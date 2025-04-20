@@ -9,6 +9,9 @@ import algoliasearch from 'algoliasearch';
 import RequirementDetailsModal from '../components/requirement/RequirementDetailsModal';
 import { Requirement } from '../types';
 import Animated from 'react-native-reanimated';
+import { useSelector } from 'react-redux';
+import { RootState } from '@/store/store';
+import Offline from '../components/Offline';
 
 const searchClient = algoliasearch(
   "J150UQXDLH",
@@ -126,6 +129,8 @@ const RequirementsPage = () => {
   const filtersRef = useRef<View>(null);
   const paginationRef = useRef<View>(null);
 
+  const isConnectedToInternet = useSelector((state: RootState) => state.app.isConnectedToInternet);
+
   useEffect(() => {
     // Measure the height of the filters component
     if (filtersRef.current) {
@@ -146,6 +151,9 @@ const RequirementsPage = () => {
     setIsMoreFiltersModalOpen(prev => !prev);
     Keyboard.dismiss();
   };
+
+  if (!isConnectedToInternet)
+    return (<Offline />)
 
   return (
     <View style={styles.container}>

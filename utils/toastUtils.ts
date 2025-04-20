@@ -43,6 +43,10 @@ export const showToast = (
 
 const toastProps: BaseToastProps = {
   text1NumberOfLines: 10,
+  text1Style: {
+    fontSize: 14,
+    fontWeight: 500
+  },
   style: {
     height: "auto",
     paddingVertical: 20,

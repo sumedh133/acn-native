@@ -5,6 +5,7 @@ import * as SplashScreen from "expo-splash-screen";
 import { useRouter } from 'expo-router';
 import LandingPage from '../components/Auth/LandingPage';
 import { RootState } from '@/store/store';
+import Offline from '../components/Offline';
 
 // Keep splash screen visible until explicitly hidden
 SplashScreen.preventAutoHideAsync();
@@ -16,6 +17,8 @@ export default function TabOneScreen() {
 
   // Get authentication status from Redux
   const isAuthenticated = useSelector((state: RootState) => state.auth.isAuthenticated);
+
+  const isConnectedToInternet = useSelector((state: RootState) => state.app.isConnectedToInternet);
 
   // Handle navigation based on auth state once store is ready
   useEffect(() => {
@@ -39,6 +42,9 @@ export default function TabOneScreen() {
   if (!isStoreReady) {
     return null;
   }
+
+  if (!isConnectedToInternet)
+    return (<Offline />)
 
   // For unauthenticated users, show landing page
   return (

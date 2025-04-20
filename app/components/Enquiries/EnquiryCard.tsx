@@ -1,64 +1,50 @@
 import React, { useState } from 'react';
 import { View, Text, Pressable } from 'react-native';
 import { FontAwesome, FontAwesome5, MaterialIcons } from '@expo/vector-icons';
-import PropertyDetailsScreen from "../property/PropertyDetailsScreen";
 import ReviewModal from "./ReviewModal";
 import { EnquiryWithProperty } from "@/app/types";
+import { setPropertyDataThunk } from '@/store/slices/propertySlice';
+import { useDispatch } from 'react-redux';
+import { AnyAction, ThunkDispatch } from '@reduxjs/toolkit';
+import { RootState } from '@/store/store';
+import { router } from 'expo-router';
 
 interface CardProps {
-  // key:string,
   index: number;
   enquiry: EnquiryWithProperty;
 }
 
 const EnquiryCard: React.FC<CardProps> = ({
-  // key,
   index,
   enquiry,
 }) => {
-  const [isDetailsModalOpen, setIsDetailsModalOpen] = useState(false);
+  const dispatch = useDispatch<ThunkDispatch<RootState, unknown, AnyAction>>();
   const [isReviewModalOpen, setIsReviewModalOpen] = useState(false);
-  // const [loading,setLoading] = useState(true);
+
   const giveReviewClick = (e: any, enqId: string) => {
     e.preventDefault();
     e.stopPropagation();
     setIsReviewModalOpen(true);
   };
 
-  // useEffect(()=>{
-  //   setLoading(false);
-  // },[])
+  const handleOpenPropertyDetails = () => {
+    if (enquiry?.property) {
+      // Set the property data in Redux store
+      dispatch(setPropertyDataThunk(enquiry.property));
 
-  // if (loading) {
-  //   return (
-  //     <View className="border border-gray-300 rounded-lg p-4 bg-white w-full">
-  //     </View>
-  //   );
-  // }
+      // Navigate to PropertyDetailsScreen with params
+      router.push({
+        pathname: "/components/property/PropertyDetailsScreen",
+        params: {
+          parent: "dashboardEnquiry",
+          enqId: enquiry.enquiryId
+        }
+      });
+    }
+  };
 
   return (
     <>
-      {isDetailsModalOpen && (
-        <PropertyDetailsScreen
-          property={enquiry?.property!}
-          onClose={() => setIsDetailsModalOpen(false)}
-          parent="dashboardEnquiry"
-          enqId={enquiry['enquiryId']!}
-        />
-      )}
-      {isReviewModalOpen && (
-        <ReviewModal
-          isOpen={isReviewModalOpen}
-          onClose={() => setIsReviewModalOpen(false)}
-          enqId={enquiry['enquiryId']!}
-        />
-      )}
-      {/* {isDetailsModalOpen && (
-        <PropertyDetailsScreen
-          property={enquiry?.property!}
-          onClose={() => setIsDetailsModalOpen(false)}
-        />
-      )} */}
       {isReviewModalOpen && (
         <ReviewModal
           isOpen={isReviewModalOpen}
@@ -70,7 +56,7 @@ const EnquiryCard: React.FC<CardProps> = ({
       <Pressable
         className="border border-gray-300 rounded-lg p-4 bg-white w-full flex flex-col mb-4 "
         style={{ gap: 16 }}
-        onPress={() => enquiry?.property && setIsDetailsModalOpen(true)}
+        onPress={handleOpenPropertyDetails}
       >
         {/* Header Section */}
         <View className='flex flex-col' style={{ gap: 10 }}>

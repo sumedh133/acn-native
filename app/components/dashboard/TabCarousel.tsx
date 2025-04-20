@@ -40,18 +40,18 @@ const TabCarousel: React.FC<TabCarouselProps> = ({ activeTab, setActiveTab, setB
           }`}
         onPress={() => handleTabChange(item.key)}
         activeOpacity={0.9}
-        style={{ width: 200 }}
+        style={{ minWidth: 200 }}
       >
-        <StyledView className="flex flex-row items-center gap-[24px]">
+        <StyledView className="flex flex-row items-center gap-[16px]">
           <StyledView
-            className={`p-[9.3] rounded-full ${isActive ? "bg-[#0E2C2A]" : "bg-[#EAF8F6]"
+            className={`p-[9.3]  rounded-full ${isActive ? "bg-[#0E2C2A]" : "bg-[#EAF8F6]"
               }`}
           >
             {item?.icon}
           </StyledView>
           <StyledView className="flex flex-col items-start justify-center gap-[4px]">
             <StyledText
-              className={`text-xs font-semibold ${isActive ? "text-white" : "text-gray-700"
+              className={`font-montserrat text-xs font-semibold ${isActive ? "text-white" : "text-gray-700"
                 }`}
               style={{ marginLeft: 0, marginTop: 0 }}
             >

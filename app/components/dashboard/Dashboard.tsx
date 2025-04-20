@@ -37,6 +37,10 @@ import MyRequirementIcon from '@/assets/icons/svg/Dashboard/MyRequirementsIcon';
 import MyInverntoriesIcon from '@/assets/icons/svg/Dashboard/MyInventoriesIcon';
 import MyEnquiriesIcon from '@/assets/icons/svg/Dashboard/MyEnquiryIcon';
 import { showErrorToast, showSuccessToast } from '@/utils/toastUtils';
+import { setPropertyDataThunk } from '@/store/slices/propertySlice';
+import { useDispatch } from 'react-redux';
+import { AnyAction, ThunkDispatch } from '@reduxjs/toolkit';
+import { setRequirementDataThunk } from '@/store/slices/requirementSlice';
 
 const StyledView = styled(View);
 const StyledText = styled(Text);
@@ -52,10 +56,8 @@ const PropertyCard = React.memo(({ property, onStatusChange, index, totalCount }
 }) => {
   // State for share modal
   const [isShareModalOpen, setIsShareModalOpen] = useState(false);
-  // State for property details modal
-  const [isDetailsModalOpen, setIsDetailsModalOpen] = useState(false);
   const [matchingEnquiriesCount, setMatchingEnquiriesCount] = useState("-");
-
+  const dispatch = useDispatch<ThunkDispatch<RootState, unknown, AnyAction>>();
 
   // Function to get property status color
   const getStatusColor = () => {
@@ -106,17 +108,18 @@ const PropertyCard = React.memo(({ property, onStatusChange, index, totalCount }
     micromarket: property.micromarket
   };
 
-  // Format the property data to match the PropertyDetailsScreen expected format
-  const propertyDetailsData = {
-    propertyId: property.propertyId,
-    nameOfTheProperty: property.nameOfTheProperty,
-    micromarket: property.micromarket,
-    unitType: property.unitType,
-    totalAskPrice: property.totalAskPrice,
-    sbua: property.sbua,
-    // Add other required properties with default values as needed
-    assetType: property.assetType,
-    photo: []
+  // Handler for navigating to property details
+  const handleNavigateToPropertyDetails = () => {
+    // Set the property data in Redux
+    dispatch(setPropertyDataThunk(property));
+
+    // Navigate to the property details screen with params
+    router.push({
+      pathname: "/components/property/PropertyDetailsScreen",
+      params: {
+        parent: "dashboardInventory",
+      }
+    });
   };
 
   const fetchMatchingEnquiryCount = async () => {
@@ -127,6 +130,7 @@ const PropertyCard = React.memo(({ property, onStatusChange, index, totalCount }
   useEffect(() => {
     fetchMatchingEnquiryCount();
   }, [])
+
   return (
     <StyledView key={property.propertyId} className={`mb-4 rounded-lg bg-white border border-gray-200 overflow-visible`} style={{ zIndex: 99999 - index }}>
       {/* Share Modal */}
@@ -137,20 +141,10 @@ const PropertyCard = React.memo(({ property, onStatusChange, index, totalCount }
         setProfileModalOpen={setIsShareModalOpen}
       />
 
-      {/* Property Details Modal */}
-      {isDetailsModalOpen && (
-        <PropertyDetailsScreen
-          property={property}
-          onClose={() => setIsDetailsModalOpen(false)}
-          parent="dashboardInventory"
-          onStatusChange={onStatusChange}
-        />
-      )}
-
       {/* Clickable Card */}
       <StyledTouchableOpacity
         activeOpacity={0.7}
-        onPress={() => setIsDetailsModalOpen(true)}
+        onPress={handleNavigateToPropertyDetails}
       >
         {/* Top Content Section */}
         <StyledView className="p-4">
@@ -254,9 +248,7 @@ const RequirementCard = React.memo(({ requirement, onStatusChange, index, totalC
   index: number,
   totalCount: number
 }) => {
-
-  // Add state for details modal
-  const [isDetailsModalOpen, setIsDetailsModalOpen] = useState(false);
+  const dispatch = useDispatch<ThunkDispatch<RootState, unknown, AnyAction>>();
 
   // Status options and their colors
   const statusOptions = [
@@ -267,110 +259,103 @@ const RequirementCard = React.memo(({ requirement, onStatusChange, index, totalC
   // Find current status color
   const currentStatus = statusOptions.find(option => option.label === requirement.status) || statusOptions[0];
 
-  // Handler for card press
-  const handleCardPress = () => {
-    // Show details modal
-    setIsDetailsModalOpen(true);
+  // Handler for card press - navigate to requirement details
+  const handleNavigateToRequirementDetails = () => {
+    // Set requirement data in Redux
+    dispatch(setRequirementDataThunk(requirement));
+    
+    // Navigate to the requirement details screen
+    router.push({
+      pathname: "/components/requirement/RequirementDetailsScreen"
+    });
   };
 
   return (
-    <>
-      <StyledTouchableOpacity
-        className="mb-4 rounded-lg bg-white border border-gray-200 overflow-visible"
-        activeOpacity={0.7}
-        onPress={handleCardPress}
-        style={{ zIndex: 99999 - index }}
-        key={requirement.requirementId}
-      >
-        {/* Top section with ID */}
-        <StyledView className="p-4 pb-2">
-          <StyledView className="border-b border-gray-200 pb-1 mb-3 w-fit">
-            <StyledText className="text-sm text-gray-600 font-semibold">
-              {`${requirement.requirementId}`}
-            </StyledText>
-          </StyledView>
+    <StyledTouchableOpacity
+      className="mb-4 rounded-lg bg-white border border-gray-200 overflow-visible"
+      activeOpacity={0.7}
+      onPress={handleNavigateToRequirementDetails}
+      style={{ zIndex: 99999 - index }}
+      key={requirement.requirementId}
+    >
+      {/* Top section with ID */}
+      <StyledView className="p-4 pb-2">
+        <StyledView className="border-b border-gray-200 pb-1 mb-3 w-fit">
+          <StyledText className="text-sm text-gray-600 font-semibold">
+            {`${requirement.requirementId}`}
+          </StyledText>
+        </StyledView>
 
-          {/* Requirement Title */}
-          <StyledText className="text-lg font-bold text-black mb-4">
-            {requirement.propertyName}
+        {/* Requirement Title */}
+        <StyledText className="text-lg font-bold text-black mb-4">
+          {requirement.propertyName}
+        </StyledText>
+
+        {/* Budget */}
+        <StyledView className="flex flex-row items-center mb-2">
+          <StyledView className="mr-2">
+            <Ionicons name="cash-outline" size={20} color="#4B5563" />
+          </StyledView>
+          <StyledText className="text-base text-gray-700">
+            {requirement.marketValue === "Market Value"
+              ? "Market Price"
+              : requirement.budget?.from === 0
+                ? `₹${requirement.budget?.to || 0} Cr`
+                : requirement.budget?.from === requirement.budget?.to
+                  ? `₹${requirement.budget?.to || 0}`
+                  : `₹${requirement.budget?.from || 0} Cr - ₹${requirement.budget?.to || 0
+                  } Cr`}
+          </StyledText>
+        </StyledView>
+
+        {/* Property Type */}
+        <StyledView className="flex flex-row items-center">
+          <StyledView className="mr-2">
+            <Ionicons name="home-outline" size={20} color="#4B5563" />
+          </StyledView>
+          <StyledText className="text-base text-gray-700">
+            {toCapitalizedWords(requirement.assetType)}
+            {requirement.configuration
+              ? ` - ${requirement.configuration}`
+              : requirement.area
+                ? ` - ${requirement.area} sqft`
+                : ""}
+            {requirement.configuration && requirement.area
+              ? ` / ${requirement.area} sqft`
+              : ""}
+          </StyledText>
+        </StyledView>
+
+        {/* Requirement details if available */}
+        {requirement.requirementDetails && (
+          <StyledText className="text-base text-gray-700 mt-2">
+            {requirement.requirementDetails}
+          </StyledText>
+        )}
+      </StyledView>
+
+      {/* Bottom section with status */}
+      <StyledView className="px-4 py-4">
+        <StyledView className="flex flex-row justify-between items-center bg-gray-50 p-3 rounded-md">
+          <StyledText className="text-base font-medium text-gray-700">
+            Requirement Status :
           </StyledText>
 
-          {/* Budget */}
-          <StyledView className="flex flex-row items-center mb-2">
-            <StyledView className="mr-2">
-              <Ionicons name="cash-outline" size={20} color="#4B5563" />
-            </StyledView>
-            <StyledText className="text-base text-gray-700">
-              {requirement.marketValue === "Market Value"
-                ? "Market Price"
-                : requirement.budget?.from === 0
-                  ? `₹${requirement.budget?.to || 0} Cr`
-                  : requirement.budget?.from === requirement.budget?.to
-                    ? `₹${requirement.budget?.to || 0}`
-                    : `₹${requirement.budget?.from || 0} Cr - ₹${requirement.budget?.to || 0
-                    } Cr`}
-            </StyledText>
-          </StyledView>
-
-          {/* Property Type */}
-          <StyledView className="flex flex-row items-center">
-            <StyledView className="mr-2">
-              <Ionicons name="home-outline" size={20} color="#4B5563" />
-            </StyledView>
-            <StyledText className="text-base text-gray-700">
-              {toCapitalizedWords(requirement.assetType)}
-              {requirement.configuration
-                ? ` - ${requirement.configuration}`
-                : requirement.area
-                  ? ` - ${requirement.area} sqft`
-                  : ""}
-              {requirement.configuration && requirement.area
-                ? ` / ${requirement.area} sqft`
-                : ""}
-            </StyledText>
-          </StyledView>
-
-          {/* Requirement details if available */}
-          {requirement.requirementDetails && (
-            <StyledText className="text-base text-gray-700 mt-2">
-              {requirement.requirementDetails}
-            </StyledText>
-          )}
-        </StyledView>
-
-        {/* Bottom section with status */}
-        <StyledView className="px-4 py-4">
-          <StyledView className="flex flex-row justify-between items-center bg-gray-50 p-3 rounded-md">
-            <StyledText className="text-base font-medium text-gray-700">
-              Requirement Status :
-            </StyledText>
-
-            <StyledView className="relative">
-
-              <DashboardDropdown
-                value={requirement.status}
-                options={[
-                  { label: "Open", value: "Pending" },
-                  { label: "Closed", value: "Closed" },
-                ]}
-                setValue={(val) => onStatusChange(requirement.requirementId || "", val)}
-                type={"requirement"}
-                openDropdownUp={index === (totalCount - 1) && totalCount > 1}
-              />
-            </StyledView>
+          <StyledView className="relative">
+            <DashboardDropdown
+              value={requirement.status}
+              options={[
+                { label: "Open", value: "Pending" },
+                { label: "Closed", value: "Closed" },
+              ]}
+              setValue={(val) => onStatusChange(requirement.requirementId || "", val)}
+              type={"requirement"}
+              openDropdownUp={index === (totalCount - 1) && totalCount > 1}
+            />
           </StyledView>
         </StyledView>
-      </StyledTouchableOpacity>
-
-
-      {/* Requirement Details Modal */}
-      <RequirementDetailsScreen
-        requirement={requirement}
-        onClose={() => setIsDetailsModalOpen(false)}
-        visible={isDetailsModalOpen}
-
-      />
-    </>
+      </StyledView>
+    </StyledTouchableOpacity>
   );
 });
 
@@ -563,7 +548,7 @@ export default function Dashboard({ myEnquiries, myProperties, myRequirements, l
     {
       key: "inventories",
       label: "My Inventories",
-      icon: <MyInverntoriesIcon iconColor={myInverntoriesIconColor} />,
+      icon: <MyInverntoriesIcon  height={36} width={36} iconColor={myInverntoriesIconColor} />,
       count: myProperties.length,
       loading: loading.propertiesLoading
     },
@@ -577,7 +562,7 @@ export default function Dashboard({ myEnquiries, myProperties, myRequirements, l
     {
       key: "enquiries",
       label: "My Enquiries",
-      icon: <MyEnquiriesIcon iconColor={myEnquiresIconColor} />,
+      icon: <MyEnquiriesIcon size={30} iconColor={myEnquiresIconColor} />,
       count: myEnquiries.length,
       loading: loading.enquiriesLoading
     },

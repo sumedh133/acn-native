@@ -140,39 +140,42 @@ const ImageCarousel: React.FC<ImageCarouselProps> = ({ images, onImagePress }) =
         ))}
       </View>
 
-      {/* Bottom navigation buttons */}
+      {/* Arrow navigation buttons */}
       {images.length > 1 && (
-        <View style={styles.bottomNavContainer}>
-          <TouchableOpacity
-            style={[
-              styles.bottomNavButton,
-              activeIndex === 0 && styles.bottomNavButtonDisabled
-            ]}
-            disabled={activeIndex === 0}
-            onPress={handlePrevious}
-          >
-            <Ionicons
-              name="chevron-back"
-              size={24}
-              color={activeIndex === 0 ? "rgba(255,255,255,0.3)" : "#FFFFFF"}
-            />
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            style={[
-              styles.bottomNavButton,
-              activeIndex === images.length - 1 && styles.bottomNavButtonDisabled
-            ]}
-            disabled={activeIndex === images.length - 1}
-            onPress={handleNext}
-          >
-            <Ionicons
-              name="chevron-forward"
-              size={24}
-              color={activeIndex === images.length - 1 ? "rgba(255,255,255,0.3)" : "#FFFFFF"}
-            />
-          </TouchableOpacity>
-        </View>
+        <>
+          <View style={styles.leftNav}>
+            <TouchableOpacity
+              style={[
+                styles.bottomNavButton,
+                activeIndex === 0 && styles.bottomNavButtonDisabled
+              ]}
+              disabled={activeIndex === 0}
+              onPress={handlePrevious}
+            >
+              <Ionicons
+                name="chevron-back"
+                size={24}
+                color={activeIndex === 0 ? "rgba(255,255,255,0.3)" : "#FFFFFF"}
+              />
+            </TouchableOpacity>
+          </View>
+          <View style={styles.rightNav}>
+            <TouchableOpacity
+              style={[
+                styles.bottomNavButton,
+                activeIndex === images.length - 1 && styles.bottomNavButtonDisabled
+              ]}
+              disabled={activeIndex === images.length - 1}
+              onPress={handleNext}
+            >
+              <Ionicons
+                name="chevron-forward"
+                size={24}
+                color={activeIndex === images.length - 1 ? "rgba(255,255,255,0.3)" : "#FFFFFF"}
+              />
+            </TouchableOpacity>
+          </View>
+        </>
       )}
 
       {/* Full-screen image viewer */}
@@ -250,6 +253,24 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     paddingHorizontal: 20,
+    paddingBottom: 20,
+    zIndex: 10,
+  },
+  leftNav: {
+    position: 'absolute',
+    top: '50%',
+    marginTop: -20,
+    left: 0,
+    paddingLeft: 20,
+    paddingBottom: 20,
+    zIndex: 10,
+  },
+  rightNav: {
+    position: 'absolute',
+    top: '50%',
+    marginTop: -20,
+    right: 0,
+    paddingRight: 20,
     paddingBottom: 20,
     zIndex: 10,
   },

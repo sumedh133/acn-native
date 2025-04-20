@@ -15,7 +15,8 @@ interface DropdownMoreFiltersProps {
   transformFunction?: (label: string) => string;
   items: RefinementItem[],
   refine: any,
-  isAssetType?: boolean
+  isAssetType?: boolean,
+  isRight?: boolean,
 }
 
 const DropdownMoreFilters = ({
@@ -23,7 +24,8 @@ const DropdownMoreFilters = ({
   items,
   refine,
   transformFunction,
-  isAssetType = false
+  isAssetType = false,
+  isRight
 }: DropdownMoreFiltersProps) => {
   const [isOpen, setIsOpen] = useState(false);
   const [dropdownLayout, setDropdownLayout] = useState({ height: 0, width: 0 });
@@ -93,6 +95,7 @@ const DropdownMoreFilters = ({
   const measureItemWidth = useCallback((item: RefinementItem) => {
    
     const labelWidth = (item.label.length * 8) + 50; // Base width + padding
+    // const labelWidth = 20;
     const countWidth = (item.count.toString().length * 8) + 20; // Count width + padding
     const totalWidth = labelWidth + countWidth + 50; 
     
@@ -118,7 +121,7 @@ const DropdownMoreFilters = ({
       return (
         <TouchableOpacity
           key={index}
-          className="flex-row justify-between items-center py-2 px-3 border-b border-gray-100"
+          className="flex-row justify-between items-center py-2 pl-3 border-b border-gray-100"
           onPress={() => handleRefine(item.value)}
         >
           <View className="flex-row items-center flex-1">
@@ -127,9 +130,9 @@ const DropdownMoreFilters = ({
                 <Ionicons name="checkmark" size={12} color="#FFFFFF" />
               )}
             </View>
-            <Text className="text-gray-800">{item.label}</Text>
+            <Text className="text-gray-800 mr-6">{item.label.split('-')[0]}{" "}{item.label.split('-')[1]}</Text>
           </View>
-          <View className="ml-2">
+          <View className="mx-2">
             <Text className="text-xs text-gray-600 bg-[#e5e7eb] rounded-[4px] px-2">{item.count}</Text>
           </View>
         </TouchableOpacity>
@@ -170,20 +173,22 @@ const DropdownMoreFilters = ({
           
           <View 
             style={{
-              position: 'absolute',
-              top: buttonPosition.y,
-              left: buttonPosition.x-dropdownWidth*0.2,
-              width: dropdownWidth,
-              backgroundColor: 'white',
-              borderRadius: 4,
-              borderWidth: 1,
-              borderColor: '#e2e8f0',
-              shadowColor: "#000",
-              shadowOffset: { width: 0, height: 2 },
-              shadowOpacity: 0.1,
-              shadowRadius: 4,
-              elevation: 3,
-              zIndex: 1000
+              ...{
+                position: 'absolute',
+                top: buttonPosition.y,
+                width: dropdownWidth,
+                backgroundColor: 'white',
+                borderRadius: 4,
+                borderWidth: 1,
+                borderColor: '#e2e8f0',
+                shadowColor: "#000",
+                shadowOffset: { width: 0, height: 2 },
+                shadowOpacity: 0.1,
+                shadowRadius: 4,
+                elevation: 3,
+                zIndex: 1000,
+              },
+              ...(isRight ? { right: 35} : { left: buttonPosition.x })
             }}
           >
             <ScrollView 

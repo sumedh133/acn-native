@@ -19,6 +19,7 @@ import { useSelector } from 'react-redux';
 import { RootState } from '@/store/store';
 import CustomSelectDropdown from '../components/CustomSelectDropdown';
 import { showErrorToast, showInfoToast, showSuccessToast } from '@/utils/toastUtils';
+import Offline from '../components/Offline';
 
 const UserRequirementForm = () => {
   const cpId = useSelector((state: RootState) => state?.agent?.docData?.cpId) || null;
@@ -46,6 +47,8 @@ const UserRequirementForm = () => {
     configuration?: string;
     budget?: string;
   }>({});
+
+  const isConnectedToInternet = useSelector((state: RootState) => state.app.isConnectedToInternet);
 
   const assetTypes = [
     { label: "Select Asset Type", value: "" },
@@ -205,6 +208,9 @@ const UserRequirementForm = () => {
   const isSubmitEnabled = propertyName.trim() !== '' &&
     assetType.trim() !== '' &&
     (marketValue || isBudgetValidRange());
+
+  if (!isConnectedToInternet)
+    return (<Offline />)
 
   return (
     <View style={styles.overlay}>
@@ -536,6 +542,7 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: '600',
     marginBottom: 8,
+    fontFamily:'Montserrat_700Bold',
   },
   required: {
     color: 'red',
@@ -622,6 +629,7 @@ const styles = StyleSheet.create({
   checkmark: {
     color: '#fff',
     fontWeight: 'bold',
+    fontSize: 12,
   },
   checkboxLabel: {
     fontSize: 14,

@@ -155,10 +155,11 @@ const styles = StyleSheet.create({
     marginBottom: 24,
   },
   headerText: {
-    fontSize: 20,
-    fontWeight: 'bold',
+    fontSize: 18,
+    //fontWeight: 'bold',
     color: '#252626',
     marginRight: 1,
+    fontFamily: 'Montserrat_700Bold',
   },
   profileRow: {
     flexDirection: 'row',
@@ -188,10 +189,11 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   infoText: {
-    fontSize: 18,
+    fontSize: 16,
     color: '#726C6C',
     marginLeft: 8,
     marginRight: 15,
+    fontFamily: 'Lato',
   },
   logoutButton: {
     flexDirection: 'row',
@@ -205,8 +207,10 @@ const styles = StyleSheet.create({
   },
   logoutText: {
     color: '#DE1135',
-    fontWeight: '600',
-    fontSize: 16,
+    //fontWeight: '600',
+    fontSize: 14,
     marginLeft: 6,
+    fontWeight: 'bold',
+    
   },
 });

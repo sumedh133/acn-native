@@ -196,6 +196,7 @@ const MoreFiltersRequirement = ({
                 title="Please Select"
                 items={unitTypeItems}
                 refine={refineUnitType}
+                isRight={true}
               />
             </View>
           </View>

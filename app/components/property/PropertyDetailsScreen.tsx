@@ -1,13 +1,13 @@
-import React, { useState, useEffect } from 'react';
-import { View, Text, TouchableOpacity, ScrollView, StyleSheet, Dimensions, Image, Modal, Alert, Linking, Pressable } from 'react-native';
+import React, { useState, useEffect, useCallback } from 'react';
+import { View, Text, TouchableOpacity, ScrollView, StyleSheet, Dimensions, Image, Linking, Pressable } from 'react-native';
 import { Ionicons, MaterialIcons } from '@expo/vector-icons';
-import { useRouter } from 'expo-router';
+import { router, useLocalSearchParams } from 'expo-router';
 import ImageCarousel from './ImageCarousel';
-import { Enquiry, Property } from '@/app/types';
+import { Enquiry } from '@/app/types';
 import { useSelector } from 'react-redux';
 import { RootState } from '@/store/store';
 import { handleIdGeneration } from '@/app/helpers/nextId';
-import { doc, setDoc } from 'firebase/firestore';
+import { collection, doc, getDocs, query, setDoc, updateDoc, where } from 'firebase/firestore';
 import { db } from '@/app/config/firebase';
 import deductMonthlyCredit from '@/app/helpers/deductCredit';
 import EnquiryCPModal from '@/app/modals/EnquiryCPModal';
@@ -23,23 +23,19 @@ import CloseIcon from '@/assets/icons/svg/CloseIcon';
 import { LinearGradient } from 'react-native-linear-gradient';
 import { styled } from 'nativewind';
 
+const { width } = Dimensions.get('window');
+
 const StyledView = styled(View);
 const StyledText = styled(Text);
-import ShareIcon from '@/assets/icons/svg/PropertiesPage/ShareIcon';
 import ShareIconInsidePropertyDetails from '@/assets/icons/svg/PropertiesPage/SHareIconPropertyDetailsModal';
 import DriveIcon from '@/assets/icons/svg/PropertiesPage/DriveIcon';
+import { selectPropertyStateData } from '@/store/slices/propertySlice';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import Offline from '../Offline';
 
 interface AgentData {
   phonenumber: string;
   [key: string]: any;
-}
-
-interface PropertyDetailsScreenProps {
-  property: Property;
-  onClose: () => void;
-  parent?: string;
-  enqId?: string;
-  onStatusChange?: (id: string, status: string) => void;
 }
 
 interface IdGenerationResult {
@@ -69,9 +65,41 @@ const formatDate = (timestamp?: number) => {
   });
 };
 
-// Use React.memo to fix the static flag issue
-const PropertyDetailsScreen = React.memo(({ property, onClose, parent, enqId, onStatusChange }: PropertyDetailsScreenProps) => {
-  const router = useRouter();
+// InfoRow component for property details
+const InfoRow = ({ label, value, bottomPadding }: { label: string, value: any, bottomPadding?: number }) => (
+  <View style={[styles.infoRow, bottomPadding ? { marginBottom: bottomPadding } : null]}>
+    <Text style={styles.infoLabel}>{label}:</Text>
+    <View style={styles.infoSeparator} />
+    <Text style={styles.infoValue}>{value || "-"}</Text>
+  </View>
+);
+
+export default function PropertyDetailsScreen() {
+  const params = useLocalSearchParams();
+  const parent = params.parent as string || 'properties';
+  const enqId = params.enqId as string;
+
+  const isConnectedToInternet = useSelector((state: RootState) => state.app.isConnectedToInternet);
+
+  const handlePropertyStatusChange = useCallback(async (id: string, status: string) => {
+    const newStatus = status;
+    try {
+      const propertyRef = collection(db, "ACN123");
+      const q = query(propertyRef, where("propertyId", "==", id));
+      const querySnapshot = await getDocs(q);
+
+      if (!querySnapshot.empty) {
+        const docRef = querySnapshot.docs[0].ref;
+        await updateDoc(docRef, { status: newStatus });
+      }
+      showSuccessToast('Inventory status updated Succesfully!');
+    } catch (error) {
+      showErrorToast('Error updating Inventory status!');
+      console.error("Error updating status in Firestore:", error);
+    }
+  }, []);
+
+  const property = useSelector(selectPropertyStateData);
   const agentData = useSelector((state: RootState) => state?.agent?.docData) as AgentData;
   const [localImages, setLocalImages] = useState<string[]>([]);
   const [isImageViewerVisible, setIsImageViewerVisible] = useState(false);
@@ -114,12 +142,9 @@ const PropertyDetailsScreen = React.memo(({ property, onClose, parent, enqId, on
     setLocalImages([...photos, ...videos]);
   }, [property.photo, property.video]);
 
-
-
   // Update useEffect to handle loading state
   useEffect(() => {
     const initializeContent = async () => {
-
       try {
         // Initialize images array
         const images = [
@@ -127,7 +152,6 @@ const PropertyDetailsScreen = React.memo(({ property, onClose, parent, enqId, on
           ...(property.video || []),
         ];
         setLocalImages(images);
-
       } catch (error) {
         console.error('Error loading images:', error);
       }
@@ -136,13 +160,18 @@ const PropertyDetailsScreen = React.memo(({ property, onClose, parent, enqId, on
     initializeContent();
   }, [property.photo, property.video]);
 
+  // Return to previous screen
+  const handleGoBack = () => {
+    router.back();
+  };
+
   // Dummy handler functions
   const handleOpenGoogleMap = () => {
     if (!property.mapLocation) {
       showErrorToast("Map location not available.");
       return;
     }
-    Linking.openURL(property.mapLocation)
+    Linking.openURL(property.mapLocation);
   };
 
   const handleOpenDriveDetails = () => {
@@ -156,17 +185,16 @@ const PropertyDetailsScreen = React.memo(({ property, onClose, parent, enqId, on
   };
 
   const handleEnquireNowBtn = (e: any) => {
-    setSelectedCPID(property.cpCode || "")
+    setSelectedCPID(property.cpCode || "");
     if (monthlyCredits > 0) {
       setIsConfirmModelOpen(true);
       return;
     }
     showErrorToast("You don't have enough credits. Please contact your account manager.");
-    //Alert.alert("Do not have credits");
   };
 
   const handleCancel = () => {
-    setIsConfirmModelOpen(false)
+    setIsConfirmModelOpen(false);
   };
 
   const submitEnquiry = async (nextEnqId: string) => {
@@ -184,25 +212,20 @@ const PropertyDetailsScreen = React.memo(({ property, onClose, parent, enqId, on
 
   const onConfirmEnquiry = async () => {
     if (!selectedCPID) {
-      //Alert.alert("Error: Seller CPID is missing. Please try again.");
       showErrorToast("Error: Seller CPID is missing. Please try again.");
       setIsConfirmModelOpen(false);
       return;
     }
 
     if (!(monthlyCredits > 0)) {
-      //Alert.alert("You don't have enough credits. Please contact your account manager.");
       showErrorToast("You don't have enough credits. Please contact your account manager.");
       setIsConfirmModelOpen(false);
       return;
     }
 
     try {
-      const nextEnqId = await generateNextEnqId()
+      const nextEnqId = await generateNextEnqId();
       if (!nextEnqId) {
-        // Alert.alert(
-        //   "Failed to generate the next Enquiry ID. Please try again later."
-        // );
         showErrorToast("Failed to generate the next Enquiry ID. Please try again later.");
         setIsConfirmModelOpen(false);
         return;
@@ -222,301 +245,220 @@ const PropertyDetailsScreen = React.memo(({ property, onClose, parent, enqId, on
       setTimeout(() => {
         setIsEnquiryCPModelOpen(true);
       }, 100);
-
     } catch (error) {
-
-      // Alert.alert(
-      //   "An error occurred while processing your enquiry. Please try again."
-      // );
       showErrorToast("An error occurred while processing your enquiry. Please try again.");
     }
   };
 
-  // InfoRow component for property details
-  const InfoRow = ({ label, value, bottomPadding }: { label: string, value: any, bottomPadding?: number }) => (
-    <View style={[styles.infoRow, bottomPadding ? { marginBottom: bottomPadding } : null]}>
-      <Text style={styles.infoLabel}>{label}:</Text>
-      <View style={styles.infoSeparator} />
-      <Text style={styles.infoValue}>{value || "-"}</Text>
-    </View>
-  );
-
   const handleShareButtonPress = () => {
     setIsShareModalOpen(true);
-
   };
 
-  const [forceRender, setForceRender] = useState(false);
+  if (!isConnectedToInternet)
+    return <Offline />;
 
   return (
-    <Modal
-      visible={true}
-      onShow={() => setForceRender(prev => !prev)}
-      animationType="slide"
-      transparent={false}
-      onRequestClose={onClose}
-    >
-      <View style={styles.container}>
-        {/* Header Section */}
-        <View style={styles.header}>
-          <View style={styles.headerTop}>
-            <View style={styles.headerInfo}>
-              <View style={styles.propertyIdBadge}>
-                <Text style={styles.propertyIdText}>{property.propertyId || "Property ID"}</Text>
-              </View>
-              <Text style={styles.propertyName}>{getPropertyName()}</Text>
+    <SafeAreaView style={styles.container}>
+      {/* Header Section */}
+      <View style={styles.header}>
+        <View style={styles.headerTop}>
+          <View style={styles.headerInfo}>
+            <View style={styles.propertyIdBadge}>
+              <Text style={styles.propertyIdText}>{property.propertyId || "Property ID"}</Text>
             </View>
-            <TouchableOpacity onPress={onClose}>
-              <CloseIcon />
-            </TouchableOpacity>
+            <Text style={styles.propertyName}>{getPropertyName()}</Text>
           </View>
-
-          <View style={styles.locationInfo}>
-            <View style={styles.infoItem}>
-              <Ionicons name="location-outline" size={16} color="#374151" />
-              <Text style={styles.infoText}>{property.micromarket || "N/A"}</Text>
-            </View>
-            <View style={styles.infoItem}>
-              <Ionicons name="home-outline" size={16} color="#374151" />
-              <Text style={styles.infoText}>{property.assetType || "Unknown Type"}</Text>
-            </View>
-            <View style={styles.infoItem}>
-              <HandOverIcon />
-              <Text style={styles.infoText}>{property.handoverDate || "Pending"}</Text>
-            </View>
-            <View style={styles.infoItem}>
-              <Ionicons name="bed-outline" size={16} color="#374151" />
-              <Text style={styles.infoText}>{property.unitType || "Not Specified"}</Text>
-            </View>
-          </View>
-        </View>
-
-        {/* Main Content */}
-        <ScrollView
-          style={[styles.content]}
-          contentContainerStyle={[
-            styles.contentContainer,
-            { flexGrow: 1 }  // Add this to ensure content is scrollable
-          ]}
-
-        >
-
-          {/* Basic Property Information */}
-          <View style={styles.infoSectionContainer}>
-            {localImages.length <= 0 ? (
-              <LinearGradient
-                colors={["#E0F7F4", "#FFFFFF"]}
-                locations={[0.0891, 0.7814]}
-                className="w-full"
-                style={{ borderBottomWidth: 1, borderColor: "#CCCBCB" }}
-              >
-                <View
-                  style={{
-                    display: "flex",
-                    flexDirection: "column",
-                    gap: 12,
-                    alignItems: "center",
-                    justifyContent: "center",
-                    height: 200
-                  }}>
-                  <Image
-                    source={require('../../../assets/icons/no-image-icon.webp')}
-                    style={{ width: 96, height: 96 }} // You can adjust the size
-                  />
-                  <StyledView className="flex flex-col items-center justify-center">
-                    <StyledText className='text-sm font-bold'>No Images Found</StyledText>
-                    <StyledText className="text-sm font-medium text-[#757575]">The listing doesn't have any images yet.</StyledText>
-                  </StyledView>
-                </View>
-              </LinearGradient>
-            ) : (
-              <ImageCarousel
-                images={localImages}
-                onImagePress={() => {
-                  setCurrentImageIndex(0);
-                  setIsImageViewerVisible(true);
-                }}
-              />
-            )}
-            <View style={styles.infoSection}>
-              <InfoRow label="Plot Size" value={property.plotSize ? `${property.plotSize} sqft` : null} />
-              <InfoRow label="Carpet Area" value={property.carpet ? `${property.carpet} sqft` : null} />
-              <InfoRow label="SBUA" value={property.sbua ? `${property.sbua} sqft` : null} />
-              <InfoRow label="Facing" value={property.facing} />
-              <InfoRow label="Total Ask Price" value={property.totalAskPrice ? formatCost(property.totalAskPrice) : null} />
-              <InfoRow label="Ask Price/Sqft" value={property.askPricePerSqft ? `₹${property.askPricePerSqft}` : null} />
-              <InfoRow label="Floor" value={property.floorNo} />
-            </View>
-            {/* Location Details Section */}
-            <View style={styles.locationSection}>
-              <View style={styles.locationDetails}>
-                <View style={styles.locationItem}>
-                  <Text style={styles.locationLabel}>Micromarket</Text>
-                  <Text style={styles.locationValue}>{property.micromarket || "-"}</Text>
-                </View>
-                <View style={styles.locationItem}>
-                  <Text style={styles.locationLabel}>Area</Text>
-                  <Text style={styles.locationValue}>{property.area || "-"}</Text>
-                </View>
-              </View>
-
-              <TouchableOpacity style={styles.mapButton} onPress={handleOpenGoogleMap}>
-                <Text style={styles.mapButtonText}>Open in Google Maps</Text>
-                <Ionicons name="arrow-forward" size={16} color="#10302D" />
-              </TouchableOpacity>
-            </View>
-            {/* Extra Details Section */}
-            <View style={styles.extraDetailsSection}>
-              <Text style={styles.extraDetailsTitle}>Extra Details</Text>
-              <View style={styles.extraDetailsContent}>
-                {property?.extraDetails ? (
-                  property?.extraDetails?.split("\n")?.map((detail, index) => (
-                    <View key={index} style={styles.detailItem}>
-                      <Text style={styles.bulletPoint}>•</Text>
-                      <Text style={styles.detailText}>{detail}</Text>
-                    </View>
-                  ))
-                ) : (
-                  <Text style={styles.noDetailsText}>No extra details available.</Text>
-                )}
-              </View>
-            </View>
-            {/* Additional Property Information */}
-            <View style={styles.additionalInfo}>
-              <InfoRow label="Building Khata" value={property.buildingKhata} />
-              <InfoRow label="Land Khata" value={property.landKhata} />
-              <InfoRow label="Building Age" value={property.buildingAge ? `${property.buildingAge}` : null} />
-              <InfoRow label="Tenanted" value={property.tenanted ? "Yes" : "No"} />
-              <InfoRow label="Inventory Added On" value={formatDate(property.dateOfInventoryAdded)}  />
-            <InfoRow label="Last Status Check" value={formatDate(property.dateOfStatusLastChecked)}/>
-            </View>
-          </View>
-        </ScrollView>
-
-        <ShareModal
-          property={property}
-          agentData={agentData}
-          setProfileModalOpen={setIsShareModalOpen}
-          visible={isShareModalOpen}
-        />
-        <EnquiryCPModal
-          setIsEnquiryCPModalOpen={setIsEnquiryCPModelOpen}
-          generatingEnquiry={false}
-          visible={isEnquiryModelOpen}
-          selectedCPID={selectedCPID || ""}
-        />
-        <ConfirmModal
-          title="Confirm Enquiry"
-          message={`Are you sure you want to enquire? You have ${monthlyCredits} credits remaining for this month.`}
-          onConfirm={onConfirmEnquiry}
-          onCancel={handleCancel}
-          generatingEnquiry={false}
-          visible={isConfirmModelOpen}
-        />
-
-        {/* Fixed share button */}
-        <TouchableOpacity style={styles.shareButton} onPress={handleShareButtonPress}>
-          <ShareIconInsidePropertyDetails />
-        </TouchableOpacity>
-
-        {/* Footer Actions */}
-        <View style={styles.footer}>
-          <TouchableOpacity style={styles.secondaryButton} onPress={handleOpenDriveDetails}>
-            <DriveIcon />
-            <Text style={styles.secondaryButtonText}>Open Details</Text>
+          <TouchableOpacity onPress={handleGoBack}>
+            <CloseIcon />
           </TouchableOpacity>
-          {parent === "properties" &&
-            <TouchableOpacity style={styles.primaryButton} onPress={handleEnquireNowBtn}>
-              <Ionicons name="call-outline" size={20} color="white" />
-              <Text style={styles.primaryButtonText}>Enquire Now</Text>
-            </TouchableOpacity>
-          }
-          {parent === "dashboardEnquiry" &&
-            <Pressable
-              // className="bg-gray-200 border border-gray-300 rounded-lg"
-              onPress={(e) => giveReviewClick(e, enqId!)}
-              // style={{ display: "flex", flexDirection: "row", alignItems: "center", paddingVertical: 6, paddingHorizontal: 4, gap: 8 }}
-              style={styles.primaryButton}
-            >
-              <MaterialIcons name="edit" size={20} color="white" />
-              <Text style={styles.primaryButtonText}>Give review</Text>
-            </Pressable>
-          }
-          {parent === "dashboardInventory" &&
-            <View
-            // style={styles.primaryButton}
-            >
-              <DashboardDropdown
-                value={property.status || "Available"}
-                setValue={(val) => onStatusChange!(property.propertyId, val)}
-                options={[
-                  { label: "Available", value: "Available" },
-                  { label: "Hold", value: "Hold" },
-                  { label: "Sold", value: "Sold" }
-                ]}
-                type={"inventory"}
-                openDropdownUp={true}
-                parent="dashboardInventory"
-              />
-            </View>
-          }
         </View>
 
-        {/* Image Viewer Modal */}
-        <Modal
-          visible={isImageViewerVisible}
-          transparent={true}
-          animationType="fade"
-          onRequestClose={() => setIsImageViewerVisible(false)}
-        >
-          <View style={styles.imageViewerContainer}>
-            <TouchableOpacity
-              style={styles.closeImageViewer}
-              onPress={() => setIsImageViewerVisible(false)}
+        <View style={styles.locationInfo}>
+          <View style={styles.infoItem}>
+            <Ionicons name="location-outline" size={16} color="#374151" />
+            <Text style={styles.infoText}>{property.micromarket || "N/A"}</Text>
+          </View>
+          <View style={styles.infoItem}>
+            <Ionicons name="home-outline" size={16} color="#374151" />
+            <Text style={styles.infoText}>{property.assetType || "Unknown Type"}</Text>
+          </View>
+          <View style={styles.infoItem}>
+            <HandOverIcon />
+            <Text style={styles.infoText}>{property.handoverDate || "Pending"}</Text>
+          </View>
+          <View style={styles.infoItem}>
+            <Ionicons name="bed-outline" size={16} color="#374151" />
+            <Text style={styles.infoText}>{property.unitType || "Not Specified"}</Text>
+          </View>
+        </View>
+      </View>
+
+      {/* Main Content */}
+      <ScrollView
+        style={[styles.content]}
+        contentContainerStyle={[
+          styles.contentContainer,
+          { flexGrow: 1 }  // Add this to ensure content is scrollable
+        ]}
+      >
+        {/* Basic Property Information */}
+        <View style={styles.infoSectionContainer}>
+          {localImages.length <= 0 ? (
+            <LinearGradient
+              colors={["#E0F7F4", "#FFFFFF"]}
+              locations={[0.0891, 0.7814]}
+              className="w-full"
+              style={{ borderBottomWidth: 1, borderColor: "#CCCBCB" }}
             >
-              <CloseIcon />
+              <View
+                style={{
+                  display: "flex",
+                  flexDirection: "column",
+                  gap: 12,
+                  alignItems: "center",
+                  justifyContent: "center",
+                  height: 200
+                }}>
+                <Image
+                  source={require('../../../assets/icons/no-image-icon.webp')}
+                  style={{ width: 96, height: 96 }} // You can adjust the size
+                />
+                <StyledView className="flex flex-col items-center justify-center">
+                  <StyledText className='text-sm font-bold'>No Images Found</StyledText>
+                  <StyledText className="text-sm font-medium text-[#757575]">The listing doesn't have any images yet.</StyledText>
+                </StyledView>
+              </View>
+            </LinearGradient>
+          ) : (
+            <ImageCarousel
+              images={localImages}
+              onImagePress={() => {
+                setCurrentImageIndex(0);
+                setIsImageViewerVisible(true);
+              }}
+            />
+          )}
+          <View style={styles.infoSection}>
+            <InfoRow label="Plot Size" value={property.plotSize ? `${property.plotSize} sqft` : null} />
+            <InfoRow label="Carpet Area" value={property.carpet ? `${property.carpet} sqft` : null} />
+            <InfoRow label="SBUA" value={property.sbua ? `${property.sbua} sqft` : null} />
+            <InfoRow label="Facing" value={property.facing} />
+            <InfoRow label="Total Ask Price" value={property.totalAskPrice ? formatCost(property.totalAskPrice) : null} />
+            <InfoRow label="Ask Price/Sqft" value={property.askPricePerSqft ? `₹${property.askPricePerSqft}` : null} />
+            <InfoRow label="Floor" value={property.floorNo} />
+          </View>
+          {/* Location Details Section */}
+          <View style={styles.locationSection}>
+            <View style={styles.locationDetails}>
+              <View style={styles.locationItem}>
+                <Text style={styles.locationLabel}>Micromarket</Text>
+                <Text style={styles.locationValue}>{property.micromarket || "-"}</Text>
+              </View>
+              <View style={styles.locationItem}>
+                <Text style={styles.locationLabel}>Area</Text>
+                <Text style={styles.locationValue}>{property.area || "-"}</Text>
+              </View>
+            </View>
+
+            <TouchableOpacity style={styles.mapButton} onPress={handleOpenGoogleMap}>
+              <Text style={styles.mapButtonText}>Open in Google Maps</Text>
+              <Ionicons name="arrow-forward" size={16} color="#10302D" />
             </TouchableOpacity>
-
-            {localImages.length > 0 && (
-              <Image
-                source={{ uri: localImages[currentImageIndex] }}
-                style={styles.fullImage}
-                resizeMode="contain"
-              />
-            )}
-
-            <View style={styles.imageNavigation}>
-              <TouchableOpacity
-                style={styles.navButton}
-                disabled={currentImageIndex === 0}
-                onPress={() => setCurrentImageIndex(prev => prev - 1)}
-              >
-                <Ionicons
-                  name="chevron-back"
-                  size={28}
-                  color={currentImageIndex === 0 ? "#999999" : "white"}
-                />
-              </TouchableOpacity>
-
-              <Text style={styles.imageCounter}>
-                {currentImageIndex + 1}/{localImages.length}
-              </Text>
-
-              <TouchableOpacity
-                style={styles.navButton}
-                disabled={currentImageIndex === localImages.length - 1}
-                onPress={() => setCurrentImageIndex(prev => prev + 1)}
-              >
-                <Ionicons
-                  name="chevron-forward"
-                  size={28}
-                  color={currentImageIndex === localImages.length - 1 ? "#999999" : "white"}
-                />
-              </TouchableOpacity>
+          </View>
+          {/* Extra Details Section */}
+          <View style={styles.extraDetailsSection}>
+            <Text style={styles.extraDetailsTitle}>Extra Details</Text>
+            <View style={styles.extraDetailsContent}>
+              {property?.extraDetails ? (
+                property?.extraDetails?.split("\n")?.map((detail: any, index: number) => (
+                  <View key={index} style={styles.detailItem}>
+                    <Text style={styles.bulletPoint}>•</Text>
+                    <Text style={styles.detailText}>{detail}</Text>
+                  </View>
+                ))
+              ) : (
+                <Text style={styles.noDetailsText}>No extra details available.</Text>
+              )}
             </View>
           </View>
-        </Modal>
+          {/* Additional Property Information */}
+          <View style={styles.additionalInfo}>
+            <InfoRow label="Building Khata" value={property.buildingKhata} />
+            <InfoRow label="Land Khata" value={property.landKhata} />
+            <InfoRow label="Building Age" value={property.buildingAge ? `${property.buildingAge}` : null} />
+            <InfoRow label="Tenanted" value={property.tenanted ? "Yes" : "No"} />
+            <InfoRow label="Inventory Added On" value={formatDate(property.dateOfInventoryAdded)} />
+            <InfoRow label="Last Status Check" value={formatDate(property.dateOfStatusLastChecked)} />
+          </View>
+        </View>
+      </ScrollView>
+
+      <ShareModal
+        property={property}
+        agentData={agentData}
+        setProfileModalOpen={setIsShareModalOpen}
+        visible={isShareModalOpen}
+      />
+      <EnquiryCPModal
+        setIsEnquiryCPModalOpen={setIsEnquiryCPModelOpen}
+        generatingEnquiry={false}
+        visible={isEnquiryModelOpen}
+        selectedCPID={selectedCPID || ""}
+      />
+      <ConfirmModal
+        title="Confirm Enquiry"
+        message={`Are you sure you want to enquire? You have ${monthlyCredits} credits remaining for this month.`}
+        onConfirm={onConfirmEnquiry}
+        onCancel={handleCancel}
+        generatingEnquiry={false}
+        visible={isConfirmModelOpen}
+      />
+
+      {/* Fixed share button */}
+      <TouchableOpacity style={styles.shareButton} onPress={handleShareButtonPress}>
+        <ShareIconInsidePropertyDetails />
+      </TouchableOpacity>
+
+      {/* Footer Actions */}
+      <View style={styles.footer}>
+        <TouchableOpacity style={styles.secondaryButton} onPress={handleOpenDriveDetails}>
+          <DriveIcon />
+          <Text style={styles.secondaryButtonText}>Open Details</Text>
+        </TouchableOpacity>
+        {parent === "properties" &&
+          <TouchableOpacity style={styles.primaryButton} onPress={handleEnquireNowBtn}>
+            <Ionicons name="call-outline" size={20} color="white" />
+            <Text style={styles.primaryButtonText}>Enquire Now</Text>
+          </TouchableOpacity>
+        }
+        {parent === "dashboardEnquiry" &&
+          <Pressable
+            onPress={(e) => giveReviewClick(e, enqId!)}
+            style={styles.primaryButton}
+          >
+            <MaterialIcons name="edit" size={20} color="white" />
+            <Text style={styles.primaryButtonText}>Give review</Text>
+          </Pressable>
+        }
+        {parent === "dashboardInventory" &&
+          <View>
+            <DashboardDropdown
+              value={property.status || "Available"}
+              setValue={(val) => handlePropertyStatusChange!(property?.propertyId, val)}
+              options={[
+                { label: "Available", value: "Available" },
+                { label: "Hold", value: "Hold" },
+                { label: "Sold", value: "Sold" }
+              ]}
+              type={"inventory"}
+              openDropdownUp={true}
+              parent="dashboardInventory"
+              updatePropertySlice={true}
+            />
+          </View>
+        }
       </View>
+
       {isReviewModalOpen && (
         <ReviewModal
           isOpen={isReviewModalOpen}
@@ -524,14 +466,61 @@ const PropertyDetailsScreen = React.memo(({ property, onClose, parent, enqId, on
           enqId={enqId!}
         />
       )}
-    </Modal>
+
+      {/* Image Viewer Modal for full-screen images */}
+      {isImageViewerVisible && (
+        <View style={styles.imageViewerContainer}>
+          <TouchableOpacity
+            style={styles.closeImageViewer}
+            onPress={() => setIsImageViewerVisible(false)}
+          >
+            <CloseIcon />
+          </TouchableOpacity>
+
+          {localImages.length > 0 && (
+            <Image
+              source={{ uri: localImages[currentImageIndex] }}
+              style={styles.fullImage}
+              resizeMode="contain"
+            />
+          )}
+
+          <View style={styles.imageNavigation}>
+            <TouchableOpacity
+              style={styles.navButton}
+              disabled={currentImageIndex === 0}
+              onPress={() => setCurrentImageIndex(prev => prev - 1)}
+            >
+              <Ionicons
+                name="chevron-back"
+                size={28}
+                color={currentImageIndex === 0 ? "#999999" : "white"}
+              />
+            </TouchableOpacity>
+
+            <Text style={styles.imageCounter}>
+              {currentImageIndex + 1}/{localImages.length}
+            </Text>
+
+            <TouchableOpacity
+              style={styles.navButton}
+              disabled={currentImageIndex === localImages.length - 1}
+              onPress={() => setCurrentImageIndex(prev => prev + 1)}
+            >
+              <Ionicons
+                name="chevron-forward"
+                size={28}
+                color={currentImageIndex === localImages.length - 1 ? "#999999" : "white"}
+              />
+            </TouchableOpacity>
+          </View>
+        </View>
+      )}
+    </SafeAreaView>
   );
-});
+}
 
-// Set display name for debugging
-PropertyDetailsScreen.displayName = 'PropertyDetailsScreen';
 
-const { width } = Dimensions.get('window');
 
 const styles = StyleSheet.create({
   container: {
@@ -543,20 +532,6 @@ const styles = StyleSheet.create({
     padding: 16,
     borderBottomWidth: 1,
     borderBottomColor: '#CFCECE',
-  },
-  noImagePlaceholder: {
-    width: '100%',
-    height: 200,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: '#F3F4F6',
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: '#E1E1E1',
-  },
-  noImageText: {
-    fontSize: 14,
-    color: '#9CA3AF',
   },
   headerTop: {
     flexDirection: 'row',
@@ -579,19 +554,13 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontWeight: '500',
     color: '#FAFBFC',
+    fontFamily: 'Lato',
   },
   propertyName: {
     fontSize: 18,
     fontWeight: 'bold',
     color: '#2B2928',
-  },
-  closeButton: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    backgroundColor: '#F3F4F6',
-    alignItems: 'center',
-    justifyContent: 'center',
+    fontFamily: 'montserrat-700bold',
   },
   locationInfo: {
     flexDirection: 'row',
@@ -604,11 +573,12 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
     paddingVertical: 4,
     gap: 6,
-    width: '48%'
+    width: '48%',
   },
   infoText: {
     fontSize: 12,
     color: '#2B2928',
+    fontFamily: 'Lato'
   },
   content: {
     flex: 1,
@@ -616,42 +586,6 @@ const styles = StyleSheet.create({
   contentContainer: {
     padding: 16,
     gap: 16,
-  },
-  imageContainer: {
-    width: '100%',
-    height: 200,
-    borderRadius: 8,
-    overflow: 'hidden',
-    position: 'relative',
-  },
-  propertyImage: {
-    width: '100%',
-    height: '100%',
-  },
-  imageCounter: {
-    position: 'absolute',
-    bottom: 8,
-    right: 8,
-    backgroundColor: 'rgba(0,0,0,0.6)',
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 12,
-  },
-  imageCounterText: {
-    color: 'white',
-    fontSize: 12,
-  },
-  imagePlaceholder: {
-    width: '100%',
-    height: 200,
-    borderRadius: 8,
-    backgroundColor: '#F3F4F6',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  placeholderText: {
-    marginTop: 8,
-    color: '#9CA3AF',
   },
   infoSectionContainer: {
     borderWidth: 1,
@@ -666,6 +600,7 @@ const styles = StyleSheet.create({
     backgroundColor: 'white',
     paddingHorizontal: 16,
     gap: 12,
+
   },
   infoRow: {
     flexDirection: 'row',
@@ -676,6 +611,7 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontWeight: '600',
     color: '#5A5555',
+    fontFamily: 'Montserrat_600SemiBold',
   },
   infoSeparator: {
     flex: 1,
@@ -708,6 +644,7 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontWeight: '600',
     color: '#5A5555',
+    fontFamily: 'Montserrat_600SemiBold',
   },
   locationValue: {
     fontSize: 14,
@@ -717,12 +654,13 @@ const styles = StyleSheet.create({
   mapButton: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'space-between',
+    justifyContent: 'center',
     paddingHorizontal: 12,
     paddingVertical: 10,
     borderWidth: 2,
     borderColor: '#153E3B',
     borderRadius: 8,
+    gap: 8,
   },
   mapButtonText: {
     fontSize: 12,
@@ -742,6 +680,7 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontWeight: '600',
     color: '#5A5555',
+    fontFamily: 'Montserrat_600SemiBold',
   },
   extraDetailsContent: {
     backgroundColor: 'white',
@@ -773,7 +712,12 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     padding: 16,
     gap: 12,
-    marginHorizontal: 16
+    paddingHorizontal: 16,
+
+  },
+  additionalInfolable: {
+    fontSize: 12,
+    fontFamily: 'Montserrat_600SemiBold'
   },
   shareButton: {
     position: 'absolute',
@@ -831,15 +775,20 @@ const styles = StyleSheet.create({
     color: 'white',
   },
   imageViewerContainer: {
-    flex: 1,
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
     backgroundColor: 'rgba(0, 0, 0, 0.9)',
     justifyContent: 'center',
+    zIndex: 1000,
   },
   closeImageViewer: {
     position: 'absolute',
     top: 40,
     right: 20,
-    zIndex: 10,
+    zIndex: 1010,
   },
   fullImage: {
     width: width,
@@ -861,6 +810,9 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
   },
+  imageCounter: {
+    color: 'white',
+    fontSize: 16,
+    fontWeight: '500',
+  },
 });
-
-export default PropertyDetailsScreen; 

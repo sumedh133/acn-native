@@ -11,6 +11,9 @@ import PropertyCard from "../components/property/PropertyCard";
 import MoreFilters from "../components/MoreFilters";
 import { useDoubleBackPressExit } from "@/hooks/useDoubleBackPressExit";
 import Animated from "react-native-reanimated";
+import Offline from "../components/Offline";
+import { useSelector } from "react-redux";
+import { RootState } from "@/store/store";
 
 // Initialize Algolia search client
 const searchClient = algoliasearch(
@@ -30,6 +33,7 @@ export interface Landmark {
 // SearchRefresher component that accesses the refresh method
 function SearchRefresher({ onRefreshAvailable }: { onRefreshAvailable: (refresh: Function) => void }) {
   const { refresh } = useInstantSearch();
+
 
   useEffect(() => {
     if (refresh && onRefreshAvailable) {
@@ -77,17 +81,22 @@ const MobileHits = forwardRef<FlatList>((props, ref) => {
   if (items?.length === 0 && query?.length !== 0) {
     return (
       <View className="flex items-center justify-center h-64">
-        <Text style={styles.text}>No results found for "{query}"</Text>
+        <Text style={{ ...styles.text, fontFamily: 'Montserrat_400Regular' }}>No results found for "{query}"</Text>
       </View>
     );
   } else if (items.length === 0) {
     return (
-      <View className="flex items-center justify-center h-64">
+      <View className="flex items-center justify-center h-64 gap-10 mt-20">
         <ActivityIndicator size={'large'} color={'#153E3B'} />
+        <View className="flex flex-col items-center">
+          <Text style={{ ...styles.text, fontWeight: 'bold', fontFamily: 'Montserrat_400Regular', color: 'black', fontSize: 17 }}>“The best investment on Earth is earth.”</Text>
+          <Text style={{ ...styles.text, fontStyle: 'italic', fontFamily: 'Lato' }}>- Louis Glickman</Text>
+        </View>
       </View>
     );
   }
 
+  // When we have hits, render the property cards
   return (
     <>
       {/* <View className="w-full flex-1"> */}
@@ -152,8 +161,10 @@ export default function PropertiesScreen() {
   const [paginationHeight, setPaginationHeight] = useState(0);
   const filtersRef = useRef<View>(null);
   const paginationRef = useRef<View>(null);
-  // const [refreshFunction, setRefreshFunction] = useState<Function | null>(null);
-  const scrollViewRef = useRef<FlatList>(null);
+  const [refreshFunction, setRefreshFunction] = useState<Function | null>(null);
+  const scrollViewRef = useRef<Animated.ScrollView>(null);
+
+  const isConnectedToInternet = useSelector((state: RootState) => state.app.isConnectedToInternet);
 
   useEffect(() => {
     // Measure the height of the filters component
@@ -179,7 +190,7 @@ export default function PropertiesScreen() {
   // Calculate the content height dynamically
   const windowHeight = Dimensions.get('window').height;
 
-  // const [refreshing, setRefreshing] = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
 
   // Handle when refresh function becomes available
   // const handleRefreshAvailable = useCallback((refresh: Function) => {
@@ -202,10 +213,14 @@ export default function PropertiesScreen() {
 
   useDoubleBackPressExit();
 
+  if (!isConnectedToInternet)
+    return (<Offline />)
+
   return (
     <View className="flex-1 bg-[#F5F6F7]">
       <InstantSearch searchClient={searchClient} indexName={indexName}>
         {/* This component gets the refresh function and passes it up */}
+
         {/* <SearchRefresher onRefreshAvailable={handleRefreshAvailable} /> */}
 
         <Configure
@@ -280,7 +295,7 @@ export default function PropertiesScreen() {
 
 const styles = StyleSheet.create({
   text: {
-    fontFamily: 'Montserrat_400Regular',
+    // fontFamily: 'Montserrat_400Regular',
     color: '#6B7280',
     fontSize: 16,
   },

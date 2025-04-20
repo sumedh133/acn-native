@@ -226,19 +226,19 @@ const MoreFilters = ({
       <View className="flex-1 bg-white" style={{ zIndex: 1 }}>
         {/* Header */}
         {forceRender && <View style={{ height: 0 }} />}
-        <View className="flex-row justify-between items-center p-4 border-b border-gray-200">
+        <View className="flex-row justify-between items-center p-4 border-b border-gray-200 mb-2">
           <Text className="font-semibold text-lg text-gray-800">Filters</Text>
           <TouchableOpacity onPress={handleToggle} >
             <CloseIcon />
           </TouchableOpacity>
         </View>
 
-        <ScrollView className="flex-1 px-4 py-2">
+        <ScrollView className="flex-1 px-4 py-2 mb-2">
           {/* Asset Type & Configuration - First Row */}
           <View className="flex-row flex-wrap justify-between mb-4">
             {/* Asset Type Dropdown - Now with higher z-index */}
-            <View className="p-4 border border-gray-200 rounded-xl w-[48%] mb-4" style={{ zIndex: 30 }}>
-              <Text className="text-base font-semibold text-black mb-2 font-['Montserrat']">
+            <View className="p-4 border border-gray-200 rounded-xl w-[48%] " style={{ zIndex: 30 }}>
+              <Text className="text-base text-[14px] text-black mb-2" style={{ fontFamily: 'Montserrat_600SemiBold' }}>
                 {outsideFilters[0].title}
               </Text>
               <DropdownMoreFilters
@@ -250,14 +250,15 @@ const MoreFilters = ({
             </View>
 
             {/* Configuration Dropdown - Now with lower z-index than Asset Type */}
-            <View className="p-4 border border-gray-200 rounded-xl w-[48%] mb-4" style={{ zIndex: 30 }}>
-              <Text className="text-base font-semibold text-black mb-2 font-['Montserrat']">
+            <View className="p-4 border border-gray-200 rounded-xl w-[48%] " style={{ zIndex: 30 }}>
+              <Text className="text-base text-[14px] text-black mb-2 "style={{ fontFamily: 'Montserrat_600SemiBold' }}>
                 {outsideFilters[1].title}
               </Text>
               <DropdownMoreFilters
                 title="Please Select"
                 items={unitTypeItems}
                 refine={refineUnitType}
+                isRight={true}
               />
             </View>
           </View>
@@ -375,7 +376,7 @@ const MoreFilters = ({
             />
           </View>
 
-          <View className="flex-row flex-wrap justify-between mb-4">
+          <View className="flex-row flex-wrap justify-between">
             {/* Facing Dropdown with proper z-index */}
             <View className="p-4 border border-gray-200 rounded-xl w-[48%] mb-4" style={{ zIndex: 15 }}>
               <Text className="font-semibold text-sm text-gray-700 mb-3">
@@ -397,6 +398,7 @@ const MoreFilters = ({
                 title="Please Select"
                 items={floorItems}
                 refine={refineFloor}
+                isRight={true}
               />
             </View>
           </View>
@@ -421,10 +423,10 @@ const MoreFilters = ({
         {/* Footer */}
         <View className="p-4 border-t border-gray-200">
           <TouchableOpacity
-            className="bg-[#153E3B] py-4 rounded-md items-center"
+            className="bg-[#153E3B] py-3 mx-4 rounded-md items-center"
             onPress={handleToggle}
           >
-            <Text className="font-semibold text-base text-white">Show Results</Text>
+            <Text className="text-white font-medium text-md ml-1">Show Results</Text>
           </TouchableOpacity>
         </View>
       </View>

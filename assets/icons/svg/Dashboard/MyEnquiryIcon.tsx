@@ -33,7 +33,7 @@ const ChecklistIcon: React.FC<ChecklistIconProps> = ({
       <Path 
         d="M6 8l1.5 1.5L11 6" 
         stroke={iconColor}
-        strokeWidth="1.5"
+        strokeWidth="1.2"
         strokeLinecap="round"
         strokeLinejoin="round"
         fill="none"
@@ -41,7 +41,7 @@ const ChecklistIcon: React.FC<ChecklistIconProps> = ({
       <Path 
         d="M15 8h6" 
         stroke={iconColor}
-        strokeWidth="1.5"
+        strokeWidth="1.2"
         strokeLinecap="round"
       />
       
@@ -49,7 +49,7 @@ const ChecklistIcon: React.FC<ChecklistIconProps> = ({
       <Path 
         d="M6 12l1.5 1.5L11 10" 
         stroke={iconColor}
-        strokeWidth="1.5"
+        strokeWidth="1.2"
         strokeLinecap="round"
         strokeLinejoin="round"
         fill="none"
@@ -57,7 +57,7 @@ const ChecklistIcon: React.FC<ChecklistIconProps> = ({
       <Path 
         d="M15 12h6" 
         stroke={iconColor}
-        strokeWidth="1.5"
+        strokeWidth="1.2"
         strokeLinecap="round"
       />
       
@@ -65,7 +65,7 @@ const ChecklistIcon: React.FC<ChecklistIconProps> = ({
       <Path 
         d="M6 16l1.5 1.5L11 14" 
         stroke={iconColor}
-        strokeWidth="1.5"
+        strokeWidth="1.2"
         strokeLinecap="round"
         strokeLinejoin="round"
         fill="none"
@@ -73,7 +73,7 @@ const ChecklistIcon: React.FC<ChecklistIconProps> = ({
       <Path 
         d="M15 16h6" 
         stroke={iconColor}
-        strokeWidth="1.5"
+        strokeWidth="1.2"
         strokeLinecap="round"
       />
     </Svg>

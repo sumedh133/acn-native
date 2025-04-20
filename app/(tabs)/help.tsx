@@ -8,11 +8,15 @@ import TncIcon from '../../assets/icons/tnc.svg';
 import ArrowRightIcon from '../../assets/icons/arrowRightt.svg';
 import LockIcon from '../../assets/icons/lock.svg';
 import ReceiptMoneyIcon from '../../assets/icons/receiptMoney.svg';
+import { useSelector } from 'react-redux';
+import { RootState } from '@/store/store';
+import Offline from '../components/Offline';
 
-interface HelpMobileProps {}
+interface HelpMobileProps { }
 
 const HelpMobile: React.FC<HelpMobileProps> = () => {
   const navigation = useNavigation();
+  const isConnectedToInternet = useSelector((state: RootState) => state.app.isConnectedToInternet);
 
   useEffect(() => {
     const handleDimensionsChange = ({ window }: { window: { width: number; height: number } }) => {
@@ -55,6 +59,9 @@ const HelpMobile: React.FC<HelpMobileProps> = () => {
     </TouchableOpacity>
   );
 
+  if (!isConnectedToInternet)
+    return (<Offline />)
+
   return (
     <View style={styles.container}>
       <View style={styles.linksContainer}>
@@ -63,13 +70,13 @@ const HelpMobile: React.FC<HelpMobileProps> = () => {
           'Terms and Conditions',
           'https://acnonline.in/tnc'
         )}
-        
+
         {renderLinkItem(
           <LockIcon width={20} height={20} />,
           'Privacy Policy',
           'https://acnonline.in/privacy-policy'
         )}
-        
+
         {renderLinkItem(
           <ReceiptMoneyIcon width={20} height={20} />,
           'Refund Policy',

@@ -6,11 +6,14 @@ import { RootState } from '@/store/store';
 import { Button } from 'react-native-elements';
 import KamManager from '@/app/modals/KamModal';
 import KamModalIcon from '@/assets/icons/svg/KamModal';
+import { showToast } from '@/utils/toastUtils';
 
 export const KamModalButton = () => {
   const isAuthenticated = useSelector((state: RootState) => state.auth.isAuthenticated);
   const pathName = usePathname();
   const [kamModalVisible, setKamModalVisible] = useState(false);
+
+  const isConnectedToInternet = useSelector((state: RootState) => state.app.isConnectedToInternet);
 
   return (
     <>
@@ -23,7 +26,10 @@ export const KamModalButton = () => {
           <View style={styles.button}>
             <Button
               onPress={() => {
-                setKamModalVisible(true);
+                if (!isConnectedToInternet)
+                  showToast("error", "You're offline! Please check your connection.");
+                else
+                  setKamModalVisible(true);
               }}
               containerStyle={{ marginVertical: 10 }}
               buttonStyle={{
@@ -33,7 +39,7 @@ export const KamModalButton = () => {
                 paddingHorizontal: 12,
               }}
               icon={
-                <KamModalIcon/>
+                <KamModalIcon />
               }
             />
 

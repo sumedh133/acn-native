@@ -12,7 +12,7 @@ interface HomeOutlineIconProps {
 
 const MyInverntoriesIcon: React.FC<HomeOutlineIconProps> = ({
   width = 40,
-  height = 41,
+  height = 40,
   // backgroundColor = '#E0F7F4', // Background color from the SVG
   iconColor, // Icon color from the SVG
   style

@@ -143,14 +143,16 @@ const styles = StyleSheet.create({
     marginLeft:12,
   },
   nameText: {
-    fontWeight: "bold",
-    fontSize: 18,
+    // fontWeight: "bold",
+    fontSize: 16,
     color: "#2B2928",
+    fontFamily: "Montserrat_700Bold",
   },
   roleText: {
-    fontSize: 14,
+    fontSize: 12,
     color: "#2B2928",
     marginTop: 4,
+    fontFamily: "Lato",
   },
   divider: {
     height: 1,
@@ -180,12 +182,12 @@ const styles = StyleSheet.create({
     borderRadius: 4,
   },
   callText: {
-    fontSize: 16,
+    fontSize: 14,
     fontWeight: "600",
     color: "#0A0B0A",
   },
   whatsappText: {
-    fontSize: 16,
+    fontSize: 14,
     fontWeight: "600",
     color: "#FAFBFC",
   },

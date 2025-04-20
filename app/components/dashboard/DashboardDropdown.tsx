@@ -3,6 +3,10 @@ import { View, Text, TouchableOpacity, StyleSheet, LayoutChangeEvent, DimensionV
 import ArrowDownIcon from '../../assets/icons/arrow-down.svg';
 import { Ionicons } from '@expo/vector-icons';
 import { styled } from 'nativewind';
+import { setPropertyStatus } from '@/store/slices/propertySlice';
+import { useDispatch } from 'react-redux';
+import { AnyAction, ThunkDispatch } from '@reduxjs/toolkit';
+import { RootState } from '@/store/store';
 
 const StyledView = styled(View);
 const StyledText = styled(Text);
@@ -20,6 +24,7 @@ interface DashboardDropdownProps {
   type?: 'requirement' | 'inventory';
   openDropdownUp: boolean,
   parent?: string,
+  updatePropertySlice?: boolean
 }
 
 const DashboardDropdown: React.FC<DashboardDropdownProps> = ({
@@ -29,10 +34,12 @@ const DashboardDropdown: React.FC<DashboardDropdownProps> = ({
   type,
   openDropdownUp,
   parent,
+  updatePropertySlice
 }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [selectedLabel, setSelectedLabel] = useState<string | null>("");
   const [dropdownTop, setDrodownTop] = useState<DimensionValue>(0);
+  const dispatch = useDispatch<ThunkDispatch<RootState, unknown, AnyAction>>();
 
   useEffect(() => {
     const selected: string | null = options?.find(
@@ -49,6 +56,9 @@ const DashboardDropdown: React.FC<DashboardDropdownProps> = ({
   const handleOptionClick = (option: string) => {
     if (value !== option) {
       setValue(option);
+      if (updatePropertySlice) {
+        dispatch(setPropertyStatus(option));
+      }
     }
     setIsOpen(false);
   };

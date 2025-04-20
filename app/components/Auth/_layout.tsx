@@ -8,12 +8,18 @@ import 'react-native-reanimated';
 import '../../../global.css';
 
 import { useColorScheme } from '@/hooks/useColorScheme';
+import { useSelector } from 'react-redux';
+import { RootState } from '@/store/store';
+import Offline from '../Offline';
 
 // Prevent the splash screen from auto-hiding before asset loading is complete.
 SplashScreen.preventAutoHideAsync();
 
 export default function RootLayout() {
   const colorScheme = useColorScheme();
+
+  const isConnectedToInternet = useSelector((state: RootState) => state.app.isConnectedToInternet);
+
   // const [loaded] = useFonts({
   //   SpaceMono: require('../assets/fonts/SpaceMono-Regular.ttf'),
   // });
@@ -27,6 +33,9 @@ export default function RootLayout() {
   // if (!loaded) {
   //   return null;
   // }
+
+  if (!isConnectedToInternet)
+    return (<Offline />)
 
   return (
     <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
