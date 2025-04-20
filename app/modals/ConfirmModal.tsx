@@ -1,6 +1,7 @@
 import { toastConfig } from '@/utils/toastUtils';
 import React from 'react';
 import { Modal, View, Text, TouchableOpacity, StyleSheet, ActivityIndicator } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import Toast from 'react-native-toast-message';
 
 type ConfirmModalProps = {
@@ -9,6 +10,7 @@ type ConfirmModalProps = {
   onConfirm: () => void;
   onCancel: () => void;
   generatingEnquiry?: boolean;
+  onModalHide: ()=>void;
   visible: boolean;
 };
 
@@ -18,10 +20,11 @@ const ConfirmModal: React.FC<ConfirmModalProps> = ({
   onConfirm,
   onCancel,
   generatingEnquiry = false,
+  onModalHide,
   visible,
 }) => {
   return (
-    <Modal transparent visible={visible} animationType="fade">
+    <Modal transparent visible={visible} animationType="fade"onDismiss={onModalHide}>
       <View style={styles.overlay}>
         <Toast config={toastConfig} />
         <View style={styles.modalContainer}>

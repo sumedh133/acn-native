@@ -1,6 +1,6 @@
-import React, { useState } from 'react';
+import React, { useRef, useState } from 'react';
 import { Montserrat_400Regular, Montserrat_500Medium, Montserrat_600SemiBold, Montserrat_700Bold, useFonts } from '@expo-google-fonts/montserrat';
-import { View, Text, TouchableOpacity, Image, Linking, Alert, StyleSheet, FlatList } from 'react-native';
+import { View, Text, TouchableOpacity, Image, Linking, Alert, StyleSheet, FlatList, SafeAreaView } from 'react-native';
 import { Ionicons, Octicons } from '@expo/vector-icons';
 import PropertyDetailsScreen from './PropertyDetailsScreen';
 import EnquiryCPModal from '@/app/modals/EnquiryCPModal';
@@ -49,12 +49,13 @@ const PropertyCard: React.FC<PropertyCardProps> = ({ property, onCardClick }) =>
 
   const [selectedCPID, setSelectedCPID] = useState("");
   const [isConfirmModelOpen, setIsConfirmModelOpen] = useState(false);
-  const [isEnquiryModelOpen, setIsEnquiryCPModelOpen] = useState(false);
+  const [isEnquiryCPModelOpen, setIsEnquiryCPModelOpen] = useState(false);
   const [isShareModalOpen, setIsShareModalOpen] = useState(false);
   const agentData = useSelector((state: RootState) => state.agent.docData);
   const phoneNumber = useSelector((state: RootState) => state?.agent?.docData?.phonenumber);
   const monthlyCredits = useSelector((state: RootState) => state?.agent?.docData?.monthlyCredits);
 
+  const enquiryConfirmed = useRef<Boolean>(false);
   // Format price display
   const formatPrice = () => {
     if (!property.totalAskPrice) return "N/A";
@@ -113,7 +114,7 @@ const PropertyCard: React.FC<PropertyCardProps> = ({ property, onCardClick }) =>
   };
 
   const handleCancel = () => {
-    setIsConfirmModelOpen(false)
+    setIsConfirmModelOpen(false);
   };
 
   const submitEnquiry = async (nextEnqId: string) => {
@@ -159,10 +160,7 @@ const PropertyCard: React.FC<PropertyCardProps> = ({ property, onCardClick }) =>
       // ✅ Close the confirmation modal
       setIsConfirmModelOpen(false);
 
-      // ✅ Open EnquireCPModal AFTER confirming
-      setTimeout(() => {
-        setIsEnquiryCPModelOpen(true);
-      }, 100);
+      enquiryConfirmed.current = true;
     } catch (error) {
       console.error("Error during enquiry process:", error);
       showErrorToast("An error occurred while processing your enquiry. Please try again.");
@@ -191,7 +189,9 @@ const PropertyCard: React.FC<PropertyCardProps> = ({ property, onCardClick }) =>
   };
 
   return (
-    <>
+    <SafeAreaView>
+      {/* Property Card */}
+      <View style={{ zIndex: -999}}>
       <TouchableOpacity
         className="border border-[#CCCBCB] rounded-lg p-4 bg-white mb-4 flex-col"
         onPress={openPropertyDetails}
@@ -202,7 +202,7 @@ const PropertyCard: React.FC<PropertyCardProps> = ({ property, onCardClick }) =>
             {/* Property ID on the left - using width fit-content approach */}
             <View className="flex-1" style={{ flexShrink: 1 }}>
               <View style={{ alignSelf: 'flex-start' }}>
-                <Text className="text-gray-600 text-[14px]  border-b border-[#E3E3E3]" style={{ fontFamily: 'Montserrat_700Bold' }}>
+                <Text className="text-gray-600 text-[14px] border-b border-[#E3E3E3]" style={{ fontFamily: 'Montserrat_700Bold' }}>
                   {property.propertyId}
                 </Text>
               </View>
@@ -221,7 +221,6 @@ const PropertyCard: React.FC<PropertyCardProps> = ({ property, onCardClick }) =>
               <ShareIconOutSide />
             </TouchableOpacity>
           </View>
-
 
           {/* Property Name */}
           <Text className="text-black text-base mt-2 font-bold" style={{ fontFamily: 'Montserrat_700Bold' }}>
@@ -286,29 +285,40 @@ const PropertyCard: React.FC<PropertyCardProps> = ({ property, onCardClick }) =>
           </TouchableOpacity>
         </View>
       </TouchableOpacity>
+      </View>
+      
 
       {/* Modals */}
       <EnquiryCPModal
-        setIsEnquiryCPModalOpen={setIsEnquiryCPModelOpen}
+        setIsEnquiryCPModelOpen={setIsEnquiryCPModelOpen}
         generatingEnquiry={false}
-        visible={isEnquiryModelOpen}
+        visible={isEnquiryCPModelOpen}
         selectedCPID={selectedCPID}
       />
+  
+
       <ConfirmModal
         title="Confirm Enquiry"
         message={`Are you sure you want to enquire? You have ${monthlyCredits} credits remaining for this month.`}
         onConfirm={onConfirmEnquiry}
         onCancel={handleCancel}
+        onModalHide={() => {
+          if(enquiryConfirmed.current){
+            setIsEnquiryCPModelOpen(true);
+            enquiryConfirmed.current = false
+          }
+        }}
         generatingEnquiry={false}
         visible={isConfirmModelOpen}
       />
+      
       <ShareModal
         property={property}
         agentData={agentData}
         setProfileModalOpen={setIsShareModalOpen}
         visible={isShareModalOpen}
       />
-    </>
+    </SafeAreaView>
   );
 };
 

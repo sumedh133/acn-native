@@ -127,7 +127,7 @@ export default function RequirementDetailsScreen() {
     return <Offline />;
 
   return (
-    <SafeAreaView style={styles.container}>
+    <View style={styles.container}>
       {/* Header Section */}
       <View style={styles.header}>
         <View style={styles.headerContent}>
@@ -218,7 +218,7 @@ export default function RequirementDetailsScreen() {
           {isSubmitting ? "Please Wait..." : "Submit Matching Inventory"}
         </PrimaryButton>
       </View>
-    </SafeAreaView>
+    </View>
   );
 }
 
