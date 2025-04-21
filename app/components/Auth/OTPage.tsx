@@ -38,6 +38,21 @@ export default function OTPage() {
 
   const { verificationId } = useLocalSearchParams();
 
+  // Firebase auth state listener effect
+  useEffect(() => {
+    const unsubscribe = auth().onAuthStateChanged((user) => {
+      if (user) {
+        // User is logged in - treat this like successful OTP verification
+        dispatch(signIn());
+        router.dismissAll();
+        router.replace('/(tabs)/properties');
+        setIsVerifying(false);
+      }
+    });
+
+    return () => unsubscribe();
+  }, [dispatch, router]);
+
   useEffect(() => {
     let timer: NodeJS.Timeout;
     if (resendTimer > 0 && !canResend) {
