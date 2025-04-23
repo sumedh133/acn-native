@@ -3,7 +3,7 @@ import { View, Text, StyleSheet, TextInput, TouchableOpacity, FlatList, Activity
 import Slider from '@react-native-community/slider';
 import { Landmark } from '../(tabs)/properties';
 import { Ionicons } from '@expo/vector-icons';
-import { PLACES_API_KEY } from '@env';
+// import { PLACES_API_KEY } from '@env';
 
 // Define types for API responses
 interface PlacePrediction {
@@ -27,7 +27,8 @@ interface LandmarkDropdownFiltersProps {
 }
 
 // Note: In production, use environment variables or a secure config approach
-const API_KEY = PLACES_API_KEY;
+// const API_KEY = PLACES_API_KEY;
+const API_KEY = "AIzaSyBsygl4y777lWd7M7mMQMwvnTyYFjPwoaM";
 
 const LandmarkDropdownFilters = ({ selectedLandmark, setSelectedLandmark }: LandmarkDropdownFiltersProps) => {
   const [searchQuery, setSearchQuery] = useState('');
