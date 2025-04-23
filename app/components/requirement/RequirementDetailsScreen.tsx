@@ -130,29 +130,30 @@ export default function RequirementDetailsScreen() {
     <View style={styles.container}>
       {/* Header Section */}
       <View style={styles.header}>
-        <View style={styles.headerContent}>
-          {/* Requirement ID */}
-          <View style={styles.idContainer}>
-            <Text style={styles.idText}>
-              {requirement.requirementId || ""}
+        <View style={styles.headerTop}>
+          <View style={styles.headerContent}>
+            {/* Requirement ID */}
+            <View style={styles.idContainer}>
+              <Text style={styles.idText}>
+                {requirement.requirementId || ""}
+              </Text>
+              <View style={styles.divider} />
+            </View>
+
+            {/* Project Name */}
+            <Text style={styles.titleText}>
+              {toCapitalizedWords(requirement.propertyName || '') || "No Project Name"}
             </Text>
-            <View style={styles.divider} />
           </View>
 
-          {/* Project Name */}
-          <Text style={styles.titleText}>
-            {toCapitalizedWords(requirement.propertyName || '') || "No Project Name"}
-          </Text>
+          {/* Close Button */}
+          <TouchableOpacity
+            onPress={handleGoBack}
+            accessibilityLabel="Close Modal"
+          >
+            <CloseIcon />
+          </TouchableOpacity>
         </View>
-
-        {/* Close Button */}
-        <TouchableOpacity
-          style={styles.closeButton}
-          onPress={handleGoBack}
-          accessibilityLabel="Close Modal"
-        >
-          <CloseIcon />
-        </TouchableOpacity>
       </View>
 
       {/* Main content */}
@@ -244,6 +245,13 @@ const styles = StyleSheet.create({
     gap: 12,
     maxWidth: '85%',
   },
+  headerTop: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "flex-start",
+    width: '100%',
+    paddingTop: Platform.OS === 'ios' ? 0 : 16,
+  },
   idContainer: {
     flexDirection: 'column',
     gap: 2,
@@ -266,14 +274,6 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '700',
     color: '#111827',
-  },
-  closeButton: {
-    width: 36,
-    height: 36,
-    backgroundColor: '#f3f4f6',
-    borderRadius: 18,
-    alignItems: 'center',
-    justifyContent: 'center',
   },
   mainContentContainer: {
     flex: 1,

@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect, forwardRef } from 'react';
-import { View, Text, TouchableOpacity, Animated, StyleSheet, Dimensions, Pressable, ScrollView, Alert, Image, Linking } from 'react-native';
+import { View, Text, TouchableOpacity, Animated, StyleSheet, Dimensions, Pressable, ScrollView, Alert, Image, Linking, Platform } from 'react-native';
 import { Link, useRouter, usePathname } from 'expo-router';
 import ProfileModal from '@/app/modals/ProfileModal';
 import { Button } from 'react-native-elements/dist/buttons/Button';
@@ -328,6 +328,7 @@ const styles = StyleSheet.create({
     zIndex: 4,
     shadowColor: '#000',
     elevation: 5,
+    paddingTop: Platform.OS === 'ios' ? 0 : 20,
   },
   menuContent: {
     paddingTop: height * 0.03,

@@ -666,6 +666,7 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     alignItems: "flex-start",
     marginBottom: 16,
+    paddingTop: Platform.OS === 'ios' ? 0 : 16,
   },
   headerInfo: {
     flex: 1,
