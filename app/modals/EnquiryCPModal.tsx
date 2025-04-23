@@ -33,19 +33,6 @@ const EnquiryCPModal: React.FC<EnquiryCPModalProps> = ({
   const [agentData, setAgentData] = useState<AgentData | null>(null);
 
   useEffect(() => {
-    console.log("EnquiryCPModal mounted, visible =", visible);
-    if (visible) {
-      console.log("Modal should be visible now with CPID:", selectedCPID);
-    }
-    
-    return () => {
-      console.log("EnquiryCPModal unmounted");
-    };
-  }, [visible, selectedCPID]);
-
-
-
-  useEffect(() => {
     const fetchAgentData = async () => {
       if (!selectedCPID) return;
 

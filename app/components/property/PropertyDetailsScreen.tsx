@@ -294,8 +294,6 @@ export default function PropertyDetailsScreen() {
       setIsConfirmModelOpen(false);
 
       enquiryConfirmed.current = true;
-
-      console.log(isEnquiryCPModelOpen, "ra");
     } catch (error) {
       showErrorToast(
         "An error occurred while processing your enquiry. Please try again."

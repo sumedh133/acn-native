@@ -128,17 +128,8 @@ export default function SignUp() {
     setErrorMessage(""); // Reset any previous errors
 
     try {
-     
-
-      // Configure reCAPTCHA verifier if needed
-      // if (!auth().settings.appVerificationDisabledForTesting) {
-      //   console.log('⚠️ Warning: App verification is enabled. Make sure reCAPTCHA is configured.');
-      // }
-
-      // Send OTP using Firebase
       const confirmation = await auth().signInWithPhoneNumber(phoneNumber, true);
      
-
       router.push({
         pathname: '/components/Auth/OTPage',
         params: { verificationId: confirmation.verificationId }
@@ -146,13 +137,6 @@ export default function SignUp() {
       setIsSendingOTP(false);
 
     } catch (error: any) {
-      // console.error("❌ Error during OTP send:", {
-      //   message: error.message,
-      //   code: error.code,
-      //   nativeErrorMessage: error.nativeErrorMessage
-      // });
-
-      // Handle specific error cases
       if (error.code === 'auth/invalid-phone-number') {
         setErrorMessage("Please enter a valid phone number.");
       } else if (error.code === 'auth/too-many-requests') {
@@ -164,8 +148,6 @@ export default function SignUp() {
         
       }
 
-     
-      // Optionally log the error for debugging
       console.error("Error during OTP send:", error);
       setIsSendingOTP(false);
     } finally {
