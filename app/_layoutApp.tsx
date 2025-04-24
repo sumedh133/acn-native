@@ -1,5 +1,5 @@
 import HamburgerMenu from "@/components/HamburgerMenu";
-import { SplashScreen, Stack } from "expo-router";
+import { SplashScreen, Stack, useRouter } from "expo-router";
 import React, { useCallback, useEffect, useState } from "react";
 import ProfileModal from "./modals/ProfileModal";
 import Toast from "react-native-toast-message";
@@ -83,6 +83,7 @@ export default function LayoutApp() {
   });
 
   const dispatch = useDispatch();
+  const router = useRouter();
 
   const onLayoutRootView = useCallback(async () => {
     if (fontsLoaded) {
@@ -91,8 +92,8 @@ export default function LayoutApp() {
   }, [fontsLoaded]);
 
   const onMenuPress = () => {
-    setIsMenuOpen(true);
-    Keyboard.dismiss();
+    router.replace("/(tabs)/properties");
+    router.push("(pages)/Profile" as any);
   };
 
   useEffect(() => {
@@ -181,10 +182,7 @@ export default function LayoutApp() {
           name="components/requirement/RequirementDetailsScreen"
           options={{ headerShown: false }}
         />
-        <Stack.Screen 
-          name="(pages)/Profile"
-          options={{ headerShown: false }}
-        />
+        <Stack.Screen name="(pages)/Profile" options={{ headerShown: false }} />
       </Stack>
       <HamburgerMenu
         visible={isMenuOpen}
