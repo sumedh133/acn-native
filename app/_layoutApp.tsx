@@ -135,6 +135,10 @@ export default function LayoutApp() {
           options={{ title: "Requirements" }}
         />
         <Stack.Screen
+          name="(tabs)/AddInventoryForm"
+          options={{ title: "Add Inventory" }}
+        />
+        <Stack.Screen
           name="(tabs)/UserRequirementForm"
           options={{ title: "Add Requirement" }}
         />
