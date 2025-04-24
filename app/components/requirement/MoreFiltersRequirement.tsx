@@ -8,6 +8,7 @@ import {
   SafeAreaView,
   ScrollView,
   FlatList,
+  Platform,
 } from 'react-native';
 import { useRange, useRefinementList } from 'react-instantsearch';
 import CheckboxFilter from './CheckboxFilter';
@@ -171,7 +172,10 @@ const MoreFiltersRequirement = ({
       }}
 
     >
-      <View className="flex-1 bg-white">
+      <SafeAreaView className="flex-1 bg-white"   style={{
+            zIndex: 1,
+            paddingTop: Platform.OS === 'ios' ? 40 : 0,
+          }}>
         <View className="flex-row justify-between items-center p-4 border-b border-gray-200">
           <Text className="font-semibold text-lg text-gray-800">Filters</Text>
           <TouchableOpacity onPress={handleToggle}>
@@ -233,7 +237,7 @@ const MoreFiltersRequirement = ({
         >
           <Text className="text-white text-lg font-semibold">Show Results</Text>
         </TouchableOpacity>
-      </View>
+      </SafeAreaView>
     </Modal>
   );
 };

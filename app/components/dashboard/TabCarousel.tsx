@@ -1,5 +1,5 @@
-import React from "react";
-import { FlatList, View, Text, TouchableOpacity, ListRenderItem, ActivityIndicator } from "react-native";
+import React, { useRef, useEffect } from "react";
+import { FlatList, View, Text, TouchableOpacity, ListRenderItem, ActivityIndicator, Platform } from "react-native";
 import MaterialCommunityIcons from "react-native-vector-icons/MaterialCommunityIcons";
 import { styled } from "nativewind";
 
@@ -25,12 +25,49 @@ interface TabCarouselProps {
 }
 
 const TabCarousel: React.FC<TabCarouselProps> = ({ activeTab, setActiveTab, setBuffering, tabData, initialLoad }) => {
+
+  const isChangingTab = useRef(false);
+  const timeoutRef = useRef<NodeJS.Timeout | null>(null);
+  
+  // Clean up timeouts when component unmounts
+  useEffect(() => {
+    return () => {
+      if (timeoutRef.current) {
+        clearTimeout(timeoutRef.current);
+      }
+    };
+  }, []);
+  
   const handleTabChange = (tab: string) => {
-    if (tab === activeTab) return;
+    // Prevent rapid/multiple tab changes
+    if (isChangingTab.current || tab === activeTab) return;
+    
+    isChangingTab.current = true;
     initialLoad.current = true;
     setBuffering(true);
-    setTimeout(() => setActiveTab(tab), 0);
-  }
+    
+    // Clear any existing timeout
+    if (timeoutRef.current) {
+      clearTimeout(timeoutRef.current);
+      timeoutRef.current = null;
+    }
+    
+    // iOS needs special handling with slightly longer timeouts
+    const delay = Platform.OS === 'ios' ? 100 : 50;
+    
+    // Set timeout to change tab
+    timeoutRef.current = setTimeout(() => {
+      setActiveTab(tab);
+      
+      // Add a second timeout to reset the changing state
+      // This helps especially on iOS where state updates can be queued differently
+      setTimeout(() => {
+        isChangingTab.current = false;
+      }, Platform.OS === 'ios' ? 150 : 50);
+      
+      timeoutRef.current = null;
+    }, delay);
+  };
 
   const renderTabItem: ListRenderItem<TabItem> = ({ item }) => {
     const isActive = activeTab === item.key;

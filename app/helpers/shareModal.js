@@ -9,19 +9,40 @@ function formatCost2(cost) {
     }
   }
 
-const shortenUrl = async (longUrl) => {
+  const shortenUrl = async (longUrl) => {
     if (!longUrl) {
         console.warn('No URL provided to shorten.');
         return null;
     }
 
-    try {
-        const response = await axios.get(`https://api.shrtco.de/v2/shorten?url=${encodeURIComponent(longUrl)}`);
-        return response.data.result.full_short_link;
-    } catch (error) {
-        console.error('Error shortening URL:', longUrl, error.message);
-        return longUrl; // Fall back to the original URL if shortening fails
+    // Array of URL shortening services to try
+    const shortenerServices = [
+        async (url) => {
+            const response = await axios.get(`https://api.shrtco.de/v2/shorten?url=${encodeURIComponent(url)}`);
+            return response.data.result.full_short_link;
+        },
+        async (url) => {
+            const response = await axios.post('https://tinyurl.com/api-create.php', null, {
+                params: { url: url }
+            });
+            return response.data;
+        }
+    ];
+
+    // Try each service in sequence
+    for (const shortener of shortenerServices) {
+        try {
+            const shortUrl = await shortener(longUrl);
+            if (shortUrl) return shortUrl;
+        } catch (error) {
+            console.warn('URL shortening attempt failed:', error.message);
+            continue;
+        }
     }
+
+    // If all services fail, return the original URL
+    console.warn('All URL shortening services failed, using original URL');
+    return longUrl;
 };
 
 export const createPropertyMessage = async (property, agentNumber) => {

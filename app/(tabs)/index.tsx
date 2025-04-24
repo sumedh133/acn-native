@@ -4,6 +4,8 @@ import { useSelector } from 'react-redux';
 import * as SplashScreen from "expo-splash-screen";
 import { useRouter } from 'expo-router';
 import LandingPage from '../components/Auth/LandingPage';
+import * as Notifications from 'expo-notifications';
+// import * as Permissions from 'expo-permissions';
 import { RootState } from '@/store/store';
 import Offline from '../components/Offline';
 
@@ -15,6 +17,23 @@ export default function TabOneScreen() {
   // Add state to track if Redux store is ready
   const [isStoreReady, setIsStoreReady] = useState(false);
 
+  // useEffect(() => {
+  //   // Function to request permission and get the token
+  //   const getPushNotificationPermission = async () => {
+  //     // Request notification permissions
+  //     const { status } = await Permissions.askAsync(Permissions.NOTIFICATIONS);
+  //     if (status === 'granted') {
+  //       const token = await Notifications.getExpoPushTokenAsync();
+  //       console.log('Expo Push Token:', token);
+  //       // Optionally send the token to your server to store for sending notifications
+  //     } else {
+  //       console.log('Notification permissions not granted');
+  //     }
+  //   };
+
+  //   getPushNotificationPermission();
+  // }, []);
+  
   // Get authentication status from Redux
   const isAuthenticated = useSelector((state: RootState) => state.auth.isAuthenticated);
 

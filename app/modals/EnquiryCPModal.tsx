@@ -8,6 +8,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { showErrorToast, showSuccessToast, toastConfig } from '@/utils/toastUtils';
 import CloseIcon from '@/assets/icons/svg/CloseIcon';
 import Toast from 'react-native-toast-message';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 // Define the AgentData interface separately
 interface AgentData {
@@ -17,14 +18,14 @@ interface AgentData {
 
 // Props type for your EnquiryCPModal component
 type EnquiryCPModalProps = {
-  setIsEnquiryCPModalOpen: (isOpen: boolean) => void;
+  setIsEnquiryCPModelOpen: (isOpen: boolean) => void;
   generatingEnquiry?: boolean;
   visible: boolean;
   selectedCPID: string
 };
 
 const EnquiryCPModal: React.FC<EnquiryCPModalProps> = ({
-  setIsEnquiryCPModalOpen,
+  setIsEnquiryCPModelOpen,
   generatingEnquiry,
   visible,
   selectedCPID
@@ -81,7 +82,7 @@ const EnquiryCPModal: React.FC<EnquiryCPModalProps> = ({
   };
 
   const onClose = () => {
-    setIsEnquiryCPModalOpen(false)
+    setIsEnquiryCPModelOpen(false)
   }
 
   const toCapitalizedWords = (name: string) => {
@@ -92,15 +93,23 @@ const EnquiryCPModal: React.FC<EnquiryCPModalProps> = ({
       .join(' ');
   };
 
+  // if (!visible) return null;
+
+    const [forceRender, setForceRender] = useState(false);
+  
+
+
   return (
-    <Modal transparent visible={visible} animationType="fade">
+      <Modal visible={visible} transparent animationType='slide'       onShow={() => setForceRender(prev => !prev)}
+>
+{forceRender && <View style={{ height: 0 }} />}
       <View style={styles.modalOverlay}>
         <Toast config={toastConfig} />
         <View style={styles.modalContent}>
 
           <TouchableOpacity
             style={styles.closeButton}
-            onPress={() => setIsEnquiryCPModalOpen(false)}
+            onPress={() => setIsEnquiryCPModelOpen(false)}
           >
             <CloseIcon />
           </TouchableOpacity>
@@ -168,16 +177,18 @@ const EnquiryCPModal: React.FC<EnquiryCPModalProps> = ({
           </View>
         </View>
       </View>
-    </Modal>
+    {/* <Text style={styles.modalOverlay}>Hi</Text> */}
+      </Modal>
   );
 };
 
 const styles = StyleSheet.create({
   modalOverlay: {
     flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.3)',
     justifyContent: 'center',
     alignItems: 'center',
+    zIndex: 9999,
+    backgroundColor: 'rgba(0,0,0,0.5)',
     padding: 20,
   },
   modalContent: {
@@ -190,6 +201,7 @@ const styles = StyleSheet.create({
     borderWidth: 2,
     borderColor: '#E5E5E5',
     position: 'relative',
+    zIndex: 10000,
   },
   closeButton: {
     position: 'absolute',
@@ -233,7 +245,6 @@ const styles = StyleSheet.create({
   },
   phoneNumberContainer: {
     padding: 12,
-    width: 136,
 
   },
   phoneNumber: {

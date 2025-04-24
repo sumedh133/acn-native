@@ -9,7 +9,6 @@ import {
   Pressable,
   ActivityIndicator
 } from 'react-native';
-import { Picker } from '@react-native-picker/picker';
 import ARSecondaryButton from '../components/Button/ARSecondaryButton';
 import ARPrimaryButton from '../components/Button/ARPrimaryButton';
 import { FontAwesome } from '@expo/vector-icons';
@@ -273,27 +272,6 @@ const UserRequirementForm = () => {
 
                 focusedFields['assetType'] && styles.focusedInput
               ]}>
-                {/* <Picker
-                  selectedValue={assetType}
-                  onValueChange={(itemValue) => {
-                    setAssetType(itemValue);
-                    setError((prev) => ({ ...prev, assetType: "" }));
-                    // Reset configuration when asset type changes
-                    setConfiguration('');
-                  }}
-                  onFocus={() => handleFocus('assetType')}
-                  onBlur={() => handleBlur('assetType')}
-                  style={styles.picker}
-                >
-                  {assetTypes.map((item, index) => (
-                    <Picker.Item 
-                      key={index} 
-                      label={item.label} 
-                      value={item.value} 
-                      style={styles.pickerItem} 
-                    />
-                  ))}
-                </Picker> */}
                 <CustomSelectDropdown
                   selectedValue={assetType}
                   onValueChange={setAssetType}
@@ -318,32 +296,6 @@ const UserRequirementForm = () => {
                   focusedFields['configuration'] && styles.focusedInput,
                   isConfigurationDisabled && styles.disabledInput
                 ]}>
-                  {/* <Picker
-                    selectedValue={configuration}
-                    onValueChange={(itemValue) => {
-                      setConfiguration(itemValue);
-                      setError((prev) => ({ ...prev, configuration: "" }));
-                    }}
-                    onFocus={() => handleFocus('configuration')}
-                    onBlur={() => handleBlur('configuration')}
-                    enabled={!isConfigurationDisabled}
-                    style={styles.picker}
-                  >
-                    <Picker.Item
-                      label={isConfigurationDisabled ? "Not applicable" : "Select Configuration"}
-                      value=""
-                      style={styles.pickerItem}
-                    />
-                    {getConfigurations().map((config, index) => (
-
-                      <Picker.Item
-                        key={index}
-                        label={config}
-                        value={config}
-                        style={styles.pickerItem}
-                      />
-                    ))}
-                  </Picker> */}
                   <CustomSelectDropdown
                     selectedValue={configuration}
                     onValueChange={setConfiguration}

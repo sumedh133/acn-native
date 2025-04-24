@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect, forwardRef } from 'react';
-import { View, Text, TouchableOpacity, Animated, StyleSheet, Dimensions, Pressable, ScrollView, Alert, Image, Linking } from 'react-native';
+import { View, Text, TouchableOpacity, Animated, StyleSheet, Dimensions, Pressable, ScrollView, Alert, Image, Linking, Platform } from 'react-native';
 import { Link, useRouter, usePathname } from 'expo-router';
 import ProfileModal from '@/app/modals/ProfileModal';
 import { Button } from 'react-native-elements/dist/buttons/Button';
@@ -193,7 +193,7 @@ export const HamburgerMenu = ({ visible, onClose, onOpenProfile }: HamburgerMenu
         <View style={{ flexDirection: 'row' }}>
           <View
             style={[
-              { marginTop: insets.top + 12, marginLeft: 16 },
+              { marginTop:  12, marginLeft: 16 },
             ]}
           >
             <HamburgerMenuButton onPress={onClose} isOpen={false} showACN={true} />
@@ -327,14 +327,8 @@ const styles = StyleSheet.create({
     backgroundColor: '#fff',
     zIndex: 4,
     shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    
-    shadowOpacity: 0.25,
-    shadowRadius: 3,
     elevation: 5,
+    paddingTop: Platform.OS === 'ios' ? 0 : 20,
   },
   menuContent: {
     paddingTop: height * 0.03,

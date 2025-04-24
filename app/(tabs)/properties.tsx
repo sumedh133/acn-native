@@ -14,6 +14,7 @@ import Animated from "react-native-reanimated";
 import Offline from "../components/Offline";
 import { useSelector } from "react-redux";
 import { RootState } from "@/store/store";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 // Initialize Algolia search client
 const searchClient = algoliasearch(

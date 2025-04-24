@@ -382,6 +382,21 @@ export default function Dashboard({ myEnquiries, myProperties, myRequirements, l
   const requirementMonthOptions = useRef(generateRequirementMonths(myRequirements));
   const enquiryMonthOptions = useRef(generateEnquiryMonths(myEnquiries));
   const initalLoad = useRef(true);
+
+  useEffect(() => {
+    if (myProperties) {
+      setProperties(myProperties);
+      propertyMonthOptions.current = generatePropertyMonths(myProperties);
+    }
+    if (myRequirements) {
+      setRequirements(myRequirements);
+      requirementMonthOptions.current = generateRequirementMonths(myRequirements);
+    }
+    if (myEnquiries) {
+      setEnquiries(myEnquiries);
+      enquiryMonthOptions.current = generateEnquiryMonths(myEnquiries);
+    }
+  }, [myProperties, myRequirements, myEnquiries])
   const [myInverntoriesIconColor, setMyInverntoriesIconColor] = useState("white");
   const [myRequirementsIconColor, setMyRequirementsIconColor] = useState("#153E3B");
   const [myEnquiresIconColor, setMyEnquiresIconColor] = useState("#153E3B");
