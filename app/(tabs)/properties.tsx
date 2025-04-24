@@ -55,13 +55,14 @@ const MobileHits = forwardRef<FlatList>((props, ref) => {
   console.log("status inf", status, items.length);
   const [selectedProperty, setSelectedProperty] = useState<any>(null);
 
-  const handleCardClick = (property: any) => {
+  const handleCardClick = useCallback((property: any) => {
     setSelectedProperty(property);
-  };
+  }, []);
 
   const { refresh } = useInstantSearch();
   const [refreshing, setRefreshing] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [isLoadingMore, setIsLoadingMore] = useState(false);
 
   const onRefresh = useCallback(() => {
     setRefreshing(true);
@@ -73,11 +74,45 @@ const MobileHits = forwardRef<FlatList>((props, ref) => {
     setTimeout(() => {
       setRefreshing(false);
     }, 1000);
-  }, []);
+  }, [refresh]);
 
   useEffect(() => {
     setLoading(status === "loading" || status === "stalled" || status === "error");
   }, [status]);
+
+  const handleEndReached = useCallback(() => {
+    if (!isLastPage && !isLoadingMore) {
+      setIsLoadingMore(true);
+      requestAnimationFrame(() => {
+        showMore();
+        setIsLoadingMore(false);
+      });
+    }
+  }, [isLastPage, isLoadingMore, showMore]);
+
+  const keyExtractor = useCallback((item) => item.objectID || String(item.id), []);
+
+  const renderItem = useCallback(({ item }) => {
+    const transformedProperty: Property = item;
+    return (
+      <PropertyCard
+        key={item.objectID}
+        property={transformedProperty}
+        onCardClick={handleCardClick}
+      />
+    );
+  }, [handleCardClick]);
+
+  const renderFooter = useCallback(() => {
+    if (loading) {
+      return (
+        <View className="flex items-center justify-center h-32">
+          <ActivityIndicator size={'large'} color={'#153E3B'} />
+        </View>
+      );
+    }
+    return null;
+  }, [loading]);
 
   if (items?.length === 0 && query?.length !== 0) {
     return (
@@ -90,7 +125,7 @@ const MobileHits = forwardRef<FlatList>((props, ref) => {
       <View className="flex items-center justify-center h-64 gap-10 mt-20">
         <ActivityIndicator size={'large'} color={'#153E3B'} />
         <View className="flex flex-col items-center">
-          <Text style={{ ...styles.text, fontWeight: 'bold', fontFamily: 'Montserrat_400Regular', color: 'black', fontSize: 17 }}>“The best investment on Earth is earth.”</Text>
+          <Text style={{ ...styles.text, fontWeight: 'bold', fontFamily: 'Montserrat_400Regular', color: 'black', fontSize: 17 }}>"The best investment on Earth is earth."</Text>
           <Text style={{ ...styles.text, fontStyle: 'italic', fontFamily: 'Lato' }}>- Louis Glickman</Text>
         </View>
       </View>
@@ -100,57 +135,31 @@ const MobileHits = forwardRef<FlatList>((props, ref) => {
   // When we have hits, render the property cards
   return (
     <>
-      {/* <View className="w-full flex-1"> */}
       <FlatList
         data={items}
         ref={ref}
-        renderItem={(item) => {
-          const transformedProperty: Property = item.item;
-          return <PropertyCard
-            key={item.item.objectID}
-            property={transformedProperty}
-            onCardClick={handleCardClick}
+        renderItem={renderItem}
+        keyExtractor={keyExtractor}
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={onRefresh}
+            colors={["#153E3B"]}
+            tintColor="#153E3B"
+            title="Refreshing..."
+            titleColor="#153E3B"
           />
-        }}
-        refreshControl={<RefreshControl
-          refreshing={refreshing}
-          onRefresh={onRefresh}
-          colors={["#153E3B"]}
-          tintColor="#153E3B"
-          title="Refreshing..."
-          titleColor="#153E3B"
-        />}
+        }
         contentContainerStyle={{ paddingHorizontal: 12, width: '100%', flexGrow: 1 }}
         style={{ flexGrow: 1, flexShrink: 1 }}
-        // keyExtractor={(item, index: number) => { return item.propertyId }}
-        onEndReached={() => {
-          if (!isLastPage) {
-            setLoading(true);
-            setTimeout(() => {
-              showMore();
-            }, 0)
-          }
-        }}
+        initialNumToRender={10}
+        maxToRenderPerBatch={5}
+        windowSize={10}
+        removeClippedSubviews={true}
+        onEndReached={handleEndReached}
         onEndReachedThreshold={0.5}
-        ListFooterComponent={() => {
-          if (loading)
-            return (
-              <View className="flex items-center justify-center h-32">
-                <ActivityIndicator size={'large'} color={'#153E3B'} />
-              </View>
-            );
-          return null;
-        }}
+        ListFooterComponent={renderFooter}
       />
-      {/* </View> */}
-      {/* {hits.map((property) => {
-          // Transform property data
-          const transformedProperty: Property = property;
-
-          return (
-            
-          );
-        })} */}
     </>
   );
 });
