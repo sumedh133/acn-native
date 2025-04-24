@@ -48,12 +48,7 @@ const CustomHeader = ({
     (state: RootState) => state?.agent?.docData?.monthlyCredits
   );
   return (
-    <View
-      style={[
-        styles.headerContainer,
-        Platform.OS === "android" && { paddingTop: insets.top },
-      ]}
-    >
+    <View style={styles.headerContainer}>
       <View style={styles.headerContent}>
         <View style={styles.headerLeft}>
           <TouchableOpacity onPress={onMenuPress}>

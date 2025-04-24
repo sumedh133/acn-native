@@ -1,7 +1,7 @@
 import { useEffect } from "react";
 import * as SplashScreen from "expo-splash-screen";
-import { SafeAreaProvider } from "react-native-safe-area-context";
-import { Dimensions, SafeAreaView } from "react-native";
+import { SafeAreaProvider, SafeAreaView } from "react-native-safe-area-context";
+import { Dimensions } from "react-native";
 import "react-native-reanimated";
 import "../global.css";
 import ReduxProvider from "@/providers/ReduxProvider";
@@ -37,7 +37,7 @@ export default function RootLayout() {
     // Add event listener for dimension changes
     const dimensionsSubscription = Dimensions.addEventListener(
       "change",
-      updateMargin,
+      updateMargin
     );
 
     // Clean up

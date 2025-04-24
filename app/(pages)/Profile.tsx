@@ -2,7 +2,7 @@ import React from "react";
 import { useSelector } from "react-redux";
 import { RootState } from "@/store/store";
 import Offline from "../components/Offline";
-import { SafeAreaView, Text, View } from "react-native";
+import { Text, View } from "react-native";
 
 const Profile = () => {
   const isConnectedToInternet = useSelector(
