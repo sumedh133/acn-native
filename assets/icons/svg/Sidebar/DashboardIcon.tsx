@@ -1,6 +1,6 @@
-import React from 'react';
-import Svg, { Path } from 'react-native-svg';
-import { ViewStyle } from 'react-native';
+import React from "react";
+import Svg, { Path } from "react-native-svg";
+import { ViewStyle } from "react-native";
 
 interface GridIconProps {
   width?: number;
@@ -9,17 +9,17 @@ interface GridIconProps {
   style?: ViewStyle;
 }
 
-const DashboardIcon: React.FC<GridIconProps> = ({ 
-  width = 18, 
-  height = 19, 
-  color = '#292D32',
-  style 
+const DashboardIcon: React.FC<GridIconProps> = ({
+  width = 18,
+  height = 19,
+  color = "#292D32",
+  style,
 }) => {
   return (
-    <Svg 
-      width={width} 
-      height={height} 
-      viewBox="0 0 18 19" 
+    <Svg
+      width={width}
+      height={height}
+      viewBox="0 0 18 19"
       fill="none"
       style={style}
     >

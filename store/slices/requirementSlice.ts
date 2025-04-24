@@ -1,6 +1,11 @@
-import { createSlice, PayloadAction, ThunkAction, AnyAction } from '@reduxjs/toolkit';
-import { RootState } from '../store';
-import { Requirement } from '@/app/types';
+import {
+  createSlice,
+  PayloadAction,
+  ThunkAction,
+  AnyAction,
+} from "@reduxjs/toolkit";
+import { RootState } from "../store";
+import { Requirement } from "@/app/types";
 
 // Define the requirement state interface
 interface RequirementState {
@@ -19,7 +24,7 @@ const initialState: RequirementState = {
 };
 
 const requirementSlice = createSlice({
-  name: 'requirement',
+  name: "requirement",
   initialState,
   reducers: {
     setLoading: (state, action: PayloadAction<boolean>) => {
@@ -49,7 +54,7 @@ const requirementSlice = createSlice({
     },
     resetError: (state) => {
       state.error = null;
-    }
+    },
   },
 });
 
@@ -61,22 +66,22 @@ export const {
   setRequirementStatus,
   resetRequirementState,
   setError,
-  resetError
+  resetError,
 } = requirementSlice.actions;
 
 // Thunk action to set requirement data
-export const setRequirementDataThunk = (requirement: Requirement): ThunkAction<
-  void,
-  RootState,
-  unknown,
-  AnyAction
-> => (dispatch, getState) => {
-  dispatch(setRequirementData(requirement));
-};
+export const setRequirementDataThunk =
+  (
+    requirement: Requirement,
+  ): ThunkAction<void, RootState, unknown, AnyAction> =>
+  (dispatch, getState) => {
+    dispatch(setRequirementData(requirement));
+  };
 
 // Export selector to get requirement state
 export const selectRequirementState = (state: RootState) => state.requirement;
-export const selectRequirementStateData = (state: RootState) => state.requirement.requirementDocData;
+export const selectRequirementStateData = (state: RootState) =>
+  state.requirement.requirementDocData;
 
 // Export reducer
 export default requirementSlice.reducer;

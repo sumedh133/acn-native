@@ -32,7 +32,7 @@ export interface Property {
   dateOfStatusLastChecked?: number;
 }
 
-export interface Budget{
+export interface Budget {
   from?: number;
   to?: number;
 }
@@ -47,7 +47,7 @@ export interface Requirement {
   configuration?: string;
   lastModified?: number;
   marketValue?: string;
-  propertyName?: string, 
+  propertyName?: string;
   requirementDetails?: string;
   requirementId?: string;
   [key: string]: any;
@@ -70,10 +70,10 @@ export interface EnquiryWithProperty extends Enquiry {
 
 export interface Coupon {
   name: string;
-        code: string;
-        description: string;
-        discount: number; // in rupees
-        active: boolean;
+  code: string;
+  description: string;
+  discount: number; // in rupees
+  active: boolean;
 }
 
 export interface Landmark {

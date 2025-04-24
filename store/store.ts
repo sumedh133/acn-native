@@ -1,16 +1,16 @@
 // store/store.ts
-import { configureStore, combineReducers } from '@reduxjs/toolkit';
-import { persistStore, persistReducer } from 'redux-persist';
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import { PersistPartial } from 'redux-persist/es/persistReducer';
+import { configureStore, combineReducers } from "@reduxjs/toolkit";
+import { persistStore, persistReducer } from "redux-persist";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { PersistPartial } from "redux-persist/es/persistReducer";
 
-import authReducer from './slices/authSlice';
-import agentReducer from './slices/agentSlice';
-import kamReducer from './slices/kamSlice';
-import listenerReducer from './slices/listenerSlice';
-import appReducer from './slices/appSlice';
-import propertyReducer from './slices/propertySlice';
-import requirementReducer from './slices/requirementSlice';
+import authReducer from "./slices/authSlice";
+import agentReducer from "./slices/agentSlice";
+import kamReducer from "./slices/kamSlice";
+import listenerReducer from "./slices/listenerSlice";
+import appReducer from "./slices/appSlice";
+import propertyReducer from "./slices/propertySlice";
+import requirementReducer from "./slices/requirementSlice";
 
 const rootReducer = combineReducers({
   auth: authReducer,
@@ -24,7 +24,7 @@ const rootReducer = combineReducers({
 });
 
 const persistConfig = {
-  key: 'root',
+  key: "root",
   storage: AsyncStorage,
   whitelist: ["auth", "agent"],
 };

@@ -1,5 +1,5 @@
-import React from 'react';
-import Svg, { Path } from 'react-native-svg';
+import React from "react";
+import Svg, { Path } from "react-native-svg";
 
 interface KamModalIconProps {
   width?: number;
@@ -12,17 +12,12 @@ interface KamModalIconProps {
 const KamModalIcon: React.FC<KamModalIconProps> = ({
   width = 24,
   height = 24,
-  fillColor = '#FAFAFA',
-  strokeColor = '#FAFAFA',
-  strokeWidth = 1.25
+  fillColor = "#FAFAFA",
+  strokeColor = "#FAFAFA",
+  strokeWidth = 1.25,
 }) => {
   return (
-    <Svg 
-      width={width} 
-      height={height} 
-      viewBox="0 0 24 24" 
-      fill="none"
-    >
+    <Svg width={width} height={height} viewBox="0 0 24 24" fill="none">
       <Path
         fillRule="evenodd"
         clipRule="evenodd"
@@ -52,10 +47,10 @@ export default KamModalIcon;
 // Usage examples:
 // <StarIcon />
 // or with custom props
-// <StarIcon 
-//   width={32} 
-//   height={32} 
-//   fillColor="#FFD700" 
-//   strokeColor="#000000" 
-//   strokeWidth={1.5} 
+// <StarIcon
+//   width={32}
+//   height={32}
+//   fillColor="#FFD700"
+//   strokeColor="#000000"
+//   strokeWidth={1.5}
 // />

@@ -1,12 +1,19 @@
-import React, { useEffect, useState } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, LayoutChangeEvent, DimensionValue } from 'react-native';
-import ArrowDownIcon from '../../assets/icons/arrow-down.svg';
-import { Ionicons } from '@expo/vector-icons';
-import { styled } from 'nativewind';
-import { setPropertyStatus } from '@/store/slices/propertySlice';
-import { useDispatch } from 'react-redux';
-import { AnyAction, ThunkDispatch } from '@reduxjs/toolkit';
-import { RootState } from '@/store/store';
+import React, { useEffect, useState } from "react";
+import {
+  View,
+  Text,
+  TouchableOpacity,
+  StyleSheet,
+  LayoutChangeEvent,
+  DimensionValue,
+} from "react-native";
+import ArrowDownIcon from "../../assets/icons/arrow-down.svg";
+import { Ionicons } from "@expo/vector-icons";
+import { styled } from "nativewind";
+import { setPropertyStatus } from "@/store/slices/propertySlice";
+import { useDispatch } from "react-redux";
+import { AnyAction, ThunkDispatch } from "@reduxjs/toolkit";
+import { RootState } from "@/store/store";
 
 const StyledView = styled(View);
 const StyledText = styled(Text);
@@ -21,10 +28,10 @@ interface DashboardDropdownProps {
   options: Option[];
   value: string | null;
   setValue: (value: string) => void;
-  type?: 'requirement' | 'inventory';
-  openDropdownUp: boolean,
-  parent?: string,
-  updatePropertySlice?: boolean
+  type?: "requirement" | "inventory";
+  openDropdownUp: boolean;
+  parent?: string;
+  updatePropertySlice?: boolean;
 }
 
 const DashboardDropdown: React.FC<DashboardDropdownProps> = ({
@@ -34,7 +41,7 @@ const DashboardDropdown: React.FC<DashboardDropdownProps> = ({
   type,
   openDropdownUp,
   parent,
-  updatePropertySlice
+  updatePropertySlice,
 }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [selectedLabel, setSelectedLabel] = useState<string | null>("");
@@ -42,9 +49,10 @@ const DashboardDropdown: React.FC<DashboardDropdownProps> = ({
   const dispatch = useDispatch<ThunkDispatch<RootState, unknown, AnyAction>>();
 
   useEffect(() => {
-    const selected: string | null = options?.find(
-      (option) => option?.value?.toLowerCase() === value?.toLowerCase()
-    )?.label || value;
+    const selected: string | null =
+      options?.find(
+        (option) => option?.value?.toLowerCase() === value?.toLowerCase(),
+      )?.label || value;
     setSelectedLabel(selected);
   }, [value, options]);
 
@@ -64,9 +72,8 @@ const DashboardDropdown: React.FC<DashboardDropdownProps> = ({
   };
 
   const handleDropdownLayout = (e: LayoutChangeEvent) => {
-    if (openDropdownUp)
-      setDrodownTop(-1 * e.nativeEvent.layout.height)
-  }
+    if (openDropdownUp) setDrodownTop(-1 * e.nativeEvent.layout.height);
+  };
 
   // Determine button style based on value
   const getButtonStyle = () => {
@@ -85,32 +92,53 @@ const DashboardDropdown: React.FC<DashboardDropdownProps> = ({
     <View style={{ ...styles.container }}>
       <TouchableOpacity
         style={[
-          parent === "dashboardInventory" ? styles.dashboardInventoryButton : styles.button,
+          parent === "dashboardInventory"
+            ? styles.dashboardInventoryButton
+            : styles.button,
           getButtonStyle(),
-          type === "requirement" ? styles.requirementButton : styles.inventoryButton
+          type === "requirement"
+            ? styles.requirementButton
+            : styles.inventoryButton,
         ]}
         onPress={toggleDropdown}
         disabled={value === "De-Listed"}
       >
         {type === "requirement" && (
-          <Ionicons name="chevron-down" size={16} color={value === 'Closed' ? "#FF0000" : "#153E3B"} />
+          <Ionicons
+            name="chevron-down"
+            size={16}
+            color={value === "Closed" ? "#FF0000" : "#153E3B"}
+          />
         )}
-        <Text style={styles.buttonText}>
-          {selectedLabel}
-        </Text>
+        <Text style={styles.buttonText}>{selectedLabel}</Text>
         {type === "inventory" && (
-          <Ionicons name="chevron-down" size={16} color={value === 'Closed' ? "#FF0000" : "#153E3B"} />
+          <Ionicons
+            name="chevron-down"
+            size={16}
+            color={value === "Closed" ? "#FF0000" : "#153E3B"}
+          />
         )}
       </TouchableOpacity>
       {isOpen && (
-        <StyledView className="absolute top-9 right-0 p-1 bg-white border border-gray-200 rounded-lg shadow-md z-2 min-w-[120px]"
-          style={openDropdownUp ? { top: dropdownTop, opacity: dropdownTop ? 1 : 0 } : {}}
-          onLayout={(e) => { handleDropdownLayout(e) }}>
+        <StyledView
+          className="absolute top-9 right-0 p-1 bg-white border border-gray-200 rounded-lg shadow-md z-2 min-w-[120px]"
+          style={
+            openDropdownUp
+              ? { top: dropdownTop, opacity: dropdownTop ? 1 : 0 }
+              : {}
+          }
+          onLayout={(e) => {
+            handleDropdownLayout(e);
+          }}
+        >
           {options.map((option, index) => (
             <StyledTouchableOpacity
               key={index}
               className="rounded-md w-full px-3 py-2 mb-1"
-              style={{ backgroundColor: option.value === value ? '#F2F2F2' : 'transparent' }}
+              style={{
+                backgroundColor:
+                  option.value === value ? "#F2F2F2" : "transparent",
+              }}
               onPress={() => handleOptionClick(option.value)}
             >
               <StyledText className="font-medium text-sm text-black">
@@ -126,14 +154,14 @@ const DashboardDropdown: React.FC<DashboardDropdownProps> = ({
 
 const styles = StyleSheet.create({
   container: {
-    position: 'relative',
-    width: '100%',
-    overflow: 'visible',
+    position: "relative",
+    width: "100%",
+    overflow: "visible",
   },
   button: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
     borderWidth: 1,
     borderRadius: 6,
     paddingHorizontal: 16,
@@ -142,11 +170,11 @@ const styles = StyleSheet.create({
   },
   // New style for dashboardInventory parent
   dashboardInventoryButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
     borderWidth: 1,
-    borderRadius: 8,  // Using 8 instead of 6
+    borderRadius: 8, // Using 8 instead of 6
     paddingHorizontal: 16,
     paddingVertical: 12, // Using 12 instead of 6
     gap: 8, // Using 8 instead of 6
@@ -159,43 +187,43 @@ const styles = StyleSheet.create({
   },
   buttonText: {
     fontSize: 14,
-    fontFamily: 'sans-serif',
-    fontWeight: '500',
+    fontFamily: "sans-serif",
+    fontWeight: "500",
     lineHeight: 21,
-    textAlign: 'center',
-    color: '#153E3B',
+    textAlign: "center",
+    color: "#153E3B",
   },
   buttonAvailable: {
-    backgroundColor: '#E0F7F4',
-    borderColor: '#A3E6DE',
+    backgroundColor: "#E0F7F4",
+    borderColor: "#A3E6DE",
   },
   buttonHold: {
-    backgroundColor: '#FBDD97',
-    borderColor: '#E8B006',
+    backgroundColor: "#FBDD97",
+    borderColor: "#E8B006",
   },
   buttonDisabled: {
-    backgroundColor: '#D3D3D3',
-    borderColor: '#A3A4A5',
+    backgroundColor: "#D3D3D3",
+    borderColor: "#A3A4A5",
     opacity: 0.5,
   },
   buttonDeListed: {
-    backgroundColor: '#FCD5DC',
-    borderColor: '#F9ABB9',
+    backgroundColor: "#FCD5DC",
+    borderColor: "#F9ABB9",
   },
   modalOverlay: {
     flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "rgba(0, 0, 0, 0.5)",
   },
   dropdown: {
-    position: 'absolute',
-    backgroundColor: '#FFFFFF',
+    position: "absolute",
+    backgroundColor: "#FFFFFF",
     borderWidth: 1,
-    borderColor: '#FAFAFA',
+    borderColor: "#FAFAFA",
     borderRadius: 6,
     padding: 4,
-    shadowColor: '#000',
+    shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.25,
     shadowRadius: 3.84,
@@ -209,16 +237,16 @@ const styles = StyleSheet.create({
   },
   option: {
     borderRadius: 6,
-    width: '100%',
+    width: "100%",
     paddingHorizontal: 16,
     paddingVertical: 6,
   },
   optionText: {
-    fontFamily: 'sans-serif',
-    fontWeight: '600',
+    fontFamily: "sans-serif",
+    fontWeight: "600",
     fontSize: 14,
     lineHeight: 21,
-    color: '#0A0B0A',
+    color: "#0A0B0A",
   },
 });
 

@@ -1,5 +1,5 @@
 import React, { RefObject, useEffect, useState } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, Keyboard, Dimensions } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, Keyboard, Dimensions, FlatList } from 'react-native';
 import { useInstantSearch, usePagination } from 'react-instantsearch';
 import { ScrollView } from 'react-native-gesture-handler';
 import { Ionicons } from '@expo/vector-icons'; // Assuming you're using Expo or have this library installed
@@ -9,11 +9,13 @@ interface CustomPaginationProps {
   isSticky?: boolean;
   scrollRef?: RefObject<ScrollView | Animated.ScrollView> | null;
   analyticsEvent?: string;
+  flatListRef?: RefObject<FlatList> | null;
 }
 
-export default function CustomPagination({ 
-  isSticky = false, 
+export default function CustomPagination({
+  isSticky = false,
   scrollRef = null,
+  flatListRef = null,
   analyticsEvent = 'pagination_click'
 }: CustomPaginationProps) {
   const [loading, setLoading] = useState(false);
@@ -29,8 +31,12 @@ export default function CustomPagination({
   const { status } = useInstantSearch();
 
   useEffect(() => {
-    if (status === 'loading' && loading === true && scrollRef?.current)
-      scrollRef.current.scrollTo({ y: 0, animated: true });
+    if (status === 'loading' && loading === true) {
+      if (scrollRef?.current)
+        scrollRef.current.scrollTo({ y: 0, animated: true })
+      if (flatListRef?.current)
+        flatListRef.current.scrollToOffset({ animated: true, offset: 0 })
+    }
     setLoading(status === 'loading');
   }, [status]);
 
@@ -98,10 +104,10 @@ export default function CustomPagination({
             (currentRefinement === 0 || loading) && styles.disabledButton
           ]}
         >
-          <Ionicons 
-            name="chevron-back" 
-            size={20} 
-            color={currentRefinement === 0 || loading ? "#9CA3AF" : "#4B5563"} 
+          <Ionicons
+            name="chevron-back"
+            size={20}
+            color={currentRefinement === 0 || loading ? "#9CA3AF" : "#4B5563"}
           />
         </TouchableOpacity>
 
@@ -120,7 +126,7 @@ export default function CustomPagination({
                 onPress={() => handlePageClick(page as number)}
                 disabled={loading || currentRefinement === (page as number) - 1}
               >
-                <Text 
+                <Text
                   style={[
                     styles.pageButtonText,
                     currentRefinement === (page as number) - 1 && styles.activePageText
@@ -146,10 +152,10 @@ export default function CustomPagination({
             (currentRefinement === nbPages - 1 || loading) && styles.disabledButton
           ]}
         >
-          <Ionicons 
-            name="chevron-forward" 
-            size={20} 
-            color={currentRefinement === nbPages - 1 || loading ? "#9CA3AF" : "#4B5563"} 
+          <Ionicons
+            name="chevron-forward"
+            size={20}
+            color={currentRefinement === nbPages - 1 || loading ? "#9CA3AF" : "#4B5563"}
           />
         </TouchableOpacity>
       </View>
