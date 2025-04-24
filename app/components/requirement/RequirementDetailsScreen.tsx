@@ -250,7 +250,7 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     alignItems: "flex-start",
     width: '100%',
-    paddingTop: Platform.OS === 'ios' ? 0 : 16,
+    paddingTop: Platform.OS === 'ios' ? 0 : 24,
   },
   idContainer: {
     flexDirection: 'column',
