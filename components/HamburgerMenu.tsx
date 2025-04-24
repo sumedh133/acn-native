@@ -95,7 +95,7 @@ const getIconComponent = (
   type: MenuItem["iconType"],
   name: string,
   size: number = 24,
-  color: string = "#252626",
+  color: string = "#252626"
 ) => {
   switch (type) {
     case "Dashboard":
@@ -126,7 +126,7 @@ const SidebarItem = forwardRef<View, SidebarItemProps>(
       </View>
       {label && <Text style={styles.buttonLabel}>{label}</Text>}
     </TouchableOpacity>
-  ),
+  )
 );
 
 export const HamburgerMenu = ({
@@ -143,10 +143,10 @@ export const HamburgerMenu = ({
 
   const agentName = useSelector(selectName);
   const monthlyCredits = useSelector(
-    (state: RootState) => state?.agent?.docData?.monthlyCredits,
+    (state: RootState) => state?.agent?.docData?.monthlyCredits
   );
   const isAuthenticated = useSelector(
-    (state: RootState) => state?.auth?.isAuthenticated,
+    (state: RootState) => state?.auth?.isAuthenticated
   );
 
   useEffect(() => {
@@ -277,9 +277,9 @@ export const HamburgerMenu = ({
                   <TouchableOpacity
                     onPress={() => {
                       Linking.openURL(
-                        "https://chat.whatsapp.com/KcirtDCrZkA3sdgS6WIB38",
+                        "https://chat.whatsapp.com/KcirtDCrZkA3sdgS6WIB38"
                       ).catch((err) =>
-                        console.error("Failed to open URL:", err),
+                        console.error("Failed to open URL:", err)
                       );
                     }}
                     style={[styles.standardButton, styles.secondaryButton]}
