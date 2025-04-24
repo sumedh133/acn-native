@@ -69,7 +69,7 @@ const MobileHits = () => {
   const { items, isLastPage, showMore } = useInfiniteHits<Property>();
   const { status } = useInstantSearch();
   const { query } = useSearchBox();
-  console.log("status inf", status, items.length);
+
   const [selectedProperty, setSelectedProperty] = useState<any>(null);
 
   const handleCardClick = useCallback((property: any) => {
