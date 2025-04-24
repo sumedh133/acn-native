@@ -75,3 +75,19 @@ export interface Coupon {
         discount: number; // in rupees
         active: boolean;
 }
+
+export interface Landmark {
+  name: string;
+  lat: number;
+  lng: number;
+  radius: number;
+}
+
+export interface Places {
+  name: string;
+  lat: number;
+  lng: number;
+  address: string;
+  mapLink: string;
+  micromarket?: string;
+}

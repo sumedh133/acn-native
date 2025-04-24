@@ -1,8 +1,8 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { View, Text, StyleSheet, TextInput, TouchableOpacity, FlatList, ActivityIndicator, Keyboard } from 'react-native';
 import Slider from '@react-native-community/slider';
-import { Landmark } from '../(tabs)/properties';
 import { Ionicons } from '@expo/vector-icons';
+import { Landmark } from '../types';
 // import { PLACES_API_KEY } from '@env';
 
 // Define types for API responses

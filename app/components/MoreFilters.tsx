@@ -4,11 +4,11 @@ import { useCurrentRefinements, useRange, useRefinementList } from 'react-instan
 import DropdownMoreFilters from './DropdownMoreFilters';
 import { Ionicons } from '@expo/vector-icons';
 import BudgetRangeSlider from './property/BudgetRangeSlider';
-import { Landmark } from '../(tabs)/properties';
 import RangeMoreFilters from './RangeMoreFilters';
 import LandmarkDropdownFilters from './LandmarkDropdownFilters';
 import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
 import CloseIcon from '@/assets/icons/svg/CloseIcon';
+import { Landmark } from '../types';
 
 export interface RangeState {
   start: (number | undefined)[];
