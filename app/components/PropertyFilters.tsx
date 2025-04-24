@@ -105,7 +105,7 @@ export default function PropertyFilters({
         <View style={styles.filters}>
           <TouchableOpacity
             onPress={handleToggleMoreFilters}
-            // style={styles.moreFiltersButton}
+          // style={styles.moreFiltersButton}
           >
             <FilterIcon />
           </TouchableOpacity>
@@ -130,6 +130,8 @@ const styles = StyleSheet.create({
     alignSelf: "center",
     // backgroundColor: '#fff',
     paddingTop: 16,
+    paddingHorizontal: 12,
+    marginBottom: 16,
     borderRadius: 16,
   },
   contentWrapper: {

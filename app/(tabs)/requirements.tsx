@@ -13,6 +13,7 @@ import {
   ActivityIndicator,
   Text,
   RefreshControl,
+  FlatList,
 } from "react-native";
 import RequirementFilters from "../components/requirement/RequirementFilters";
 import RequirementCard from "../components/requirement/RequirementCard";
@@ -22,6 +23,7 @@ import {
   Configure,
   InstantSearch,
   useHits,
+  useInfiniteHits,
   useInstantSearch,
   useSearchBox,
 } from "react-instantsearch";
@@ -35,47 +37,133 @@ import Offline from "../components/Offline";
 
 const searchClient = algoliasearch(
   "J150UQXDLH",
-  "146a46f31a26226786751f663e88ae33",
+  "146a46f31a26226786751f663e88ae33"
 );
 
-const MobileHits = () => {
-  const { hits } = useHits<Requirement>();
+const MobileHits = forwardRef<FlatList>((props, ref) => {
+  const { items, isLastPage, showMore } = useInfiniteHits<Requirement>();
+  const { status } = useInstantSearch();
   const { query } = useSearchBox();
   const [selectedProperty, setSelectedProperty] = useState<any>(null);
 
-  const handleCardClick = (property: any) => {
-    setSelectedProperty(property);
-  };
+  // Add state for tracking loading states
+  const [refreshing, setRefreshing] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [isLoadingMore, setIsLoadingMore] = useState(false);
 
-  if (hits?.length === 0 && query?.length !== 0) {
+  // Update loading state based on search status
+  useEffect(() => {
+    setLoading(
+      status === "loading" || status === "stalled" || status === "error"
+    );
+  }, [status]);
+
+  // Handle card click with useCallback for better performance
+  const handleCardClick = useCallback((property: any) => {
+    setSelectedProperty(property);
+  }, []);
+
+  // Add refresh functionality
+  const { refresh } = useInstantSearch();
+  const onRefresh = useCallback(() => {
+    setRefreshing(true);
+    refresh();
+    setTimeout(() => {
+      setRefreshing(false);
+    }, 1000);
+  }, [refresh]);
+
+  // Improve end reached handler with loading state
+  const handleEndReached = useCallback(() => {
+    if (!isLastPage && !isLoadingMore) {
+      setIsLoadingMore(true);
+      requestAnimationFrame(() => {
+        showMore();
+        setIsLoadingMore(false);
+      });
+    }
+  }, [isLastPage, isLoadingMore, showMore]);
+
+  // Optimize item rendering with useCallback
+  const keyExtractor = useCallback((item: Requirement) => item.objectID, []);
+
+  const renderItem = useCallback(
+    ({ item }: { item: Requirement }) => (
+      <View style={{ padding: 2 }}>
+        <RequirementCard
+          requirement={item as Requirement}
+          onCardClick={handleCardClick}
+        />
+      </View>
+    ),
+    [handleCardClick]
+  );
+
+  // Improved footer component
+  const renderFooter = useCallback(() => {
+    if (loading) {
+      return (
+        <View className="flex items-center justify-center h-32">
+          <ActivityIndicator size="large" color="#153E3B" />
+        </View>
+      );
+    }
+    return null;
+  }, [loading]);
+
+  // Empty states handling
+  if (items?.length === 0 && query?.length !== 0) {
     return (
       <View className="flex items-center justify-center h-64">
-        {/* <Text style={styles.text}>No results found for "{query}"</Text> */}
+        <Text>No results found for "{query}"</Text>
       </View>
     );
-  } else if (hits.length === 0) {
+  } else if (items.length === 0) {
     return (
-      <View className="flex items-center justify-center h-64">
-        <ActivityIndicator size={"large"} color={"#153E3B"} />
+      <View className="flex items-center justify-center h-64 gap-10 mt-20">
+        <ActivityIndicator size="large" color="#153E3B" />
+        <View className="flex flex-col items-center">
+          <Text style={{ fontWeight: "bold", color: "black", fontSize: 17 }}>
+            "The best investment on Earth is earth."
+          </Text>
+          <Text style={{ fontStyle: "italic" }}>- Louis Glickman</Text>
+        </View>
       </View>
     );
   }
 
   return (
-    <ScrollView contentContainerStyle={{ paddingBottom: 0 }}>
-      {hits.map((requirement) => {
-        const transformedRequirement = requirement as Requirement;
-        return (
-          <RequirementCard
-            key={requirement.objectID}
-            requirement={transformedRequirement}
-            onCardClick={handleCardClick}
-          />
-        );
-      })}
-    </ScrollView>
+    <FlatList
+      data={items}
+      ref={ref}
+      keyExtractor={keyExtractor}
+      renderItem={renderItem}
+      refreshControl={
+        <RefreshControl
+          refreshing={refreshing}
+          onRefresh={onRefresh}
+          colors={["#153E3B"]}
+          tintColor="#153E3B"
+          title="Refreshing..."
+          titleColor="#153E3B"
+        />
+      }
+      onEndReached={handleEndReached}
+      onEndReachedThreshold={0.5}
+      ListFooterComponent={renderFooter}
+      contentContainerStyle={{
+        paddingHorizontal: 12,
+        width: "100%",
+        flexGrow: 1,
+      }}
+      style={{ flexGrow: 1, flexShrink: 1 }}
+      initialNumToRender={10}
+      maxToRenderPerBatch={5}
+      windowSize={10}
+      removeClippedSubviews={true}
+    />
   );
-};
+});
 
 const RequirementsList = forwardRef<Animated.ScrollView>((props, ref) => {
   // The generic type should be Requirement, not Requirement[]
@@ -113,31 +201,9 @@ const RequirementsList = forwardRef<Animated.ScrollView>((props, ref) => {
   }, []);
 
   return (
-    <>
-      <ScrollView
-        refreshControl={
-          <RefreshControl
-            refreshing={refreshing}
-            onRefresh={onRefresh}
-            colors={["#153E3B"]}
-            tintColor="#153E3B"
-            title="Refreshing..."
-            titleColor="#153E3B"
-          />
-        }
-        style={[styles.mobileContent]}
-        contentContainerStyle={{ paddingBottom: 0 }}
-        ref={ref}
-      >
-        <MobileHits />
-      </ScrollView>
-
-      {/* <RequirementDetailsModal
-        isOpen={!!selectedRequirement}
-        onClose={() => setSelectedRequirement(null)}
-        requirement={selectedRequirement}
-      /> */}
-    </>
+    <View style={[styles.mobileContent]}>
+      <MobileHits />
+    </View>
   );
 });
 
@@ -146,12 +212,11 @@ const RequirementsPage = () => {
 
   const [filtersHeight, setFiltersHeight] = useState(0);
   const [paginationHeight, setPaginationHeight] = useState(0);
-  const scrollViewRef = useRef<Animated.ScrollView>(null);
   const filtersRef = useRef<View>(null);
   const paginationRef = useRef<View>(null);
 
   const isConnectedToInternet = useSelector(
-    (state: RootState) => state.app.isConnectedToInternet,
+    (state: RootState) => state.app.isConnectedToInternet
   );
 
   useEffect(() => {
@@ -160,7 +225,7 @@ const RequirementsPage = () => {
       filtersRef.current.measure(
         (_x: number, _y: number, _width: number, height: number) => {
           setFiltersHeight(height);
-        },
+        }
       );
     }
 
@@ -169,7 +234,7 @@ const RequirementsPage = () => {
       paginationRef.current.measure(
         (_x: number, _y: number, _width: number, height: number) => {
           setPaginationHeight(height);
-        },
+        }
       );
     }
   }, []);
@@ -200,9 +265,9 @@ const RequirementsPage = () => {
             />
           </View>
 
-          <RequirementsList ref={scrollViewRef} />
+          <RequirementsList />
 
-          <View
+          {/* <View
             ref={paginationRef}
             className="bg-white border-t border-gray-200 mt-4"
             onLayout={(event) => {
@@ -211,7 +276,7 @@ const RequirementsPage = () => {
             }}
           >
             <CustomPagination scrollRef={scrollViewRef} />
-          </View>
+          </View> */}
 
           <MoreFiltersRequirement
             isOpen={isMoreFiltersModalOpen}
@@ -248,10 +313,11 @@ const styles = StyleSheet.create({
   },
   mobileContent: {
     flex: 1,
-    paddingHorizontal: 16,
+    // paddingHorizontal: 16,
     paddingTop: 14,
     marginTop: 60,
   },
 });
 
 export default RequirementsPage;
+
