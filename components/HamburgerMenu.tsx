@@ -211,6 +211,12 @@ export const HamburgerMenu = ({
     onClose();
   };
 
+  const handleInventorySubmit = () => {
+    router.dismissAll();
+    router.push('/(tabs)/AddInventoryForm');
+    onClose();
+  };
+
   const handleHelpClick = () => {
     router.dismissAll();
     router.push("/help" as any);
@@ -271,6 +277,17 @@ export const HamburgerMenu = ({
                       <MaterialIcons name="post-add" size={20} color="#fff" />
                     </View>
                     <Text style={styles.actionButtonText}>Add Requirement</Text>
+                  </TouchableOpacity>
+                </View>
+                <View style={styles.menuItemContainer}>
+                  <TouchableOpacity
+                    onPress={handleInventorySubmit}
+                    style={[styles.standardButton, styles.primaryButton]}
+                  >
+                    <View style={styles.iconContainer}>
+                      <MaterialIcons name="post-add" size={20} color="#fff" />
+                    </View>
+                    <Text style={styles.actionButtonText}>Add Inventory</Text>
                   </TouchableOpacity>
                 </View>
                 <View style={styles.menuItemContainer}>

@@ -116,6 +116,9 @@ export default function LayoutApp() {
     return () => unsubscribe();
   }, []);
 
+  const isAuthenticated =
+    useSelector((state: RootState) => state.auth.isAuthenticated) || false;
+
   if (!fontsLoaded) {
     return null;
   }
@@ -153,6 +156,10 @@ export default function LayoutApp() {
         <Stack.Screen
           name="(tabs)/requirements"
           options={{ title: "Requirements" }}
+        />
+        <Stack.Screen
+          name="(tabs)/AddInventoryForm"
+          options={{ title: "Add Inventory" }}
         />
         <Stack.Screen
           name="(tabs)/UserRequirementForm"
@@ -227,7 +234,9 @@ export default function LayoutApp() {
       />
       <Toast config={toastConfig} />
       <StatusBar style="auto" />
-      <FooterNavigation />
+      {isAuthenticated &&
+        <FooterNavigation />
+      }
     </View>
   );
 }

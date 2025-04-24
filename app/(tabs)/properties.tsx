@@ -26,7 +26,7 @@ import {
 import { useHits, useSearchBox } from "react-instantsearch";
 import PropertyFilters from "../components/PropertyFilters";
 import CustomPagination from "../components/CustomPagination";
-import { Property } from "../types";
+import { Landmark, Property } from "../types";
 import { useRouter } from "expo-router";
 import PropertyCard from "../components/property/PropertyCard";
 import MoreFilters from "../components/MoreFilters";
@@ -44,13 +44,6 @@ const searchClient = algoliasearch(
 );
 
 const indexName = "propertyId";
-
-export interface Landmark {
-  name: string;
-  lat: number;
-  lng: number;
-  radius: number;
-}
 
 // SearchRefresher component that accesses the refresh method
 function SearchRefresher({

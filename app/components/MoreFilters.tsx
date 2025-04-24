@@ -1,29 +1,14 @@
-import React, { useState, useEffect, useRef } from "react";
-import {
-  View,
-  Text,
-  TouchableOpacity,
-  Modal,
-  ScrollView,
-  TextInput,
-  Pressable,
-  PanResponder,
-  Animated,
-  Platform,
-} from "react-native";
-import {
-  useCurrentRefinements,
-  useRange,
-  useRefinementList,
-} from "react-instantsearch";
-import DropdownMoreFilters from "./DropdownMoreFilters";
-import { Ionicons } from "@expo/vector-icons";
-import BudgetRangeSlider from "./property/BudgetRangeSlider";
-import { Landmark } from "../(tabs)/properties";
-import RangeMoreFilters from "./RangeMoreFilters";
-import LandmarkDropdownFilters from "./LandmarkDropdownFilters";
-import { SafeAreaProvider, SafeAreaView } from "react-native-safe-area-context";
-import CloseIcon from "@/assets/icons/svg/CloseIcon";
+import React, { useState, useEffect, useRef } from 'react';
+import { View, Text, TouchableOpacity, Modal, ScrollView, TextInput, Pressable, PanResponder, Animated, Platform } from 'react-native';
+import { useCurrentRefinements, useRange, useRefinementList } from 'react-instantsearch';
+import DropdownMoreFilters from './DropdownMoreFilters';
+import { Ionicons } from '@expo/vector-icons';
+import BudgetRangeSlider from './property/BudgetRangeSlider';
+import RangeMoreFilters from './RangeMoreFilters';
+import LandmarkDropdownFilters from './LandmarkDropdownFilters';
+import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
+import CloseIcon from '@/assets/icons/svg/CloseIcon';
+import { Landmark } from '../types';
 
 export interface RangeState {
   start: (number | undefined)[];
