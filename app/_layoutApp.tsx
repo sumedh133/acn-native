@@ -172,6 +172,10 @@ export default function LayoutApp() {
           name="components/requirement/RequirementDetailsScreen"
           options={{ headerShown: false }}
         />
+        <Stack.Screen 
+          name="(pages)/Profile"
+          options={{ headerShown: false }}
+        />
       </Stack>
       <HamburgerMenu
         visible={isMenuOpen}
