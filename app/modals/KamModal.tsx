@@ -10,10 +10,14 @@ import {
   Image,
 } from "react-native";
 import { Ionicons, FontAwesome } from "@expo/vector-icons";
-import { Avatar } from 'react-native-elements';
+import { Avatar } from "react-native-elements";
 import { useSelector } from "react-redux";
 import { selectMyKam } from "@/store/slices/agentSlice";
-import { selectKamName, selectKamNumber, setKamDataState } from "@/store/slices/kamSlice";
+import {
+  selectKamName,
+  selectKamNumber,
+  setKamDataState,
+} from "@/store/slices/kamSlice";
 import { useDispatch } from "react-redux";
 import { AnyAction, ThunkDispatch } from "@reduxjs/toolkit";
 import { RootState } from "@/store/store";
@@ -26,16 +30,15 @@ type KamManagerProps = {
 };
 
 const getInitials = (name: string): string => {
-  if(!name) return "";
-  const names = name.trim().split(' ');
-  const initials = names.length >= 2
-    ? names[0][0] + names[1][0]
-    : names[0].slice(0, 2);
+  if (!name) return "";
+  const names = name.trim().split(" ");
+  const initials =
+    names.length >= 2 ? names[0][0] + names[1][0] : names[0].slice(0, 2);
   return initials.toUpperCase();
 };
 
 const getRandomColor = () => {
-  const colors = ['#3d4db7', '#e67e22', '#2ecc71', '#9b59b6', '#e74c3c'];
+  const colors = ["#3d4db7", "#e67e22", "#2ecc71", "#9b59b6", "#e74c3c"];
   return colors[Math.floor(Math.random() * colors.length)];
 };
 
@@ -51,7 +54,7 @@ const KamManager: React.FC<KamManagerProps> = ({ visible, setVisible }) => {
       dispatch(setKamDataState(myKamId));
     }
   }, [myKamId, dispatch]);
-  
+
   const profilePicUrl = `https://ui-avatars.com/api/?name=${kamName.replace(" ", "+")}`;
 
   const handleOutsidePress = () => {
@@ -78,11 +81,15 @@ const KamManager: React.FC<KamManagerProps> = ({ visible, setVisible }) => {
                 <Avatar
                   rounded
                   title={getInitials(kamName)}
-                  overlayContainerStyle={{ backgroundColor: getRandomColor() }}
+                  overlayContainerStyle={{
+                    backgroundColor: getRandomColor(),
+                  }}
                   size="medium"
                 />
                 <View style={styles.textContainer}>
-                  <Text style={styles.nameText}>{toCapitalizedWords(kamName)}</Text>
+                  <Text style={styles.nameText}>
+                    {toCapitalizedWords(kamName)}
+                  </Text>
                   <Text style={styles.roleText}>Account Manager</Text>
                 </View>
               </View>
@@ -90,21 +97,35 @@ const KamManager: React.FC<KamManagerProps> = ({ visible, setVisible }) => {
               <View style={styles.divider} />
 
               <View style={styles.buttonContainer}>
-                <TouchableOpacity style={styles.callButton} onPress={handleCallPress}>
+                <TouchableOpacity
+                  style={styles.callButton}
+                  onPress={handleCallPress}
+                >
                   <Ionicons name="call-outline" size={20} color="black" />
                   <Text style={styles.callText}>
                     {kamNumber.slice(0, 3)} {kamNumber.slice(3)}
                   </Text>
                 </TouchableOpacity>
 
-                <TouchableOpacity style={styles.whatsappButton} onPress={handleWhatsAppPress}>
-                  <FontAwesome name="whatsapp" size={24} color="#FAFBFC" style={styles.iconMargin} />
+                <TouchableOpacity
+                  style={styles.whatsappButton}
+                  onPress={handleWhatsAppPress}
+                >
+                  <FontAwesome
+                    name="whatsapp"
+                    size={24}
+                    color="#FAFBFC"
+                    style={styles.iconMargin}
+                  />
                   <Text style={styles.whatsappText}>Whatsapp</Text>
                 </TouchableOpacity>
               </View>
 
-              <TouchableOpacity style={styles.closeButton} onPress={() => setVisible(false)}>
-                <CloseIcon/>
+              <TouchableOpacity
+                style={styles.closeButton}
+                onPress={() => setVisible(false)}
+              >
+                <CloseIcon />
               </TouchableOpacity>
             </View>
           </TouchableWithoutFeedback>
@@ -140,7 +161,7 @@ const styles = StyleSheet.create({
   },
   textContainer: {
     flexDirection: "column",
-    marginLeft:12,
+    marginLeft: 12,
   },
   nameText: {
     // fontWeight: "bold",
@@ -168,7 +189,7 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     paddingVertical: 8,
     borderColor: "#153E3B",
-    backgroundColor:"#FFFFFF",
+    backgroundColor: "#FFFFFF",
     borderWidth: 2,
     borderRadius: 4,
     gap: 4,

@@ -1,15 +1,31 @@
-import { Montserrat_400Regular, Montserrat_500Medium, Montserrat_600SemiBold, Montserrat_700Bold, useFonts } from '@expo-google-fonts/montserrat';
-import React from 'react';
-import { View, TouchableOpacity, StyleSheet, Text, Platform } from 'react-native';
-import HamburgerMenuIcon from '@/assets/icons/svg/HamburgerMenuIcon';
+import {
+  Montserrat_400Regular,
+  Montserrat_500Medium,
+  Montserrat_600SemiBold,
+  Montserrat_700Bold,
+  useFonts,
+} from "@expo-google-fonts/montserrat";
+import React from "react";
+import {
+  View,
+  TouchableOpacity,
+  StyleSheet,
+  Text,
+  Platform,
+} from "react-native";
+import HamburgerMenuIcon from "@/assets/icons/svg/HamburgerMenuIcon";
 
 interface HamburgerMenuButtonProps {
   onPress: () => void;
   isOpen: boolean;
-  showACN?: boolean
+  showACN?: boolean;
 }
 
-export const HamburgerMenuButton = ({ onPress, isOpen, showACN = false }: HamburgerMenuButtonProps) => {
+export const HamburgerMenuButton = ({
+  onPress,
+  isOpen,
+  showACN = false,
+}: HamburgerMenuButtonProps) => {
   const [fontsLoaded] = useFonts({
     Montserrat_400Regular,
     Montserrat_500Medium,
@@ -28,11 +44,7 @@ export const HamburgerMenuButton = ({ onPress, isOpen, showACN = false }: Hambur
         <View style={styles.hamburgerContainer}>
           <HamburgerMenuIcon />
         </View>
-        {showACN &&
-          <Text style={styles.acnText}>
-            ACN
-          </Text>
-        }
+        {showACN && <Text style={styles.acnText}>ACN</Text>}
       </View>
     </TouchableOpacity>
   );
@@ -40,37 +52,37 @@ export const HamburgerMenuButton = ({ onPress, isOpen, showACN = false }: Hambur
 
 const styles = StyleSheet.create({
   container: {
-    flexDirection: 'row',
+    flexDirection: "row",
     gap: 10,
-    alignItems: 'center',
-    justifyContent: 'flex-start',
+    alignItems: "center",
+    justifyContent: "flex-start",
   },
   hamburgerContainer: {
     width: 28,
     height: 20,
-    justifyContent: 'space-between',
+    justifyContent: "space-between",
     marginLeft: 6,
     bottom: 5,
   },
   hamburgerLine: {
     height: 3,
-    backgroundColor: '#000',
+    backgroundColor: "#000",
     borderRadius: 2,
   },
   hamburgerLineOpen: {
-    backgroundColor: '#153E3B',
+    backgroundColor: "#153E3B",
   },
   acnText: {
     left: 25,
-    fontFamily: 'Montserrat_700Bold',
+    fontFamily: "Montserrat_700Bold",
     fontSize: 24,
-    fontWeight: '600',
-    color: '#000',
+    fontWeight: "600",
+    color: "#000",
   },
   buttonLabel: {
-    fontFamily: Platform.OS === 'ios' ? 'System' : 'Roboto',
+    fontFamily: Platform.OS === "ios" ? "System" : "Roboto",
     fontSize: 16,
-    fontWeight: '500',
-    color: '#252626',
+    fontWeight: "500",
+    color: "#252626",
   },
 });

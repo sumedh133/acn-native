@@ -1,34 +1,49 @@
-import React, { useState, useRef, useEffect, forwardRef } from 'react';
-import { View, Text, TouchableOpacity, Animated, StyleSheet, Dimensions, Pressable, ScrollView, Alert, Image, Linking, Platform } from 'react-native';
-import { Link, useRouter, usePathname } from 'expo-router';
-import ProfileModal from '@/app/modals/ProfileModal';
-import { Button } from 'react-native-elements/dist/buttons/Button';
-import { useSelector, useDispatch } from 'react-redux';
-import { RootState } from '@/store/store';
-import { logOut } from '@/store/slices/authSlice';
-import { MaterialIcons, FontAwesome5, Ionicons, MaterialCommunityIcons, Feather } from '@expo/vector-icons';
-import { selectAdmin, selectName } from '@/store/slices/agentSlice';
-import { toCapitalizedWords } from '@/app/helpers/common';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { HamburgerMenuButton } from './HamburgerMenuButton';
-import DashboardIcon from '@/assets/icons/svg/Sidebar/DashboardIcon';
-import PropertyIcon from '@/assets/icons/svg/Sidebar/PropertyIcon';
-import RequirementIcon from '@/assets/icons/svg/Sidebar/RequirementsIcon';
-import RupeeIcon from '@/assets/icons/svg/Sidebar/BillingIcon';
-import AnimatedTooltip from './AnimatedTooltip';
+import React, { useState, useRef, useEffect, forwardRef } from "react";
+import {
+  View,
+  Text,
+  TouchableOpacity,
+  Animated,
+  StyleSheet,
+  Dimensions,
+  Pressable,
+  ScrollView,
+  Alert,
+  Image,
+  Linking,
+  Platform,
+} from "react-native";
+import { Link, useRouter, usePathname } from "expo-router";
+import ProfileModal from "@/app/modals/ProfileModal";
+import { Button } from "react-native-elements/dist/buttons/Button";
+import { useSelector, useDispatch } from "react-redux";
+import { RootState } from "@/store/store";
+import { logOut } from "@/store/slices/authSlice";
+import {
+  MaterialIcons,
+  FontAwesome5,
+  Ionicons,
+  MaterialCommunityIcons,
+  Feather,
+} from "@expo/vector-icons";
+import { selectAdmin, selectName } from "@/store/slices/agentSlice";
+import { toCapitalizedWords } from "@/app/helpers/common";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { HamburgerMenuButton } from "./HamburgerMenuButton";
+import DashboardIcon from "@/assets/icons/svg/Sidebar/DashboardIcon";
+import PropertyIcon from "@/assets/icons/svg/Sidebar/PropertyIcon";
+import RequirementIcon from "@/assets/icons/svg/Sidebar/RequirementsIcon";
+import RupeeIcon from "@/assets/icons/svg/Sidebar/BillingIcon";
+import AnimatedTooltip from "./AnimatedTooltip";
 
-
-
-
-
-const { width } = Dimensions.get('window');
-const { height } = Dimensions.get('window');
+const { width } = Dimensions.get("window");
+const { height } = Dimensions.get("window");
 
 interface MenuItem {
   title: string;
   path: string;
   icon: string;
-  iconType: 'Dashboard' | 'Requirements' | 'Properties' | 'Billing' | 'Feather';
+  iconType: "Dashboard" | "Requirements" | "Properties" | "Billing" | "Feather";
 }
 
 interface SidebarItemProps {
@@ -36,7 +51,7 @@ interface SidebarItemProps {
   icon: string;
   label?: string;
   selected: boolean;
-  iconType: MenuItem['iconType'];
+  iconType: MenuItem["iconType"];
 }
 
 interface HamburgerMenuProps {
@@ -46,27 +61,52 @@ interface HamburgerMenuProps {
 }
 
 const menuItems: MenuItem[] = [
-  { title: 'Dashboard', path: '/dashboardTab', icon: 'dashboard', iconType: 'Dashboard' },
-  { title: 'Properties', path: '/properties', icon: 'home', iconType: 'Properties' },
-  { title: 'Requirements', path: '/requirements', icon: 'list-alt', iconType: 'Requirements' },
+  {
+    title: "Dashboard",
+    path: "/dashboardTab",
+    icon: "dashboard",
+    iconType: "Dashboard",
+  },
+  {
+    title: "Properties",
+    path: "/properties",
+    icon: "home",
+    iconType: "Properties",
+  },
+  {
+    title: "Requirements",
+    path: "/requirements",
+    icon: "list-alt",
+    iconType: "Requirements",
+  },
 ];
 
 const bottomMenuItems: MenuItem[] = [
-  { title: 'Billing', path: '/billings', icon: 'dollar-sign', iconType: 'Billing' },
-  { title: 'Help', path: '/help', icon: 'help-circle', iconType: 'Feather' },
+  {
+    title: "Billing",
+    path: "/billings",
+    icon: "dollar-sign",
+    iconType: "Billing",
+  },
+  { title: "Help", path: "/help", icon: "help-circle", iconType: "Feather" },
 ];
 
-const getIconComponent = (type: MenuItem['iconType'], name: string, size: number = 24, color: string = '#252626') => {
+const getIconComponent = (
+  type: MenuItem["iconType"],
+  name: string,
+  size: number = 24,
+  color: string = "#252626",
+) => {
   switch (type) {
-    case 'Dashboard':
+    case "Dashboard":
       return <DashboardIcon />;
-    case 'Requirements':
+    case "Requirements":
       return <RequirementIcon />;
-    case 'Properties':
+    case "Properties":
       return <PropertyIcon />;
-    case 'Billing':
-      return <RupeeIcon />
-    case 'Feather':
+    case "Billing":
+      return <RupeeIcon />;
+    case "Feather":
       return <Feather name={name as any} size={size} color={color} />;
     default:
       return <MaterialIcons name="error" size={size} color={color} />;
@@ -74,20 +114,26 @@ const getIconComponent = (type: MenuItem['iconType'], name: string, size: number
 };
 
 // Standardized SidebarItem with consistent dimensions
-const SidebarItem = forwardRef<View, SidebarItemProps>(({ onClick, icon, label, selected, iconType }, ref) => (
-  <TouchableOpacity
-    onPress={onClick}
-    style={[styles.standardButton, selected ? styles.selectedButton : {}]}
-    ref={ref}
-  >
-    <View style={styles.iconContainer}>
-      {getIconComponent(iconType, icon, 20)}
-    </View>
-    {label && <Text style={styles.buttonLabel}>{label}</Text>}
-  </TouchableOpacity>
-));
+const SidebarItem = forwardRef<View, SidebarItemProps>(
+  ({ onClick, icon, label, selected, iconType }, ref) => (
+    <TouchableOpacity
+      onPress={onClick}
+      style={[styles.standardButton, selected ? styles.selectedButton : {}]}
+      ref={ref}
+    >
+      <View style={styles.iconContainer}>
+        {getIconComponent(iconType, icon, 20)}
+      </View>
+      {label && <Text style={styles.buttonLabel}>{label}</Text>}
+    </TouchableOpacity>
+  ),
+);
 
-export const HamburgerMenu = ({ visible, onClose, onOpenProfile }: HamburgerMenuProps) => {
+export const HamburgerMenu = ({
+  visible,
+  onClose,
+  onOpenProfile,
+}: HamburgerMenuProps) => {
   const slideAnim = useRef(new Animated.Value(0)).current;
   const overlayOpacity = useRef(new Animated.Value(0)).current;
   const [profileModalVisible, setProfileModalVisible] = useState(false);
@@ -96,9 +142,12 @@ export const HamburgerMenu = ({ visible, onClose, onOpenProfile }: HamburgerMenu
   const insets = useSafeAreaInsets();
 
   const agentName = useSelector(selectName);
-  const monthlyCredits = useSelector((state: RootState) => state?.agent?.docData?.monthlyCredits);
-  const isAuthenticated = useSelector((state: RootState) => state?.auth?.isAuthenticated);
-    
+  const monthlyCredits = useSelector(
+    (state: RootState) => state?.agent?.docData?.monthlyCredits,
+  );
+  const isAuthenticated = useSelector(
+    (state: RootState) => state?.auth?.isAuthenticated,
+  );
 
   useEffect(() => {
     if (visible) {
@@ -146,7 +195,7 @@ export const HamburgerMenu = ({ visible, onClose, onOpenProfile }: HamburgerMenu
     }
     onClose();
     // router.dismissAll();
-    router.replace('/(tabs)/properties');
+    router.replace("/(tabs)/properties");
     router.push(path as any);
     // onClose();
   };
@@ -158,7 +207,7 @@ export const HamburgerMenu = ({ visible, onClose, onOpenProfile }: HamburgerMenu
 
   const handleRequirementSubmit = () => {
     router.dismissAll();
-    router.push('/(tabs)/UserRequirementForm');
+    router.push("/(tabs)/UserRequirementForm");
     onClose();
   };
 
@@ -170,7 +219,7 @@ export const HamburgerMenu = ({ visible, onClose, onOpenProfile }: HamburgerMenu
 
   const handleHelpClick = () => {
     router.dismissAll();
-    router.push('/help' as any);
+    router.push("/help" as any);
   };
 
   const isActive = (path: string) => {
@@ -181,28 +230,23 @@ export const HamburgerMenu = ({ visible, onClose, onOpenProfile }: HamburgerMenu
 
   return (
     <>
-      <Animated.View
-        style={[
-          styles.overlay,
-          { opacity: overlayOpacity },
-        ]}
-      >
-        <Pressable style={styles.overlayPressable} onPress={handleOverlayPress} />
+      <Animated.View style={[styles.overlay, { opacity: overlayOpacity }]}>
+        <Pressable
+          style={styles.overlayPressable}
+          onPress={handleOverlayPress}
+        />
       </Animated.View>
 
       <Animated.View
-        style={[
-          styles.menuContainer,
-          { transform: [{ translateX }] },
-        ]}
+        style={[styles.menuContainer, { transform: [{ translateX }] }]}
       >
-        <View style={{ flexDirection: 'row' }}>
-          <View
-            style={[
-              { marginTop:  12, marginLeft: 16 },
-            ]}
-          >
-            <HamburgerMenuButton onPress={onClose} isOpen={false} showACN={true} />
+        <View style={{ flexDirection: "row" }}>
+          <View style={[{ marginTop: 12, marginLeft: 16 }]}>
+            <HamburgerMenuButton
+              onPress={onClose}
+              isOpen={false}
+              showACN={true}
+            />
           </View>
         </View>
         <ScrollView
@@ -223,7 +267,7 @@ export const HamburgerMenu = ({ visible, onClose, onOpenProfile }: HamburgerMenu
                   />
                 </View>
               ))}
-              <View className='mt-[36px]'>
+              <View className="mt-[36px]">
                 <View style={styles.menuItemContainer}>
                   <TouchableOpacity
                     onPress={handleRequirementSubmit}
@@ -249,15 +293,20 @@ export const HamburgerMenu = ({ visible, onClose, onOpenProfile }: HamburgerMenu
                 <View style={styles.menuItemContainer}>
                   <TouchableOpacity
                     onPress={() => {
-                      Linking.openURL('https://chat.whatsapp.com/KcirtDCrZkA3sdgS6WIB38')
-                        .catch((err) => console.error('Failed to open URL:', err));
+                      Linking.openURL(
+                        "https://chat.whatsapp.com/KcirtDCrZkA3sdgS6WIB38",
+                      ).catch((err) =>
+                        console.error("Failed to open URL:", err),
+                      );
                     }}
                     style={[styles.standardButton, styles.secondaryButton]}
                   >
                     <View style={styles.iconContainer}>
                       <FontAwesome5 name="whatsapp" size={20} color="#153E3B" />
                     </View>
-                    <Text style={styles.communityButtonText}>Join Community</Text>
+                    <Text style={styles.communityButtonText}>
+                      Join Community
+                    </Text>
                   </TouchableOpacity>
                 </View>
               </View>
@@ -280,7 +329,11 @@ export const HamburgerMenu = ({ visible, onClose, onOpenProfile }: HamburgerMenu
               {/* Credits Display with Improved Tooltip */}
               <View style={styles.creditsContainer}>
                 <View style={styles.creditsInfoContainer}>
-                  <MaterialIcons name="monetization-on" size={20} color="#FFD700" />
+                  <MaterialIcons
+                    name="monetization-on"
+                    size={20}
+                    color="#FFD700"
+                  />
                   <Text style={styles.creditsText}>
                     {monthlyCredits} Credits
                   </Text>
@@ -290,7 +343,10 @@ export const HamburgerMenu = ({ visible, onClose, onOpenProfile }: HamburgerMenu
 
               <TouchableOpacity
                 onPress={handleOpenProfile}
-                style={[styles.profileButton, isActive('/profile') ? styles.selectedButton : {}]}
+                style={[
+                  styles.profileButton,
+                  isActive("/profile") ? styles.selectedButton : {},
+                ]}
               >
                 <View style={styles.profileIconContainer}>
                   <MaterialIcons name="person" size={18} color="#fff" />
@@ -298,14 +354,18 @@ export const HamburgerMenu = ({ visible, onClose, onOpenProfile }: HamburgerMenu
                 <View style={styles.profileInfoContainer}>
                   <Text
                     numberOfLines={1}
-                    ellipsizeMode='tail'
+                    ellipsizeMode="tail"
                     style={styles.profileName}
                   >
-                    {toCapitalizedWords(agentName) || 'Agent Name'}
+                    {toCapitalizedWords(agentName) || "Agent Name"}
                   </Text>
                   <View style={styles.profileLinkContainer}>
                     <Text style={styles.profileLinkText}>Check profile</Text>
-                    <MaterialIcons name="arrow-forward" size={12} color="#205E59" />
+                    <MaterialIcons
+                      name="arrow-forward"
+                      size={12}
+                      color="#205E59"
+                    />
                   </View>
                 </View>
               </TouchableOpacity>
@@ -320,32 +380,32 @@ export const HamburgerMenu = ({ visible, onClose, onOpenProfile }: HamburgerMenu
       />
     </>
   );
-}
+};
 
 const styles = StyleSheet.create({
   overlay: {
-    position: 'absolute',
+    position: "absolute",
     top: 0,
     left: 0,
     right: 0,
     bottom: 0,
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    backgroundColor: "rgba(0, 0, 0, 0.5)",
     zIndex: 3,
   },
   overlayPressable: {
     flex: 1,
   },
   menuContainer: {
-    position: 'absolute',
+    position: "absolute",
     top: 0,
     left: 0,
     width: width * 0.55,
-    height: '100%',
-    backgroundColor: '#fff',
+    height: "100%",
+    backgroundColor: "#fff",
     zIndex: 4,
-    shadowColor: '#000',
+    shadowColor: "#000",
     elevation: 5,
-    paddingTop: Platform.OS === 'ios' ? 0 : 20,
+    paddingTop: Platform.OS === "ios" ? 0 : 20,
   },
   menuContent: {
     paddingTop: height * 0.03,
@@ -355,80 +415,77 @@ const styles = StyleSheet.create({
   },
   menuWrapper: {
     flex: 1,
-    flexDirection: 'column',
-    height: '100%',
-    justifyContent: 'space-between',
+    flexDirection: "column",
+    height: "100%",
+    justifyContent: "space-between",
   },
   menuSection: {
-    display: 'flex',
-    flexDirection: 'column',
+    display: "flex",
+    flexDirection: "column",
     marginBottom: 12,
   },
   bottomSection: {
-    marginTop: 'auto',
-    display: 'flex',
-    flexDirection: 'column',
+    marginTop: "auto",
+    display: "flex",
+    flexDirection: "column",
     paddingBottom: 10,
   },
   menuItemContainer: {
-    width: '100%',
+    width: "100%",
     marginBottom: 12,
-    
   },
   standardButton: {
     height: 50,
-    width: '100%',
-    flexDirection: 'row',
-    alignItems: 'center',
+    width: "100%",
+    flexDirection: "row",
+    alignItems: "center",
     paddingHorizontal: 16,
     paddingVertical: 8,
     borderRadius: 8,
   },
   selectedButton: {
-    backgroundColor: '#B9D7D2',
+    backgroundColor: "#B9D7D2",
   },
   primaryButton: {
-    backgroundColor: '#153E3B',
-    justifyContent: 'center',
+    backgroundColor: "#153E3B",
+    justifyContent: "center",
   },
   secondaryButton: {
-    backgroundColor: 'white',
+    backgroundColor: "white",
     borderWidth: 1,
-    borderColor: '#153E3B',
-    justifyContent: 'center',
+    borderColor: "#153E3B",
+    justifyContent: "center",
   },
   buttonLabel: {
-    fontFamily: 'Lato',
+    fontFamily: "Lato",
     fontSize: 16,
-    fontWeight: '500',
-    color: '#252626',
+    fontWeight: "500",
+    color: "#252626",
   },
   iconContainer: {
     width: 24,
     height: 24,
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: "center",
+    alignItems: "center",
     marginRight: 12,
   },
   actionButtonText: {
-    color: '#FFFFFF',
+    color: "#FFFFFF",
     fontSize: 14,
-    fontWeight: '600',
-    
+    fontWeight: "600",
   },
   communityButtonText: {
-    color: '#153E3B',
+    color: "#153E3B",
     fontSize: 14,
-    fontWeight: '600',
-    
+    fontWeight: "600",
   },
   creditsContainer: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    width: '100%',
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    width: "100%",
     borderWidth: 1,
-    borderColor: '#E3E3E3',
+    borderColor: "#E3E3E3",
     borderRadius: 20,
     paddingHorizontal: 16,
     paddingVertical: 12,
@@ -436,21 +493,21 @@ const styles = StyleSheet.create({
     height: 50,
   },
   creditsInfoContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     gap: 8,
   },
   creditsText: {
-    fontFamily: 'Lato',
-    fontWeight: '500',
+    fontFamily: "Lato",
+    fontWeight: "500",
     fontSize: 14,
-    color: '#5A5555',
+    color: "#5A5555",
   },
   profileButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     borderWidth: 1,
-    borderColor: '#E3E3E3',
+    borderColor: "#E3E3E3",
     borderRadius: 8,
     paddingHorizontal: 16,
     paddingVertical: 10,
@@ -461,28 +518,28 @@ const styles = StyleSheet.create({
     width: 32,
     height: 32,
     borderRadius: 100,
-    backgroundColor: '#153E3B',
-    alignItems: 'center',
-    justifyContent: 'center',
+    backgroundColor: "#153E3B",
+    alignItems: "center",
+    justifyContent: "center",
   },
   profileInfoContainer: {
-    flexDirection: 'column',
+    flexDirection: "column",
     gap: 4,
   },
   profileName: {
     fontSize: 14,
-    color: '#2B2928',
-    fontWeight: 'bold',
+    color: "#2B2928",
+    fontWeight: "bold",
     marginRight: 38,
   },
   profileLinkContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     gap: 4,
   },
   profileLinkText: {
     fontSize: 12,
-    color: '#205E59',
+    color: "#205E59",
   },
 });
 

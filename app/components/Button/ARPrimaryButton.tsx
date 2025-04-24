@@ -1,10 +1,17 @@
-import React from 'react';
-import { Text, TouchableOpacity, Image, StyleSheet, View, GestureResponderEvent } from 'react-native';
+import React from "react";
+import {
+  Text,
+  TouchableOpacity,
+  Image,
+  StyleSheet,
+  View,
+  GestureResponderEvent,
+} from "react-native";
 
 interface ARPrimaryButtonProps {
   children: React.ReactNode;
   onPress?: (event: GestureResponderEvent) => void;
-  IconFirst?: any; 
+  IconFirst?: any;
   IconSecond?: any;
   disabled?: boolean;
   style?: object;
@@ -22,21 +29,21 @@ const ARPrimaryButton: React.FC<ARPrimaryButtonProps> = ({
     <TouchableOpacity
       onPress={onPress}
       disabled={disabled}
-      style={[
-        styles.button,
-        disabled ? styles.disabled : {},
-        style
-      ]}
+      style={[styles.button, disabled ? styles.disabled : {}, style]}
       activeOpacity={0.8}
     >
       <View style={styles.content}>
-        {IconFirst && <Image source={IconFirst} style={styles.icon} resizeMode="contain" />}
-        
+        {IconFirst && (
+          <Image source={IconFirst} style={styles.icon} resizeMode="contain" />
+        )}
+
         <Text numberOfLines={1} ellipsizeMode="tail" style={styles.text}>
           {children}
         </Text>
-        
-        {IconSecond && <Image source={IconSecond} style={styles.icon} resizeMode="contain" />}
+
+        {IconSecond && (
+          <Image source={IconSecond} style={styles.icon} resizeMode="contain" />
+        )}
       </View>
     </TouchableOpacity>
   );
@@ -44,19 +51,19 @@ const ARPrimaryButton: React.FC<ARPrimaryButtonProps> = ({
 
 const styles = StyleSheet.create({
   button: {
-    backgroundColor: '#007bff', 
+    backgroundColor: "#007bff",
     paddingVertical: 12,
     paddingHorizontal: 16,
     borderRadius: 8,
-    width: '100%',
+    width: "100%",
   },
   disabled: {
-    backgroundColor: '#a0a0a0',
+    backgroundColor: "#a0a0a0",
   },
   content: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
     gap: 8,
   },
   icon: {
@@ -64,7 +71,7 @@ const styles = StyleSheet.create({
     width: 20,
   },
   text: {
-    color: '#ffffff',
+    color: "#ffffff",
     fontSize: 14,
     flexShrink: 1,
   },

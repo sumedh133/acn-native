@@ -1,5 +1,11 @@
-import React, { useState, useEffect } from 'react';
-import { View, TextInput, TouchableOpacity, Text, Dimensions } from 'react-native';
+import React, { useState, useEffect } from "react";
+import {
+  View,
+  TextInput,
+  TouchableOpacity,
+  Text,
+  Dimensions,
+} from "react-native";
 
 interface RangeMoreFiltersProps {
   title: string;
@@ -19,12 +25,14 @@ const RangeMoreFilters: React.FC<RangeMoreFiltersProps> = ({
   range,
   start,
 }) => {
-  const [isMobile, setIsMobile] = useState<boolean>(Dimensions.get('window').width <= 640);
+  const [isMobile, setIsMobile] = useState<boolean>(
+    Dimensions.get("window").width <= 640,
+  );
 
   const formatValue = (value: string | number | undefined): string => {
-    if (value === undefined || value === '') return '';
-    const numValue = typeof value === 'string' ? parseFloat(value) : value;
-    return transformFunction && typeof numValue === 'number'
+    if (value === undefined || value === "") return "";
+    const numValue = typeof value === "string" ? parseFloat(value) : value;
+    return transformFunction && typeof numValue === "number"
       ? transformFunction(numValue).toString()
       : String(value);
   };
@@ -32,17 +40,17 @@ const RangeMoreFilters: React.FC<RangeMoreFiltersProps> = ({
   const [minValue, setMinValue] = useState<string>(
     start && start[0] !== undefined && start[0] !== -Infinity
       ? start[0].toString()
-      : ""
+      : "",
   );
   const [maxValue, setMaxValue] = useState<string>(
     start && start[1] !== undefined && start[1] !== Infinity
       ? start[1].toString()
-      : ""
+      : "",
   );
   const [errorMessage, setErrorMessage] = useState<string>("");
 
   useEffect(() => {
-    const subscription = Dimensions.addEventListener('change', ({ window }) => {
+    const subscription = Dimensions.addEventListener("change", ({ window }) => {
       setIsMobile(window.width <= 640);
     });
 
@@ -58,13 +66,17 @@ const RangeMoreFilters: React.FC<RangeMoreFiltersProps> = ({
 
     // Check if min is less than range.min
     if (minNum !== undefined && range.min !== undefined && minNum < range.min) {
-      setErrorMessage(`Minimum value cannot be less than ${formatValue(range.min)}`);
+      setErrorMessage(
+        `Minimum value cannot be less than ${formatValue(range.min)}`,
+      );
       return false;
     }
 
     // Check if max is greater than range.max
     if (maxNum !== undefined && range.max !== undefined && maxNum > range.max) {
-      setErrorMessage(`Maximum value cannot be greater than ${formatValue(range.max)}`);
+      setErrorMessage(
+        `Maximum value cannot be greater than ${formatValue(range.max)}`,
+      );
       return false;
     }
 
@@ -102,27 +114,32 @@ const RangeMoreFilters: React.FC<RangeMoreFiltersProps> = ({
 
   return (
     <View className="p-4 border border-gray-200 rounded-xl w-full mb-4">
-      <Text className="font-semibold text-sm text-gray-700 mb-4" style={{ fontFamily: 'Montserrat_600SemiBold' }}>{title}</Text>
+      <Text
+        className="font-semibold text-sm text-gray-700 mb-4"
+        style={{ fontFamily: "Montserrat_600SemiBold" }}
+      >
+        {title}
+      </Text>
       <View className="flex-row items-center">
         <View className="flex-row items-center flex-1 justify-between">
           <TextInput
-            className={`h-10 w-[45%] border ${errorMessage ? 'border-red-500' : 'border-gray-300'} rounded-md px-3`}
-            placeholder={formatValue(range.min) || 'Min'}
+            className={`h-10 w-[45%] border ${errorMessage ? "border-red-500" : "border-gray-300"} rounded-md px-3`}
+            placeholder={formatValue(range.min) || "Min"}
             value={minValue}
             onChangeText={handleMinChange}
             keyboardType="numeric"
-            placeholderTextColor="#9CA3AF" 
-            style={{ color: '#1F2937' }} 
+            placeholderTextColor="#9CA3AF"
+            style={{ color: "#1F2937" }}
           />
           <Text className="text-black">to</Text>
           <TextInput
-            className={`h-10 w-[45%] border ${errorMessage ? 'border-red-500' : 'border-gray-300'} rounded-md px-3  `}
-            placeholder={formatValue(range.max) || 'Max'}
+            className={`h-10 w-[45%] border ${errorMessage ? "border-red-500" : "border-gray-300"} rounded-md px-3  `}
+            placeholder={formatValue(range.max) || "Max"}
             value={maxValue}
             onChangeText={handleMaxChange}
             keyboardType="numeric"
-            placeholderTextColor="#9CA3AF" 
-            style={{ color: '#1F2937' }} 
+            placeholderTextColor="#9CA3AF"
+            style={{ color: "#1F2937" }}
           />
         </View>
         <TouchableOpacity

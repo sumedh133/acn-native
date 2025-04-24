@@ -1,5 +1,5 @@
-import React, { useEffect } from 'react';
-import { View, StyleSheet, Animated, Easing } from 'react-native';
+import React, { useEffect } from "react";
+import { View, StyleSheet, Animated, Easing } from "react-native";
 
 const Loader: React.FC = () => {
   // Animation values
@@ -16,7 +16,7 @@ const Loader: React.FC = () => {
           duration: 500,
           easing: Easing.linear,
           useNativeDriver: true,
-        })
+        }),
       ).start();
 
       // Shadow animation
@@ -26,12 +26,12 @@ const Loader: React.FC = () => {
           duration: 500,
           easing: Easing.linear,
           useNativeDriver: true,
-        })
+        }),
       ).start();
     };
 
     createAnimations();
-    
+
     // Cleanup animations on unmount
     return () => {
       jumpAnimation.stopAnimation();
@@ -49,7 +49,7 @@ const Loader: React.FC = () => {
     // rotation animation
     rotate: jumpAnimation.interpolate({
       inputRange: [0, 0.25, 0.5, 0.75, 1],
-      outputRange: ['0deg', '22.5deg', '45deg', '67.5deg', '90deg'],
+      outputRange: ["0deg", "22.5deg", "45deg", "67.5deg", "90deg"],
     }),
     // scale animation (only affects Y during middle of animation)
     scaleY: jumpAnimation.interpolate({
@@ -77,10 +77,7 @@ const Loader: React.FC = () => {
         style={[
           styles.shadow,
           {
-            transform: [
-              { scaleX: shadowInterpolation.scaleX },
-              { scaleY: 1 },
-            ],
+            transform: [{ scaleX: shadowInterpolation.scaleX }, { scaleY: 1 }],
           },
         ]}
       />
@@ -106,24 +103,24 @@ const styles = StyleSheet.create({
   container: {
     width: 48,
     height: 48,
-    alignSelf: 'center',
-    justifyContent: 'center',
+    alignSelf: "center",
+    justifyContent: "center",
     marginVertical: 30,
   },
   loader: {
     width: 48,
     height: 48,
-    backgroundColor: '#153E3B',
+    backgroundColor: "#153E3B",
     borderRadius: 4,
-    position: 'absolute',
+    position: "absolute",
     bottom: 5,
   },
   shadow: {
     width: 48,
     height: 5,
-    backgroundColor: '#153E3B50',
+    backgroundColor: "#153E3B50",
     borderRadius: 50,
-    position: 'absolute',
+    position: "absolute",
     top: 60,
   },
 });
