@@ -1,7 +1,7 @@
-import React, { useEffect, useState } from 'react';
-import { View, Text, TouchableOpacity, FlatList } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
-import { styled } from 'nativewind';
+import React, { useEffect, useState } from "react";
+import { View, Text, TouchableOpacity, FlatList } from "react-native";
+import { Ionicons } from "@expo/vector-icons";
+import { styled } from "nativewind";
 
 const StyledView = styled(View);
 const StyledText = styled(Text);
@@ -20,7 +20,13 @@ interface MonthFilterDropdownProps {
   setBatchSize: (batch: number) => void;
 }
 
-const MonthFilterDropdown = ({ options, value, setValue, setBuffering, setBatchSize }: MonthFilterDropdownProps) => {
+const MonthFilterDropdown = ({
+  options,
+  value,
+  setValue,
+  setBuffering,
+  setBatchSize,
+}: MonthFilterDropdownProps) => {
   const allOptions = [{ label: "All", value: "" }, ...options];
   const [isOpen, setIsOpen] = useState(false);
   const [selectedLabel, setSelectedLabel] = useState("");
@@ -29,7 +35,9 @@ const MonthFilterDropdown = ({ options, value, setValue, setBuffering, setBatchS
     if (!value || value === "") {
       setSelectedLabel("All");
     } else {
-      const selected = allOptions?.find((option) => option?.value === value)?.label;
+      const selected = allOptions?.find(
+        (option) => option?.value === value,
+      )?.label;
       if (selected) {
         setSelectedLabel(selected);
       }
@@ -46,7 +54,7 @@ const MonthFilterDropdown = ({ options, value, setValue, setBuffering, setBatchS
       setBatchSize(10);
       setTimeout(() => {
         setValue(optionValue);
-      }, 0)
+      }, 0);
     }
     setIsOpen(false);
     // Add analytics here if needed
@@ -59,9 +67,7 @@ const MonthFilterDropdown = ({ options, value, setValue, setBuffering, setBatchS
       </StyledText>
 
       <StyledView className="relative z-[999999999]">
-        <StyledTouchableOpacity
-          onPress={toggleDropdown}
-        >
+        <StyledTouchableOpacity onPress={toggleDropdown}>
           <StyledView className="flex flex-row items-center justify-between bg-white min-w-[145px] p-[8px] rounded-[5px] border border-gray-200">
             <StyledText className="text-sm font-medium text-black">
               {selectedLabel}
@@ -80,7 +86,10 @@ const MonthFilterDropdown = ({ options, value, setValue, setBuffering, setBatchS
               <StyledTouchableOpacity
                 key={index}
                 className="rounded-md w-full px-3 py-2 mb-1"
-                style={{ backgroundColor: option.value === value ? '#F2F2F2' : 'transparent' }}
+                style={{
+                  backgroundColor:
+                    option.value === value ? "#F2F2F2" : "transparent",
+                }}
                 onPress={() => handleOptionClick(option.value)}
               >
                 <StyledText className="font-medium text-sm text-black">
@@ -95,4 +104,4 @@ const MonthFilterDropdown = ({ options, value, setValue, setBuffering, setBatchS
   );
 };
 
-export default MonthFilterDropdown; 
+export default MonthFilterDropdown;

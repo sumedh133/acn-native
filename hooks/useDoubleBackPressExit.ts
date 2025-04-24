@@ -1,6 +1,6 @@
-import React, { useEffect, useRef } from 'react';
-import { BackHandler, ToastAndroid, Platform, Alert } from 'react-native';
-import { useFocusEffect } from '@react-navigation/native';
+import React, { useEffect, useRef } from "react";
+import { BackHandler, ToastAndroid, Platform, Alert } from "react-native";
+import { useFocusEffect } from "@react-navigation/native";
 
 /**
  * A custom hook to handle double back press to exit app functionality
@@ -22,26 +22,31 @@ export const useDoubleBackPressExit = (exitDelay = 2000) => {
 
         // First back press
         backPressedOnce.current = true;
-        
+
         // Show toast/alert message
-        if (Platform.OS === 'android') {
-          ToastAndroid.show('Press back again to exit', ToastAndroid.SHORT);
+        if (Platform.OS === "android") {
+          ToastAndroid.show("Press back again to exit", ToastAndroid.SHORT);
         } else {
-          Alert.alert('', 'Press back again to exit', [{ text: 'OK' }], { cancelable: true });
+          Alert.alert("", "Press back again to exit", [{ text: "OK" }], {
+            cancelable: true,
+          });
         }
-        
+
         // Reset after delay
         backPressTimeout.current = setTimeout(() => {
           backPressedOnce.current = false;
           backPressTimeout.current = null;
         }, exitDelay);
-        
+
         // We handled the back press
         return true;
       };
 
       // Add back press event listener
-      const subscription = BackHandler.addEventListener('hardwareBackPress', handleBackPress);
+      const subscription = BackHandler.addEventListener(
+        "hardwareBackPress",
+        handleBackPress,
+      );
 
       // Cleanup
       return () => {
@@ -50,6 +55,6 @@ export const useDoubleBackPressExit = (exitDelay = 2000) => {
           clearTimeout(backPressTimeout.current);
         }
       };
-    }, [exitDelay])
+    }, [exitDelay]),
   );
 };

@@ -1,13 +1,13 @@
-import { View } from 'react-native';
-import { useEffect, useState } from 'react';
-import { useSelector } from 'react-redux';
+import { View } from "react-native";
+import { useEffect, useState } from "react";
+import { useSelector } from "react-redux";
 import * as SplashScreen from "expo-splash-screen";
-import { useRouter } from 'expo-router';
-import LandingPage from '../components/Auth/LandingPage';
-import * as Notifications from 'expo-notifications';
+import { useRouter } from "expo-router";
+import LandingPage from "../components/Auth/LandingPage";
+import * as Notifications from "expo-notifications";
 // import * as Permissions from 'expo-permissions';
-import { RootState } from '@/store/store';
-import Offline from '../components/Offline';
+import { RootState } from "@/store/store";
+import Offline from "../components/Offline";
 
 // Keep splash screen visible until explicitly hidden
 SplashScreen.preventAutoHideAsync();
@@ -33,11 +33,15 @@ export default function TabOneScreen() {
 
   //   getPushNotificationPermission();
   // }, []);
-  
-  // Get authentication status from Redux
-  const isAuthenticated = useSelector((state: RootState) => state.auth.isAuthenticated);
 
-  const isConnectedToInternet = useSelector((state: RootState) => state.app.isConnectedToInternet);
+  // Get authentication status from Redux
+  const isAuthenticated = useSelector(
+    (state: RootState) => state.auth.isAuthenticated,
+  );
+
+  const isConnectedToInternet = useSelector(
+    (state: RootState) => state.app.isConnectedToInternet,
+  );
 
   // Handle navigation based on auth state once store is ready
   useEffect(() => {
@@ -47,7 +51,7 @@ export default function TabOneScreen() {
 
       // Navigate based on auth status
       if (isAuthenticated) {
-        router.replace('/(tabs)/properties');
+        router.replace("/(tabs)/properties");
       }
     }
   }, [isStoreReady, isAuthenticated, router]);
@@ -62,12 +66,11 @@ export default function TabOneScreen() {
     return null;
   }
 
-  if (!isConnectedToInternet)
-    return (<Offline />)
+  if (!isConnectedToInternet) return <Offline />;
 
   // For unauthenticated users, show landing page
   return (
-    <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+    <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
       <LandingPage />
     </View>
   );

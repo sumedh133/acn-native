@@ -1,7 +1,14 @@
-import React, { useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Modal, ScrollView } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
-import CloseIcon from '@/assets/icons/svg/CloseIcon';
+import React, { useState } from "react";
+import {
+  View,
+  Text,
+  StyleSheet,
+  TouchableOpacity,
+  Modal,
+  ScrollView,
+} from "react-native";
+import { Ionicons } from "@expo/vector-icons";
+import CloseIcon from "@/assets/icons/svg/CloseIcon";
 
 interface DetailsModalProps {
   onClose: () => void;
@@ -16,7 +23,7 @@ const DetailsModal = ({ onClose, requirement }: DetailsModalProps) => {
   return (
     <Modal
       visible={true}
-      onShow={() => setForceRender(prev => !prev)}
+      onShow={() => setForceRender((prev) => !prev)}
       animationType="slide"
       transparent={true}
       onRequestClose={onClose}
@@ -26,7 +33,7 @@ const DetailsModal = ({ onClose, requirement }: DetailsModalProps) => {
           <View style={styles.header}>
             <Text style={styles.title}>Requirement Details</Text>
             <TouchableOpacity onPress={onClose}>
-              <CloseIcon/>
+              <CloseIcon />
             </TouchableOpacity>
           </View>
 
@@ -96,27 +103,27 @@ const DetailsModal = ({ onClose, requirement }: DetailsModalProps) => {
 const styles = StyleSheet.create({
   modalContainer: {
     flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
-    justifyContent: 'flex-end',
+    backgroundColor: "rgba(0, 0, 0, 0.5)",
+    justifyContent: "flex-end",
   },
   modalContent: {
-    backgroundColor: '#FFFFFF',
+    backgroundColor: "#FFFFFF",
     borderTopLeftRadius: 16,
     borderTopRightRadius: 16,
-    maxHeight: '90%',
+    maxHeight: "90%",
   },
   header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
     padding: 16,
     borderBottomWidth: 1,
-    borderBottomColor: '#E5E7EB',
+    borderBottomColor: "#E5E7EB",
   },
   title: {
-    fontFamily: 'Montserrat_600SemiBold',
+    fontFamily: "Montserrat_600SemiBold",
     fontSize: 18,
-    color: '#374151',
+    color: "#374151",
   },
   content: {
     padding: 16,
@@ -125,45 +132,45 @@ const styles = StyleSheet.create({
     marginBottom: 24,
   },
   sectionTitle: {
-    fontFamily: 'Montserrat_600SemiBold',
+    fontFamily: "Montserrat_600SemiBold",
     fontSize: 16,
-    color: '#374151',
+    color: "#374151",
     marginBottom: 12,
   },
   infoRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
+    flexDirection: "row",
+    justifyContent: "space-between",
     marginBottom: 8,
   },
   label: {
-    fontFamily: 'Montserrat_500Medium',
+    fontFamily: "Montserrat_500Medium",
     fontSize: 14,
-    color: '#6B7280',
+    color: "#6B7280",
   },
   value: {
-    fontFamily: 'Montserrat_500Medium',
+    fontFamily: "Montserrat_500Medium",
     fontSize: 14,
-    color: '#374151',
-    textAlign: 'right',
+    color: "#374151",
+    textAlign: "right",
     flex: 1,
     marginLeft: 16,
   },
   footer: {
     padding: 16,
     borderTopWidth: 1,
-    borderTopColor: '#E5E7EB',
+    borderTopColor: "#E5E7EB",
   },
   contactButton: {
-    backgroundColor: '#10B981',
+    backgroundColor: "#10B981",
     paddingVertical: 12,
     borderRadius: 8,
-    alignItems: 'center',
+    alignItems: "center",
   },
   contactButtonText: {
-    fontFamily: 'Montserrat_600SemiBold',
+    fontFamily: "Montserrat_600SemiBold",
     fontSize: 16,
-    color: '#FFFFFF',
+    color: "#FFFFFF",
   },
 });
 
-export default DetailsModal; 
+export default DetailsModal;

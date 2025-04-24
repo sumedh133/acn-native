@@ -29,7 +29,8 @@ const PropertyIcon: React.FC<HomeIconProps> = ({
       height={height}
       viewBox="0 0 18 19"
       fill="none"
-      style={style}>
+      style={style}
+    >
       <Path
         d="M1.5 17H16.5"
         stroke={color}

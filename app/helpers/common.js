@@ -123,10 +123,20 @@ function getRandomInt(min, max) {
 }
 
 export const formatMonthYear = (dateString) => {
-  const [month, year] = dateString.split('/');
+  const [month, year] = dateString.split("/");
   const months = [
-    'JANUARY', 'FEBRUARY', 'MARCH', 'APRIL', 'MAY', 'JUNE',
-    'JULY', 'AUGUST', 'SEPTEMBER', 'OCTOBER', 'NOVEMBER', 'DECEMBER'
+    "JANUARY",
+    "FEBRUARY",
+    "MARCH",
+    "APRIL",
+    "MAY",
+    "JUNE",
+    "JULY",
+    "AUGUST",
+    "SEPTEMBER",
+    "OCTOBER",
+    "NOVEMBER",
+    "DECEMBER",
   ];
   const monthIndex = parseInt(month) - 1;
   return `${months[monthIndex]} ${year}`;

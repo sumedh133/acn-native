@@ -1,8 +1,8 @@
-import React, { useState } from 'react';
-import { View, Text, TouchableOpacity, Modal, ScrollView } from 'react-native';
-import { useRefinementList } from 'react-instantsearch';
-import { StyleSheet } from 'react-native';
-import CloseIcon from '@/assets/icons/svg/CloseIcon';
+import React, { useState } from "react";
+import { View, Text, TouchableOpacity, Modal, ScrollView } from "react-native";
+import { useRefinementList } from "react-instantsearch";
+import { StyleSheet } from "react-native";
+import CloseIcon from "@/assets/icons/svg/CloseIcon";
 
 interface DropdownRefinementListProps {
   attribute: string;
@@ -29,10 +29,7 @@ export default function DropdownRefinementList({
 
   return (
     <View style={styles.container}>
-      <TouchableOpacity
-        onPress={() => setIsOpen(true)}
-        style={styles.button}
-      >
+      <TouchableOpacity onPress={() => setIsOpen(true)} style={styles.button}>
         <Text style={styles.buttonText}>{label}</Text>
       </TouchableOpacity>
 
@@ -47,7 +44,7 @@ export default function DropdownRefinementList({
             <View style={styles.modalHeader}>
               <Text style={styles.modalTitle}>{label}</Text>
               <TouchableOpacity onPress={() => setIsOpen(false)}>
-                <CloseIcon/>
+                <CloseIcon />
               </TouchableOpacity>
             </View>
 
@@ -61,10 +58,12 @@ export default function DropdownRefinementList({
                   }}
                   style={styles.item}
                 >
-                  <Text style={[
-                    styles.itemText,
-                    item.isRefined && styles.selectedItemText
-                  ]}>
+                  <Text
+                    style={[
+                      styles.itemText,
+                      item.isRefined && styles.selectedItemText,
+                    ]}
+                  >
                     {item.label} ({item.count})
                   </Text>
                 </TouchableOpacity>
@@ -84,44 +83,44 @@ const styles = StyleSheet.create({
   button: {
     paddingHorizontal: 12,
     paddingVertical: 8,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: "#FFFFFF",
     borderWidth: 1,
-    borderColor: '#E5E7EB',
+    borderColor: "#E5E7EB",
     borderRadius: 6,
   },
   buttonText: {
-    fontFamily: 'Montserrat_500Medium',
+    fontFamily: "Montserrat_500Medium",
     fontSize: 14,
-    color: '#374151',
+    color: "#374151",
   },
   modalOverlay: {
     flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
-    justifyContent: 'center',
-    alignItems: 'center',
+    backgroundColor: "rgba(0, 0, 0, 0.5)",
+    justifyContent: "center",
+    alignItems: "center",
   },
   modalContent: {
-    backgroundColor: '#FFFFFF',
+    backgroundColor: "#FFFFFF",
     borderRadius: 12,
-    width: '80%',
-    maxHeight: '80%',
+    width: "80%",
+    maxHeight: "80%",
   },
   modalHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
     padding: 16,
     borderBottomWidth: 1,
-    borderBottomColor: '#E5E7EB',
+    borderBottomColor: "#E5E7EB",
   },
   modalTitle: {
-    fontFamily: 'Montserrat_600SemiBold',
+    fontFamily: "Montserrat_600SemiBold",
     fontSize: 18,
-    color: '#111827',
+    color: "#111827",
   },
   closeButton: {
     fontSize: 24,
-    color: '#6B7280',
+    color: "#6B7280",
   },
   listContainer: {
     maxHeight: 300,
@@ -129,15 +128,15 @@ const styles = StyleSheet.create({
   item: {
     padding: 16,
     borderBottomWidth: 1,
-    borderBottomColor: '#E5E7EB',
+    borderBottomColor: "#E5E7EB",
   },
   itemText: {
-    fontFamily: 'Montserrat_400Regular',
+    fontFamily: "Montserrat_400Regular",
     fontSize: 16,
-    color: '#374151',
+    color: "#374151",
   },
   selectedItemText: {
-    color: '#3B82F6',
-    fontFamily: 'Montserrat_600SemiBold',
+    color: "#3B82F6",
+    fontFamily: "Montserrat_600SemiBold",
   },
-}); 
+});

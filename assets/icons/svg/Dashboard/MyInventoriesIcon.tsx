@@ -1,6 +1,6 @@
-import React from 'react';
-import Svg, { Path, Rect, G, Defs, ClipPath } from 'react-native-svg';
-import { ViewStyle } from 'react-native';
+import React from "react";
+import Svg, { Path, Rect, G, Defs, ClipPath } from "react-native-svg";
+import { ViewStyle } from "react-native";
 
 interface HomeOutlineIconProps {
   width?: number;
@@ -15,7 +15,7 @@ const MyInverntoriesIcon: React.FC<HomeOutlineIconProps> = ({
   height = 40,
   // backgroundColor = '#E0F7F4', // Background color from the SVG
   iconColor, // Icon color from the SVG
-  style
+  style,
 }) => {
   return (
     <Svg
@@ -29,7 +29,7 @@ const MyInverntoriesIcon: React.FC<HomeOutlineIconProps> = ({
       <Path
         opacity="0.3"
         d="M0 16.0833C0 7.61497 6.86497 0.75 15.3333 0.75H24.6667C33.135 0.75 40 7.61497 40 16.0833V25.4167C40 33.885 33.135 40.75 24.6667 40.75H15.3333C6.86497 40.75 0 33.885 0 25.4167V16.0833Z"
-      // fill={backgroundColor}
+        // fill={backgroundColor}
       />
       <G clipPath="url(#clip0_1439_19637)">
         <Path

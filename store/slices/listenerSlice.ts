@@ -1,5 +1,5 @@
 // store/slices/listenerSlice.ts
-import { createSlice, PayloadAction } from '@reduxjs/toolkit';
+import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 
 type ListenerState = {
   unsubscribeAgentListener: null | (() => void);
@@ -12,7 +12,7 @@ const initialState: ListenerState = {
 };
 
 const listenerSlice = createSlice({
-  name: 'listeners',
+  name: "listeners",
   initialState,
   reducers: {
     setAgentListener: (state, action: PayloadAction<() => void>) => {

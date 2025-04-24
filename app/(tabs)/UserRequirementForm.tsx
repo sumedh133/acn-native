@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState } from "react";
 import {
   View,
   Text,
@@ -7,23 +7,30 @@ import {
   TextInput,
   TouchableOpacity,
   Pressable,
-  ActivityIndicator
-} from 'react-native';
-import ARSecondaryButton from '../components/Button/ARSecondaryButton';
-import ARPrimaryButton from '../components/Button/ARPrimaryButton';
-import { FontAwesome } from '@expo/vector-icons';
-import { Requirement } from '../types';
-import submitRequirement from '../helpers/submitRequirement';
-import { useSelector } from 'react-redux';
-import { RootState } from '@/store/store';
-import CustomSelectDropdown from '../components/CustomSelectDropdown';
-import { showErrorToast, showInfoToast, showSuccessToast } from '@/utils/toastUtils';
-import Offline from '../components/Offline';
+  ActivityIndicator,
+} from "react-native";
+import ARSecondaryButton from "../components/Button/ARSecondaryButton";
+import ARPrimaryButton from "../components/Button/ARPrimaryButton";
+import { FontAwesome } from "@expo/vector-icons";
+import { Requirement } from "../types";
+import submitRequirement from "../helpers/submitRequirement";
+import { useSelector } from "react-redux";
+import { RootState } from "@/store/store";
+import CustomSelectDropdown from "../components/CustomSelectDropdown";
+import {
+  showErrorToast,
+  showInfoToast,
+  showSuccessToast,
+} from "@/utils/toastUtils";
+import Offline from "../components/Offline";
 
 const UserRequirementForm = () => {
-  const cpId = useSelector((state: RootState) => state?.agent?.docData?.cpId) || null;
+  const cpId =
+    useSelector((state: RootState) => state?.agent?.docData?.cpId) || null;
 
-  const [focusedFields, setFocusedFields] = useState<{ [key: string]: boolean }>({});
+  const [focusedFields, setFocusedFields] = useState<{
+    [key: string]: boolean;
+  }>({});
   const handleFocus = (fieldName: string) => {
     setFocusedFields((prev) => ({ ...prev, [fieldName]: true }));
   };
@@ -31,13 +38,13 @@ const UserRequirementForm = () => {
     setFocusedFields((prev) => ({ ...prev, [fieldName]: false }));
   };
 
-  const [propertyName, setPropertyName] = useState('');
-  const [requirementDetails, setRequirementDetails] = useState('');
-  const [assetType, setAssetType] = useState('');
-  const [area, setArea] = useState<string>('');
-  const [configuration, setConfiguration] = useState('');
-  const [budgetFrom, setBudgetFrom] = useState<string>('');
-  const [budgetTo, setBudgetTo] = useState<string>('');
+  const [propertyName, setPropertyName] = useState("");
+  const [requirementDetails, setRequirementDetails] = useState("");
+  const [assetType, setAssetType] = useState("");
+  const [area, setArea] = useState<string>("");
+  const [configuration, setConfiguration] = useState("");
+  const [budgetFrom, setBudgetFrom] = useState<string>("");
+  const [budgetTo, setBudgetTo] = useState<string>("");
   const [marketValue, setMarketValue] = useState(false);
 
   const [error, setError] = useState<{
@@ -47,7 +54,9 @@ const UserRequirementForm = () => {
     budget?: string;
   }>({});
 
-  const isConnectedToInternet = useSelector((state: RootState) => state.app.isConnectedToInternet);
+  const isConnectedToInternet = useSelector(
+    (state: RootState) => state.app.isConnectedToInternet,
+  );
 
   const assetTypes = [
     { label: "Select Asset Type", value: "" },
@@ -60,7 +69,7 @@ const UserRequirementForm = () => {
     { label: "Commercial Building", value: "commercial building" },
     { label: "Row House", value: "rowhouse" },
     { label: "Bungalow", value: "bungalow" },
-    { label: "Villament", value: "villament" }
+    { label: "Villament", value: "villament" },
   ];
 
   const getConfigurations = () => {
@@ -108,20 +117,20 @@ const UserRequirementForm = () => {
     setMarketValue(!marketValue);
     if (!marketValue) {
       // If enabling market value, clear budget fields
-      setBudgetFrom('');
-      setBudgetTo('');
+      setBudgetFrom("");
+      setBudgetTo("");
     }
   };
 
   const clearForm = () => {
     // Reset form fields
-    setPropertyName('');
-    setRequirementDetails('');
-    setAssetType('');
-    setArea('');
-    setConfiguration('');
-    setBudgetFrom('');
-    setBudgetTo('');
+    setPropertyName("");
+    setRequirementDetails("");
+    setAssetType("");
+    setArea("");
+    setConfiguration("");
+    setBudgetFrom("");
+    setBudgetTo("");
     setMarketValue(false); // Reset to default value
 
     // Clear errors
@@ -138,11 +147,11 @@ const UserRequirementForm = () => {
       return true;
     }
 
-    if (budgetTo === '') {
+    if (budgetTo === "") {
       return false; // Max budget (budgetTo) is required
     }
 
-    if (budgetFrom === '') {
+    if (budgetFrom === "") {
       return true; // Min budget (budgetFrom) can be skipped
     }
 
@@ -165,7 +174,8 @@ const UserRequirementForm = () => {
     }
 
     if (!marketValue && !isBudgetValidRange()) {
-      newErrors.budget = "Please enter a valid maximum budget or select 'As per Market Price'.";
+      newErrors.budget =
+        "Please enter a valid maximum budget or select 'As per Market Price'.";
     }
 
     setError(newErrors);
@@ -188,13 +198,15 @@ const UserRequirementForm = () => {
           to: budgetTo ? parseFloat(budgetTo) : undefined,
         },
         marketValue: marketValue === true ? "Market Value" : "",
-      }
+      };
 
       await submitRequirement(userRequirement, cpId);
       clearForm();
       showSuccessToast("Requirement submitted successfully!");
     } catch (error) {
-      showErrorToast("An error occurred while submitting the requirement. Please try again.");
+      showErrorToast(
+        "An error occurred while submitting the requirement. Please try again.",
+      );
       console.error("An error occurred:", error);
     } finally {
       setSaving(false);
@@ -204,19 +216,21 @@ const UserRequirementForm = () => {
   const [saving, setSaving] = useState(false);
 
   // Calculate if form is valid for submit button
-  const isSubmitEnabled = propertyName.trim() !== '' &&
-    assetType.trim() !== '' &&
+  const isSubmitEnabled =
+    propertyName.trim() !== "" &&
+    assetType.trim() !== "" &&
     (marketValue || isBudgetValidRange());
 
-  if (!isConnectedToInternet)
-    return (<Offline />)
+  if (!isConnectedToInternet) return <Offline />;
 
   return (
     <View style={styles.overlay}>
       <View style={styles.modalContainer}>
-
         {/* Scrollable Content */}
-        <ScrollView style={styles.contentContainer} showsVerticalScrollIndicator={false}>
+        <ScrollView
+          style={styles.contentContainer}
+          showsVerticalScrollIndicator={false}
+        >
           {/* Project Name / Location */}
           <View style={styles.inputGroup}>
             <Text style={styles.inputLabel}>
@@ -226,14 +240,17 @@ const UserRequirementForm = () => {
               value={propertyName}
               onChangeText={(text) => {
                 setPropertyName(text);
-                setError((prev) => ({ ...prev, propertyName: undefined }));
+                setError((prev) => ({
+                  ...prev,
+                  propertyName: undefined,
+                }));
               }}
-              onFocus={() => handleFocus('propertyName')}
-              onBlur={() => handleBlur('propertyName')}
+              onFocus={() => handleFocus("propertyName")}
+              onBlur={() => handleBlur("propertyName")}
               placeholder="Type here"
               style={[
                 styles.textInput,
-                focusedFields['propertyName'] && styles.focusedInput
+                focusedFields["propertyName"] && styles.focusedInput,
               ]}
             />
             {error.propertyName && (
@@ -247,8 +264,8 @@ const UserRequirementForm = () => {
             <TextInput
               value={requirementDetails}
               onChangeText={setRequirementDetails}
-              onFocus={() => handleFocus('requirementDetails')}
-              onBlur={() => handleBlur('requirementDetails')}
+              onFocus={() => handleFocus("requirementDetails")}
+              onBlur={() => handleBlur("requirementDetails")}
               placeholder="Enter the details"
               multiline
               numberOfLines={3}
@@ -256,7 +273,7 @@ const UserRequirementForm = () => {
               style={[
                 styles.textInput,
                 styles.textArea,
-                focusedFields['requirementDetails'] && styles.focusedInput
+                focusedFields["requirementDetails"] && styles.focusedInput,
               ]}
             />
           </View>
@@ -268,10 +285,7 @@ const UserRequirementForm = () => {
               <Text style={styles.inputLabel}>
                 Asset Type <Text style={styles.required}>*</Text>
               </Text>
-              <View style={[
-
-                focusedFields['assetType'] && styles.focusedInput
-              ]}>
+              <View style={[focusedFields["assetType"] && styles.focusedInput]}>
                 <CustomSelectDropdown
                   selectedValue={assetType}
                   onValueChange={setAssetType}
@@ -285,29 +299,33 @@ const UserRequirementForm = () => {
             </View>
 
             {/* Configuration + Area Row */}
-            <View style={styles.rowContainer} className='mb-[-24px]'>
+            <View style={styles.rowContainer} className="mb-[-24px]">
               {/* Configuration */}
               <View style={[styles.inputGroup, styles.halfWidth]}>
                 <Text style={styles.inputLabel}>
                   Configuration <Text style={styles.required}>*</Text>
                 </Text>
-                <View style={[
-
-                  focusedFields['configuration'] && styles.focusedInput,
-                  isConfigurationDisabled && styles.disabledInput
-                ]}>
+                <View
+                  style={[
+                    focusedFields["configuration"] && styles.focusedInput,
+                    isConfigurationDisabled && styles.disabledInput,
+                  ]}
+                >
                   <CustomSelectDropdown
                     selectedValue={configuration}
                     onValueChange={setConfiguration}
                     options={[
-                      { label: "Select Configuration", value: "" },
+                      {
+                        label: "Select Configuration",
+                        value: "",
+                      },
                       ...getConfigurations().map((config) => ({
                         label: config,
                         value: config,
                       })),
                     ]}
                     placeholder="Select Configuration"
-                  // disabled={isConfigurationDisabled}
+                    // disabled={isConfigurationDisabled}
                   />
                 </View>
                 {error.configuration && (
@@ -331,13 +349,13 @@ const UserRequirementForm = () => {
                       setArea(numericValue);
                     }
                   }}
-                  onFocus={() => handleFocus('area')}
-                  onBlur={() => handleBlur('area')}
+                  onFocus={() => handleFocus("area")}
+                  onBlur={() => handleBlur("area")}
                   placeholder="0000"
                   keyboardType="decimal-pad"
                   style={[
                     styles.textInput,
-                    focusedFields['area'] && styles.focusedInput
+                    focusedFields["area"] && styles.focusedInput,
                   ]}
                 />
               </View>
@@ -370,17 +388,20 @@ const UserRequirementForm = () => {
                     } else {
                       setBudgetFrom(numericValue);
                     }
-                    setError((prev) => ({ ...prev, budget: "" }));
+                    setError((prev) => ({
+                      ...prev,
+                      budget: "",
+                    }));
                   }}
-                  onFocus={() => handleFocus('budgetFrom')}
-                  onBlur={() => handleBlur('budgetFrom')}
+                  onFocus={() => handleFocus("budgetFrom")}
+                  onBlur={() => handleBlur("budgetFrom")}
                   keyboardType="decimal-pad"
                   editable={!marketValue}
                   style={[
                     styles.textInput,
                     styles.budgetInput,
-                    focusedFields['budgetFrom'] && styles.focusedInput,
-                    marketValue && styles.disabledInput
+                    focusedFields["budgetFrom"] && styles.focusedInput,
+                    marketValue && styles.disabledInput,
                   ]}
                 />
 
@@ -404,17 +425,20 @@ const UserRequirementForm = () => {
                     } else {
                       setBudgetTo(numericValue);
                     }
-                    setError((prev) => ({ ...prev, budget: "" }));
+                    setError((prev) => ({
+                      ...prev,
+                      budget: "",
+                    }));
                   }}
-                  onFocus={() => handleFocus('budgetTo')}
-                  onBlur={() => handleBlur('budgetTo')}
+                  onFocus={() => handleFocus("budgetTo")}
+                  onBlur={() => handleBlur("budgetTo")}
                   keyboardType="decimal-pad"
                   editable={!marketValue}
                   style={[
                     styles.textInput,
                     styles.budgetInput,
-                    focusedFields['budgetTo'] && styles.focusedInput,
-                    marketValue && styles.disabledInput
+                    focusedFields["budgetTo"] && styles.focusedInput,
+                    marketValue && styles.disabledInput,
                   ]}
                 />
               </View>
@@ -441,13 +465,21 @@ const UserRequirementForm = () => {
         {/* Fixed Footer */}
         <View style={styles.footerButtons}>
           {/* Clear Button */}
-          <ARSecondaryButton onPress={clearForm} style={styles.clearButton} >
+          <ARSecondaryButton onPress={clearForm} style={styles.clearButton}>
             Clear
           </ARSecondaryButton>
 
           {/* Submit Button */}
-          <ARPrimaryButton onPress={handleSubmit} style={styles.submitButton} disabled={saving}>
-            {saving ? <ActivityIndicator size={'small'} color={'white'} /> : "Submit"}
+          <ARPrimaryButton
+            onPress={handleSubmit}
+            style={styles.submitButton}
+            disabled={saving}
+          >
+            {saving ? (
+              <ActivityIndicator size={"small"} color={"white"} />
+            ) : (
+              "Submit"
+            )}
           </ARPrimaryButton>
         </View>
       </View>
@@ -458,29 +490,29 @@ const UserRequirementForm = () => {
 const styles = StyleSheet.create({
   overlay: {
     flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
-    justifyContent: 'center',
-    alignItems: 'center',
+    backgroundColor: "rgba(0, 0, 0, 0.5)",
+    justifyContent: "center",
+    alignItems: "center",
     zIndex: 60,
   },
   modalContainer: {
-    width: '100%',
-    height: '100%',
-    backgroundColor: '#fff',
+    width: "100%",
+    height: "100%",
+    backgroundColor: "#fff",
     // paddingBottom: 80,
   },
   header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
     padding: 16,
     borderBottomWidth: 1,
-    borderBottomColor: '#e5e7eb',
-    backgroundColor: '#fff',
+    borderBottomColor: "#e5e7eb",
+    backgroundColor: "#fff",
   },
   headerText: {
     fontSize: 18,
-    fontWeight: 'bold',
+    fontWeight: "bold",
   },
   contentContainer: {
     flex: 1,
@@ -492,65 +524,63 @@ const styles = StyleSheet.create({
   },
   inputLabel: {
     fontSize: 14,
-    fontWeight: '600',
+    fontWeight: "600",
     marginBottom: 8,
-    fontFamily:'Montserrat_700Bold',
+    fontFamily: "Montserrat_700Bold",
   },
   required: {
-    color: 'red',
+    color: "red",
   },
   textInput: {
     borderWidth: 1.5,
-    borderColor: '#e5e7eb',
+    borderColor: "#e5e7eb",
     borderRadius: 8,
     paddingHorizontal: 12,
     paddingVertical: 8,
     fontSize: 14,
-    backgroundColor: '#fff',
+    backgroundColor: "#fff",
   },
   textArea: {
     height: 80,
     paddingTop: 12,
   },
   focusedInput: {
-    borderColor: '#F59E0B', // Yellow-600 equivalent
+    borderColor: "#F59E0B", // Yellow-600 equivalent
     borderWidth: 2,
   },
   disabledInput: {
-    backgroundColor: '#F5F5F4', // Stone-100 equivalent
-    color: '#6B7280', // Gray-500 equivalent
+    backgroundColor: "#F5F5F4", // Stone-100 equivalent
+    color: "#6B7280", // Gray-500 equivalent
     opacity: 0.5,
   },
   pickerContainer: {
     borderWidth: 1.5,
-    borderColor: '#e5e7eb',
+    borderColor: "#e5e7eb",
     borderRadius: 8,
-    backgroundColor: '#fff',
-    overflow: 'hidden',
+    backgroundColor: "#fff",
+    overflow: "hidden",
   },
   picker: {
     height: 45,
-
   },
   pickerItem: {
     fontSize: 14,
-
   },
   containerBox: {
-    backgroundColor: '#fff',
+    backgroundColor: "#fff",
     borderRadius: 8,
     borderWidth: 1,
-    borderColor: '#e5e7eb',
+    borderColor: "#e5e7eb",
     padding: 16,
     marginBottom: 16,
   },
   rowContainer: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
   },
   halfWidth: {
-    width: '48%',
+    width: "48%",
   },
   budgetInput: {
     flex: 1,
@@ -560,52 +590,52 @@ const styles = StyleSheet.create({
     fontSize: 14,
   },
   checkboxContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     // marginTop: 12,
   },
   checkbox: {
     width: 16,
     height: 16,
     borderWidth: 1,
-    borderColor: '#9CA3AF', // Gray-400 equivalent
+    borderColor: "#9CA3AF", // Gray-400 equivalent
     borderRadius: 4,
     marginRight: 8,
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: "center",
+    alignItems: "center",
   },
   checkedBox: {
-    backgroundColor: '#3B82F6', // Blue-500 equivalent
-    borderColor: '#2563EB', // Blue-600 equivalent
+    backgroundColor: "#3B82F6", // Blue-500 equivalent
+    borderColor: "#2563EB", // Blue-600 equivalent
   },
   checkmark: {
-    color: '#fff',
-    fontWeight: 'bold',
+    color: "#fff",
+    fontWeight: "bold",
     fontSize: 12,
   },
   checkboxLabel: {
     fontSize: 14,
-    fontWeight: '600',
+    fontWeight: "600",
   },
   errorText: {
-    color: '#EF4444', // Red-500 equivalent
+    color: "#EF4444", // Red-500 equivalent
     fontSize: 12,
     marginTop: 4,
   },
 
   footerButtons: {
-    position: 'absolute',
+    position: "absolute",
     bottom: 0,
-    width: '100%',
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+    width: "100%",
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
     paddingHorizontal: 16,
     paddingVertical: 16,
     gap: "60%",
     borderTopWidth: 1,
-    borderColor: '#e5e7eb',
-    backgroundColor: 'white',
+    borderColor: "#e5e7eb",
+    backgroundColor: "white",
   },
 
   clearButton: {
@@ -613,7 +643,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 32,
     borderRadius: 8,
     borderWidth: 1,
-    borderColor: '#999',
+    borderColor: "#999",
     flexShrink: 1,
   },
 
@@ -621,11 +651,11 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
     paddingHorizontal: 32,
     borderRadius: 8,
-    backgroundColor: '#153E3B',
+    backgroundColor: "#153E3B",
     flexShrink: 1,
   },
   disabledButton: {
-    backgroundColor: '#D1D5DB', // Gray-300
+    backgroundColor: "#D1D5DB", // Gray-300
   },
 });
 
