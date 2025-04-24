@@ -107,6 +107,9 @@ export default function LayoutApp() {
     return () => unsubscribe();
   }, []);
 
+  const isAuthenticated =
+    useSelector((state: RootState) => state.auth.isAuthenticated) || false;
+
   if (!fontsLoaded) {
     return null;
   }
@@ -194,7 +197,9 @@ export default function LayoutApp() {
       />
       <Toast config={toastConfig} />
       <StatusBar style="auto" />
-      <FooterNavigation />
+      {isAuthenticated &&
+        <FooterNavigation />
+      }
     </View>
   );
 }
