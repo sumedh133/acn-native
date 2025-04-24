@@ -47,9 +47,9 @@ function SearchRefresher({ onRefreshAvailable }: { onRefreshAvailable: (refresh:
 }
 
 // MobileHits Component
-const MobileHits = forwardRef<FlatList>((props, ref) => {
+const MobileHits = () => {
   // const { hits } = useHits<Property>();
-  const { items, isLastPage, showMore } = useInfiniteHits();
+  const { items, isLastPage, showMore } = useInfiniteHits<Property>();
   const { status } = useInstantSearch();
   const { query } = useSearchBox();
   console.log("status inf", status, items.length);
@@ -90,9 +90,9 @@ const MobileHits = forwardRef<FlatList>((props, ref) => {
     }
   }, [isLastPage, isLoadingMore, showMore]);
 
-  const keyExtractor = useCallback((item) => item.objectID || String(item.id), []);
+  const keyExtractor = useCallback((item: Property) => item.objectID || String(item.propertyId), []);
 
-  const renderItem = useCallback(({ item }) => {
+  const renderItem = useCallback(({ item }: { item: Property }) => {
     const transformedProperty: Property = item;
     return (
       <PropertyCard
@@ -137,7 +137,6 @@ const MobileHits = forwardRef<FlatList>((props, ref) => {
     <>
       <FlatList
         data={items}
-        ref={ref}
         renderItem={renderItem}
         keyExtractor={keyExtractor}
         refreshControl={
@@ -162,7 +161,7 @@ const MobileHits = forwardRef<FlatList>((props, ref) => {
       />
     </>
   );
-});
+};
 
 export default function PropertiesScreen() {
   const [isMoreFiltersModalOpen, setIsMoreFiltersModalOpen] = useState(false);
@@ -274,7 +273,7 @@ export default function PropertiesScreen() {
             }
           > */}
           <View className="w-full flex-1">
-            <MobileHits ref={scrollViewRef} />
+            <MobileHits />
           </View>
           {/* </ScrollView> */}
 

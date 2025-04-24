@@ -19,11 +19,11 @@ const searchClient = algoliasearch(
 );
 
 const MobileHits = forwardRef<FlatList>((props, ref) => {
-  const { hits, isLastPage, showMore } = useInfiniteHits<Requirement>();
+  const { items, isLastPage, showMore } = useInfiniteHits<Requirement>();
   const { status } = useInstantSearch();
   const { query } = useSearchBox();
   const [selectedProperty, setSelectedProperty] = useState<any>(null);
-  
+
   // Add state for tracking loading states
   const [refreshing, setRefreshing] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -61,9 +61,9 @@ const MobileHits = forwardRef<FlatList>((props, ref) => {
   }, [isLastPage, isLoadingMore, showMore]);
 
   // Optimize item rendering with useCallback
-  const keyExtractor = useCallback((item) => item.objectID, []);
-  
-  const renderItem = useCallback(({ item }) => (
+  const keyExtractor = useCallback((item: Requirement) => item.objectID, []);
+
+  const renderItem = useCallback(({ item } : { item: Requirement }) => (
     <View style={{ padding: 2 }}>
       <RequirementCard
         requirement={item as Requirement}
@@ -85,13 +85,13 @@ const MobileHits = forwardRef<FlatList>((props, ref) => {
   }, [loading]);
 
   // Empty states handling
-  if (hits?.length === 0 && query?.length !== 0) {
+  if (items?.length === 0 && query?.length !== 0) {
     return (
       <View className="flex items-center justify-center h-64">
         <Text>No results found for "{query}"</Text>
       </View>
     );
-  } else if (hits.length === 0) {
+  } else if (items.length === 0) {
     return (
       <View className="flex items-center justify-center h-64 gap-10 mt-20">
         <ActivityIndicator size="large" color="#153E3B" />
@@ -105,7 +105,7 @@ const MobileHits = forwardRef<FlatList>((props, ref) => {
 
   return (
     <FlatList
-      data={hits}
+      data={items}
       ref={ref}
       keyExtractor={keyExtractor}
       renderItem={renderItem}
@@ -155,7 +155,6 @@ const RequirementsList = forwardRef<Animated.ScrollView>((props, ref) => {
 
   const { refresh } = useInstantSearch();
   const [refreshing, setRefreshing] = useState(false);
-  const scrollViewRef = useRef<Animated.ScrollView>(null);
 
   const onRefresh = useCallback(() => {
     setRefreshing(true);
@@ -171,11 +170,10 @@ const RequirementsList = forwardRef<Animated.ScrollView>((props, ref) => {
 
   return (
     <View
-        style={[styles.mobileContent]} contentContainerStyle={{ paddingBottom: 0, }}
-        ref={ref}
-      >
-        <MobileHits ref={scrollViewRef} />
-      </View>
+      style={[styles.mobileContent]}
+    >
+      <MobileHits />
+    </View>
   );
 });
 
@@ -184,7 +182,6 @@ const RequirementsPage = () => {
 
   const [filtersHeight, setFiltersHeight] = useState(0);
   const [paginationHeight, setPaginationHeight] = useState(0);
-  const scrollViewRef = useRef<Animated.ScrollView>(null)
   const filtersRef = useRef<View>(null);
   const paginationRef = useRef<View>(null);
 
@@ -231,7 +228,7 @@ const RequirementsPage = () => {
             <RequirementFilters handleToggleMoreFilters={handleToggleMoreFilters} />
           </View>
 
-          <RequirementsList ref={scrollViewRef} />
+          <RequirementsList />
 
           {/* <View
             ref={paginationRef}
