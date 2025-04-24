@@ -1,7 +1,16 @@
-import React from 'react';
-import { View, Text, TouchableOpacity, ScrollView, StyleSheet } from 'react-native';
-import { useClearRefinements, useCurrentRefinements } from 'react-instantsearch';
-import { Button } from 'react-native-elements';
+import React from "react";
+import {
+  View,
+  Text,
+  TouchableOpacity,
+  ScrollView,
+  StyleSheet,
+} from "react-native";
+import {
+  useClearRefinements,
+  useCurrentRefinements,
+} from "react-instantsearch";
+import { Button } from "react-native-elements";
 
 interface CustomCurrentRefinementsProps {
   selectedLandmark?: any;
@@ -20,11 +29,11 @@ export default function CustomCurrentRefinements({
   }
 
   // Flatten refinements from all items into a single array for inline display
-  const allRefinements = items.flatMap(item =>
-    item.refinements.map(refinement => ({
+  const allRefinements = items.flatMap((item) =>
+    item.refinements.map((refinement) => ({
       attribute: item.attribute,
-      refinement: refinement
-    }))
+      refinement: refinement,
+    })),
   );
 
   return (
@@ -36,7 +45,9 @@ export default function CustomCurrentRefinements({
       <View style={styles.content}>
         {selectedLandmark && (
           <TouchableOpacity
-            onPress={() => { setSelectedLandmark && setSelectedLandmark(null) }}
+            onPress={() => {
+              setSelectedLandmark && setSelectedLandmark(null);
+            }}
             style={styles.chip}
           >
             <Text style={styles.chipText}>
@@ -53,7 +64,9 @@ export default function CustomCurrentRefinements({
             style={styles.chip}
           >
             <Text style={styles.chipText}>
-              {item.refinement.attribute === 'agentCpid' ? 'My Requirements' : item.refinement.label}
+              {item.refinement.attribute === "agentCpid"
+                ? "My Requirements"
+                : item.refinement.label}
             </Text>
             <Text style={styles.removeIcon}>×</Text>
           </TouchableOpacity>
@@ -63,7 +76,9 @@ export default function CustomCurrentRefinements({
           <TouchableOpacity
             onPress={() => {
               clearRefinements();
-              { setSelectedLandmark && setSelectedLandmark(null); }
+              {
+                setSelectedLandmark && setSelectedLandmark(null);
+              }
             }}
             style={styles.clearButton}
           >
@@ -83,45 +98,45 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   content: {
-    flexDirection: 'row',
+    flexDirection: "row",
     paddingHorizontal: 16,
     gap: 8,
-    alignItems: 'center',
+    alignItems: "center",
   },
   chip: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#E5E7EB',
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "#E5E7EB",
     paddingHorizontal: 12,
     paddingVertical: 6,
     borderRadius: 16,
   },
   chipText: {
-    fontFamily: 'Montserrat_400Regular',
+    fontFamily: "Montserrat_400Regular",
     fontSize: 14,
-    color: '#374151',
+    color: "#374151",
     marginRight: 4,
   },
   removeIcon: {
     fontSize: 16,
-    color: '#6B7280',
+    color: "#6B7280",
   },
   clearButton: {
     marginLeft: 4,
   },
   clearButtonContent: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     borderWidth: 1,
-    borderColor: '#E11E1E',
-    backgroundColor: 'rgba(225, 30, 30, 0.1)',
+    borderColor: "#E11E1E",
+    backgroundColor: "rgba(225, 30, 30, 0.1)",
     paddingHorizontal: 8,
     paddingVertical: 6,
     borderRadius: 16,
   },
   clearButtonText: {
-    fontFamily: 'Montserrat_600SemiBold',
+    fontFamily: "Montserrat_600SemiBold",
     fontSize: 12,
-    color: '#E11E1E',
-  }
+    color: "#E11E1E",
+  },
 });

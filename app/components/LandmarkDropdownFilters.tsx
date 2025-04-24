@@ -1,8 +1,17 @@
-import React, { useState, useEffect, useCallback, useRef } from 'react';
-import { View, Text, StyleSheet, TextInput, TouchableOpacity, FlatList, ActivityIndicator, Keyboard } from 'react-native';
-import Slider from '@react-native-community/slider';
-import { Landmark } from '../(tabs)/properties';
-import { Ionicons } from '@expo/vector-icons';
+import React, { useState, useEffect, useCallback, useRef } from "react";
+import {
+  View,
+  Text,
+  StyleSheet,
+  TextInput,
+  TouchableOpacity,
+  FlatList,
+  ActivityIndicator,
+  Keyboard,
+} from "react-native";
+import Slider from "@react-native-community/slider";
+import { Landmark } from "../(tabs)/properties";
+import { Ionicons } from "@expo/vector-icons";
 // import { PLACES_API_KEY } from '@env';
 
 // Define types for API responses
@@ -17,8 +26,8 @@ interface PlaceDetails {
     location: {
       lat: number;
       lng: number;
-    }
-  }
+    };
+  };
 }
 
 interface LandmarkDropdownFiltersProps {
@@ -30,15 +39,22 @@ interface LandmarkDropdownFiltersProps {
 // const API_KEY = PLACES_API_KEY;
 const API_KEY = "AIzaSyBsygl4y777lWd7M7mMQMwvnTyYFjPwoaM";
 
-const LandmarkDropdownFilters = ({ selectedLandmark, setSelectedLandmark }: LandmarkDropdownFiltersProps) => {
-  const [searchQuery, setSearchQuery] = useState('');
+const LandmarkDropdownFilters = ({
+  selectedLandmark,
+  setSelectedLandmark,
+}: LandmarkDropdownFiltersProps) => {
+  const [searchQuery, setSearchQuery] = useState("");
   const [searchResults, setSearchResults] = useState<PlacePrediction[]>([]);
   const [showResults, setShowResults] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  const [sliderValue, setSliderValue] = useState(selectedLandmark?.radius || 5000);
-  const [sliderTempValue, setSliderTempValue] = useState(selectedLandmark?.radius || 5000);
+  const [sliderValue, setSliderValue] = useState(
+    selectedLandmark?.radius || 5000,
+  );
+  const [sliderTempValue, setSliderTempValue] = useState(
+    selectedLandmark?.radius || 5000,
+  );
   const [userInitiatedSearch, setUserInitiatedSearch] = useState(false);
-  
+
   const searchTimeout = useRef<NodeJS.Timeout | null>(null);
   // Track if component has mounted
   const isInitialMount = useRef(true);
@@ -53,21 +69,23 @@ const LandmarkDropdownFilters = ({ selectedLandmark, setSelectedLandmark }: Land
     try {
       setIsLoading(true);
       const response = await fetch(
-        `https://maps.googleapis.com/maps/api/place/autocomplete/json?input=${encodeURIComponent(query)}&key=${API_KEY}`
+        `https://maps.googleapis.com/maps/api/place/autocomplete/json?input=${encodeURIComponent(query)}&key=${API_KEY}`,
       );
       const data = await response.json();
 
-      if (data.status === 'OK') {
-        setSearchResults(data.predictions.map((prediction: any) => ({
-          place_id: prediction.place_id,
-          description: prediction.description
-        })));
+      if (data.status === "OK") {
+        setSearchResults(
+          data.predictions.map((prediction: any) => ({
+            place_id: prediction.place_id,
+            description: prediction.description,
+          })),
+        );
       } else {
-        console.error('Places API error:', data.status);
+        console.error("Places API error:", data.status);
         setSearchResults([]);
       }
     } catch (error) {
-      console.error('Error fetching location suggestions:', error);
+      console.error("Error fetching location suggestions:", error);
       setSearchResults([]);
     } finally {
       setIsLoading(false);
@@ -75,32 +93,35 @@ const LandmarkDropdownFilters = ({ selectedLandmark, setSelectedLandmark }: Land
   }, []);
 
   // Get place details by ID
-  const getPlaceDetails = useCallback(async (placeId: string): Promise<PlaceDetails | null> => {
-    try {
-      const response = await fetch(
-        `https://maps.googleapis.com/maps/api/place/details/json?place_id=${placeId}&fields=name,geometry&key=${API_KEY}`
-      );
-      const data = await response.json();
+  const getPlaceDetails = useCallback(
+    async (placeId: string): Promise<PlaceDetails | null> => {
+      try {
+        const response = await fetch(
+          `https://maps.googleapis.com/maps/api/place/details/json?place_id=${placeId}&fields=name,geometry&key=${API_KEY}`,
+        );
+        const data = await response.json();
 
-      if (data.status === 'OK' && data.result) {
-        return {
-          name: data.result.name,
-          geometry: {
-            location: {
-              lat: data.result.geometry.location.lat,
-              lng: data.result.geometry.location.lng
-            }
-          }
-        };
-      } else {
-        console.error('Place Details API error:', data.status);
+        if (data.status === "OK" && data.result) {
+          return {
+            name: data.result.name,
+            geometry: {
+              location: {
+                lat: data.result.geometry.location.lat,
+                lng: data.result.geometry.location.lng,
+              },
+            },
+          };
+        } else {
+          console.error("Place Details API error:", data.status);
+          return null;
+        }
+      } catch (error) {
+        console.error("Error fetching place details:", error);
         return null;
       }
-    } catch (error) {
-      console.error('Error fetching place details:', error);
-      return null;
-    }
-  }, []);
+    },
+    [],
+  );
 
   // Update searchQuery when selectedLandmark changes without triggering a search
   useEffect(() => {
@@ -114,7 +135,7 @@ const LandmarkDropdownFilters = ({ selectedLandmark, setSelectedLandmark }: Land
       isInitialMount.current = false;
       return;
     }
-    
+
     // For subsequent updates to selectedLandmark
     if (selectedLandmark) {
       setSearchQuery(selectedLandmark.name);
@@ -123,7 +144,7 @@ const LandmarkDropdownFilters = ({ selectedLandmark, setSelectedLandmark }: Land
       // Don't show results when landmark is programmatically selected
       setShowResults(false);
     } else {
-      setSearchQuery('');
+      setSearchQuery("");
       setSliderValue(5000);
       setSliderTempValue(5000);
     }
@@ -133,7 +154,7 @@ const LandmarkDropdownFilters = ({ selectedLandmark, setSelectedLandmark }: Land
   useEffect(() => {
     // Skip the initial render when component mounts with a selectedLandmark
     if (isInitialMount.current) return;
-    
+
     // Only search when the user is typing, not when searchQuery is set programmatically
     if (searchTimeout.current) {
       clearTimeout(searchTimeout.current);
@@ -169,29 +190,32 @@ const LandmarkDropdownFilters = ({ selectedLandmark, setSelectedLandmark }: Land
   };
 
   // Handle selecting a place from search results
-  const handleSelectPlace = useCallback(async (placeId: string, description: string) => {
-    try {
-      setIsLoading(true);
-      const details = await getPlaceDetails(placeId);
-      if (details && details.geometry) {
-        const location: Landmark = {
-          name: details.name || description,
-          lat: details.geometry.location.lat,
-          lng: details.geometry.location.lng,
-          radius: sliderValue,
-        };
-        // This will set searchQuery via useEffect, so reset userInitiatedSearch
-        setUserInitiatedSearch(false);
-        setSelectedLandmark(location);
-        setShowResults(false);
-        Keyboard.dismiss();
+  const handleSelectPlace = useCallback(
+    async (placeId: string, description: string) => {
+      try {
+        setIsLoading(true);
+        const details = await getPlaceDetails(placeId);
+        if (details && details.geometry) {
+          const location: Landmark = {
+            name: details.name || description,
+            lat: details.geometry.location.lat,
+            lng: details.geometry.location.lng,
+            radius: sliderValue,
+          };
+          // This will set searchQuery via useEffect, so reset userInitiatedSearch
+          setUserInitiatedSearch(false);
+          setSelectedLandmark(location);
+          setShowResults(false);
+          Keyboard.dismiss();
+        }
+      } catch (error) {
+        console.error("Error getting place details:", error);
+      } finally {
+        setIsLoading(false);
       }
-    } catch (error) {
-      console.error("Error getting place details:", error);
-    } finally {
-      setIsLoading(false);
-    }
-  }, [getPlaceDetails, sliderValue, setSelectedLandmark]);
+    },
+    [getPlaceDetails, sliderValue, setSelectedLandmark],
+  );
 
   // Handle slider change - track temp value during sliding
   const handleSliderChange = useCallback((value: number) => {
@@ -199,19 +223,22 @@ const LandmarkDropdownFilters = ({ selectedLandmark, setSelectedLandmark }: Land
   }, []);
 
   // Update the actual value when sliding is complete
-  const handleSlidingComplete = useCallback((value: number) => {
-    setSliderValue(value);
-    if (selectedLandmark) {
-      setSelectedLandmark({
-        ...selectedLandmark,
-        radius: value,
-      });
-    }
-  }, [selectedLandmark, setSelectedLandmark]);
+  const handleSlidingComplete = useCallback(
+    (value: number) => {
+      setSliderValue(value);
+      if (selectedLandmark) {
+        setSelectedLandmark({
+          ...selectedLandmark,
+          radius: value,
+        });
+      }
+    },
+    [selectedLandmark, setSelectedLandmark],
+  );
 
   // Clear search
   const handleClearSearch = useCallback(() => {
-    setSearchQuery('');
+    setSearchQuery("");
     setSelectedLandmark(null);
     setSearchResults([]);
     setShowResults(false);
@@ -248,11 +275,18 @@ const LandmarkDropdownFilters = ({ selectedLandmark, setSelectedLandmark }: Land
           onChangeText={handleSearchInputChange}
           onFocus={handleSearchFocus}
         />
-        
+
         {isLoading ? (
-          <ActivityIndicator style={styles.rightIcon} size="small" color="#666" />
+          <ActivityIndicator
+            style={styles.rightIcon}
+            size="small"
+            color="#666"
+          />
         ) : searchQuery ? (
-          <TouchableOpacity onPress={handleClearSearch} style={styles.rightIcon}>
+          <TouchableOpacity
+            onPress={handleClearSearch}
+            style={styles.rightIcon}
+          >
             <Text style={styles.clearButtonText}>✕</Text>
           </TouchableOpacity>
         ) : null}
@@ -267,7 +301,9 @@ const LandmarkDropdownFilters = ({ selectedLandmark, setSelectedLandmark }: Land
             renderItem={({ item }) => (
               <TouchableOpacity
                 style={styles.resultItem}
-                onPress={() => handleSelectPlace(item.place_id, item.description)}
+                onPress={() =>
+                  handleSelectPlace(item.place_id, item.description)
+                }
               >
                 <Text style={styles.resultText}>{item.description}</Text>
               </TouchableOpacity>
@@ -284,14 +320,24 @@ const LandmarkDropdownFilters = ({ selectedLandmark, setSelectedLandmark }: Land
       {selectedLandmark && (
         <View className="mt-4 mb-4">
           <View className="flex-row justify-between items-center mb-2">
-            <Text className="font-semibold text-sm text-gray-700">Search Radius (in km)</Text>
-            <Ionicons name="information-circle-outline" size={18} color="#6B7280" />
+            <Text className="font-semibold text-sm text-gray-700">
+              Search Radius (in km)
+            </Text>
+            <Ionicons
+              name="information-circle-outline"
+              size={18}
+              color="#6B7280"
+            />
           </View>
 
           <View style={styles.radiusLabelsContainer}>
             <Text className="text-sm text-gray-700 font-medium mb-2">1 km</Text>
-            <Text className="text-sm text-gray-700 font-medium mb-2">{formatRadius(sliderTempValue)} km</Text>
-            <Text className="text-sm text-gray-700 font-medium mb-2">10 km</Text>
+            <Text className="text-sm text-gray-700 font-medium mb-2">
+              {formatRadius(sliderTempValue)} km
+            </Text>
+            <Text className="text-sm text-gray-700 font-medium mb-2">
+              10 km
+            </Text>
           </View>
           {/* <Text className="text-sm text-gray-700 font-medium mb-2">
                   Selected: {sliderTempValue.toFixed(1)} km
@@ -316,16 +362,16 @@ const LandmarkDropdownFilters = ({ selectedLandmark, setSelectedLandmark }: Land
 
 const styles = StyleSheet.create({
   container: {
-    width: '100%',
+    width: "100%",
     zIndex: 100,
   },
   inputContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     borderWidth: 1.5,
-    borderColor: '#E3E3E3',
+    borderColor: "#E3E3E3",
     borderRadius: 5,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: "#FFFFFF",
     height: 40,
     paddingHorizontal: 12,
   },
@@ -333,95 +379,95 @@ const styles = StyleSheet.create({
     width: 20,
     height: 20,
     marginRight: 8,
-    backgroundColor: '#CCCCCC', // Replace with actual icon
+    backgroundColor: "#CCCCCC", // Replace with actual icon
   },
   textInput: {
     flex: 1,
-    fontFamily: 'System',
+    fontFamily: "System",
     fontSize: 12,
-    color: '#333333',
+    color: "#333333",
     padding: 0,
   },
   rightIcon: {
     width: 20,
     height: 20,
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: "center",
+    alignItems: "center",
   },
   clearButtonText: {
     fontSize: 14,
-    color: '#999',
-    fontWeight: 'bold',
+    color: "#999",
+    fontWeight: "bold",
   },
   resultsContainer: {
-    position: 'absolute',
+    position: "absolute",
     top: 45,
     left: 0,
     right: 0,
-    backgroundColor: 'white',
+    backgroundColor: "white",
     borderRadius: 5,
     borderWidth: 1,
-    borderColor: '#E3E3E3',
+    borderColor: "#E3E3E3",
     maxHeight: 200,
     zIndex: 1000,
     elevation: 5,
-    shadowColor: '#000',
+    shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 2,
   },
   resultsList: {
-    width: '100%',
+    width: "100%",
   },
   resultItem: {
     padding: 12,
     borderBottomWidth: 1,
-    borderBottomColor: '#f0f0f0',
+    borderBottomColor: "#f0f0f0",
   },
   resultText: {
     fontSize: 12,
-    color: '#333',
+    color: "#333",
   },
   sliderContainer: {
     marginTop: 16,
-    width: '100%',
+    width: "100%",
   },
   radiusHeaderContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     marginBottom: 6,
   },
   radiusHeader: {
-    fontFamily: 'System',
+    fontFamily: "System",
     fontSize: 13,
-    fontWeight: '600',
-    color: '#666666',
+    fontWeight: "600",
+    color: "#666666",
     marginRight: 10,
   },
   infoIconPlaceholder: {
     width: 16,
     height: 16,
-    backgroundColor: '#CCCCCC', // Replace with actual icon
+    backgroundColor: "#CCCCCC", // Replace with actual icon
   },
   radiusLabelsContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
     marginVertical: 6,
   },
   radiusLabel: {
-    fontFamily: 'System',
+    fontFamily: "System",
     fontSize: 12,
-    color: '#7A7B7C',
+    color: "#7A7B7C",
   },
   radiusLabelCurrent: {
-    fontFamily: 'System',
+    fontFamily: "System",
     fontSize: 12,
-    color: '#333',
-    fontWeight: '500',
+    color: "#333",
+    fontWeight: "500",
   },
   slider: {
-    width: '100%',
+    width: "100%",
     height: 40,
   },
 });

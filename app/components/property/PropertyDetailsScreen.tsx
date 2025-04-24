@@ -115,7 +115,7 @@ export default function PropertyDetailsScreen() {
   const enquiryConfirmed = useRef<Boolean>(false);
 
   const isConnectedToInternet = useSelector(
-    (state: RootState) => state.app.isConnectedToInternet
+    (state: RootState) => state.app.isConnectedToInternet,
   );
 
   const handlePropertyStatusChange = useCallback(
@@ -136,12 +136,12 @@ export default function PropertyDetailsScreen() {
         console.error("Error updating status in Firestore:", error);
       }
     },
-    []
+    [],
   );
 
   const property = useSelector(selectPropertyStateData);
   const agentData = useSelector(
-    (state: RootState) => state?.agent?.docData
+    (state: RootState) => state?.agent?.docData,
   ) as AgentData;
   const [localImages, setLocalImages] = useState<string[]>([]);
   const [isImageViewerVisible, setIsImageViewerVisible] = useState(false);
@@ -151,10 +151,10 @@ export default function PropertyDetailsScreen() {
   const [isEnquiryCPModelOpen, setIsEnquiryCPModelOpen] = useState(false);
   const [isShareModalOpen, setIsShareModalOpen] = useState(false);
   const phoneNumber = useSelector(
-    (state: RootState) => state?.agent?.docData?.phonenumber
+    (state: RootState) => state?.agent?.docData?.phonenumber,
   );
   const monthlyCredits = useSelector(
-    (state: RootState) => state?.agent?.docData?.monthlyCredits
+    (state: RootState) => state?.agent?.docData?.monthlyCredits,
   );
 
   const [isReviewModalOpen, setIsReviewModalOpen] = useState(false);
@@ -235,7 +235,7 @@ export default function PropertyDetailsScreen() {
       return;
     }
     showErrorToast(
-      "You don't have enough credits. Please contact your account manager."
+      "You don't have enough credits. Please contact your account manager.",
     );
   };
 
@@ -249,7 +249,9 @@ export default function PropertyDetailsScreen() {
     try {
       const enquiryDocRef = doc(db, "enquiries", nextEnqId);
       await setDoc(enquiryDocRef, enq);
-      showSuccessToast("Enquiry submitted successfully!", { isInModal: true });
+      showSuccessToast("Enquiry submitted successfully!", {
+        isInModal: true,
+      });
     } catch (error) {
       showErrorToast("Error submitting enquiry. Please try again.", {
         isInModal: true,
@@ -267,7 +269,7 @@ export default function PropertyDetailsScreen() {
 
     if (!(monthlyCredits > 0)) {
       showErrorToast(
-        "You don't have enough credits. Please contact your account manager."
+        "You don't have enough credits. Please contact your account manager.",
       );
       setIsConfirmModelOpen(false);
       return;
@@ -277,7 +279,7 @@ export default function PropertyDetailsScreen() {
       const nextEnqId = await generateNextEnqId();
       if (!nextEnqId) {
         showErrorToast(
-          "Failed to generate the next Enquiry ID. Please try again later."
+          "Failed to generate the next Enquiry ID. Please try again later.",
         );
         setIsConfirmModelOpen(false);
         return;
@@ -296,7 +298,7 @@ export default function PropertyDetailsScreen() {
       enquiryConfirmed.current = true;
     } catch (error) {
       showErrorToast(
-        "An error occurred while processing your enquiry. Please try again."
+        "An error occurred while processing your enquiry. Please try again.",
       );
     }
   };
@@ -366,7 +368,10 @@ export default function PropertyDetailsScreen() {
               colors={["#E0F7F4", "#FFFFFF"]}
               locations={[0.0891, 0.7814]}
               className="w-full"
-              style={{ borderBottomWidth: 1, borderColor: "#CCCBCB" }}
+              style={{
+                borderBottomWidth: 1,
+                borderColor: "#CCCBCB",
+              }}
             >
               <View
                 style={{
@@ -664,7 +669,7 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     alignItems: "flex-start",
     marginBottom: 16,
-    paddingTop: Platform.OS === 'ios' ? 0 : 24,
+    paddingTop: Platform.OS === "ios" ? 0 : 24,
   },
   headerInfo: {
     flex: 1,

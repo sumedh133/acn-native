@@ -1,6 +1,11 @@
-import { createSlice, PayloadAction, ThunkAction, AnyAction } from '@reduxjs/toolkit';
-import { RootState } from '../store';
-import { Property } from '@/app/types';
+import {
+  createSlice,
+  PayloadAction,
+  ThunkAction,
+  AnyAction,
+} from "@reduxjs/toolkit";
+import { RootState } from "../store";
+import { Property } from "@/app/types";
 
 // Define the property state interface
 interface PropertyState {
@@ -19,7 +24,7 @@ const initialState: PropertyState = {
 };
 
 const propertySlice = createSlice({
-  name: 'property',
+  name: "property",
   initialState,
   reducers: {
     setLoading: (state, action: PayloadAction<boolean>) => {
@@ -34,7 +39,7 @@ const propertySlice = createSlice({
       state.propertyDocData = action.payload;
     },
     setPropertyStatus: (state, action: PayloadAction<string | null>) => {
-        state.propertyDocData.status = action.payload;
+      state.propertyDocData.status = action.payload;
     },
     resetPropertyState: (state) => {
       state.loading = false;
@@ -47,7 +52,7 @@ const propertySlice = createSlice({
     },
     resetError: (state) => {
       state.error = null;
-    }
+    },
   },
 });
 
@@ -59,24 +64,22 @@ export const {
   setPropertyStatus,
   resetPropertyState,
   setError,
-  resetError
+  resetError,
 } = propertySlice.actions;
 
 // Thunk action to set property data
-export const setPropertyDataThunk = (property: Property): ThunkAction<
-  void,
-  RootState,
-  unknown,
-  AnyAction
-> => (dispatch, getState) => {
-  const { propertyId: currentPropertyId } = getState().property;
+export const setPropertyDataThunk =
+  (property: Property): ThunkAction<void, RootState, unknown, AnyAction> =>
+  (dispatch, getState) => {
+    const { propertyId: currentPropertyId } = getState().property;
 
-  dispatch(setPropertyData(property));
-};
+    dispatch(setPropertyData(property));
+  };
 
 // Export selector to get property state
 export const selectPropertyState = (state: RootState) => state.property;
-export const selectPropertyStateData = (state: RootState) => state.property.propertyDocData;
+export const selectPropertyStateData = (state: RootState) =>
+  state.property.propertyDocData;
 
 // Export reducer
 export default propertySlice.reducer;

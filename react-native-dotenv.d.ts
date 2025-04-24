@@ -9,4 +9,3 @@
 //     export const FIREBASE_MEASUREMENT_ID: string;
 //     export const PLACES_API_KEY: string;
 //   }
-  
