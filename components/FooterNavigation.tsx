@@ -7,7 +7,7 @@ import NotificationIcon from "@/assets/icons/svg/Footer/NotificationIcon";
 import PropertiesIcon from "@/assets/icons/svg/Footer/PropertiesIcon";
 import RequirementsIcon from "@/assets/icons/svg/Footer/RequirementsIcon";
 import PlusIcon from "@/assets/icons/svg/PlusIcon";
-import { usePathname, useRouter } from "expo-router";
+import { useNavigation, usePathname, useRouter } from "expo-router";
 import React, { ReactNode } from "react";
 import { Text, TouchableOpacity } from "react-native";
 import { StyleSheet, View } from "react-native";
@@ -55,6 +55,11 @@ const menuItems: MenuItem[] = [
 const FooterNavigation = () => {
   const pathname = usePathname();
   const router = useRouter();
+  const navigation = useNavigation();
+
+  const params = navigation?.getState()?.routes?.at(-1)?.params as {
+    showFooter?: boolean;
+  };
 
   const handleNavigation = (path: string) => {
     if (path === pathname) return;
@@ -62,20 +67,25 @@ const FooterNavigation = () => {
     router.push(path as any);
   };
 
+  if (params?.showFooter === false) return null;
+
   return (
     <View style={styles.footer}>
       {menuItems?.map((item, idx) => {
         const active = item?.path === pathname;
         if (item?.path === "/add") {
           return (
-            <TouchableOpacity>
+            <TouchableOpacity key={idx}>
               <View style={styles?.addItem}>{item?.icon}</View>
             </TouchableOpacity>
           );
         }
         return (
-          <TouchableOpacity onPress={() => handleNavigation(item?.path)}>
-            <View key={idx} style={active ? styles.activeItem : styles.item}>
+          <TouchableOpacity
+            onPress={() => handleNavigation(item?.path)}
+            key={idx}
+          >
+            <View style={active ? styles.activeItem : styles.item}>
               {active && <View style={styles.activeBar}></View>}
               {active ? item?.activeIcon : item?.icon}
               <Text style={active ? styles.itemActiveText : styles.itemText}>

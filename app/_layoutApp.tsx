@@ -27,21 +27,24 @@ import { KamModalButton } from "@/components/KamModalButton";
 import { useDispatch } from "react-redux";
 import NetInfo from "@react-native-community/netinfo";
 import { setIsConnectedToInternet } from "@/store/slices/appSlice";
-import UserIcon from "@/assets/icons/svg/Sidebar/UserIcon";
+import UserIcon from "@/assets/icons/svg/Header/UserIcon";
 import { useSelector } from "react-redux";
 import { RootState } from "@/store/store";
 import CoinIcon from "@/assets/icons/svg/Sidebar/CoinIcon";
 import FooterNavigation from "@/components/FooterNavigation";
+import ArrowLeftIcon from "@/assets/icons/svg/Header/ArrowLeftIcon";
 
 // Custom header component to apply the desired styling
 const CustomHeader = ({
   title,
   onMenuPress,
   isMenuOpen,
+  headerBackVisible,
 }: {
   title: string;
-  onMenuPress: () => void;
+  onMenuPress: (backHeader: boolean) => void;
   isMenuOpen: boolean;
+  headerBackVisible: boolean;
 }) => {
   const insets = useSafeAreaInsets();
   const monthlyCredits = useSelector(
@@ -51,15 +54,17 @@ const CustomHeader = ({
     <View style={styles.headerContainer}>
       <View style={styles.headerContent}>
         <View style={styles.headerLeft}>
-          <TouchableOpacity onPress={onMenuPress}>
-            <UserIcon />
+          <TouchableOpacity onPress={() => onMenuPress(headerBackVisible)}>
+            {headerBackVisible ? <ArrowLeftIcon /> : <UserIcon />}
           </TouchableOpacity>
           {!isMenuOpen && <Text style={styles.headerTitle}>{title}</Text>}
         </View>
-        <View style={styles.headerRight}>
-          <Text style={styles.creditsText}>{monthlyCredits}</Text>
-          <CoinIcon />
-        </View>
+        {!headerBackVisible && (
+          <View style={styles.headerRight}>
+            <Text style={styles.creditsText}>{monthlyCredits}</Text>
+            <CoinIcon />
+          </View>
+        )}
       </View>
     </View>
   );
@@ -86,7 +91,11 @@ export default function LayoutApp() {
     }
   }, [fontsLoaded]);
 
-  const onMenuPress = () => {
+  const onMenuPress = (headerBack = false) => {
+    if (headerBack) {
+      router.back();
+      return;
+    }
     router.replace("/(tabs)/properties");
     router.push("(pages)/Profile" as any);
   };
@@ -120,17 +129,23 @@ export default function LayoutApp() {
           headerBackVisible: false,
           header: ({ route, options }) => {
             const title = options.title || route.name;
+            const headerBackVisible = options.headerBackVisible || false;
             return (
               <CustomHeader
                 title={title}
-                onMenuPress={() => onMenuPress()}
+                onMenuPress={onMenuPress}
                 isMenuOpen={isMenuOpen}
+                headerBackVisible={headerBackVisible}
               />
             );
           },
         }}
       >
-        <Stack.Screen name="(tabs)/index" options={{ headerShown: false }} />
+        <Stack.Screen
+          name="(tabs)/index"
+          options={{ headerShown: false }}
+          initialParams={{ showFooter: false }}
+        />
         <Stack.Screen
           name="(tabs)/properties"
           options={{ title: "Resale Inventories" }}
@@ -150,34 +165,56 @@ export default function LayoutApp() {
           options={{ title: "Dashboard" }}
         />
 
-        <Stack.Screen name="components/Auth" options={{ headerShown: false }} />
+        <Stack.Screen
+          name="components/Auth"
+          options={{ headerShown: false }}
+          initialParams={{ showFooter: false }}
+        />
         <Stack.Screen
           name="components/Auth/Signin"
           options={{ headerShown: false }}
+          initialParams={{ showFooter: false }}
         />
         <Stack.Screen
           name="components/Auth/OTPage"
           options={{ headerShown: false }}
+          initialParams={{ showFooter: false }}
         />
         <Stack.Screen
           name="components/Auth/VerificationPage"
           options={{ headerShown: false }}
+          initialParams={{ showFooter: false }}
         />
         <Stack.Screen
           name="components/Auth/BlacklistedPage"
           options={{ headerShown: false }}
+          initialParams={{ showFooter: false }}
         />
-        <Stack.Screen name="not-found" options={{ headerShown: false }} />
+        <Stack.Screen
+          name="not-found"
+          options={{ headerShown: false }}
+          initialParams={{ showFooter: false }}
+        />
 
         <Stack.Screen
           name="components/property/PropertyDetailsScreen"
           options={{ headerShown: false }}
+          initialParams={{ showFooter: false }}
         />
         <Stack.Screen
           name="components/requirement/RequirementDetailsScreen"
           options={{ headerShown: false }}
+          initialParams={{ showFooter: false }}
         />
-        <Stack.Screen name="(pages)/Profile" options={{ headerShown: false }} />
+        <Stack.Screen
+          name="(pages)/Profile"
+          options={{
+            headerShown: true,
+            title: "Settings",
+            headerBackVisible: true,
+          }}
+          initialParams={{ showFooter: false }}
+        />
       </Stack>
       <HamburgerMenu
         visible={isMenuOpen}
