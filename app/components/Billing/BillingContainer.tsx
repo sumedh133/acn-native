@@ -12,10 +12,12 @@ import {
   TextInput,
   Linking,
   Alert,
+  Modal,
 } from "react-native";
 import { FontAwesome as FAIcon, Feather } from "@expo/vector-icons";
 import { FontAwesome5 as FA5Icon } from "@expo/vector-icons";
 import { getFunctions, httpsCallable } from "firebase/functions";
+import { WebView } from "react-native-webview";
 
 import { formatCost } from "../../helpers/common.js";
 import { useSelector } from "react-redux";
@@ -29,6 +31,7 @@ import {
   showSuccessToast,
 } from "@/utils/toastUtils";
 import CloseIcon from "@/assets/icons/svg/CloseIcon";
+import { WebViewNavigationEvent } from "react-native-webview/lib/RNCWebViewNativeComponent.js";
 
 if (
   Platform.OS === "android" &&
@@ -44,6 +47,7 @@ type BillingContainerProps = {
 const BillingContainer: React.FC<BillingContainerProps> = ({
   onOpenBusinessModal,
 }) => {
+  const redirectUrl = "https://acnonline.in/billing";
   const [processing, setProcessing] = useState(false);
   const scrollRef = useRef<ScrollView>(null);
   const [showKeyBenefits, setShowKeyBenefits] = useState(false);
@@ -69,6 +73,8 @@ const BillingContainer: React.FC<BillingContainerProps> = ({
   const [allCoupons, setAllCoupons] = useState<Coupon[] | []>([]);
   const [couponCode, setCouponCode] = useState("");
   const [matchedCoupon, setMatchedCoupon] = useState<Coupon | null>(null);
+  const [showWebView, setShowWebView] = useState<boolean>(false);
+  const [paymentUrl, setPaymentUrl] = useState<string>("");
 
   useEffect(() => {
     const unsubscribe = onSnapshot(doc(db, "admin", "coupons"), (docSnap) => {
@@ -96,13 +102,12 @@ const BillingContainer: React.FC<BillingContainerProps> = ({
     const functions = getFunctions();
     const initiatePhonePePayment = httpsCallable(
       functions,
-      "initiatePhonePePayment",
+      "initiatePhonePePayment"
     );
 
     try {
       const transactionId = "TXN" + Date.now();
       //figure out and validate anoter redirect url for app.
-      const redirectUrl = "https://acnonline.in/billing";
       const mobileNumber = phoneNumber;
       const userId = cpId;
 
@@ -116,18 +121,13 @@ const BillingContainer: React.FC<BillingContainerProps> = ({
 
       if (response.data.success) {
         const paymentUrl: string = response.data.paymentUrl;
-
-        const supported = await Linking.canOpenURL(paymentUrl);
-        if (supported) {
-          await Linking.openURL(paymentUrl);
-        } else {
-          Alert.alert("Error", "Unable to open payment URL.");
-        }
+        setPaymentUrl(paymentUrl);
+        setShowWebView(true);
       } else {
         console.error("Payment failed:", response.data.error);
         Alert.alert(
           "Payment Failed",
-          response.data.error || "Something went wrong.",
+          response.data.error || "Something went wrong."
         );
       }
     } catch (error: any) {
@@ -136,6 +136,14 @@ const BillingContainer: React.FC<BillingContainerProps> = ({
     }
 
     setProcessing(false);
+  };
+
+  const handleNavigationStateChange = async (
+    navState: WebViewNavigationEvent
+  ) => {
+    if (navState.url.startsWith(redirectUrl)) {
+      setShowWebView(false);
+    }
   };
 
   useEffect(() => {
@@ -192,305 +200,311 @@ const BillingContainer: React.FC<BillingContainerProps> = ({
   };
 
   return (
-    <ScrollView
-      ref={scrollRef}
-      contentContainerStyle={styles.scrollContent}
-      showsVerticalScrollIndicator={false}
-    >
-      <View style={styles.container}>
-        <View style={styles.innerContainer}>
-          {/* price container */}
-          <View style={styles.card}>
-            <View style={styles.header}>
-              <Text style={styles.title}>
-                ACN Annual{"\n"}
-                <Text style={styles.subtext}>Membership (1 year)</Text>
-              </Text>
-              <Text style={styles.costText}>
-                {formatCost(originalAmount)}/yr
-              </Text>
-            </View>
-
-            <Text style={styles.description}>
-              Get full access to <Text style={styles.bold}>ACN</Text> with a
-              mandatory{" "}
-              <Text style={styles.regular}>12-month subscription</Text>,
-              allowing verified agents to list, manage, and inquire about resale
-              inventories while connecting with a trusted real estate network.
-            </Text>
-
-            <View style={styles.keyBenefitsSection}>
-              <View style={styles.keyBenefitsHeader}>
-                <Text style={styles.keyBenefitsTitle}>KEY BENEFITS</Text>
-                <TouchableOpacity
-                  onPress={toggleKeyBenefits}
-                  style={styles.keyBenefitsTitle}
-                >
-                  <FA5Icon
-                    name="chevron-down"
-                    size={24}
-                    style={[
-                      styles.arrowIcon,
-                      showKeyBenefits && styles.arrowIconRotated,
-                    ]}
-                  />
-                </TouchableOpacity>
+    <>
+      <Modal
+        visible={showWebView}
+        animationType="slide"
+        transparent={false}
+        onRequestClose={() => setShowWebView(false)}
+      >
+        <WebView
+          source={{ uri: paymentUrl }}
+          onNavigationStateChange={handleNavigationStateChange}
+        ></WebView>
+      </Modal>
+      <ScrollView
+        ref={scrollRef}
+        contentContainerStyle={styles.scrollContent}
+        showsVerticalScrollIndicator={false}
+      >
+        <View style={styles.container}>
+          <View style={styles.innerContainer}>
+            {/* price container */}
+            <View style={styles.card}>
+              <View style={styles.header}>
+                <Text style={styles.title}>
+                  ACN Annual{"\n"}
+                  <Text style={styles.subtext}>Membership (1 year)</Text>
+                </Text>
+                <Text style={styles.costText}>
+                  {formatCost(originalAmount)}/yr
+                </Text>
               </View>
 
-              {showKeyBenefits && (
-                <View style={styles.benefitsList}>
-                  {[
-                    {
-                      icon: "earth",
-                      label: "Exclusive Access",
-                    },
-                    {
-                      icon: "file-cloud",
-                      label: "Post & Manage Listings",
-                    },
-                    {
-                      icon: "message-text-outline",
-                      label: "On-demand Enquiries",
-                    },
-                    {
-                      icon: "shield-check",
-                      label: "Verified Network",
-                    },
-                    {
-                      icon: "whatsapp",
-                      label: "WhatsApp Community",
-                    },
-                    {
-                      icon: "headset",
-                      label: "Priority Support",
-                    },
-                  ].map((item, index) => (
-                    <View key={index} style={styles.benefitItem}>
-                      <View style={styles.iconContainer}>
-                        <FA5Icon
-                          name={
-                            benefitIcons[item.icon as keyof typeof benefitIcons]
-                          }
-                          size={20}
-                        />
+              <Text style={styles.description}>
+                Get full access to <Text style={styles.bold}>ACN</Text> with a
+                mandatory{" "}
+                <Text style={styles.regular}>12-month subscription</Text>,
+                allowing verified agents to list, manage, and inquire about
+                resale inventories while connecting with a trusted real estate
+                network.
+              </Text>
+
+              <View style={styles.keyBenefitsSection}>
+                <View style={styles.keyBenefitsHeader}>
+                  <Text style={styles.keyBenefitsTitle}>KEY BENEFITS</Text>
+                  <TouchableOpacity
+                    onPress={toggleKeyBenefits}
+                    style={styles.keyBenefitsTitle}
+                  >
+                    <FA5Icon
+                      name="chevron-down"
+                      size={24}
+                      style={[
+                        styles.arrowIcon,
+                        showKeyBenefits && styles.arrowIconRotated,
+                      ]}
+                    />
+                  </TouchableOpacity>
+                </View>
+
+                {showKeyBenefits && (
+                  <View style={styles.benefitsList}>
+                    {[
+                      { icon: "earth", label: "Exclusive Access" },
+                      { icon: "file-cloud", label: "Post & Manage Listings" },
+                      {
+                        icon: "message-text-outline",
+                        label: "On-demand Enquiries",
+                      },
+                      { icon: "shield-check", label: "Verified Network" },
+                      { icon: "whatsapp", label: "WhatsApp Community" },
+                      { icon: "headset", label: "Priority Support" },
+                    ].map((item, index) => (
+                      <View key={index} style={styles.benefitItem}>
+                        <View style={styles.iconContainer}>
+                          <FA5Icon
+                            name={
+                              benefitIcons[
+                                item.icon as keyof typeof benefitIcons
+                              ]
+                            }
+                            size={20}
+                          />
+                        </View>
+                        <Text style={styles.benefitText}>{item.label}</Text>
                       </View>
-                      <Text style={styles.benefitText}>{item.label}</Text>
-                    </View>
-                  ))}
+                    ))}
+                  </View>
+                )}
+              </View>
+
+              <View style={styles.validitySection}>
+                <Text style={styles.validityText}>
+                  Validity: <Text style={styles.bold}>12 Months</Text> from the
+                  date of activation.
+                </Text>
+                <Text style={styles.refundText}>
+                  Non-refundable & Non-transferable.**
+                </Text>
+              </View>
+
+              {!(businessName || gstNo) && (
+                <Text style={styles.gstText}>
+                  Have a GST?{" "}
+                  <Text style={styles.linkText} onPress={onOpenBusinessModal}>
+                    Click here
+                  </Text>{" "}
+                  to submit details
+                </Text>
+              )}
+            </View>
+
+            {(businessName || gstNo) && (
+              <View style={[styles.gstCard, { paddingVertical: 20, gap: 16 }]}>
+                <View style={styles.header}>
+                  <Text
+                    style={[styles.title, { fontSize: 16, lineHeight: 24 }]}
+                  >
+                    GST details added :
+                  </Text>
+                  <TouchableOpacity
+                    style={styles.gstEditButton}
+                    onPress={onOpenBusinessModal}
+                  >
+                    {/* <Icon name="edit" size={20} color="#000000" /> */}
+                    <Feather name="edit-3" size={20} color="black" />
+                  </TouchableOpacity>
+                </View>
+
+                <View style={{ width: "100%", gap: 12 }}>
+                  <View style={{ width: "100%", gap: 8 }}>
+                    <Text style={styles.validityText}>
+                      Business Name:{" "}
+                      <Text style={styles.bold}>{businessName}</Text>
+                    </Text>
+                    <Text style={styles.validityText}>
+                      GSTIN: <Text style={styles.bold}>{gstNo}</Text>
+                    </Text>
+                  </View>
+                  <Text style={styles.refundText}>
+                    Your invoice will include the submitted GST details.
+                  </Text>
+                </View>
+              </View>
+            )}
+
+            {/* coupon container */}
+            <View style={styles.couponContainer}>
+              <Text style={styles.heading}>Coupon code</Text>
+              <Text style={styles.couponSubtext}>
+                Have a coupon? Enter the code here to avail discounts!
+              </Text>
+
+              {!matchedCoupon ? (
+                <View style={styles.inputRow}>
+                  <TextInput
+                    value={couponCode}
+                    onChangeText={setCouponCode}
+                    placeholder="Coupon code"
+                    style={styles.input}
+                    placeholderTextColor="#747474"
+                  />
+                  <TouchableOpacity
+                    style={styles.applyBtn}
+                    onPress={applyCoupon}
+                  >
+                    <Text style={styles.applyText}>Apply</Text>
+                  </TouchableOpacity>
+                </View>
+              ) : (
+                <View style={styles.couponRow}>
+                  <View style={styles.appliedCoupon}>
+                    <FAIcon name="tag" size={20} style={styles.icon} />
+                    <Text style={styles.couponCodeText}>
+                      {matchedCoupon.code}
+                    </Text>
+                  </View>
+                  <TouchableOpacity
+                    style={styles.removeBtn}
+                    onPress={removeCoupon}
+                  >
+                    <CloseIcon />
+                    <Text style={styles.removeText}>Remove</Text>
+                  </TouchableOpacity>
                 </View>
               )}
             </View>
 
-            <View style={styles.validitySection}>
-              <Text style={styles.validityText}>
-                Validity: <Text style={styles.bold}>12 Months</Text> from the
-                date of activation.
-              </Text>
-              <Text style={styles.refundText}>
-                Non-refundable & Non-transferable.**
-              </Text>
-            </View>
+            {/* order container */}
+            <View style={styles.orderContainer}>
+              <Text style={styles.orderHeader}>Order Summary</Text>
 
-            {!(businessName || gstNo) && (
-              <Text style={styles.gstText}>
-                Have a GST?{" "}
-                <Text style={styles.linkText} onPress={onOpenBusinessModal}>
-                  Click here
-                </Text>{" "}
-                to submit details
-              </Text>
-            )}
-          </View>
-
-          {(businessName || gstNo) && (
-            <View style={[styles.gstCard, { paddingVertical: 20, gap: 16 }]}>
-              <View style={styles.header}>
-                <Text style={[styles.title, { fontSize: 16, lineHeight: 24 }]}>
-                  GST details added :
-                </Text>
-                <TouchableOpacity
-                  style={styles.gstEditButton}
-                  onPress={onOpenBusinessModal}
-                >
-                  {/* <Icon name="edit" size={20} color="#000000" /> */}
-                  <Feather name="edit-3" size={20} color="black" />
-                </TouchableOpacity>
-              </View>
-
-              <View style={{ width: "100%", gap: 12 }}>
-                <View style={{ width: "100%", gap: 8 }}>
-                  <Text style={styles.validityText}>
-                    Business Name:{" "}
-                    <Text style={styles.bold}>{businessName}</Text>
-                  </Text>
-                  <Text style={styles.validityText}>
-                    GSTIN: <Text style={styles.bold}>{gstNo}</Text>
-                  </Text>
-                </View>
-                <Text style={styles.refundText}>
-                  Your invoice will include the submitted GST details.
-                </Text>
-              </View>
-            </View>
-          )}
-
-          {/* coupon container */}
-          <View style={styles.couponContainer}>
-            <Text style={styles.heading}>Coupon code</Text>
-            <Text style={styles.couponSubtext}>
-              Have a coupon? Enter the code here to avail discounts!
-            </Text>
-
-            {!matchedCoupon ? (
-              <View style={styles.inputRow}>
-                <TextInput
-                  value={couponCode}
-                  onChangeText={setCouponCode}
-                  placeholder="Coupon code"
-                  style={styles.input}
-                  placeholderTextColor="#747474"
-                />
-                <TouchableOpacity style={styles.applyBtn} onPress={applyCoupon}>
-                  <Text style={styles.applyText}>Apply</Text>
-                </TouchableOpacity>
-              </View>
-            ) : (
-              <View style={styles.couponRow}>
-                <View style={styles.appliedCoupon}>
-                  <FAIcon name="tag" size={20} style={styles.icon} />
-                  <Text style={styles.couponCodeText}>
-                    {matchedCoupon.code}
-                  </Text>
-                </View>
-                <TouchableOpacity
-                  style={styles.removeBtn}
-                  onPress={removeCoupon}
-                >
-                  <CloseIcon />
-                  <Text style={styles.removeText}>Remove</Text>
-                </TouchableOpacity>
-              </View>
-            )}
-          </View>
-
-          {/* order container */}
-          <View style={styles.orderContainer}>
-            <Text style={styles.orderHeader}>Order Summary</Text>
-
-            <View style={styles.summaryCard}>
-              {/* Payment Breakdown */}
-              <View style={styles.paymentBreakdown}>
-                <View>
-                  <View style={styles.rowBetween}>
-                    <Text style={styles.label}>Annual membership</Text>
-                    <Text style={styles.value}>{formatCost(10000)}</Text>
-                  </View>
-                  <Text style={styles.orderDescription}>
-                    Valid for 12 months
-                  </Text>
-                </View>
-
-                {matchedCoupon && (
+              <View style={styles.summaryCard}>
+                {/* Payment Breakdown */}
+                <View style={styles.paymentBreakdown}>
                   <View>
                     <View style={styles.rowBetween}>
-                      <Text style={styles.label}>{matchedCoupon.name}</Text>
-                      <Text style={[styles.value, { color: "#898483" }]}>
-                        - {formatCost(matchedCoupon.discount)}
-                      </Text>
+                      <Text style={styles.label}>Annual membership</Text>
+                      <Text style={styles.value}>{formatCost(10000)}</Text>
                     </View>
                     <Text style={styles.orderDescription}>
-                      {matchedCoupon.description}
+                      Valid for 12 months
+                    </Text>
+                  </View>
+
+                  {matchedCoupon && (
+                    <View>
+                      <View style={styles.rowBetween}>
+                        <Text style={styles.label}>{matchedCoupon.name}</Text>
+                        <Text style={[styles.value, { color: "#898483" }]}>
+                          - {formatCost(matchedCoupon.discount)}
+                        </Text>
+                      </View>
+                      <Text style={styles.orderDescription}>
+                        {matchedCoupon.description}
+                      </Text>
+                    </View>
+                  )}
+                </View>
+
+                {/* Divider */}
+                <View style={styles.divider} />
+
+                {/* Total */}
+                <View style={styles.rowBetween}>
+                  <Text style={styles.totalLabel}>Total (INR)</Text>
+                  <Text style={styles.totalAmount}>
+                    {formatCost(totalAmount)}
+                  </Text>
+                </View>
+
+                <Text style={styles.taxInfo}>
+                  Total includes applicable taxes**
+                </Text>
+              </View>
+
+              {/* Bottom section */}
+              <View style={styles.bottomSection}>
+                {matchedCoupon && (
+                  <View style={styles.row}>
+                    <FA5Icon
+                      name="birthday-cake"
+                      size={20}
+                      style={styles.iconSmall}
+                    />
+                    <Text style={styles.savingText}>
+                      Nice! You saved {formatCost(originalAmount - totalAmount)}{" "}
+                      on your order.
                     </Text>
                   </View>
                 )}
-              </View>
 
-              {/* Divider */}
-              <View style={styles.divider} />
+                <TouchableOpacity
+                  style={styles.payButton}
+                  onPress={initiatePayment}
+                  disabled={processing}
+                >
+                  {processing ? (
+                    <Text style={styles.payText}>Processing...</Text>
+                  ) : (
+                    <View style={styles.row}>
+                      <Text style={styles.payText}>I am Ready to Pay</Text>
+                      <FAIcon
+                        name="arrow-right"
+                        size={20}
+                        style={styles.iconSmall}
+                        color={"white"}
+                      />
+                    </View>
+                  )}
+                </TouchableOpacity>
 
-              {/* Total */}
-              <View style={styles.rowBetween}>
-                <Text style={styles.totalLabel}>Total (INR)</Text>
-                <Text style={styles.totalAmount}>
-                  {formatCost(totalAmount)}
-                </Text>
-              </View>
-
-              <Text style={styles.taxInfo}>
-                Total includes applicable taxes**
-              </Text>
-            </View>
-
-            {/* Bottom section */}
-            <View style={styles.bottomSection}>
-              {matchedCoupon && (
-                <View style={styles.row}>
-                  <FA5Icon
-                    name="birthday-cake"
-                    size={20}
-                    style={styles.iconSmall}
-                  />
-                  <Text style={styles.savingText}>
-                    Nice! You saved {formatCost(originalAmount - totalAmount)}{" "}
-                    on your order.
-                  </Text>
-                </View>
-              )}
-
-              <TouchableOpacity
-                style={styles.payButton}
-                onPress={initiatePayment}
-                disabled={processing}
-              >
-                {processing ? (
-                  <Text style={styles.payText}>Processing...</Text>
-                ) : (
+                <View style={styles.paymentMethods}>
                   <View style={styles.row}>
-                    <Text style={styles.payText}>I am Ready to Pay</Text>
-                    <FAIcon
-                      name="arrow-right"
-                      size={20}
-                      style={styles.iconSmall}
-                      color={"white"}
+                    <FAIcon name="lock" size={24} style={styles.iconSmall} />
+                    <Text style={styles.secureText}>Secure Payment</Text>
+                  </View>
+
+                  <View style={styles.row}>
+                    <Image
+                      source={require("../../../assets/icons/billing/visa-icon.png")}
+                      style={styles.upiIcon}
+                    />
+                    <Image
+                      source={require("../../../assets/icons/billing/master-card-icon.png")}
+                      style={styles.upiIcon}
+                    />
+                    <Image
+                      source={require("../../../assets/icons/billing/credit-card-color-icon.png")}
+                      style={styles.upiIcon}
+                    />
+                    <Image
+                      source={require("../../../assets/icons/billing/upi-icon (3).png")}
+                      style={styles.upiIcon}
+                    />
+                    <Image
+                      source={require("../../../assets/icons/billing/rupay-logo-icon.png")}
+                      style={styles.upiIcon}
                     />
                   </View>
-                )}
-              </TouchableOpacity>
-
-              <View style={styles.paymentMethods}>
-                <View style={styles.row}>
-                  <FAIcon name="lock" size={24} style={styles.iconSmall} />
-                  <Text style={styles.secureText}>Secure Payment</Text>
-                </View>
-
-                <View style={styles.row}>
-                  <Image
-                    source={require("../../../assets/icons/billing/visa-icon.png")}
-                    style={styles.upiIcon}
-                  />
-                  <Image
-                    source={require("../../../assets/icons/billing/master-card-icon.png")}
-                    style={styles.upiIcon}
-                  />
-                  <Image
-                    source={require("../../../assets/icons/billing/credit-card-color-icon.png")}
-                    style={styles.upiIcon}
-                  />
-                  <Image
-                    source={require("../../../assets/icons/billing/upi-icon (3).png")}
-                    style={styles.upiIcon}
-                  />
-                  <Image
-                    source={require("../../../assets/icons/billing/rupay-logo-icon.png")}
-                    style={styles.upiIcon}
-                  />
                 </View>
               </View>
             </View>
           </View>
         </View>
-      </View>
-    </ScrollView>
+      </ScrollView>
+    </>
   );
 };
 
