@@ -54,9 +54,9 @@ export default function PropertyFilters({
   }
 
   // Update loading state based on Algolia search status
-  // useEffect(() => {
-  //   setLoading(status === 'loading');
-  // }, [status]);
+  useEffect(() => {
+    setLoading(status === 'loading');
+  }, [status]);
 
   return (
     <View style={styles.container}>
