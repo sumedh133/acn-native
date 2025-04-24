@@ -62,13 +62,18 @@ const FooterNavigation = () => {
     router.push(path as any);
   };
 
+  const handleInventorySubmit = () => {
+    router.dismissAll();
+    router.push("/(tabs)/AddInventoryForm");
+  };
+
   return (
     <View style={styles.footer}>
       {menuItems?.map((item, idx) => {
         const active = item?.path === pathname;
         if (item?.path === "/add") {
           return (
-            <TouchableOpacity>
+            <TouchableOpacity onPress={handleInventorySubmit}>
               <View style={styles?.addItem}>{item?.icon}</View>
             </TouchableOpacity>
           );
