@@ -234,9 +234,7 @@ export default function LayoutApp() {
       />
       <Toast config={toastConfig} />
       <StatusBar style="auto" />
-      {isAuthenticated &&
-        <FooterNavigation />
-      }
+      {isAuthenticated && <FooterNavigation />}
     </View>
   );
 }
