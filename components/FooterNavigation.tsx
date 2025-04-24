@@ -40,7 +40,7 @@ const menuItems: MenuItem[] = [
   },
   {
     title: "Notifications",
-    path: "/UserRequirementForm",
+    path: "/notifications",
     icon: <NotificationIcon />,
     activeIcon: <ActiveNotificationIcon />,
   },
