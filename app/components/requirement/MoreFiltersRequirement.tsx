@@ -181,11 +181,12 @@ const MoreFiltersRequirement = ({
         toggleFiltersVisibility();
       }}
     >
-      <SafeAreaView
+      <View
         className="flex-1 bg-white"
         style={{
           zIndex: 1,
-          paddingTop: Platform.OS === "ios" ? 40 : 0,
+          //Check for IOS
+          // paddingTop: Platform.OS === "ios" ? 40 : 0,
         }}
       >
         <View className="flex-row justify-between items-center p-4 border-b border-gray-200">
@@ -258,7 +259,7 @@ const MoreFiltersRequirement = ({
         >
           <Text className="text-white text-lg font-semibold">Show Results</Text>
         </TouchableOpacity>
-      </SafeAreaView>
+      </View>
     </Modal>
   );
 };

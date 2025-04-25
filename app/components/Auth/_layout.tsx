@@ -23,7 +23,7 @@ export default function RootLayout() {
   const colorScheme = useColorScheme();
 
   const isConnectedToInternet = useSelector(
-    (state: RootState) => state.app.isConnectedToInternet,
+    (state: RootState) => state.app.isConnectedToInternet
   );
 
   // const [loaded] = useFonts({
