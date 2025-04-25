@@ -152,7 +152,7 @@ const MobileHits = forwardRef<FlatList>((props, ref) => {
       onEndReachedThreshold={0.5}
       ListFooterComponent={renderFooter}
       contentContainerStyle={{
-        paddingHorizontal: 12,
+        paddingHorizontal: 16,
         width: "100%",
         flexGrow: 1,
       }}
@@ -320,4 +320,3 @@ const styles = StyleSheet.create({
 });
 
 export default RequirementsPage;
-

@@ -8,6 +8,7 @@ import PropertiesIcon from "@/assets/icons/svg/Footer/PropertiesIcon";
 import RequirementsIcon from "@/assets/icons/svg/Footer/RequirementsIcon";
 import PlusIcon from "@/assets/icons/svg/PlusIcon";
 import { useNavigation, usePathname, useRouter } from "expo-router";
+import { color, offset } from "highcharts";
 import React, { ReactNode } from "react";
 import { Text, TouchableOpacity } from "react-native";
 import { StyleSheet, View } from "react-native";
@@ -110,6 +111,9 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     height: 59,
     paddingHorizontal: 9.5,
+    backgroundColor: "#FFFFFF",
+    borderTopWidth: 1,
+    borderTopColor: "#E8E8E8",
   },
   addItem: {
     width: 56,

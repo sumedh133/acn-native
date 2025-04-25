@@ -52,7 +52,6 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: "#10302D",
     borderRadius: 24,
-    boxShadow: "0px 2px 32px 0px #14142B14;",
     marginBottom: 17,
   },
   informationContainer: {

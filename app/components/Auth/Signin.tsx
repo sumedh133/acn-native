@@ -45,7 +45,7 @@ export default function SignUp() {
 
   const [errorMessage, setErrorMessage] = useState("");
   const { loading, phonenumber, isAgentInDb } = useSelector(
-    (state: RootState) => state.agent,
+    (state: RootState) => state.agent
   );
 
   const handlePhoneInputChange = (value: string) => {
@@ -129,7 +129,7 @@ export default function SignUp() {
         console.error("Error adding new user:", error);
         // You might want to provide user feedback
         setErrorMessage(
-          "There was an error adding the agent. Please try again.",
+          "There was an error adding the agent. Please try again."
         );
         setAddingNewAgent(false);
       } finally {
@@ -146,7 +146,7 @@ export default function SignUp() {
     try {
       const confirmation = await auth().signInWithPhoneNumber(
         phoneNumber,
-        true,
+        true
       );
 
       router.push({
@@ -161,11 +161,11 @@ export default function SignUp() {
         setErrorMessage("Too many attempts. Please try again later.");
       } else if (error.code === "auth/operation-not-allowed") {
         setErrorMessage(
-          "Phone authentication is not enabled. Please contact support.",
+          "Phone authentication is not enabled. Please contact support."
         );
       } else {
         setErrorMessage(
-          error.message || "Failed to send OTP. Please try again.",
+          error.message || "Failed to send OTP. Please try again."
         );
       }
 
