@@ -1,248 +1,124 @@
 import { Montserrat_600SemiBold } from "@expo-google-fonts/montserrat";
-import {
-  ScrollView,
-  StyleSheet,
-  View,
-  TouchableOpacity,
-  FlatList,
-} from "react-native";
-import { Text } from "react-native-elements";
-import { SafeAreaView } from "react-native-safe-area-context";
+import { ScrollView, StyleSheet, Text, View } from "react-native";
 import PlacesSearch from "../components/Listing/PlacesSearch";
 import { useEffect, useState } from "react";
-import { Places } from "../types";
+import { ListingProperty, Places } from "../types";
 import { getMicromarketFromCoordinates } from "../helpers/getMicromarketFromCoordinates";
 import React from "react";
-import Appartments from "@/assets/icons/svg/AddInventory/Appartments";
-import Villa from "@/assets/icons/svg/AddInventory/Villa";
-import Plots from "@/assets/icons/svg/AddInventory/Plots";
-import RowHouse from "@/assets/icons/svg/AddInventory/RowHouse";
-import Villaments from "@/assets/icons/svg/AddInventory/Villaments";
-import OfficeSpace from "@/assets/icons/svg/AddInventory/OfficeSpace";
-import ShowMoreButton from "@/assets/icons/svg/AddInventory/ShowMoreButton";
-import ShowLessButton from "@/assets/icons/svg/AddInventory/ShowLessButton";
 import AssetTypeSelection from "../components/Listing/AssetTypeSelection";
-import CommunityType from "../components/Listing/CommunityType";
+import RadioButtonSelect from "../components/Listing/RadioButtonSelect";
+import { appartmentComponents } from "../components/Listing/formComponents";
 
-type AssetOption = {
-  title: string;
-  assetType: string;
-  icon: React.ReactNode;
+const initialState: ListingProperty = {
+    name: null,
+    address: null,
+    mapLink: null,
+    micromarket: null,
+    _geoloc: {
+        lat: null,
+        lng: null,
+    },
+    assetType: "Apartment",
+    communityType: null,
 };
 
 const AddInventoryForm = () => {
-  const [selectedPlace, setSelectedPlace] = useState<Places | null>(null);
-  const [selectedAsset, setSelectedAsset] = useState<string | null>(
-    "Apartment"
-  );
-  const [seeMore, setSeeMore] = useState(false);
+    const [selectedPlace, setSelectedPlace] = useState<Places | null>(null);
+    useEffect(() => {
+        if (selectedPlace) {
+            const mm = getMicromarketFromCoordinates(selectedPlace);
 
-  useEffect(() => {
-    if (selectedPlace && !selectedPlace.micromarket) {
-      const mm = getMicromarketFromCoordinates(selectedPlace);
+            setProperty((prevProperty) => ({
+                ...prevProperty,
+                name: selectedPlace.name,
+                address: selectedPlace.address,
+                mapLink: selectedPlace.mapLink,
+                micromarket: mm,
+                _geoloc: {
+                    lat: selectedPlace.lat,
+                    lng: selectedPlace.lng,
+                },
+            }));
+        } else if (!selectedPlace) {
+            setProperty((prevProperty) => ({
+                ...prevProperty,
+                name: null,
+                address: null,
+                mapLink: null,
+                micromarket: null,
+                _geoloc: {
+                    lat: null,
+                    lng: null,
+                },
+            }));
+        }
+    }, [selectedPlace]);
 
-      setSelectedPlace({
-        ...selectedPlace,
-        micromarket: mm,
-      });
-    }
-  }, [selectedPlace]);
+    const [property, setProperty] = useState<ListingProperty>(initialState);
+    console.log("property", property);
 
-  console.log("selectedPlace", selectedPlace);
-  console.log("selectedAsset", selectedAsset);
+    const handleSetValue = (field: string, value: any) => {
+        setProperty((prevProperty) => ({
+            ...prevProperty,
+            [field]: value,
+        }));
+    };
 
-  const assetOptions: AssetOption[] = [
-    {
-      title: "Flats/Apartments",
-      assetType: "Apartment",
-      icon: <Appartments />,
-    },
-    { title: "Villa", assetType: "Villa", icon: <Villa /> },
-    { title: "Plot", assetType: "Plot", icon: <Plots /> },
-    { title: "Row House", assetType: "Row House", icon: <RowHouse /> },
-    { title: "Villament", assetType: "Villament", icon: <Villaments /> },
-    // { title: "Office Space", assetType: "Office Space", icon: <OfficeSpace /> },
-    {
-      title: "Independent Building",
-      assetType: "Independent Building",
-      icon: <Appartments />,
-    },
-  ];
-
-  const toggleSeeMore = () => {
-    setSeeMore((prev) => !prev);
-  };
-
-  const getCombinedData = () => {
-    if (assetOptions.length <= 3) {
-      return assetOptions;
-    }
-
-    if (!seeMore) {
-      const visibleOptions = assetOptions.slice(0, 3);
-      return [
-        ...visibleOptions,
-        {
-          title: "More",
-          assetType: "toggle-button",
-          icon: <ShowMoreButton />,
-        } as AssetOption,
-      ];
-    }
-
-    return [
-      ...assetOptions,
-      {
-        title: "Less",
-        assetType: "toggle-button",
-        icon: <ShowLessButton />,
-      } as AssetOption,
-    ];
-  };
-
-  const renderItem = ({
-    item,
-    index,
-  }: {
-    item: AssetOption;
-    index: number;
-  }) => {
-    if (item.assetType === "toggle-button") {
-      return (
-        <TouchableOpacity style={styles.toggleButton} onPress={toggleSeeMore}>
-          {item.icon}
-          <Text
-            style={styles.assetItemText}
-            numberOfLines={2}
-            ellipsizeMode="tail"
-          >
-            {item.title}
-          </Text>
-        </TouchableOpacity>
-      );
-    }
-
-    const isSelected = selectedAsset === item.assetType;
+    const renderComponent = (component: any) => {
+        switch (component.type) {
+            case "radioSelect":
+                return (
+                    <RadioButtonSelect
+                        value={property[component.field]}
+                        setvalue={(value) =>
+                            handleSetValue(component.field, value)
+                        }
+                        title={component.label}
+                        options={component.options}
+                    />
+                );
+            default:
+                return null;
+        }
+    };
 
     return (
-      <TouchableOpacity
-        style={[styles.assetItem, isSelected && styles.selectedAssetItem]}
-        onPress={() => setSelectedAsset(item.assetType)}
-      >
-        {/* Icon */}
-        {React.cloneElement(item.icon as React.ReactElement, {
-          color: "#2B3034",
-        })}
+        <ScrollView
+            contentContainerStyle={styles.scrollContent}
+            showsVerticalScrollIndicator={false}>
+            <View style={styles.container}>
+                <PlacesSearch
+                    selectedPlace={selectedPlace}
+                    setSelectedPlace={setSelectedPlace}
+                />
 
-        {/* Text */}
-        <Text
-          style={styles.assetItemText}
-          numberOfLines={2}
-          ellipsizeMode="tail"
-        >
-          {item.title}
-        </Text>
-      </TouchableOpacity>
+                <AssetTypeSelection
+                    selectedAsset={property.assetType}
+                    setSelectedAsset={(value) =>
+                        handleSetValue("assetType", value)
+                    }
+                />
+
+                {property?.assetType === "Apartment" &&
+                    appartmentComponents.map((component) => {
+                        return renderComponent(component);
+                    })}
+            </View>
+        </ScrollView>
     );
-  };
-
-  return (
-    <ScrollView
-      contentContainerStyle={styles.scrollContent}
-      showsVerticalScrollIndicator={false}
-    >
-      <View style={styles.container}>
-        <PlacesSearch
-          selectedPlace={selectedPlace}
-          setSelectedPlace={setSelectedPlace}
-        />
-
-        <AssetTypeSelection
-          selectedAsset={selectedAsset}
-          setSelectedAsset={setSelectedAsset}
-        />
-
-        <CommunityType />
-      </View>
-    </ScrollView>
-  );
 };
 
 const styles = StyleSheet.create({
-  scrollContent: {
-    backgroundColor: "#F5F6F7",
-    paddingVertical: 16,
-    paddingHorizontal: 12,
-    width: "100%",
-  },
-  container: {
-    flex: 1,
-    gap: 16,
-  },
-  section: {
-    width: "100%",
-    flex: 1,
-    alignItems: "flex-start",
-    justifyContent: "center",
-    gap: 12,
-  },
-  headingContainer: {
-    display: "flex",
-    flexDirection: "row",
-    gap: 6,
-  },
-  sectionHeading: {
-    fontFamily: "Montserrat_600SemiBold",
-    fontSize: 14,
-  },
-  compulsoryStar: {
-    fontFamily: "sans-serif",
-    color: "#DC3545",
-    fontSize: 14,
-    fontWeight: "400",
-  },
-  assetGridContainer: {
-    width: "100%",
-  },
-  gridContent: {
-    width: "100%",
-  },
-  assetGridRow: {
-    justifyContent: "space-between",
-    marginBottom: 16,
-  },
-  assetItem: {
-    width: "48%",
-    height: 68,
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "flex-start",
-    padding: 12,
-    borderRadius: 16,
-    borderWidth: 1,
-    borderColor: "#2B3034",
-    gap: 8,
-  },
-  selectedAssetItem: {
-    borderColor: "#2B3034",
-    backgroundColor: "#DFF4F3",
-  },
-  assetItemText: {
-    fontFamily: "Montserrat_600SemiBold",
-    fontSize: 13,
-    color: "#2B3034",
-    flexShrink: 1,
-    flexWrap: "wrap",
-  },
-  toggleButton: {
-    width: "48%",
-    height: 68,
-    flexDirection: "column",
-    alignItems: "center",
-    justifyContent: "center",
-    padding: 0,
-    gap: 8,
-  },
+    scrollContent: {
+        backgroundColor: "#F5F6F7",
+        paddingVertical: 16,
+        paddingHorizontal: 12,
+        width: "100%",
+    },
+    container: {
+        flex: 1,
+        gap: 16,
+    },
 });
 
 export default AddInventoryForm;
