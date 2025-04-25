@@ -1,28 +1,12 @@
-import { Montserrat_600SemiBold } from "@expo-google-fonts/montserrat";
-import {
-  ScrollView,
-  StyleSheet,
-  View,
-  TouchableOpacity,
-  FlatList,
-} from "react-native";
-import { Text } from "react-native-elements";
-import { SafeAreaView } from "react-native-safe-area-context";
-import PlacesSearch from "../components/Listing/PlacesSearch";
-import { useEffect, useState } from "react";
-import { Places } from "../types";
-import { getMicromarketFromCoordinates } from "../helpers/getMicromarketFromCoordinates";
-import React from "react";
 import Appartments from "@/assets/icons/svg/AddInventory/Appartments";
-import Villa from "@/assets/icons/svg/AddInventory/Villa";
 import Plots from "@/assets/icons/svg/AddInventory/Plots";
 import RowHouse from "@/assets/icons/svg/AddInventory/RowHouse";
-import Villaments from "@/assets/icons/svg/AddInventory/Villaments";
-import OfficeSpace from "@/assets/icons/svg/AddInventory/OfficeSpace";
-import ShowMoreButton from "@/assets/icons/svg/AddInventory/ShowMoreButton";
 import ShowLessButton from "@/assets/icons/svg/AddInventory/ShowLessButton";
-import AssetTypeSelection from "../components/Listing/AssetTypeSelection";
-import CommunityType from "../components/Listing/CommunityType";
+import ShowMoreButton from "@/assets/icons/svg/AddInventory/ShowMoreButton";
+import Villa from "@/assets/icons/svg/AddInventory/Villa";
+import Villaments from "@/assets/icons/svg/AddInventory/Villaments";
+import React, { useState } from "react";
+import { FlatList, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 
 type AssetOption = {
   title: string;
@@ -30,26 +14,16 @@ type AssetOption = {
   icon: React.ReactNode;
 };
 
-const AddInventoryForm = () => {
-  const [selectedPlace, setSelectedPlace] = useState<Places | null>(null);
-  const [selectedAsset, setSelectedAsset] = useState<string | null>(
-    "Apartment"
-  );
+interface AssetTypeSelectionProps {
+  selectedAsset: string | null;
+  setSelectedAsset: (value: string | null) => void;
+}
+
+const AssetTypeSelection = ({
+  selectedAsset,
+  setSelectedAsset,
+}: AssetTypeSelectionProps) => {
   const [seeMore, setSeeMore] = useState(false);
-
-  useEffect(() => {
-    if (selectedPlace && !selectedPlace.micromarket) {
-      const mm = getMicromarketFromCoordinates(selectedPlace);
-
-      setSelectedPlace({
-        ...selectedPlace,
-        micromarket: mm,
-      });
-    }
-  }, [selectedPlace]);
-
-  console.log("selectedPlace", selectedPlace);
-  console.log("selectedAsset", selectedAsset);
 
   const assetOptions: AssetOption[] = [
     {
@@ -147,38 +121,28 @@ const AddInventoryForm = () => {
   };
 
   return (
-    <ScrollView
-      contentContainerStyle={styles.scrollContent}
-      showsVerticalScrollIndicator={false}
-    >
-      <View style={styles.container}>
-        <PlacesSearch
-          selectedPlace={selectedPlace}
-          setSelectedPlace={setSelectedPlace}
-        />
-
-        <AssetTypeSelection
-          selectedAsset={selectedAsset}
-          setSelectedAsset={setSelectedAsset}
-        />
-
-        <CommunityType />
+    <View style={styles.section}>
+      <View style={styles.headingContainer}>
+        <Text style={styles.sectionHeading}>Asset Type</Text>
+        <Text style={styles.compulsoryStar}>*</Text>
       </View>
-    </ScrollView>
+
+      <View style={styles.assetGridContainer}>
+        <FlatList
+          data={getCombinedData()}
+          renderItem={renderItem}
+          keyExtractor={(item) => item.assetType}
+          numColumns={2}
+          columnWrapperStyle={styles.assetGridRow}
+          scrollEnabled={false}
+          contentContainerStyle={styles.gridContent}
+        />
+      </View>
+    </View>
   );
 };
 
 const styles = StyleSheet.create({
-  scrollContent: {
-    backgroundColor: "#F5F6F7",
-    paddingVertical: 16,
-    paddingHorizontal: 12,
-    width: "100%",
-  },
-  container: {
-    flex: 1,
-    gap: 16,
-  },
   section: {
     width: "100%",
     flex: 1,
@@ -211,6 +175,15 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     marginBottom: 16,
   },
+  toggleButton: {
+    width: "48%",
+    height: 68,
+    flexDirection: "column",
+    alignItems: "center",
+    justifyContent: "center",
+    padding: 0,
+    gap: 8,
+  },
   assetItem: {
     width: "48%",
     height: 68,
@@ -234,15 +207,6 @@ const styles = StyleSheet.create({
     flexShrink: 1,
     flexWrap: "wrap",
   },
-  toggleButton: {
-    width: "48%",
-    height: 68,
-    flexDirection: "column",
-    alignItems: "center",
-    justifyContent: "center",
-    padding: 0,
-    gap: 8,
-  },
 });
 
-export default AddInventoryForm;
+export default AssetTypeSelection;
