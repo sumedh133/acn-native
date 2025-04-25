@@ -8,8 +8,8 @@ import PropertiesIcon from "@/assets/icons/svg/Footer/PropertiesIcon";
 import RequirementsIcon from "@/assets/icons/svg/Footer/RequirementsIcon";
 import PlusIcon from "@/assets/icons/svg/PlusIcon";
 import { useNavigation, usePathname, useRouter } from "expo-router";
-import React, { ReactNode, useState } from "react";
-import { Text, TouchableOpacity } from "react-native";
+import React, { ReactNode, useState, useRef, useEffect } from "react";
+import { Text, TouchableOpacity, Animated, Easing } from "react-native";
 import { StyleSheet, View } from "react-native";
 import AddPopup from "./AddPopup";
 
@@ -60,9 +60,21 @@ const FooterNavigation = () => {
 
   const [showAddPopup, setShowAddPopup] = useState<boolean>(false);
 
-  const params = navigation?.getState()?.routes?.at(-1)?.params as {
-    showFooter?: boolean;
-  };
+  const rotateAnimation = useRef(new Animated.Value(0)).current;
+
+  const rotate = rotateAnimation.interpolate({
+    inputRange: [0, 1],
+    outputRange: ["0deg", "45deg"],
+  });
+
+  useEffect(() => {
+    Animated.timing(rotateAnimation, {
+      toValue: showAddPopup ? 1 : 0,
+      duration: 100,
+      easing: Easing.linear,
+      useNativeDriver: true,
+    }).start();
+  }, [showAddPopup, rotateAnimation]);
 
   const handleNavigation = (path: string) => {
     if (path === pathname) return;
@@ -71,6 +83,10 @@ const FooterNavigation = () => {
 
   const handlePopupClick = () => {
     setShowAddPopup((prev) => !prev);
+  };
+
+  const params = navigation?.getState()?.routes?.at(-1)?.params as {
+    showFooter?: boolean;
   };
 
   if (params?.showFooter === false) return null;
@@ -88,21 +104,16 @@ const FooterNavigation = () => {
                 key={idx}
                 activeOpacity={1}
               >
-                <View
+                <Animated.View
                   style={[
-                    styles?.addItem,
-                    showAddPopup
-                      ? {
-                          transform: [
-                            { translateY: -18.5 },
-                            { rotate: "45deg" },
-                          ],
-                        }
-                      : {},
+                    styles.addItem,
+                    {
+                      transform: [{ translateY: -18.5 }, { rotate }],
+                    },
                   ]}
                 >
                   {item?.icon}
-                </View>
+                </Animated.View>
               </TouchableOpacity>
             );
           }
@@ -150,11 +161,6 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
     transformOrigin: "center",
-    transform: [
-      {
-        translateY: -18.5,
-      },
-    ],
   },
   activeBar: {
     width: 52,
