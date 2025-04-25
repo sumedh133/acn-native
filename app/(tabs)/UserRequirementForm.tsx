@@ -624,7 +624,7 @@ const styles = StyleSheet.create({
   },
 
   footerButtons: {
-    position: "absolute",
+    // position: "absolute",
     bottom: 0,
     width: "100%",
     flexDirection: "row",
