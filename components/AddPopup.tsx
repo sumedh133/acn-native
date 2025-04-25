@@ -1,7 +1,8 @@
 import AddInventoryIcon from "@/assets/icons/svg/Footer/AddInventoryIcon";
-import React, { ReactNode } from "react";
+import React, { ReactNode, useRef } from "react";
 import {
   Animated,
+  PanResponder,
   StyleSheet,
   Text,
   TouchableOpacity,
@@ -42,40 +43,68 @@ const items: popupItems[] = [
 const AddPopup = ({
   handlePopupCardPress,
   slideAnimation,
+  onDragDown,
 }: {
   handlePopupCardPress: (deeplink: string) => void;
   slideAnimation: Animated.Value;
+  onDragDown: () => void;
 }) => {
+  const DRAG_THRESHOLD = 10;
+
+  const panResponder = useRef(
+    PanResponder.create({
+      onStartShouldSetPanResponder: () => true,
+      onMoveShouldSetPanResponder: () => true,
+
+      onPanResponderRelease: (evt, gestureState) => {
+        if (gestureState.dy > DRAG_THRESHOLD) {
+          onDragDown && onDragDown();
+        }
+      },
+    })
+  ).current;
+
   return (
-    <Animated.View
-      style={[styles.popup, { transform: [{ translateY: slideAnimation }] }]}
+    <TouchableOpacity
+      onPress={(e) => {
+        e.stopPropagation();
+      }}
+      activeOpacity={1}
+      style={styles.popupTouch}
     >
-      {items?.map((item, idx) => {
-        return (
-          <TouchableOpacity
-            key={idx}
-            onPress={() => handlePopupCardPress(item?.deeplink)}
-          >
-            <LinearGradient
-              colors={item?.colors}
-              start={{ x: 0, y: 0 }}
-              end={{ x: 1, y: 0 }}
-              style={styles.card}
+      <Animated.View
+        style={[styles.popup, { transform: [{ translateY: slideAnimation }] }]}
+      >
+        <View style={styles.dragDownBarContainer} {...panResponder.panHandlers}>
+          <View style={styles.dragDownBar}></View>
+        </View>
+        {items?.map((item, idx) => {
+          return (
+            <TouchableOpacity
+              key={idx}
+              onPress={() => handlePopupCardPress(item?.deeplink)}
             >
-              <View
-                style={[styles?.icon, { backgroundColor: item?.iconColor }]}
+              <LinearGradient
+                colors={item?.colors}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 0 }}
+                style={styles.card}
               >
-                {item?.icon}
-              </View>
-              <View style={styles.textContainer}>
-                <Text style={styles.text}>{item?.text}</Text>
-                <Text style={styles.subText}>{item?.subText}</Text>
-              </View>
-            </LinearGradient>
-          </TouchableOpacity>
-        );
-      })}
-    </Animated.View>
+                <View
+                  style={[styles?.icon, { backgroundColor: item?.iconColor }]}
+                >
+                  {item?.icon}
+                </View>
+                <View style={styles.textContainer}>
+                  <Text style={styles.text}>{item?.text}</Text>
+                  <Text style={styles.subText}>{item?.subText}</Text>
+                </View>
+              </LinearGradient>
+            </TouchableOpacity>
+          );
+        })}
+      </Animated.View>
+    </TouchableOpacity>
   );
 };
 
@@ -93,16 +122,33 @@ const styles = StyleSheet.create({
     gap: 12,
     paddingBottom: 59,
   },
+  dragDownBarContainer: {
+    paddingTop: 12,
+    width: "100%",
+    marginBottom: 4,
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  dragDownBar: {
+    width: 124,
+    height: 2,
+    borderRadius: 4,
+    backgroundColor: "#00000099",
+  },
+  popupTouch: {
+    width: "100%",
+  },
   popup: {
     width: "100%",
     backgroundColor: "#FBFCFB",
     borderTopLeftRadius: 24,
     borderTopRightRadius: 24,
-    paddingTop: 12,
     paddingBottom: 36,
     paddingHorizontal: 12,
     display: "flex",
     flexDirection: "column",
+    alignItems: "center",
     gap: 8,
   },
   card: {

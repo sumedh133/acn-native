@@ -150,10 +150,17 @@ const FooterNavigation = () => {
             },
           ]}
         >
-          <AddPopup
-            handlePopupCardPress={handlePopupCardClick}
-            slideAnimation={slideAnimation}
-          />
+          <TouchableOpacity
+            activeOpacity={1}
+            style={styles.popupTouch}
+            // onPress={(e) => handlePopupClick()}
+          >
+            <AddPopup
+              handlePopupCardPress={handlePopupCardClick}
+              slideAnimation={slideAnimation}
+              onDragDown={() => handlePopupClick()}
+            />
+          </TouchableOpacity>
         </Animated.View>
       )}
       <View style={styles.footer}>
@@ -206,6 +213,10 @@ const styles = StyleSheet.create({
     width: "100%",
     height: "100%",
     backgroundColor: "#00000033",
+  },
+  popupTouch: {
+    width: "100%",
+    height: "100%",
     display: "flex",
     flexDirection: "column",
     alignItems: "center",
@@ -243,6 +254,7 @@ const styles = StyleSheet.create({
     top: 0,
     height: 3,
     backgroundColor: "#153E3B",
+    borderRadius: 4,
   },
   activeItem: {
     position: "relative",
