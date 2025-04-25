@@ -1,13 +1,22 @@
-import React, { useState, useEffect } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, TextInput, Dimensions, Keyboard, ActivityIndicator } from 'react-native';
-import { useInstantSearch, useSearchBox } from 'react-instantsearch';
-import DropdownRefinementList from './DropdownRefinementList';
-import CustomCurrentRefinements from './CustomCurrentRefinements';
-import { Property } from '../types';
-import { Feather, MaterialCommunityIcons } from '@expo/vector-icons';
-import CloseIcon from '@/assets/icons/svg/CloseIcon';
-import SearchIcon from '@/assets/icons/svg/PropertiesPage/SearchIcon';
-import FilterIcon from '@/assets/icons/svg/PropertiesPage/FilterIcon';
+import React, { useState, useEffect } from "react";
+import {
+  View,
+  Text,
+  TouchableOpacity,
+  StyleSheet,
+  TextInput,
+  Dimensions,
+  Keyboard,
+  ActivityIndicator,
+} from "react-native";
+import { useInstantSearch, useSearchBox } from "react-instantsearch";
+import DropdownRefinementList from "./DropdownRefinementList";
+import CustomCurrentRefinements from "./CustomCurrentRefinements";
+import { Property } from "../types";
+import { Feather, MaterialCommunityIcons } from "@expo/vector-icons";
+import CloseIcon from "@/assets/icons/svg/CloseIcon";
+import SearchIcon from "@/assets/icons/svg/PropertiesPage/SearchIcon";
+import FilterIcon from "@/assets/icons/svg/PropertiesPage/FilterIcon";
 
 interface PropertyFiltersProps {
   handleToggleMoreFilters: () => void;
@@ -15,11 +24,10 @@ interface PropertyFiltersProps {
   setSelectedLandmark?: (landmark: any) => void;
 }
 
-
 export default function PropertyFilters({
   handleToggleMoreFilters,
   selectedLandmark,
-  setSelectedLandmark
+  setSelectedLandmark,
 }: PropertyFiltersProps) {
   const { query, refine } = useSearchBox();
   const { status } = useInstantSearch();
@@ -37,8 +45,8 @@ export default function PropertyFilters({
     if (searchText.trim() != query) {
       setLoading(true);
       setTimeout(() => {
-        refine(searchText.trim());  // Trigger the refine action with the updated search text
-      }, 0)
+        refine(searchText.trim()); // Trigger the refine action with the updated search text
+      }, 0);
     }
   };
 
@@ -49,21 +57,18 @@ export default function PropertyFilters({
       setLoading(true);
       setTimeout(() => {
         refine("");
-      }, 0)
+      }, 0);
     }
-  }
+  };
 
   // Update loading state based on Algolia search status
   useEffect(() => {
-    setLoading(status === 'loading');
+    setLoading(status === "loading");
   }, [status]);
 
   return (
     <View style={styles.container}>
-      <View style={[
-        styles.content,
-        styles.mobileContent
-      ]}>
+      <View style={[styles.content, styles.mobileContent]}>
         {/* Search Box */}
         <View style={styles.searchBox}>
           <TextInput
@@ -78,37 +83,29 @@ export default function PropertyFilters({
 
         {/* Search Button */}
         <View style={styles.filters}>
-          <TouchableOpacity
-            onPress={handleSearchPress}
-          >
-            {
-              loading ?
-                <ActivityIndicator />
-                :
-                <SearchIcon />
-            }
+          <TouchableOpacity onPress={handleSearchPress}>
+            {loading ? <ActivityIndicator /> : <SearchIcon />}
           </TouchableOpacity>
         </View>
 
         {/* Clear Button */}
-        {searchText.trim() &&
+        {searchText.trim() && (
           <View style={styles.filters}>
             <TouchableOpacity
               onPress={handleClear}
               style={styles.clearButton}
               disabled={loading}
             >
-              <CloseIcon
-              strokeColor='white'/>
+              <CloseIcon strokeColor="white" />
             </TouchableOpacity>
           </View>
-        }
+        )}
 
         {/* More Filters Button */}
         <View style={styles.filters}>
           <TouchableOpacity
             onPress={handleToggleMoreFilters}
-            // style={styles.moreFiltersButton}
+          // style={styles.moreFiltersButton}
           >
             <FilterIcon />
           </TouchableOpacity>
@@ -125,25 +122,26 @@ export default function PropertyFilters({
   );
 }
 
-
 const styles = StyleSheet.create({
   container: {
-    width: '91%',
+    width: "91%",
     borderBottomWidth: 0,
-    borderBottomColor: '#E5E7EB',
-    alignSelf: 'center',
+    borderBottomColor: "#E5E7EB",
+    alignSelf: "center",
     // backgroundColor: '#fff',
     paddingTop: 16,
+    paddingHorizontal: 12,
+    marginBottom: 16,
     borderRadius: 16,
   },
   contentWrapper: {
-    flexDirection: 'column',
+    flexDirection: "column",
     // paddingHorizontal: 16,
     // paddingVertical: 8,
   },
   content: {
-    flexDirection: 'column',
-    alignItems: 'center',
+    flexDirection: "column",
+    alignItems: "center",
     gap: 8,
   },
   searchBox: {
@@ -151,75 +149,75 @@ const styles = StyleSheet.create({
   },
   searchInput: {
     height: 40, // fixed height
-    backgroundColor: '#FFFFFF',
+    backgroundColor: "#FFFFFF",
     borderWidth: 1,
-    borderColor: '#E5E7EB',
+    borderColor: "#E5E7EB",
     borderRadius: 6,
     paddingHorizontal: 12,
     fontSize: 14,
-    fontFamily: 'Montserrat_400Regular',
-    color: '#374151',
+    fontFamily: "Montserrat_400Regular",
+    color: "#374151",
   },
   filters: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    alignContent: 'center',
-    alignSelf: 'center',
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    alignContent: "center",
+    alignSelf: "center",
   },
   searchButton: {
     height: 40,
-    flexDirection: 'column',
-    alignItems: 'center',
+    flexDirection: "column",
+    alignItems: "center",
     borderWidth: 1,
-    borderColor: '#E5E7EB',
+    borderColor: "#E5E7EB",
     borderRadius: 6,
     paddingHorizontal: 8,
     paddingVertical: 8,
-    backgroundColor: '#153E3B',
+    backgroundColor: "#153E3B",
   },
   clearButton: {
     height: 40,
     width: 40,
-    display: 'flex',
-    flexDirection: 'row',
-    alignItems: 'center',
-    alignSelf: 'center',
-    alignContent: 'center',
-    justifyContent: 'center',
+    display: "flex",
+    flexDirection: "row",
+    alignItems: "center",
+    alignSelf: "center",
+    alignContent: "center",
+    justifyContent: "center",
     borderWidth: 1,
-    borderColor: '#ff0000',
+    borderColor: "#ff0000",
     borderRadius: 6,
     paddingHorizontal: 8,
     paddingVertical: 8,
-    backgroundColor: '#EF4444',
+    backgroundColor: "#EF4444",
   },
   moreFiltersButton: {
     height: 40,
-    flexDirection: 'column',
-    alignItems: 'center',
+    flexDirection: "column",
+    alignItems: "center",
     borderWidth: 1,
-    borderColor: '#E5E7EB',
+    borderColor: "#E5E7EB",
     borderRadius: 6,
     paddingHorizontal: 12,
     paddingVertical: 8,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: "#FFFFFF",
   },
   moreFiltersText: {
-    fontFamily: 'Montserrat_500Medium',
-    alignContent: 'center',
-    justifyContent: 'center',
+    fontFamily: "Montserrat_500Medium",
+    alignContent: "center",
+    justifyContent: "center",
     top: 10,
     fontSize: 14,
-    color: '#374151',
+    color: "#374151",
   },
   refinements: {
     // marginTop: 8,
-    flexDirection: 'row',
+    flexDirection: "row",
     left: -15,
   },
   mobileContent: {
-    flexDirection: 'row',
-    justifyContent: 'center',
+    flexDirection: "row",
+    justifyContent: "center",
   },
 });
