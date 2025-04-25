@@ -89,12 +89,10 @@ const MobileHits = forwardRef<FlatList>((props, ref) => {
 
   const renderItem = useCallback(
     ({ item }: { item: Requirement }) => (
-      <View style={{ padding: 2 }}>
-        <RequirementCard
-          requirement={item as Requirement}
-          onCardClick={handleCardClick}
-        />
-      </View>
+      <RequirementCard
+        requirement={item as Requirement}
+        onCardClick={handleCardClick}
+      />
     ),
     [handleCardClick]
   );

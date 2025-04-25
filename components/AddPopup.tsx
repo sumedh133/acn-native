@@ -1,6 +1,12 @@
 import AddInventoryIcon from "@/assets/icons/svg/Footer/AddInventoryIcon";
 import React, { ReactNode } from "react";
-import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import {
+  Animated,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
+} from "react-native";
 import AddRequirementsIcon from "../assets/icons/svg/Footer/AddRequirementsIcon";
 import LinearGradient from "react-native-linear-gradient";
 
@@ -11,6 +17,7 @@ interface popupItems {
   subText: string;
   colors: string[];
   iconColor: string;
+  deeplink: string;
 }
 const items: popupItems[] = [
   {
@@ -20,6 +27,7 @@ const items: popupItems[] = [
     subText: "Add your inventory to increase visibility",
     colors: ["#FFFCEC", "#FFFFFF"],
     iconColor: "#FFE86A",
+    deeplink: "(tabs)/AddInventoryForm",
   },
   {
     slug: "add_requirement",
@@ -28,36 +36,46 @@ const items: popupItems[] = [
     subText: "Add your requirements to find inventory.",
     colors: ["#F1FFFE", "#FFFFFF"],
     iconColor: "#BFE9E6",
+    deeplink: "(tabs)/UserRequirementForm",
   },
 ];
-const AddPopup = () => {
+const AddPopup = ({
+  handlePopupCardPress,
+  slideAnimation,
+}: {
+  handlePopupCardPress: (deeplink: string) => void;
+  slideAnimation: Animated.Value;
+}) => {
   return (
-    <View style={styles.container}>
-      <View style={styles.popup}>
-        {items?.map((item, idx) => {
-          return (
-            <TouchableOpacity key={idx}>
-              <LinearGradient
-                colors={item?.colors}
-                start={{ x: 0, y: 0 }}
-                end={{ x: 1, y: 0 }}
-                style={styles.card}
+    <Animated.View
+      style={[styles.popup, { transform: [{ translateY: slideAnimation }] }]}
+    >
+      {items?.map((item, idx) => {
+        return (
+          <TouchableOpacity
+            key={idx}
+            onPress={() => handlePopupCardPress(item?.deeplink)}
+          >
+            <LinearGradient
+              colors={item?.colors}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 0 }}
+              style={styles.card}
+            >
+              <View
+                style={[styles?.icon, { backgroundColor: item?.iconColor }]}
               >
-                <View
-                  style={[styles?.icon, { backgroundColor: item?.iconColor }]}
-                >
-                  {item?.icon}
-                </View>
-                <View style={styles.textContainer}>
-                  <Text style={styles.text}>{item?.text}</Text>
-                  <Text style={styles.subText}>{item?.subText}</Text>
-                </View>
-              </LinearGradient>
-            </TouchableOpacity>
-          );
-        })}
-      </View>
-    </View>
+                {item?.icon}
+              </View>
+              <View style={styles.textContainer}>
+                <Text style={styles.text}>{item?.text}</Text>
+                <Text style={styles.subText}>{item?.subText}</Text>
+              </View>
+            </LinearGradient>
+          </TouchableOpacity>
+        );
+      })}
+    </Animated.View>
   );
 };
 

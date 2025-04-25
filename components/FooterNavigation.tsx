@@ -10,7 +10,7 @@ import PlusIcon from "@/assets/icons/svg/PlusIcon";
 import { useNavigation, usePathname, useRouter } from "expo-router";
 import React, { ReactNode, useState, useRef, useEffect } from "react";
 import { Text, TouchableOpacity, Animated, Easing } from "react-native";
-import { StyleSheet, View } from "react-native";
+import { StyleSheet, View, Dimensions } from "react-native";
 import AddPopup from "./AddPopup";
 
 interface MenuItem {
@@ -57,10 +57,15 @@ const FooterNavigation = () => {
   const pathname = usePathname();
   const router = useRouter();
   const navigation = useNavigation();
+  const { height } = Dimensions.get("window");
 
-  const [showAddPopup, setShowAddPopup] = useState<boolean>(false);
+  const [popupAnimationFlag, setPopupAnimationFlag] = useState<boolean>(false);
+  const [showPopup, setShowPopup] = useState<boolean>(false);
+  const navigateAtEndOfAnimation = useRef<string | null>(null);
 
   const rotateAnimation = useRef(new Animated.Value(0)).current;
+  const slideAnimation = useRef(new Animated.Value(height)).current;
+  const opacityAnimation = useRef(new Animated.Value(0)).current;
 
   const rotate = rotateAnimation.interpolate({
     inputRange: [0, 1],
@@ -68,21 +73,64 @@ const FooterNavigation = () => {
   });
 
   useEffect(() => {
-    Animated.timing(rotateAnimation, {
-      toValue: showAddPopup ? 1 : 0,
-      duration: 100,
+    if (popupAnimationFlag) setShowPopup(true);
+    const rotateAnimationTemp = Animated.timing(rotateAnimation, {
+      toValue: popupAnimationFlag ? 1 : 0,
+      duration: 300,
       easing: Easing.linear,
       useNativeDriver: true,
-    }).start();
-  }, [showAddPopup, rotateAnimation]);
+    });
+
+    const slideAnimationTemp = Animated.timing(slideAnimation, {
+      toValue: popupAnimationFlag ? 0 : height,
+      duration: 300,
+      easing: Easing.linear,
+      useNativeDriver: true,
+    });
+
+    const opacityAnimationTemp = Animated.timing(opacityAnimation, {
+      toValue: popupAnimationFlag ? 1 : 0,
+      duration: 300,
+      easing: Easing.linear,
+      useNativeDriver: true,
+    });
+
+    Animated.parallel([
+      rotateAnimationTemp,
+      slideAnimationTemp,
+      opacityAnimationTemp,
+    ]).start((finished) => {
+      if (!popupAnimationFlag && finished.finished) setShowPopup(false);
+      if (
+        navigateAtEndOfAnimation.current !== null &&
+        navigateAtEndOfAnimation.current !== pathname
+      ) {
+        router.replace(navigateAtEndOfAnimation.current as any);
+        navigateAtEndOfAnimation.current = null;
+      }
+    });
+  }, [popupAnimationFlag, rotateAnimation, slideAnimation, height]);
 
   const handleNavigation = (path: string) => {
+    if (popupAnimationFlag) {
+      setPopupAnimationFlag(false);
+      navigateAtEndOfAnimation.current = path;
+      return;
+    }
     if (path === pathname) return;
-    router.replace(path as any);
+    setTimeout(() => {
+      router.replace(path as any);
+    }, 0);
+  };
+
+  const handlePopupCardClick = (path: string) => {
+    setPopupAnimationFlag(false);
+    if (path === pathname) return;
+    navigateAtEndOfAnimation.current = path;
   };
 
   const handlePopupClick = () => {
-    setShowAddPopup((prev) => !prev);
+    setPopupAnimationFlag((prev) => !prev);
   };
 
   const params = navigation?.getState()?.routes?.at(-1)?.params as {
@@ -93,7 +141,21 @@ const FooterNavigation = () => {
 
   return (
     <>
-      {showAddPopup && <AddPopup />}
+      {showPopup && (
+        <Animated.View
+          style={[
+            styles.popupContainer,
+            {
+              opacity: opacityAnimation,
+            },
+          ]}
+        >
+          <AddPopup
+            handlePopupCardPress={handlePopupCardClick}
+            slideAnimation={slideAnimation}
+          />
+        </Animated.View>
+      )}
       <View style={styles.footer}>
         {menuItems?.map((item, idx) => {
           const active = item?.path === pathname;
@@ -138,6 +200,19 @@ const FooterNavigation = () => {
 };
 
 const styles = StyleSheet.create({
+  popupContainer: {
+    position: "absolute",
+    zIndex: 100,
+    width: "100%",
+    height: "100%",
+    backgroundColor: "#00000033",
+    display: "flex",
+    flexDirection: "column",
+    alignItems: "center",
+    justifyContent: "flex-end",
+    gap: 12,
+    paddingBottom: 59,
+  },
   footer: {
     display: "flex",
     flexDirection: "row",
