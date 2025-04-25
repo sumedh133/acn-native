@@ -89,12 +89,10 @@ const MobileHits = forwardRef<FlatList>((props, ref) => {
 
   const renderItem = useCallback(
     ({ item }: { item: Requirement }) => (
-      <View style={{ padding: 2 }}>
-        <RequirementCard
-          requirement={item as Requirement}
-          onCardClick={handleCardClick}
-        />
-      </View>
+      <RequirementCard
+        requirement={item as Requirement}
+        onCardClick={handleCardClick}
+      />
     ),
     [handleCardClick]
   );
@@ -152,7 +150,7 @@ const MobileHits = forwardRef<FlatList>((props, ref) => {
       onEndReachedThreshold={0.5}
       ListFooterComponent={renderFooter}
       contentContainerStyle={{
-        paddingHorizontal: 12,
+        paddingHorizontal: 16,
         width: "100%",
         flexGrow: 1,
       }}
@@ -320,4 +318,3 @@ const styles = StyleSheet.create({
 });
 
 export default RequirementsPage;
-
