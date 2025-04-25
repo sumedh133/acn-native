@@ -124,7 +124,7 @@ const PlacesSearch = ({
         // Skip initial useEffect run when component mounts with a selectedPlace
         if (isInitialMount.current) {
             if (selectedPlace) {
-                setSearchQuery(selectedPlace.name);
+                setSearchQuery(selectedPlace.name!);
             }
             isInitialMount.current = false;
             return;
@@ -132,7 +132,7 @@ const PlacesSearch = ({
 
         // For subsequent updates to selectedPlace
         if (selectedPlace) {
-            setSearchQuery(selectedPlace.name);
+            setSearchQuery(selectedPlace.name!);
             // Don't show results when place is programmatically selected
             setShowResults(false);
         } else {
