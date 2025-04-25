@@ -84,10 +84,23 @@ export interface Landmark {
 }
 
 export interface Places {
-  name: string;
-  lat: number;
-  lng: number;
-  address: string;
-  mapLink: string;
-  micromarket?: string;
+  name: string | null;
+  lat: number | null;
+  lng: number | null;
+  address: string | null;
+  mapLink: string | null;
+}
+
+export interface ListingProperty {
+  assetType: string | null;
+  communityType: string | null;
+  name: string | null,
+  address: string | null,
+  mapLink: string | null,
+  micromarket: string | null,
+  _geoloc: {
+    lat: number | null,
+    lng: number | null,
+  },
+  [key: string]: any;
 }
