@@ -191,7 +191,7 @@ const MobileHits = () => {
           />
         }
         contentContainerStyle={{
-          paddingHorizontal: 12,
+          paddingHorizontal: 16,
           width: "100%",
           flexGrow: 1,
         }}

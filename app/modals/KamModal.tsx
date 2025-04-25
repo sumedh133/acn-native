@@ -23,23 +23,11 @@ import { AnyAction, ThunkDispatch } from "@reduxjs/toolkit";
 import { RootState } from "@/store/store";
 import { toCapitalizedWords } from "../helpers/common";
 import CloseIcon from "@/assets/icons/svg/CloseIcon";
+import { getInitials, getRandomColor } from "@/utils/userUtils";
 
 type KamManagerProps = {
   visible: boolean;
   setVisible: (visible: boolean) => void;
-};
-
-const getInitials = (name: string): string => {
-  if (!name) return "";
-  const names = name.trim().split(" ");
-  const initials =
-    names.length >= 2 ? names[0][0] + names[1][0] : names[0].slice(0, 2);
-  return initials.toUpperCase();
-};
-
-const getRandomColor = () => {
-  const colors = ["#3d4db7", "#e67e22", "#2ecc71", "#9b59b6", "#e74c3c"];
-  return colors[Math.floor(Math.random() * colors.length)];
 };
 
 const KamManager: React.FC<KamManagerProps> = ({ visible, setVisible }) => {
@@ -48,6 +36,8 @@ const KamManager: React.FC<KamManagerProps> = ({ visible, setVisible }) => {
   const myKamId = useSelector(selectMyKam);
   const kamName = useSelector(selectKamName);
   const kamNumber = useSelector(selectKamNumber);
+  const initials = getInitials(kamName);
+  const color = getRandomColor(initials);
 
   useEffect(() => {
     if (myKamId) {
@@ -55,7 +45,10 @@ const KamManager: React.FC<KamManagerProps> = ({ visible, setVisible }) => {
     }
   }, [myKamId, dispatch]);
 
-  const profilePicUrl = `https://ui-avatars.com/api/?name=${kamName.replace(" ", "+")}`;
+  const profilePicUrl = `https://ui-avatars.com/api/?name=${kamName.replace(
+    " ",
+    "+"
+  )}`;
 
   const handleOutsidePress = () => {
     setVisible(false);
@@ -80,9 +73,9 @@ const KamManager: React.FC<KamManagerProps> = ({ visible, setVisible }) => {
               <View style={styles.headerRow}>
                 <Avatar
                   rounded
-                  title={getInitials(kamName)}
+                  title={initials}
                   overlayContainerStyle={{
-                    backgroundColor: getRandomColor(),
+                    backgroundColor: color,
                   }}
                   size="medium"
                 />

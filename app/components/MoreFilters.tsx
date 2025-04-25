@@ -115,10 +115,10 @@ const MoreFilters = ({
 
   useEffect(() => {
     const hasMicromarketFilter = items?.some(
-      (item) => item.attribute === "micromarket",
+      (item) => item.attribute === "micromarket"
     );
     setSelectedLocationFilter(
-      hasMicromarketFilter && !selectedLandmark ? "micromarket" : "landmark",
+      hasMicromarketFilter && !selectedLandmark ? "micromarket" : "landmark"
     );
   }, [items, selectedLandmark]);
 
@@ -149,7 +149,7 @@ const MoreFilters = ({
 
   const renderRefinementList = (
     items: any[],
-    refine: (value: string) => void,
+    refine: (value: string) => void
   ) => {
     return (
       <View className="flex-row flex-wrap gap-2">
@@ -163,7 +163,9 @@ const MoreFilters = ({
           >
             <View className="flex-row justify-between items-center">
               <Text
-                className={`text-sm ${item.isRefined ? "text-[#153E3B]" : "text-gray-700"}`}
+                className={`text-sm ${
+                  item.isRefined ? "text-[#153E3B]" : "text-gray-700"
+                }`}
               >
                 {item.label}
               </Text>
@@ -188,7 +190,7 @@ const MoreFilters = ({
   }) => {
     const [searchQuery, setSearchQuery] = useState("");
     const filteredItems = items.filter((item) =>
-      item.label.toLowerCase().includes(searchQuery.toLowerCase()),
+      item.label.toLowerCase().includes(searchQuery.toLowerCase())
     );
 
     return (
@@ -246,10 +248,11 @@ const MoreFilters = ({
       transparent={true}
       onRequestClose={handleToggle}
     >
-      <SafeAreaView
+      <View
         className="flex-1 bg-white"
         style={{
           zIndex: 1,
+          //CHECK FOR IOS
           paddingTop: Platform.OS === "ios" ? 40 : 0,
         }}
       >
@@ -495,7 +498,7 @@ const MoreFilters = ({
             </Text>
           </TouchableOpacity>
         </View>
-      </SafeAreaView>
+      </View>
     </Modal>
   );
 };
