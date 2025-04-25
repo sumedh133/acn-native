@@ -9,9 +9,16 @@ import RequirementsIcon from "@/assets/icons/svg/Footer/RequirementsIcon";
 import PlusIcon from "@/assets/icons/svg/PlusIcon";
 import { useNavigation, usePathname, useRouter } from "expo-router";
 import React, { ReactNode, useState, useRef, useEffect } from "react";
-import { Text, TouchableOpacity, Animated, Easing } from "react-native";
+import {
+  Text,
+  TouchableOpacity,
+  Animated,
+  Easing,
+  BackHandler,
+} from "react-native";
 import { StyleSheet, View, Dimensions } from "react-native";
 import AddPopup from "./AddPopup";
+import { useFocusEffect } from "@react-navigation/native";
 
 interface MenuItem {
   title: string;
@@ -72,6 +79,55 @@ const FooterNavigation = () => {
     outputRange: ["0deg", "45deg"],
   });
 
+  const handleNavigation = (path: string) => {
+    if (popupAnimationFlag) {
+      setPopupAnimationFlag(false);
+      navigateAtEndOfAnimation.current = path;
+      return;
+    }
+    if (path === pathname) return;
+    setTimeout(() => {
+      router.replace(path as any);
+    }, 0);
+  };
+
+  const handlePopupCardClick = (path: string) => {
+    setPopupAnimationFlag(false);
+    if (path === pathname) return;
+    navigateAtEndOfAnimation.current = path;
+  };
+
+  const handlePopupClick = () => {
+    setPopupAnimationFlag((prev) => !prev);
+  };
+
+  const params = navigation?.getState()?.routes?.at(-1)?.params as {
+    showFooter?: boolean;
+  };
+
+  useFocusEffect(
+    React.useCallback(() => {
+      const handleBackPress = () => {
+        if (popupAnimationFlag) {
+          setPopupAnimationFlag(false);
+          return true;
+        }
+        return false;
+      };
+
+      // Add back press event listener
+      const subscription = BackHandler.addEventListener(
+        "hardwareBackPress",
+        handleBackPress
+      );
+
+      // Cleanup
+      return () => {
+        subscription.remove();
+      };
+    }, [popupAnimationFlag])
+  );
+
   useEffect(() => {
     if (popupAnimationFlag) setShowPopup(true);
     const rotateAnimationTemp = Animated.timing(rotateAnimation, {
@@ -111,32 +167,6 @@ const FooterNavigation = () => {
     });
   }, [popupAnimationFlag, rotateAnimation, slideAnimation, height]);
 
-  const handleNavigation = (path: string) => {
-    if (popupAnimationFlag) {
-      setPopupAnimationFlag(false);
-      navigateAtEndOfAnimation.current = path;
-      return;
-    }
-    if (path === pathname) return;
-    setTimeout(() => {
-      router.replace(path as any);
-    }, 0);
-  };
-
-  const handlePopupCardClick = (path: string) => {
-    setPopupAnimationFlag(false);
-    if (path === pathname) return;
-    navigateAtEndOfAnimation.current = path;
-  };
-
-  const handlePopupClick = () => {
-    setPopupAnimationFlag((prev) => !prev);
-  };
-
-  const params = navigation?.getState()?.routes?.at(-1)?.params as {
-    showFooter?: boolean;
-  };
-
   if (params?.showFooter === false) return null;
 
   return (
@@ -153,7 +183,7 @@ const FooterNavigation = () => {
           <TouchableOpacity
             activeOpacity={1}
             style={styles.popupTouch}
-            // onPress={(e) => handlePopupClick()}
+            onPress={(e) => handlePopupClick()}
           >
             <AddPopup
               handlePopupCardPress={handlePopupCardClick}
