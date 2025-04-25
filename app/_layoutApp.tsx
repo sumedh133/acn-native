@@ -1,7 +1,5 @@
-import HamburgerMenu from "@/components/HamburgerMenu";
 import { SplashScreen, Stack, useRouter } from "expo-router";
 import React, { useCallback, useEffect, useState } from "react";
-import ProfileModal from "./modals/ProfileModal";
 import Toast from "react-native-toast-message";
 import { StatusBar } from "expo-status-bar";
 import { toastConfig } from "@/utils/toastUtils";
@@ -22,8 +20,6 @@ import {
   Montserrat_700Bold,
 } from "@expo-google-fonts/montserrat";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { HamburgerMenuButton } from "@/components/HamburgerMenuButton";
-import { KamModalButton } from "@/components/KamModalButton";
 import { useDispatch } from "react-redux";
 import NetInfo from "@react-native-community/netinfo";
 import { setIsConnectedToInternet } from "@/store/slices/appSlice";
@@ -39,12 +35,10 @@ import { useCustomBackBehavior } from "@/hooks/useCustomBackBehavior";
 const CustomHeader = ({
   title,
   onMenuPress,
-  isMenuOpen,
   headerBackVisible,
 }: {
   title: string;
   onMenuPress: (backHeader: boolean) => void;
-  isMenuOpen: boolean;
   headerBackVisible: boolean;
 }) => {
   const insets = useSafeAreaInsets();
@@ -62,7 +56,7 @@ const CustomHeader = ({
               <UserIcon width={32} height={32} />
             )}
           </TouchableOpacity>
-          {!isMenuOpen && <Text style={styles.headerTitle}>{title}</Text>}
+          <Text style={styles.headerTitle}>{title}</Text>
         </View>
         {!headerBackVisible && (
           <View style={styles.headerRight}>
@@ -76,10 +70,6 @@ const CustomHeader = ({
 };
 
 export default function LayoutApp() {
-  const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const [profileModalVisible, setProfileModalVisible] = useState(false);
-  const colorScheme = useColorScheme();
-  const [topMargin, setTopMargin] = useState(10);
   const [fontsLoaded] = useFonts({
     Montserrat_400Regular,
     Montserrat_500Medium,
@@ -142,7 +132,6 @@ export default function LayoutApp() {
               <CustomHeader
                 title={title}
                 onMenuPress={onMenuPress}
-                isMenuOpen={isMenuOpen}
                 headerBackVisible={headerBackVisible}
               />
             );
@@ -228,15 +217,6 @@ export default function LayoutApp() {
           initialParams={{ showFooter: false }}
         />
       </Stack>
-      <HamburgerMenu
-        visible={isMenuOpen}
-        onClose={() => setIsMenuOpen(false)}
-        onOpenProfile={() => setProfileModalVisible(true)}
-      />
-      <ProfileModal
-        visible={profileModalVisible}
-        setVisible={setProfileModalVisible}
-      />
       <Toast config={toastConfig} />
       <StatusBar style="auto" />
       {isAuthenticated && <FooterNavigation />}
