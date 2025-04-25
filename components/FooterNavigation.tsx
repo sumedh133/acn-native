@@ -8,10 +8,10 @@ import PropertiesIcon from "@/assets/icons/svg/Footer/PropertiesIcon";
 import RequirementsIcon from "@/assets/icons/svg/Footer/RequirementsIcon";
 import PlusIcon from "@/assets/icons/svg/PlusIcon";
 import { useNavigation, usePathname, useRouter } from "expo-router";
-import { color, offset } from "highcharts";
-import React, { ReactNode } from "react";
+import React, { ReactNode, useState } from "react";
 import { Text, TouchableOpacity } from "react-native";
 import { StyleSheet, View } from "react-native";
+import AddPopup from "./AddPopup";
 
 interface MenuItem {
   title: string;
@@ -58,6 +58,8 @@ const FooterNavigation = () => {
   const router = useRouter();
   const navigation = useNavigation();
 
+  const [showAddPopup, setShowAddPopup] = useState<boolean>(false);
+
   const params = navigation?.getState()?.routes?.at(-1)?.params as {
     showFooter?: boolean;
   };
@@ -67,39 +69,60 @@ const FooterNavigation = () => {
     router.replace(path as any);
   };
 
-  const handleInventorySubmit = () => {
-    router.replace("/(tabs)/AddInventoryForm");
+  const handlePopupClick = () => {
+    setShowAddPopup((prev) => !prev);
   };
 
   if (params?.showFooter === false) return null;
 
   return (
-    <View style={styles.footer}>
-      {menuItems?.map((item, idx) => {
-        const active = item?.path === pathname;
-        if (item?.path === "/add") {
+    <>
+      {showAddPopup && <AddPopup />}
+      <View style={styles.footer}>
+        {menuItems?.map((item, idx) => {
+          const active = item?.path === pathname;
+          if (item?.path === "/add") {
+            return (
+              <TouchableOpacity
+                onPress={() => handlePopupClick()}
+                key={idx}
+                activeOpacity={1}
+              >
+                <View
+                  style={[
+                    styles?.addItem,
+                    showAddPopup
+                      ? {
+                          transform: [
+                            { translateY: -18.5 },
+                            { rotate: "45deg" },
+                          ],
+                        }
+                      : {},
+                  ]}
+                >
+                  {item?.icon}
+                </View>
+              </TouchableOpacity>
+            );
+          }
           return (
-            <TouchableOpacity onPress={handleInventorySubmit} key={idx}>
-              <View style={styles?.addItem}>{item?.icon}</View>
+            <TouchableOpacity
+              onPress={() => handleNavigation(item?.path)}
+              key={idx}
+            >
+              <View style={active ? styles.activeItem : styles.item}>
+                {active && <View style={styles.activeBar}></View>}
+                {active ? item?.activeIcon : item?.icon}
+                <Text style={active ? styles.itemActiveText : styles.itemText}>
+                  {item?.title}
+                </Text>
+              </View>
             </TouchableOpacity>
           );
-        }
-        return (
-          <TouchableOpacity
-            onPress={() => handleNavigation(item?.path)}
-            key={idx}
-          >
-            <View style={active ? styles.activeItem : styles.item}>
-              {active && <View style={styles.activeBar}></View>}
-              {active ? item?.activeIcon : item?.icon}
-              <Text style={active ? styles.itemActiveText : styles.itemText}>
-                {item?.title}
-              </Text>
-            </View>
-          </TouchableOpacity>
-        );
-      })}
-    </View>
+        })}
+      </View>
+    </>
   );
 };
 
@@ -114,6 +137,7 @@ const styles = StyleSheet.create({
     backgroundColor: "#FFFFFF",
     borderTopWidth: 1,
     borderTopColor: "#E8E8E8",
+    zIndex: 101,
   },
   addItem: {
     width: 56,
@@ -125,7 +149,12 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "center",
     alignItems: "center",
-    transform: "translateY(-18.5px)",
+    transformOrigin: "center",
+    transform: [
+      {
+        translateY: -18.5,
+      },
+    ],
   },
   activeBar: {
     width: 52,
