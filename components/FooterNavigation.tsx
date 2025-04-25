@@ -23,32 +23,32 @@ const menuItems: MenuItem[] = [
   {
     title: "Properties",
     path: "/properties",
-    icon: <PropertiesIcon />,
-    activeIcon: <ActivePropertiesIcon />,
+    icon: <PropertiesIcon width={24} height={24} />,
+    activeIcon: <ActivePropertiesIcon width={24} height={24} />,
   },
   {
     title: "Requirements",
     path: "/requirements",
-    icon: <RequirementsIcon />,
-    activeIcon: <ActiveRequirementsIcon />,
+    icon: <RequirementsIcon width={24} height={24} />,
+    activeIcon: <ActiveRequirementsIcon width={24} height={24} />,
   },
   {
     title: "",
     path: "/add",
-    icon: <PlusIcon />,
+    icon: <PlusIcon width={24} height={24} />,
     activeIcon: null,
   },
   {
     title: "Notifications",
     path: "/notifications",
-    icon: <NotificationIcon />,
-    activeIcon: <ActiveNotificationIcon />,
+    icon: <NotificationIcon width={24} height={24} />,
+    activeIcon: <ActiveNotificationIcon width={24} height={24} />,
   },
   {
     title: "Dashboard",
     path: "/dashboardTab",
-    icon: <DashboardIcon />,
-    activeIcon: <ActiveDashboardIcon />,
+    icon: <DashboardIcon width={24} height={24} />,
+    activeIcon: <ActiveDashboardIcon width={24} height={24} />,
   },
 ];
 
@@ -63,13 +63,11 @@ const FooterNavigation = () => {
 
   const handleNavigation = (path: string) => {
     if (path === pathname) return;
-    router.replace("/(tabs)/properties");
-    router.push(path as any);
+    router.replace(path as any);
   };
 
   const handleInventorySubmit = () => {
-    router.dismissAll();
-    router.push("/(tabs)/AddInventoryForm");
+    router.replace("/(tabs)/AddInventoryForm");
   };
 
   if (params?.showFooter === false) return null;

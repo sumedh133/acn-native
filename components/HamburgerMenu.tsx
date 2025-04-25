@@ -194,9 +194,7 @@ export const HamburgerMenu = ({
       return;
     }
     onClose();
-    // router.dismissAll();
-    router.replace("/(tabs)/properties");
-    router.push(path as any);
+    router.replace(path as any);
     // onClose();
   };
 
@@ -213,7 +211,7 @@ export const HamburgerMenu = ({
 
   const handleInventorySubmit = () => {
     router.dismissAll();
-    router.push('/(tabs)/AddInventoryForm');
+    router.push("/(tabs)/AddInventoryForm");
     onClose();
   };
 

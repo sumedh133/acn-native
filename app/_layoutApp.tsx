@@ -32,7 +32,8 @@ import { useSelector } from "react-redux";
 import { RootState } from "@/store/store";
 import CoinIcon from "@/assets/icons/svg/Sidebar/CoinIcon";
 import FooterNavigation from "@/components/FooterNavigation";
-import ArrowLeftIcon from "@/assets/icons/svg/Header/ArrowLeftIcon";
+import ArrowLeftIcon from "@/assets/icons/svg/Common/ArrowLeftIcon";
+import { useCustomBackBehavior } from "@/hooks/useCustomBackBehavior";
 
 // Custom header component to apply the desired styling
 const CustomHeader = ({
@@ -55,14 +56,18 @@ const CustomHeader = ({
       <View style={styles.headerContent}>
         <View style={styles.headerLeft}>
           <TouchableOpacity onPress={() => onMenuPress(headerBackVisible)}>
-            {headerBackVisible ? <ArrowLeftIcon /> : <UserIcon />}
+            {headerBackVisible ? (
+              <ArrowLeftIcon width={34} height={34} />
+            ) : (
+              <UserIcon width={32} height={32} />
+            )}
           </TouchableOpacity>
           {!isMenuOpen && <Text style={styles.headerTitle}>{title}</Text>}
         </View>
         {!headerBackVisible && (
           <View style={styles.headerRight}>
             <Text style={styles.creditsText}>{monthlyCredits}</Text>
-            <CoinIcon />
+            <CoinIcon width={18} height={18} />
           </View>
         )}
       </View>
@@ -96,8 +101,7 @@ export default function LayoutApp() {
       router.back();
       return;
     }
-    router.replace("/(tabs)/properties");
-    router.push("(pages)/Profile" as any);
+    router.push("/(pages)/Profile");
   };
 
   useEffect(() => {
@@ -119,6 +123,7 @@ export default function LayoutApp() {
   const isAuthenticated =
     useSelector((state: RootState) => state.auth.isAuthenticated) || false;
 
+  useCustomBackBehavior();
   if (!fontsLoaded) {
     return null;
   }

@@ -26,7 +26,7 @@ const ProfileCard = ({
   );
 };
 
-export default ProfileCard;
+export default React.memo(ProfileCard);
 
 const styles = StyleSheet.create({
   card: {

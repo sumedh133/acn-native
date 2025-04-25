@@ -6,13 +6,11 @@ import { StyleSheet, View } from "react-native";
 import LinearGradient from "react-native-linear-gradient";
 import { useSelector } from "react-redux";
 
-const UserDetailsCard = () => {
+const UserDetailsCard = ({ userType }: { userType: string | null }) => {
   const name: string | null =
     useSelector((state: RootState) => state?.agent?.docData?.name) || "";
   const phonenumber: string | null =
     useSelector((state: RootState) => state?.agent?.docData?.phonenumber) || "";
-  const userType: string | null =
-    useSelector((state: RootState) => state?.agent?.docData?.userType) || "";
   const initials = getInitials(name);
   const avatarColor = getRandomColor(initials);
   return (

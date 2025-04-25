@@ -24,21 +24,24 @@ import ProfileCard, {
 } from "../components/ProfilePage/ProfileCard";
 import KamIcon from "@/assets/icons/svg/ProfilePage/KamIcon";
 import KamManager from "../modals/KamModal";
+import GetPremiumCard from "../components/ProfilePage/GetPremiumCard";
+import LogoutIcon from "@/assets/icons/svg/Common/LogoutIcon";
+import CreditsCard from "../components/ProfilePage/CreditsCard";
 
 const profileCards: ProfileCardInterface[] = [
   {
     title: "Payment Records",
-    icon: <PaymentRecordsIcon />,
+    icon: <PaymentRecordsIcon width={24} height={24} />,
     slug: "payment_records",
   },
   {
     title: "Contact KAM",
-    icon: <KamIcon />,
+    icon: <KamIcon width={24} height={24} />,
     slug: "contact_kam",
   },
   {
     title: "Help & Support",
-    icon: <SupportIcon />,
+    icon: <SupportIcon width={24} height={24} />,
     slug: "help_support",
   },
 ];
@@ -49,16 +52,25 @@ const Profile = () => {
 
   const [kamModalVisible, setKamModalVisible] = useState(false);
 
+  const userType: string | null =
+    useSelector((state: RootState) => state?.agent?.docData?.userType) || "";
+
   const handleCardClick = (slug: string) => {
     switch (slug) {
       case "payment_records":
+        router.replace("/billings");
         break;
       case "contact_kam":
         setKamModalVisible(true);
         break;
       case "help_support":
-        router.replace("/(tabs)/properties");
-        router.push("/help");
+        router.replace("/help");
+        break;
+      case "get_premium":
+        router.replace("/billings");
+        break;
+      case "credits_card":
+        router.replace("/billings");
         break;
       default:
         break;
@@ -89,7 +101,7 @@ const Profile = () => {
     <>
       <KamManager visible={kamModalVisible} setVisible={setKamModalVisible} />
       <View style={styles.container}>
-        <UserDetailsCard />
+        <UserDetailsCard userType={userType} />
         <View style={styles.cardsContainer}>
           {profileCards?.map((item, idx) => {
             return (
@@ -101,8 +113,12 @@ const Profile = () => {
             );
           })}
         </View>
+        {userType !== "premium" && (
+          <GetPremiumCard handleClick={handleCardClick} slug={"get_premium"} />
+        )}
+        <CreditsCard handleCardClick={handleCardClick} slug={"credits_card"} />
         <TouchableOpacity style={styles.logoutButton} onPress={handleLogOut}>
-          <SimpleLineIcons name="logout" size={18} color="#DE1135" />
+          <LogoutIcon width={18} height={18} />
           <Text style={styles.logoutText}>Logout</Text>
         </TouchableOpacity>
       </View>
@@ -132,17 +148,16 @@ const styles = StyleSheet.create({
     alignItems: "center",
     borderColor: "#DE1135",
     borderWidth: 1,
-    paddingVertical: 10,
+    paddingVertical: 12,
     borderRadius: 4,
-    gap: 4,
+    gap: 6,
   },
   logoutText: {
     color: "#DE1135",
-    //fontWeight: '600',
+    fontWeight: 600,
     fontSize: 14,
     marginLeft: 6,
-    fontWeight: "bold",
   },
 });
 
-export default Profile;
+export default React.memo(Profile);
