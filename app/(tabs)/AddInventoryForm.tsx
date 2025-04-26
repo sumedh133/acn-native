@@ -192,7 +192,8 @@ const AddInventoryForm = () => {
                   component.colspan === 2
                     ? styles.fullWidthItem
                     : styles.halfWidthItem,
-                ]}>
+                ]}
+              >
                 {renderComponent(component)}
               </View>
             ))}
@@ -205,7 +206,8 @@ const AddInventoryForm = () => {
   return (
     <ScrollView
       contentContainerStyle={styles.scrollContent}
-      showsVerticalScrollIndicator={false}>
+      showsVerticalScrollIndicator={false}
+    >
       <View style={styles.container}>
         <PlacesSearch
           selectedPlace={selectedPlace}

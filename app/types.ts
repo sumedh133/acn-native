@@ -1,35 +1,45 @@
 export interface Property {
-  propertyId: string;
-  title?: string;
-  nameOfTheProperty?: string;
-  micromarket?: string;
-  assetType?: string;
-  unitType?: string;
-  facing?: string;
-  totalAskPrice?: number;
-  askPricePerSqft?: number;
-  sbua?: number;
-  plotSize?: number;
-  carpet?: number;
-  floorNo?: string;
-  handoverDate?: string;
-  buildingKhata?: string;
-  landKhata?: string;
-  buildingAge?: string;
-  tenanted?: boolean;
-  area?: string;
-  dateOfInventoryAdded?: number;
-  extraDetails?: string;
-  driveLink?: string;
-  photo?: string[];
-  video?: string[];
-  mapLocation?: string;
-  cpId?: string;
-  cpCode?: string;
-  description?: string;
-  status?: string;
+  _geoloc?: {
+    lat: number | null;
+    lng: number | null;
+  };
+  ageOfInventory?: number | null;
+  ageOfStatus: number | null;
+  area?: string | null;
+  askPricePerSqft?: number | null;
+  assetType?: string | null;
+  buildingAge?: string | null;
+  buildingKhata?: string | null;
+  carpet?: number | null;
+  cpCode?: string | null;
+  currentStatus?: string | null;
+  dateOfInventoryAdded?: number | null;
+  dateOfStatusLastChecked?: number | null;
+  driveLink?: string | null;
+  eKhata?: boolean | null;
+  exclusive?: boolean | null;
+  extraDetails?: string | null;
+  facing?: string | null;
+  floorNo?: string | null;
+  exactFloor?: number | null;
+  handoverDate?: string | null;
+  landKhata?: string | null;
+  mapLocation?: string | null;
+  micromarket?: string | null;
+  nameOfTheProperty?: string | null;
+  ocReceived?: boolean | null;
+  plotSize?: number | null;
+  propertyId: string | null;
+  sbua?: number | null;
+  status?: string | null;
+  tenanted?: boolean | null;
+  totalAskPrice?: number | number;
+  unitType?: string | null;
+  photo?: string[] | null;
+  video?: string[] | null;
+  document?: string[] | null;
+
   objectID?: string;
-  dateOfStatusLastChecked?: number;
 }
 
 export interface Budget {
