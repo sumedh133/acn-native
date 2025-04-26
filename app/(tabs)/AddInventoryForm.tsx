@@ -20,9 +20,9 @@ import TotalAskPrice from "../components/Listing/TotalAskPrice";
 import ExtraDetailsField from "../components/Listing/ExtraDetails";
 
 const initialState: ListingProperty = {
-  name: null,
+  nameOfTheProperty: null,
   address: null,
-  mapLink: null,
+  mapLocation: null,
   micromarket: null,
   _geoloc: {
     lat: null,
@@ -67,7 +67,7 @@ const AddInventoryForm = () => {
         ...prevProperty,
         name: selectedPlace.name,
         address: selectedPlace.address,
-        mapLink: selectedPlace.mapLink,
+        mapLocation: selectedPlace.mapLocation,
         micromarket: mm,
         _geoloc: {
           lat: selectedPlace.lat,
@@ -79,7 +79,7 @@ const AddInventoryForm = () => {
         ...prevProperty,
         name: null,
         address: null,
-        mapLink: null,
+        mapLocation: null,
         micromarket: null,
         _geoloc: {
           lat: null,
@@ -219,11 +219,11 @@ const AddInventoryForm = () => {
         if ( !property.assetType || property.assetType === "" ) {
             return
         } else if ( property.assetType === "Plot" ) {
-            if ( property.plotSize === "" ) {
+            if ( property.plotSize === null ) {
                 return
             }
         } else {
-            if ( property.sbua === "" ) {
+            if ( property.sbua === null ) {
                 return
             }
         }

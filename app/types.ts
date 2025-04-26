@@ -4,7 +4,7 @@ export interface Property {
     lng: number | null;
   };
   ageOfInventory?: number | null;
-  ageOfStatus: number | null;
+  ageOfStatus?: number | null;
   area?: string | null;
   askPricePerSqft?: number | null;
   assetType?: string | null;
@@ -29,7 +29,7 @@ export interface Property {
   nameOfTheProperty?: string | null;
   ocReceived?: boolean | null;
   plotSize?: number | null;
-  propertyId: string | null;
+  propertyId?: string | null;
   sbua?: number | null;
   status?: string | null;
   tenanted?: boolean | null;
@@ -98,22 +98,12 @@ export interface Places {
   lat: number | null;
   lng: number | null;
   address: string | null;
-  mapLink: string | null;
+  mapLocation: string | null;
 }
 
-export interface ListingProperty{
-  assetType: string | null;
-  agentCpid: string | null;
-  userStatus: string | null;
-  dateOfInventoryAdded: number | null;
-  communityType: string | null;
-  name: string | null;
+export interface ListingProperty extends Property {
   address: string | null;
-  mapLink: string | null;
-  micromarket: string | null;
-  _geoloc: {
-    lat: number | null;
-    lng: number | null;
-  };
+  communityType: string | null;
+  userStatus: string | null;
   [key: string]: any;
 }

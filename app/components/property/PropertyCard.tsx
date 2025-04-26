@@ -24,7 +24,7 @@ import ConfirmModal from "@/app/modals/ConfirmModal";
 import ShareModal from "@/app/modals/ShareModal";
 import { useSelector } from "react-redux";
 import { RootState } from "@/store/store";
-import { Enquiry } from "@/app/types";
+import { Enquiry, Property } from "@/app/types";
 import { doc, setDoc } from "firebase/firestore";
 import { db } from "@/app/config/firebase";
 import { handleIdGeneration } from "@/app/helpers/nextId";
@@ -38,20 +38,7 @@ import { router } from "expo-router";
 import { setPropertyDataThunk } from "@/store/slices/propertySlice";
 
 interface PropertyCardProps {
-  property: {
-    propertyId: string;
-    title?: string;
-    nameOfTheProperty?: string;
-    micromarket?: string;
-    assetType?: string;
-    unitType?: string;
-    facing?: string;
-    totalAskPrice?: number;
-    sbua?: number;
-    driveLink?: string;
-    cpId?: string;
-    cpCode?: string;
-  };
+  property: Property;
   onCardClick?: (property: any) => void;
 }
 
@@ -115,7 +102,7 @@ const PropertyCard: React.FC<PropertyCardProps> = ({
 
   // Get property name with first letter capitalized
   const getPropertyName = () => {
-    const name = property.title || property.nameOfTheProperty || "";
+    const name = property.nameOfTheProperty || "";
     if (!name) return "Unnamed Property";
     return name.charAt(0).toUpperCase() + name.slice(1);
   };

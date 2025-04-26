@@ -21,7 +21,7 @@ type AssetOption = {
 };
 
 interface AssetTypeSelectionProps {
-  selectedAsset: string | null;
+  selectedAsset: string | null | undefined;
   setSelectedAsset: (value: string | null) => void;
 }
 
