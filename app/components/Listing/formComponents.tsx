@@ -38,3 +38,7 @@ export const appartmentComponents = [
     alignment: "full",
   },
 ];
+
+export const assetTypes: { Apartment: any } = {
+    Apartment: appartmentComponents,
+};

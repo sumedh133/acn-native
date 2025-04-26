@@ -7,7 +7,10 @@ import { getMicromarketFromCoordinates } from "../helpers/getMicromarketFromCoor
 import React from "react";
 import AssetTypeSelection from "../components/Listing/AssetTypeSelection";
 import RadioButtonSelect from "../components/Listing/RadioButtonSelect";
-import { appartmentComponents } from "../components/Listing/formComponents";
+import {
+    appartmentComponents,
+    assetTypes,
+} from "../components/Listing/formComponents";
 import SliderButtonSelect from "../components/Listing/SliderButtonSelect";
 import TextInputField from "../components/Listing/TextInput";
 
@@ -26,6 +29,17 @@ const initialState: ListingProperty = {
 
 const AddInventoryForm = () => {
     const [selectedPlace, setSelectedPlace] = useState<Places | null>(null);
+    const [property, setProperty] = useState<ListingProperty>(initialState);
+
+    console.log("property", property);
+
+    const handleSetValue = (field: string, value: any) => {
+        setProperty((prevProperty) => ({
+            ...prevProperty,
+            [field]: value,
+        }));
+    };
+
     useEffect(() => {
         if (selectedPlace) {
             const mm = getMicromarketFromCoordinates(selectedPlace);
@@ -56,15 +70,6 @@ const AddInventoryForm = () => {
         }
     }, [selectedPlace]);
 
-    const [property, setProperty] = useState<ListingProperty>(initialState);
-    console.log("property", property);
-
-    const handleSetValue = (field: string, value: any) => {
-        setProperty((prevProperty) => ({
-            ...prevProperty,
-            [field]: value,
-        }));
-    };
 
     const renderComponent = (component: any) => {
         switch (component.type) {
@@ -124,10 +129,9 @@ const AddInventoryForm = () => {
                     }
                 />
 
-                {property?.assetType === "Apartment" &&
-                    appartmentComponents.map((component) => {
-                        return renderComponent(component);
-                    })}
+                {assetTypes?.[property?.assetType ?? "Apartment"]?.map((component) => {
+                    return renderComponent(component);
+                })}
             </View>
         </ScrollView>
     );
