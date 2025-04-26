@@ -1,7 +1,5 @@
-import HamburgerMenu from "@/components/HamburgerMenu";
-import { SplashScreen, Stack } from "expo-router";
+import { SplashScreen, Stack, useRouter } from "expo-router";
 import React, { useCallback, useEffect, useState } from "react";
-import ProfileModal from "./modals/ProfileModal";
 import Toast from "react-native-toast-message";
 import { StatusBar } from "expo-status-bar";
 import { toastConfig } from "@/utils/toastUtils";
@@ -10,6 +8,7 @@ import {
   Platform,
   StyleSheet,
   Text,
+  TouchableOpacity,
   useColorScheme,
   View,
 } from "react-native";
@@ -21,51 +20,56 @@ import {
   Montserrat_700Bold,
 } from "@expo-google-fonts/montserrat";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { HamburgerMenuButton } from "@/components/HamburgerMenuButton";
-import { KamModalButton } from "@/components/KamModalButton";
 import { useDispatch } from "react-redux";
 import NetInfo from "@react-native-community/netinfo";
 import { setIsConnectedToInternet } from "@/store/slices/appSlice";
+import UserIcon from "@/assets/icons/svg/Header/UserIcon";
+import { useSelector } from "react-redux";
+import { RootState } from "@/store/store";
+import CoinIcon from "@/assets/icons/svg/Sidebar/CoinIcon";
+import FooterNavigation from "@/components/FooterNavigation";
+import ArrowLeftIcon from "@/assets/icons/svg/Common/ArrowLeftIcon";
+import { useCustomBackBehavior } from "@/hooks/useCustomBackBehavior";
 
 // Custom header component to apply the desired styling
 const CustomHeader = ({
   title,
   onMenuPress,
-  isMenuOpen,
+  headerBackVisible,
 }: {
   title: string;
-  onMenuPress: () => void;
-  isMenuOpen: boolean;
+  onMenuPress: (backHeader: boolean) => void;
+  headerBackVisible: boolean;
 }) => {
   const insets = useSafeAreaInsets();
-
+  const monthlyCredits = useSelector(
+    (state: RootState) => state?.agent?.docData?.monthlyCredits
+  );
   return (
-    <View
-      style={[
-        styles.headerContainer,
-        Platform.OS === "android" && { paddingTop: insets.top },
-      ]}
-    >
+    <View style={styles.headerContainer}>
       <View style={styles.headerContent}>
         <View style={styles.headerLeft}>
-          <HamburgerMenuButton onPress={onMenuPress} isOpen={isMenuOpen} />
+          <TouchableOpacity onPress={() => onMenuPress(headerBackVisible)}>
+            {headerBackVisible ? (
+              <ArrowLeftIcon width={34} height={34} />
+            ) : (
+              <UserIcon width={32} height={32} />
+            )}
+          </TouchableOpacity>
+          <Text style={styles.headerTitle}>{title}</Text>
         </View>
-        <View style={styles.headerTitleContainer}>
-          {!isMenuOpen && <Text style={styles.headerTitle}>{title}</Text>}
-        </View>
-        <View style={styles.headerRight}>
-          <KamModalButton />
-        </View>
+        {!headerBackVisible && (
+          <View style={styles.headerRight}>
+            <Text style={styles.creditsText}>{monthlyCredits}</Text>
+            <CoinIcon width={18} height={18} />
+          </View>
+        )}
       </View>
     </View>
   );
 };
 
 export default function LayoutApp() {
-  const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const [profileModalVisible, setProfileModalVisible] = useState(false);
-  const colorScheme = useColorScheme();
-  const [topMargin, setTopMargin] = useState(10);
   const [fontsLoaded] = useFonts({
     Montserrat_400Regular,
     Montserrat_500Medium,
@@ -74,6 +78,7 @@ export default function LayoutApp() {
   });
 
   const dispatch = useDispatch();
+  const router = useRouter();
 
   const onLayoutRootView = useCallback(async () => {
     if (fontsLoaded) {
@@ -81,9 +86,12 @@ export default function LayoutApp() {
     }
   }, [fontsLoaded]);
 
-  const onMenuPress = () => {
-    setIsMenuOpen(true);
-    Keyboard.dismiss();
+  const onMenuPress = (headerBack = false) => {
+    if (headerBack) {
+      router.back();
+      return;
+    }
+    router.push("/(pages)/Profile");
   };
 
   useEffect(() => {
@@ -102,6 +110,10 @@ export default function LayoutApp() {
     return () => unsubscribe();
   }, []);
 
+  const isAuthenticated =
+    useSelector((state: RootState) => state.auth.isAuthenticated) || false;
+
+  useCustomBackBehavior();
   if (!fontsLoaded) {
     return null;
   }
@@ -115,17 +127,22 @@ export default function LayoutApp() {
           headerBackVisible: false,
           header: ({ route, options }) => {
             const title = options.title || route.name;
+            const headerBackVisible = options.headerBackVisible || false;
             return (
               <CustomHeader
                 title={title}
-                onMenuPress={() => onMenuPress()}
-                isMenuOpen={isMenuOpen}
+                onMenuPress={onMenuPress}
+                headerBackVisible={headerBackVisible}
               />
             );
           },
         }}
       >
-        <Stack.Screen name="(tabs)/index" options={{ headerShown: false }} />
+        <Stack.Screen
+          name="(tabs)/index"
+          options={{ headerShown: false }}
+          initialParams={{ showFooter: false }}
+        />
         <Stack.Screen
           name="(tabs)/properties"
           options={{ title: "Resale Inventories" }}
@@ -149,45 +166,60 @@ export default function LayoutApp() {
           options={{ title: "Dashboard" }}
         />
 
-        <Stack.Screen name="components/Auth" options={{ headerShown: false }} />
+        <Stack.Screen
+          name="components/Auth"
+          options={{ headerShown: false }}
+          initialParams={{ showFooter: false }}
+        />
         <Stack.Screen
           name="components/Auth/Signin"
           options={{ headerShown: false }}
+          initialParams={{ showFooter: false }}
         />
         <Stack.Screen
           name="components/Auth/OTPage"
           options={{ headerShown: false }}
+          initialParams={{ showFooter: false }}
         />
         <Stack.Screen
           name="components/Auth/VerificationPage"
           options={{ headerShown: false }}
+          initialParams={{ showFooter: false }}
         />
         <Stack.Screen
           name="components/Auth/BlacklistedPage"
           options={{ headerShown: false }}
+          initialParams={{ showFooter: false }}
         />
-        <Stack.Screen name="not-found" options={{ headerShown: false }} />
+        <Stack.Screen
+          name="not-found"
+          options={{ headerShown: false }}
+          initialParams={{ showFooter: false }}
+        />
 
         <Stack.Screen
           name="components/property/PropertyDetailsScreen"
           options={{ headerShown: false }}
+          initialParams={{ showFooter: false }}
         />
         <Stack.Screen
           name="components/requirement/RequirementDetailsScreen"
           options={{ headerShown: false }}
+          initialParams={{ showFooter: false }}
+        />
+        <Stack.Screen
+          name="(pages)/Profile"
+          options={{
+            headerShown: true,
+            title: "Settings",
+            headerBackVisible: true,
+          }}
+          initialParams={{ showFooter: false }}
         />
       </Stack>
-      <HamburgerMenu
-        visible={isMenuOpen}
-        onClose={() => setIsMenuOpen(false)}
-        onOpenProfile={() => setProfileModalVisible(true)}
-      />
-      <ProfileModal
-        visible={profileModalVisible}
-        setVisible={setProfileModalVisible}
-      />
       <Toast config={toastConfig} />
       <StatusBar style="auto" />
+      {isAuthenticated && <FooterNavigation />}
     </View>
   );
 }
@@ -203,10 +235,13 @@ const styles = StyleSheet.create({
     alignItems: "center",
     paddingHorizontal: 12,
     paddingVertical: 8,
+    justifyContent: "space-between",
   },
   headerLeft: {
-    width: 40, // Fixed width for the hamburger menu button
-    alignItems: "flex-start",
+    display: "flex",
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 16,
   },
   headerTitleContainer: {
     flex: 1,
@@ -220,7 +255,20 @@ const styles = StyleSheet.create({
     color: "#000",
   },
   headerRight: {
-    width: 40, // Fixed width for the right button
-    alignItems: "flex-end",
+    display: "flex",
+    flexDirection: "row",
+    alignItems: "center",
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    gap: 10,
+    borderWidth: 1,
+    borderColor: "#E3E3E3",
+    borderRadius: 20,
+  },
+  creditsText: {
+    fontSize: 14,
+    fontWeight: 500,
+    fontFamily: "Lato",
+    color: "#5A5555",
   },
 });

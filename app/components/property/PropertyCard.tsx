@@ -72,10 +72,10 @@ const PropertyCard: React.FC<PropertyCardProps> = ({
   const [isShareModalOpen, setIsShareModalOpen] = useState(false);
   const agentData = useSelector((state: RootState) => state.agent.docData);
   const phoneNumber = useSelector(
-    (state: RootState) => state?.agent?.docData?.phonenumber,
+    (state: RootState) => state?.agent?.docData?.phonenumber
   );
   const monthlyCredits = useSelector(
-    (state: RootState) => state?.agent?.docData?.monthlyCredits,
+    (state: RootState) => state?.agent?.docData?.monthlyCredits
   );
 
   const enquiryConfirmed = useRef<Boolean>(false);
@@ -96,7 +96,7 @@ const PropertyCard: React.FC<PropertyCardProps> = ({
       const result = (await handleIdGeneration(type)) as IdGenerationResult;
       if (!result || !result.nextId) {
         showErrorToast(
-          "Failed to generate Enquiry ID. Please try again later.",
+          "Failed to generate Enquiry ID. Please try again later."
         );
         return null;
       }
@@ -140,7 +140,7 @@ const PropertyCard: React.FC<PropertyCardProps> = ({
       return;
     }
     showErrorToast(
-      "You don't have enough credits Please contact your account manager.",
+      "You don't have enough credits Please contact your account manager."
     );
   };
 
@@ -174,7 +174,7 @@ const PropertyCard: React.FC<PropertyCardProps> = ({
 
     if (!(monthlyCredits > 0)) {
       showErrorToast(
-        "You don't have enough credits. Please contact your account manager.",
+        "You don't have enough credits. Please contact your account manager."
       );
       setIsConfirmModelOpen(false);
       return;
@@ -201,7 +201,7 @@ const PropertyCard: React.FC<PropertyCardProps> = ({
     } catch (error) {
       console.error("Error during enquiry process:", error);
       showErrorToast(
-        "An error occurred while processing your enquiry. Please try again.",
+        "An error occurred while processing your enquiry. Please try again."
       );
     }
   };
@@ -285,11 +285,9 @@ const PropertyCard: React.FC<PropertyCardProps> = ({
               .map((tag, index) => (
                 <View
                   key={index}
-                  className="border border-[#E3E3E3] bg-white px-3 py-1 rounded-full bg-[#FAFAFA]"
+                  className="border border-[#E3E3E3] px-3 py-1 rounded-full bg-[#FAFAFA]"
                 >
-                  <Text className="text-neutral-600 text-xs text-[#525252]">
-                    {tag}
-                  </Text>
+                  <Text className=" text-xs text-[#525252]">{tag}</Text>
                 </View>
               ))}
           </View>

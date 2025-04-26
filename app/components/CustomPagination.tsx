@@ -1,40 +1,43 @@
-import React, { RefObject, useEffect, useState } from "react";
-import {
-  View,
-  Text,
-  TouchableOpacity,
-  StyleSheet,
-  Keyboard,
-  Dimensions,
-} from "react-native";
-import { useInstantSearch, usePagination } from "react-instantsearch";
-import { ScrollView } from "react-native-gesture-handler";
-import { Ionicons } from "@expo/vector-icons"; // Assuming you're using Expo or have this library installed
-import Animated from "react-native-reanimated";
+import React, { RefObject, useEffect, useState } from 'react';
+import { View, Text, TouchableOpacity, StyleSheet, Keyboard, Dimensions, FlatList } from 'react-native';
+import { useInstantSearch, usePagination } from 'react-instantsearch';
+import { ScrollView } from 'react-native-gesture-handler';
+import { Ionicons } from '@expo/vector-icons'; // Assuming you're using Expo or have this library installed
+import Animated from 'react-native-reanimated';
 
 interface CustomPaginationProps {
   isSticky?: boolean;
   scrollRef?: RefObject<ScrollView | Animated.ScrollView> | null;
   analyticsEvent?: string;
+  flatListRef?: RefObject<FlatList> | null;
 }
 
 export default function CustomPagination({
   isSticky = false,
   scrollRef = null,
-  analyticsEvent = "pagination_click",
+  flatListRef = null,
+  analyticsEvent = 'pagination_click'
 }: CustomPaginationProps) {
   const [loading, setLoading] = useState(false);
-  const { width } = Dimensions.get("window");
+  const { width } = Dimensions.get('window');
   const isMobile = width < 768; // This is just for consistency with the web version
 
-  const { currentRefinement, nbPages, refine } = usePagination();
+  const {
+    currentRefinement,
+    nbPages,
+    refine,
+  } = usePagination();
 
   const { status } = useInstantSearch();
 
   useEffect(() => {
-    if (status === "loading" && loading === true && scrollRef?.current)
-      scrollRef.current.scrollTo({ y: 0, animated: true });
-    setLoading(status === "loading");
+    if (status === 'loading' && loading === true) {
+      if (scrollRef?.current)
+        scrollRef.current.scrollTo({ y: 0, animated: true })
+      if (flatListRef?.current)
+        flatListRef.current.scrollToOffset({ animated: true, offset: 0 })
+    }
+    setLoading(status === 'loading');
   }, [status]);
 
   // Function to generate the pages to display in pagination
@@ -98,7 +101,7 @@ export default function CustomPagination({
           disabled={currentRefinement === 0 || loading}
           style={[
             styles.arrowButton,
-            (currentRefinement === 0 || loading) && styles.disabledButton,
+            (currentRefinement === 0 || loading) && styles.disabledButton
           ]}
         >
           <Ionicons
@@ -112,16 +115,13 @@ export default function CustomPagination({
         <View style={styles.pagesContainer}>
           {pages.map((page, index) =>
             page === "..." ? (
-              <Text key={index} style={styles.ellipsis}>
-                ...
-              </Text>
+              <Text key={index} style={styles.ellipsis}>...</Text>
             ) : (
               <TouchableOpacity
                 key={index}
                 style={[
                   styles.pageButton,
-                  currentRefinement === (page as number) - 1 &&
-                    styles.activePage,
+                  currentRefinement === (page as number) - 1 && styles.activePage
                 ]}
                 onPress={() => handlePageClick(page as number)}
                 disabled={loading || currentRefinement === (page as number) - 1}
@@ -129,14 +129,13 @@ export default function CustomPagination({
                 <Text
                   style={[
                     styles.pageButtonText,
-                    currentRefinement === (page as number) - 1 &&
-                      styles.activePageText,
+                    currentRefinement === (page as number) - 1 && styles.activePageText
                   ]}
                 >
                   {page}
                 </Text>
               </TouchableOpacity>
-            ),
+            )
           )}
         </View>
 
@@ -150,18 +149,13 @@ export default function CustomPagination({
           disabled={currentRefinement === nbPages - 1 || loading}
           style={[
             styles.arrowButton,
-            (currentRefinement === nbPages - 1 || loading) &&
-              styles.disabledButton,
+            (currentRefinement === nbPages - 1 || loading) && styles.disabledButton
           ]}
         >
           <Ionicons
             name="chevron-forward"
             size={20}
-            color={
-              currentRefinement === nbPages - 1 || loading
-                ? "#9CA3AF"
-                : "#4B5563"
-            }
+            color={currentRefinement === nbPages - 1 || loading ? "#9CA3AF" : "#4B5563"}
           />
         </TouchableOpacity>
       </View>
@@ -172,65 +166,65 @@ export default function CustomPagination({
 const styles = StyleSheet.create({
   container: {
     paddingVertical: 16,
-    width: "100%",
+    width: '100%',
   },
   stickyContainer: {
-    position: "absolute",
+    position: 'absolute',
     bottom: 0,
     left: 0,
     right: 0,
-    backgroundColor: "#FFFFFF",
+    backgroundColor: '#FFFFFF',
     borderTopWidth: 1,
-    borderTopColor: "#E5E7EB",
+    borderTopColor: '#E5E7EB',
   },
   paginationContainer: {
-    flexDirection: "row",
-    justifyContent: "center",
-    alignItems: "center",
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   pagesContainer: {
-    flexDirection: "row",
-    alignItems: "center",
+    flexDirection: 'row',
+    alignItems: 'center',
   },
   arrowButton: {
     paddingVertical: 6,
     paddingHorizontal: 6,
-    backgroundColor: "#F3F4F6",
+    backgroundColor: '#F3F4F6',
     borderWidth: 1,
-    borderColor: "#E5E7EB",
+    borderColor: '#E5E7EB',
     borderRadius: 8,
     marginHorizontal: 4,
   },
   pageButton: {
     width: 35,
     height: 35,
-    justifyContent: "center",
-    alignItems: "center",
+    justifyContent: 'center',
+    alignItems: 'center',
     borderWidth: 1,
-    borderColor: "#E5E7EB",
+    borderColor: '#E5E7EB',
     borderRadius: 8,
     marginHorizontal: 4,
   },
   activePage: {
-    backgroundColor: "#737373",
-    borderColor: "#737373",
+    backgroundColor: '#737373',
+    borderColor: '#737373',
   },
   disabledButton: {
-    backgroundColor: "#E5E7EB",
-    borderColor: "#E5E7EB",
+    backgroundColor: '#E5E7EB',
+    borderColor: '#E5E7EB',
   },
   pageButtonText: {
-    fontFamily: "Montserrat_500Medium",
+    fontFamily: 'Montserrat_500Medium',
     fontSize: 14,
-    color: "#4B5563",
+    color: '#4B5563',
   },
   activePageText: {
-    color: "#FFFFFF",
+    color: '#FFFFFF',
   },
   ellipsis: {
-    fontFamily: "Montserrat_400Regular",
+    fontFamily: 'Montserrat_400Regular',
     fontSize: 14,
-    color: "#4B5563",
+    color: '#4B5563',
     paddingHorizontal: 8,
   },
 });

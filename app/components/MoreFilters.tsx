@@ -1,29 +1,14 @@
-import React, { useState, useEffect, useRef } from "react";
-import {
-  View,
-  Text,
-  TouchableOpacity,
-  Modal,
-  ScrollView,
-  TextInput,
-  Pressable,
-  PanResponder,
-  Animated,
-  Platform,
-} from "react-native";
-import {
-  useCurrentRefinements,
-  useRange,
-  useRefinementList,
-} from "react-instantsearch";
-import DropdownMoreFilters from "./DropdownMoreFilters";
-import { Ionicons } from "@expo/vector-icons";
-import BudgetRangeSlider from "./property/BudgetRangeSlider";
-import { Landmark } from "../(tabs)/properties";
-import RangeMoreFilters from "./RangeMoreFilters";
-import LandmarkDropdownFilters from "./LandmarkDropdownFilters";
-import { SafeAreaProvider, SafeAreaView } from "react-native-safe-area-context";
-import CloseIcon from "@/assets/icons/svg/CloseIcon";
+import React, { useState, useEffect, useRef } from 'react';
+import { View, Text, TouchableOpacity, Modal, ScrollView, TextInput, Pressable, PanResponder, Animated, Platform } from 'react-native';
+import { useCurrentRefinements, useRange, useRefinementList } from 'react-instantsearch';
+import DropdownMoreFilters from './DropdownMoreFilters';
+import { Ionicons } from '@expo/vector-icons';
+import BudgetRangeSlider from './property/BudgetRangeSlider';
+import RangeMoreFilters from './RangeMoreFilters';
+import LandmarkDropdownFilters from './LandmarkDropdownFilters';
+import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
+import CloseIcon from '@/assets/icons/svg/CloseIcon';
+import { Landmark } from '../types';
 
 export interface RangeState {
   start: (number | undefined)[];
@@ -130,10 +115,10 @@ const MoreFilters = ({
 
   useEffect(() => {
     const hasMicromarketFilter = items?.some(
-      (item) => item.attribute === "micromarket",
+      (item) => item.attribute === "micromarket"
     );
     setSelectedLocationFilter(
-      hasMicromarketFilter && !selectedLandmark ? "micromarket" : "landmark",
+      hasMicromarketFilter && !selectedLandmark ? "micromarket" : "landmark"
     );
   }, [items, selectedLandmark]);
 
@@ -164,7 +149,7 @@ const MoreFilters = ({
 
   const renderRefinementList = (
     items: any[],
-    refine: (value: string) => void,
+    refine: (value: string) => void
   ) => {
     return (
       <View className="flex-row flex-wrap gap-2">
@@ -178,7 +163,9 @@ const MoreFilters = ({
           >
             <View className="flex-row justify-between items-center">
               <Text
-                className={`text-sm ${item.isRefined ? "text-[#153E3B]" : "text-gray-700"}`}
+                className={`text-sm ${
+                  item.isRefined ? "text-[#153E3B]" : "text-gray-700"
+                }`}
               >
                 {item.label}
               </Text>
@@ -203,7 +190,7 @@ const MoreFilters = ({
   }) => {
     const [searchQuery, setSearchQuery] = useState("");
     const filteredItems = items.filter((item) =>
-      item.label.toLowerCase().includes(searchQuery.toLowerCase()),
+      item.label.toLowerCase().includes(searchQuery.toLowerCase())
     );
 
     return (
@@ -261,10 +248,11 @@ const MoreFilters = ({
       transparent={true}
       onRequestClose={handleToggle}
     >
-      <SafeAreaView
+      <View
         className="flex-1 bg-white"
         style={{
           zIndex: 1,
+          //CHECK FOR IOS
           paddingTop: Platform.OS === "ios" ? 40 : 0,
         }}
       >
@@ -510,7 +498,7 @@ const MoreFilters = ({
             </Text>
           </TouchableOpacity>
         </View>
-      </SafeAreaView>
+      </View>
     </Modal>
   );
 };

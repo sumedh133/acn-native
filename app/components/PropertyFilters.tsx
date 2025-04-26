@@ -124,12 +124,14 @@ export default function PropertyFilters({
 
 const styles = StyleSheet.create({
   container: {
-    width: "91%",
+    width: "100%",
     borderBottomWidth: 0,
     borderBottomColor: "#E5E7EB",
     alignSelf: "center",
     // backgroundColor: '#fff',
-    paddingTop: 16,
+    // paddingTop: 16,
+    padding: 16,
+    // marginBottom: 16,
     borderRadius: 16,
   },
   contentWrapper: {
