@@ -102,8 +102,9 @@ export interface Places {
 }
 
 export interface ListingProperty extends Property {
-  address: string | null;
-  communityType: string | null;
-  userStatus: string | null;
+  address?: string | null;
+  communityType?: string | null;
+  unitNo?: string | null;
+  furnishing?: string | null;
   [key: string]: any;
 }

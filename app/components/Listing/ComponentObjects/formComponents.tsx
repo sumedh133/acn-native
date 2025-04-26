@@ -22,7 +22,7 @@ export const assetTypes: {
 };
 
 export const compulsoryFields: {
-  Apartment: any;
+  Apartment: string[];
   Villa: any;
   Plot: any;
   Villament: any;

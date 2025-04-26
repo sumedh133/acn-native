@@ -30,9 +30,13 @@ const initialState: ListingProperty = {
   },
   assetType: "Apartment",
   communityType: null,
-  agentCpid: null,
-  userStatus: null,
-  dateOfInventoryAdded: null,
+  subType: null,
+  sbua: null,
+  carpet: null,
+  floorNo: null,
+  facing: null,
+  unitNo: null,
+  furnishing: null,
 };
 
 const AddInventoryForm = () => {
@@ -65,7 +69,7 @@ const AddInventoryForm = () => {
 
       setProperty((prevProperty) => ({
         ...prevProperty,
-        name: selectedPlace.name,
+        nameOfTheProperty: selectedPlace.name,
         address: selectedPlace.address,
         mapLocation: selectedPlace.mapLocation,
         micromarket: mm,
@@ -77,7 +81,7 @@ const AddInventoryForm = () => {
     } else if (!selectedPlace) {
       setProperty((prevProperty) => ({
         ...prevProperty,
-        name: null,
+        nameOfTheProperty: null,
         address: null,
         mapLocation: null,
         micromarket: null,
@@ -132,7 +136,8 @@ const AddInventoryForm = () => {
             title={component.label}
             suffix={component.suffix}
             placeholder={component.placeholder}
-            required={component.required}
+                required={component.required}
+                keyboardType={component.keyboardType}
           />
         );
       case "Dropdown":

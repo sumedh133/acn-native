@@ -6,11 +6,5 @@ export const independentComponents = [
     colspan: 2,
     // required: true,
   },
-  {
-    label: "Hand Over Date",
-    type: "MonthYearPicker",
-    field: "handoverDate",
-    colspan: 2,
-    // required: false,
-  },
+  
 ];

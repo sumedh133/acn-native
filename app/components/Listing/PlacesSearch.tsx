@@ -191,7 +191,7 @@ const PlacesSearch = ({
             lat: details.geometry.location.lat,
             lng: details.geometry.location.lng,
             address: details.formatted_address || description,
-            mapLink: details.url || "",
+            mapLocation: details.url || "",
           };
           // This will set searchQuery via useEffect, so reset userInitiatedSearch
           setUserInitiatedSearch(false);
