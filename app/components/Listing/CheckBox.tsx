@@ -30,13 +30,6 @@ const Checkbox = ({
 
   return (
     <View style={styles.section}>
-      {title && (
-        <View style={styles.headingContainer}>
-          <Text style={styles.sectionHeading}>{title}</Text>
-          {required && <Text style={styles.compulsoryStar}>*</Text>}
-        </View>
-      )}
-
       <TouchableOpacity
         style={styles.checkboxContainer}
         onPress={toggleCheckbox}
@@ -47,15 +40,22 @@ const Checkbox = ({
 
         {label && <Text style={styles.label}>{label}</Text>}
       </TouchableOpacity>
+      {title && (
+        <View style={styles.headingContainer}>
+          <Text style={styles.sectionHeading}>{title}</Text>
+          {required && <Text style={styles.compulsoryStar}>*</Text>}
+        </View>
+      )}
     </View>
   );
 };
 
 const styles = StyleSheet.create({
   section: {
-    alignItems: "flex-start",
-    justifyContent: "center",
+    alignItems: "center",
+    justifyContent: "flex-start",
     gap: 6,
+    flexDirection: "row",
   },
   headingContainer: {
     display: "flex",
@@ -78,11 +78,11 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   checkbox: {
-    width: 20,
-    height: 20,
-    borderRadius: 4,
+    width: 13,
+    height: 13,
+    borderRadius: 2,
     borderWidth: 1,
-    borderColor: "#E1E3E6",
+    borderColor: "#000",
     backgroundColor: "#FFFFFF",
     alignItems: "center",
     justifyContent: "center",

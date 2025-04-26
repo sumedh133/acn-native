@@ -101,7 +101,7 @@ export interface Places {
   mapLink: string | null;
 }
 
-export interface ListingProperty {
+export interface ListingProperty{
   assetType: string | null;
   communityType: string | null;
   name: string | null,
