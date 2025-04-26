@@ -8,6 +8,8 @@ import React from "react";
 import AssetTypeSelection from "../components/Listing/AssetTypeSelection";
 import RadioButtonSelect from "../components/Listing/RadioButtonSelect";
 import { appartmentComponents } from "../components/Listing/formComponents";
+import SliderButtonSelect from "../components/Listing/SliderButtonSelect";
+import TextInputField from "../components/Listing/TextInput";
 
 const initialState: ListingProperty = {
     name: null,
@@ -77,6 +79,29 @@ const AddInventoryForm = () => {
                         options={component.options}
                     />
                 );
+                case "slider":
+                    return (
+                        <SliderButtonSelect
+                            value={property[component.field]}
+                            setvalue={(value) =>
+                                handleSetValue(component.field, value)
+                            }
+                            title={component.label}
+                            options={component.options}
+                        />
+                    );
+                    case "textInput":
+                        return (
+                            <TextInputField
+                                value={property[component.field]}
+                                setValue={(value) =>
+                                    handleSetValue(component.field, value)
+                                }
+                                title={component.label}
+                                // alignment="left"
+                                alignment={component.alignment}
+                            />
+                        );
             default:
                 return null;
         }
