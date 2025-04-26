@@ -1,87 +1,66 @@
 import React from "react";
-import Svg, { Path, Rect } from "react-native-svg";
+import { View } from "react-native";
+import Svg, { Path } from "react-native-svg";
 
 interface ChecklistIconProps {
-  size?: number;
-  iconColor: string;
-  backgroundColor?: string;
+  width?: number;
+  height?: number;
+  color?: string;
 }
 
-const ChecklistIcon: React.FC<ChecklistIconProps> = ({
-  size = 24,
-  iconColor,
-  // backgroundColor = '#E0F5F0',
+const MyEnquiriesIcon: React.FC<ChecklistIconProps> = ({
+  width = 32,
+  height = 32,
+  color = "#153E3B",
 }) => {
   return (
-    <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
-      {/* Background rounded square */}
-      <Rect
-        x="2"
-        y="2"
-        width="20"
-        height="20"
-        rx="8"
-        // fill={backgroundColor}
-      />
-
-      {/* First checkmark and line */}
-      <Path
-        d="M6 8l1.5 1.5L11 6"
-        stroke={iconColor}
-        strokeWidth="1.2"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        fill="none"
-      />
-      <Path
-        d="M15 8h6"
-        stroke={iconColor}
-        strokeWidth="1.2"
-        strokeLinecap="round"
-      />
-
-      {/* Second checkmark and line */}
-      <Path
-        d="M6 12l1.5 1.5L11 10"
-        stroke={iconColor}
-        strokeWidth="1.2"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        fill="none"
-      />
-      <Path
-        d="M15 12h6"
-        stroke={iconColor}
-        strokeWidth="1.2"
-        strokeLinecap="round"
-      />
-
-      {/* Third checkmark and line */}
-      <Path
-        d="M6 16l1.5 1.5L11 14"
-        stroke={iconColor}
-        strokeWidth="1.2"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        fill="none"
-      />
-      <Path
-        d="M15 16h6"
-        stroke={iconColor}
-        strokeWidth="1.2"
-        strokeLinecap="round"
-      />
-    </Svg>
+    <View>
+      <Svg width={width} height={height} viewBox="0 0 32 32" fill="none">
+        <Path
+          d="M14.667 26H28.0003"
+          stroke={color}
+          strokeWidth="2"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        />
+        <Path
+          d="M14.667 16.6666H28.0003"
+          stroke={color}
+          strokeWidth="2"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        />
+        <Path
+          d="M14.667 7.33331H28.0003"
+          stroke={color}
+          strokeWidth="2"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        />
+        <Path
+          d="M4 7.33335L5.33333 8.66669L9.33333 4.66669"
+          stroke={color}
+          strokeWidth="2"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        />
+        <Path
+          d="M4 16.6667L5.33333 18L9.33333 14"
+          stroke={color}
+          strokeWidth="2"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        />
+        <Path
+          d="M4 26L5.33333 27.3334L9.33333 23.3334"
+          stroke={color}
+          strokeWidth="2"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        />
+      </Svg>
+    </View>
   );
 };
 
-export default ChecklistIcon;
-
-// Usage examples:
-// <ChecklistIcon />
-// or with custom props
-// <ChecklistIcon
-//   size={32}
-//   color="#2D3C34"
-//   backgroundColor="#E0F5F0"
-// />
+export default MyEnquiriesIcon;

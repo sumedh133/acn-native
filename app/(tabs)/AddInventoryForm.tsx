@@ -30,6 +30,9 @@ const initialState: ListingProperty = {
   },
   assetType: "Apartment",
   communityType: null,
+  agentCpid: null,
+  userStatus: null,
+  dateOfInventoryAdded: null,
 };
 
 const AddInventoryForm = () => {

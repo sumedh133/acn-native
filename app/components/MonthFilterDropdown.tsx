@@ -36,7 +36,7 @@ const MonthFilterDropdown = ({
       setSelectedLabel("All");
     } else {
       const selected = allOptions?.find(
-        (option) => option?.value === value,
+        (option) => option?.value === value
       )?.label;
       if (selected) {
         setSelectedLabel(selected);
@@ -61,15 +61,15 @@ const MonthFilterDropdown = ({
   };
 
   return (
-    <StyledView className="flex flex-row items-center justify-between bg-gray-100 p-3 m-3 rounded-md z-[999999999]">
+    <StyledView className="flex flex-row items-center justify-between bg-gray-100 px-[9px] py-[6px] m-3 rounded-md z-[999999999]">
       <StyledText className="text-sm text-gray-700 font-medium">
         Filter by month:
       </StyledText>
 
       <StyledView className="relative z-[999999999]">
         <StyledTouchableOpacity onPress={toggleDropdown}>
-          <StyledView className="flex flex-row items-center justify-between bg-white min-w-[145px] p-[8px] rounded-[5px] border border-gray-200">
-            <StyledText className="text-sm font-medium text-black">
+          <StyledView className="flex flex-row items-center justify-between bg-white min-w-[145px] p-[5px] rounded-[5px] border border-gray-200">
+            <StyledText className="text-xs font-medium text-black">
               {selectedLabel}
             </StyledText>
             <Ionicons
