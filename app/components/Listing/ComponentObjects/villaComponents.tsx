@@ -12,7 +12,7 @@ export const villaComponents = [
   {
     label: "Villa No.",
     type: "textInput",
-    field: "VillaNo",
+    field: "unitNo",
     // suffix: "Sqft",
     placeholder: "C 456",
     // keyboardType: "numeric",

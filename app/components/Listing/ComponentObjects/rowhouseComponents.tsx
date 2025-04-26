@@ -12,7 +12,7 @@ export const rowhouseComponents = [
   {
     label: "Row House No.",
     type: "textInput",
-    field: "VillaNo",
+    field: "unitNo",
     // suffix: "Sqft",
     placeholder: "C 456",
     // keyboardType: "numeric",
