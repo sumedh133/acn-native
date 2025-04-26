@@ -93,14 +93,17 @@ export interface Places {
 
 export interface ListingProperty {
   assetType: string | null;
+  agentCpid: string | null;
+  userStatus: string | null;
+  dateOfInventoryAdded: number | null;
   communityType: string | null;
-  name: string | null,
-  address: string | null,
-  mapLink: string | null,
-  micromarket: string | null,
+  name: string | null;
+  address: string | null;
+  mapLink: string | null;
+  micromarket: string | null;
   _geoloc: {
-    lat: number | null,
-    lng: number | null,
-  },
+    lat: number | null;
+    lng: number | null;
+  };
   [key: string]: any;
 }

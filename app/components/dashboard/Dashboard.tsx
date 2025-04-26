@@ -35,6 +35,7 @@ import {
   Requirement,
   EnquiryWithProperty,
   Enquiry,
+  ListingProperty,
 } from "@/app/types";
 import { formatCost2, toCapitalizedWords } from "@/app/helpers/common";
 import DashboardDropdown from "./DashboardDropdown";
@@ -59,6 +60,8 @@ import {
   filterRequirementsByMonth,
   generateEnquiryMonths,
   filterEnquiriesByMonth,
+  generateListingAndPropertyMonths,
+  filterListingsByMonth,
 } from "../../helpers/dashboardMonthFiltersHelper";
 import { router } from "expo-router";
 import EmptyTabContent from "./EmptyTabContent";
@@ -67,7 +70,7 @@ import MyRequirementIcon from "@/assets/icons/svg/Dashboard/MyRequirementsIcon";
 import MyInverntoriesIcon from "@/assets/icons/svg/Dashboard/MyInventoriesIcon";
 import MyEnquiriesIcon from "@/assets/icons/svg/Dashboard/MyEnquiryIcon";
 import { showErrorToast, showSuccessToast } from "@/utils/toastUtils";
-import InventoriesCarousel from "./InventoriesCarousel";
+import PropertyTabCarousel from "./InventoriesCarousel";
 import PropertyCard from "./PropertyCard";
 import RequirementCard from "./RequirementCard";
 
@@ -78,10 +81,12 @@ type DashboardProps = {
   myEnquiries: EnquiryWithProperty[];
   myProperties: Property[];
   myRequirements: Requirement[];
+  myListing: ListingProperty[];
   loading: {
     enquiriesLoading: boolean;
     propertiesLoading: boolean;
     requirementsLoading: boolean;
+    listingLoading: boolean;
   };
 };
 
@@ -89,16 +94,22 @@ export default function Dashboard({
   myEnquiries,
   myProperties,
   myRequirements,
+  myListing,
   loading,
 }: DashboardProps) {
   const [activeTab, setActiveTab] = useState("inventories");
   const [properties, setProperties] = useState<Property[] | []>([]);
   const [requirements, setRequirements] = useState<Requirement[] | []>([]);
   const [enquiries, setEnquiries] = useState<EnquiryWithProperty[] | []>([]);
+  const [listings, setListings] = useState<ListingProperty[] | []>([]);
   const [monthFilter, setMonthFilter] = useState<string>("");
   const [monthFilterOptions, setMonthFilterOptions] = useState<
     Array<{ label: string; value: any }>
   >([]);
+  const [propertiesTab, setPropertiesTab] = useState("listed");
+  const [propertyCounts, setPropertyCounts] = useState<{
+    [slug: string]: number;
+  }>({});
   const [batchSize, setBatchSize] = useState(10);
   const [bufferring, setBuffering] = useState(false);
   const [renderingNewBatch, setRenderingNewBatch] = useState(false);
@@ -106,12 +117,23 @@ export default function Dashboard({
   const isBatchSizePendingLock = useRef(false);
   const initalLoad = useRef(true);
 
+  const kam_number = useSelector(selectKamNumber);
+
   const renderMore = () => {
     if (isBatchSizePendingLock.current) return;
     let totalCount = 0;
     switch (activeTab) {
       case "inventories":
-        totalCount = properties.length;
+        switch (propertiesTab) {
+          case "listed":
+            totalCount = properties.length;
+            break;
+          default:
+            totalCount = listings.filter(
+              (listing) => listing.userStatus === propertiesTab
+            ).length;
+            break;
+        }
         break;
       case "requirements":
         totalCount = requirements.length;
@@ -173,7 +195,10 @@ export default function Dashboard({
     []
   );
 
-  const kam_number = useSelector(selectKamNumber);
+  const handlePropertyTabChange = (slug: string): void => {
+    if (slug === propertiesTab) return;
+    setPropertiesTab(slug);
+  };
 
   const handleWhatsAppEnquiry = (): void => {
     if (!kam_number) return;
@@ -185,28 +210,59 @@ export default function Dashboard({
     if (activeTab === "inventories") {
       return (
         <>
-          {properties.length === 0 || bufferring ? (
+          {propertiesTab === "listed" ? (
+            properties.length === 0 || bufferring ? (
+              <EmptyTabContent
+                text="No inventory added yet."
+                sub_text="Contact your KAM on Whatsapp to add an inventory."
+                icon={<FontAwesome name="whatsapp" size={20} color="white" />}
+                buttonText="Add Inventory"
+                handleOnPress={handleWhatsAppEnquiry}
+                loading={loading?.propertiesLoading || bufferring}
+              />
+            ) : (
+              <View className="mx-3 mb-3">
+                {properties.slice(0, batchSize).map((property, index) => {
+                  return (
+                    <PropertyCard
+                      key={property.propertyId}
+                      property={property}
+                      onStatusChange={handlePropertyStatusChange}
+                      index={index}
+                      totalCount={Math.min(batchSize, properties.length)}
+                      showEnquiriesSection={true}
+                    />
+                  );
+                })}
+              </View>
+            )
+          ) : listings.filter((listing) => listing.userStatus === propertiesTab)
+              .length === 0 || bufferring ? (
             <EmptyTabContent
               text="No inventory added yet."
               sub_text="Contact your KAM on Whatsapp to add an inventory."
               icon={<FontAwesome name="whatsapp" size={20} color="white" />}
               buttonText="Add Inventory"
               handleOnPress={handleWhatsAppEnquiry}
-              loading={loading?.propertiesLoading || bufferring}
+              loading={loading?.listingLoading || bufferring}
             />
           ) : (
             <View className="mx-3 mb-3">
-              {properties.slice(0, batchSize).map((property, index) => {
-                return (
-                  <PropertyCard
-                    key={property.propertyId}
-                    property={property}
-                    onStatusChange={handlePropertyStatusChange}
-                    index={index}
-                    totalCount={Math.min(batchSize, properties.length)}
-                  />
-                );
-              })}
+              {listings
+                .filter((listing) => listing.userStatus === propertiesTab)
+                .slice(0, batchSize)
+                .map((listing, index) => {
+                  return (
+                    <PropertyCard
+                      key={listing.propertyId}
+                      property={listing as unknown as Property}
+                      onStatusChange={handlePropertyStatusChange}
+                      index={index}
+                      totalCount={Math.min(batchSize, properties.length)}
+                      showEnquiriesSection={false}
+                    />
+                  );
+                })}
             </View>
           )}
         </>
@@ -284,6 +340,7 @@ export default function Dashboard({
     bufferring,
     loading,
     batchSize,
+    propertiesTab,
     handlePropertyStatusChange,
     handleRequirementStatusChange,
   ]);
@@ -293,7 +350,7 @@ export default function Dashboard({
       key: "inventories",
       label: "My Inventories",
       icon: MyInverntoriesIcon,
-      count: myProperties.length,
+      count: myProperties.length + myListing.length,
       loading: loading.propertiesLoading,
     },
     {
@@ -328,7 +385,10 @@ export default function Dashboard({
     switch (activeTab) {
       case "inventories":
         setProperties(myProperties);
-        setMonthFilterOptions(generatePropertyMonths(myProperties));
+        setListings(myListing);
+        setMonthFilterOptions(
+          generateListingAndPropertyMonths(myProperties, myListing)
+        );
         break;
       case "requirements":
         setRequirements(myRequirements);
@@ -347,13 +407,28 @@ export default function Dashboard({
   useEffect(() => {
     if (myProperties) {
       if (activeTab === "inventories") {
-        setMonthFilterOptions(generatePropertyMonths(myProperties));
+        setMonthFilterOptions(
+          generateListingAndPropertyMonths(myListing, myProperties)
+        );
         setProperties(filterPropertiesByMonth(myProperties, monthFilter));
       } else {
         setProperties(myProperties);
       }
     }
   }, [myProperties]);
+
+  useEffect(() => {
+    if (myListing) {
+      if (activeTab === "inventories") {
+        setMonthFilterOptions(
+          generateListingAndPropertyMonths(myListing, myProperties)
+        );
+        setListings(filterListingsByMonth(myListing, monthFilter));
+      } else {
+        setListings(myListing);
+      }
+    }
+  }, [myListing]);
 
   useEffect(() => {
     if (myRequirements) {
@@ -382,6 +457,7 @@ export default function Dashboard({
     switch (activeTab) {
       case "inventories":
         setProperties(filterPropertiesByMonth(myProperties, monthFilter));
+        setListings(filterListingsByMonth(myListing, monthFilter));
         break;
       case "requirements":
         setRequirements(filterRequirementsByMonth(myRequirements, monthFilter));
@@ -394,6 +470,18 @@ export default function Dashboard({
     }
     setBuffering(false);
   }, [monthFilter]);
+
+  useEffect(() => {
+    const listingCounts = listings.reduce(
+      (acc: Record<string, number>, item) => {
+        if (item?.userStatus)
+          acc[item?.userStatus] = (acc[item?.userStatus] || 0) + 1;
+        return acc;
+      },
+      {}
+    );
+    setPropertyCounts({ listed: properties?.length ?? 0, ...listingCounts });
+  }, [properties, listings]);
 
   return (
     <StyledView className="flex bg-gray-50 h-full">
@@ -416,7 +504,13 @@ export default function Dashboard({
         setBatchSize={setBatchSize}
       />
 
-      {activeTab === "inventories" && <InventoriesCarousel />}
+      {activeTab === "inventories" && (
+        <PropertyTabCarousel
+          activeSlug={propertiesTab}
+          handleTabChange={handlePropertyTabChange}
+          counts={propertyCounts}
+        />
+      )}
 
       {/* Content Area */}
       <StyledScrollView>
@@ -430,20 +524,3 @@ export default function Dashboard({
     </StyledView>
   );
 }
-
-const styles = StyleSheet.create({
-  shareButton: {
-    width: 30,
-    height: 30,
-    borderRadius: 22,
-    backgroundColor: "#E3E3E3",
-    justifyContent: "center",
-    alignItems: "center",
-    left: 10,
-    // elevation: 1,
-    // shadowColor: '#000',
-    // shadowOffset: { width: 0, height: 2 },
-    // shadowOpacity: 0.25,
-    // shadowRadius: 3.84,
-  },
-});

@@ -31,11 +31,13 @@ const PropertyCard = ({
   onStatusChange,
   index,
   totalCount,
+  showEnquiriesSection,
 }: {
   property: Property;
   onStatusChange: (id: string, status: string) => void;
   index: number;
   totalCount: number;
+  showEnquiriesSection: boolean;
 }) => {
   // State for share modal
   const [isShareModalOpen, setIsShareModalOpen] = useState(false);
@@ -185,32 +187,34 @@ const PropertyCard = ({
         </StyledView>
 
         {/* Bottom Status Section */}
-        <StyledView className="flex flex-row justify-between items-center p-4 bg-gray-50">
-          {/* Enquiries */}
-          <StyledView>
-            <StyledText className="text-sm text-black font-semibold">
-              Enquiries Received:
-            </StyledText>
-            <StyledText className="text-sm font-semibold text-black mt-1">
-              {matchingEnquiriesCount ?? "-"} Enquiry
-            </StyledText>
-          </StyledView>
+        {showEnquiriesSection && (
+          <StyledView className="flex flex-row justify-between items-center p-4 bg-gray-50">
+            {/* Enquiries */}
+            <StyledView>
+              <StyledText className="text-sm text-black font-semibold">
+                Enquiries Received:
+              </StyledText>
+              <StyledText className="text-sm font-semibold text-black mt-1">
+                {matchingEnquiriesCount ?? "-"} Enquiry
+              </StyledText>
+            </StyledView>
 
-          {/* Status Selector */}
-          <StyledView className={`relative overflow-visible`}>
-            <DashboardDropdown
-              value={property.status || "Available"}
-              setValue={(val) => onStatusChange(property.propertyId, val)}
-              options={[
-                { label: "Available", value: "Available" },
-                { label: "Hold", value: "Hold" },
-                { label: "Sold", value: "Sold" },
-              ]}
-              type={"inventory"}
-              openDropdownUp={index === totalCount - 1 && totalCount > 1}
-            />
+            {/* Status Selector */}
+            <StyledView className={`relative overflow-visible`}>
+              <DashboardDropdown
+                value={property.status || "Available"}
+                setValue={(val) => onStatusChange(property.propertyId, val)}
+                options={[
+                  { label: "Available", value: "Available" },
+                  { label: "Hold", value: "Hold" },
+                  { label: "Sold", value: "Sold" },
+                ]}
+                type={"inventory"}
+                openDropdownUp={index === totalCount - 1 && totalCount > 1}
+              />
+            </StyledView>
           </StyledView>
-        </StyledView>
+        )}
       </StyledTouchableOpacity>
     </StyledView>
   );
