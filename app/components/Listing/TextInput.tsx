@@ -13,7 +13,7 @@ interface TextInputFieldProps {
   setValue: (value: string) => void;
   title: string;
   placeholder?: string;
-  isRequired?: boolean;
+  required?: boolean;
   keyboardType?:
     | "default"
     | "number-pad"
@@ -30,7 +30,7 @@ const TextInputField = ({
   setValue,
   title,
   placeholder = "",
-  isRequired = false,
+  required = false,
   keyboardType = "default",
   maxLength,
   suffix,
@@ -49,7 +49,7 @@ const TextInputField = ({
     <View style={styles.section}>
       <View style={styles.headingContainer}>
         <Text style={styles.sectionHeading}>{title}</Text>
-        {isRequired && <Text style={styles.compulsoryStar}>*</Text>}
+        {required && <Text style={styles.compulsoryStar}>*</Text>}
       </View>
 
       <View

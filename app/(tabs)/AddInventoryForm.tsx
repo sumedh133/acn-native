@@ -92,7 +92,7 @@ const AddInventoryForm = () => {
             setvalue={(value: any) => handleSetValue(component.field, value)}
             title={component.label}
             options={component.options}
-                        required={component.required}
+            required={component.required}
           />
         );
       case "slider":
@@ -102,7 +102,7 @@ const AddInventoryForm = () => {
             setvalue={(value) => handleSetValue(component.field, value)}
             title={component.label}
             options={component.options}
-                            required={component.required}
+            required={component.required}
           />
         );
       case "textInput":
@@ -111,43 +111,39 @@ const AddInventoryForm = () => {
             value={property[component.field]}
             setValue={(value: any) => handleSetValue(component.field, value)}
             title={component.label}
-                                suffix={component.suffix}
-                                placeholder={component.placeholder}
-                            />
-                        );
-                        case "Dropdown":
-                            return (
-                                <DropdownSelect
-                                    value={property[component.field]}
-                                    setValue={(value) =>
-                                        handleSetValue(component.field, value)
-                                    }
-                                    title={component.label}
-                                    options={component.option}
-                                    alignment={component.alignment}
-                                />
-                            );
-                            case "Checkbox":
-                                return (
-                                    <Checkbox
-                                        checked={property[component.field]}
-                                        setChecked={(checked) =>
-                                            handleSetValue(component.field, checked)
-                                        }
-                                        title={component.label}
-                                        alignment={component.alignment}
-                                    />
-                                );
-                                case "MonthYearPicker":
-                                    return (
-                                        <MonthYearPicker
-                                            value={property[component.field]}
-                                            setValue={(value) =>
-                                                handleSetValue(component.field, value)
-                                            }
-                                            title={component.label}
-                      />
-                    );
+            suffix={component.suffix}
+            placeholder={component.placeholder}
+            required={component.required}
+          />
+        );
+      case "Dropdown":
+        return (
+          <DropdownSelect
+            value={property[component.field]}
+            setValue={(value) => handleSetValue(component.field, value)}
+            title={component.label}
+            options={component.option}
+            required={component.required}
+          />
+        );
+      case "Checkbox":
+        return (
+          <Checkbox
+            checked={property[component.field]}
+            setChecked={(checked) => handleSetValue(component.field, checked)}
+            title={component.label}
+            required={component.required}
+          />
+        );
+      case "MonthYearPicker":
+        return (
+          <MonthYearPicker
+            value={property[component.field]}
+            setValue={(value) => handleSetValue(component.field, value)}
+            title={component.label}
+            required={component.required}
+          />
+        );
 
       default:
         return null;
@@ -250,8 +246,8 @@ const styles = StyleSheet.create({
     flex: 2,
   },
   halfWidthItem: {
-      flex: 1,
-      maxWidth: '48%'
+    flex: 1,
+    maxWidth: "48%",
   },
 });
 

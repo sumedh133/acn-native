@@ -13,18 +13,15 @@ import {
 } from "react-native";
 import { Ionicons } from '@expo/vector-icons'; // Make sure to install expo/vector-icons if not already installed
 
-type AlignmentType = "left" | "right" | "full";
 
 interface MonthYearPickerProps {
     value: string;
     setValue: (value: string) => void;
     title: string;
     placeholder?: string;
-    isRequired?: boolean;
-    width?: DimensionValue;
+    required?: boolean;
     minYear?: number;
     maxYear?: number;
-    alignment?: AlignmentType;
 }
 
 const MonthYearPicker = ({
@@ -32,9 +29,7 @@ const MonthYearPicker = ({
     setValue,
     title,
     placeholder = "MM/YYYY",
-    isRequired = false,
-    alignment = "full",
-    width,
+    required = false,
     minYear = 1900,
     maxYear = 2100,
 }: MonthYearPickerProps) => {
@@ -98,158 +93,123 @@ const MonthYearPicker = ({
         (_, i) => ({ label: (minYear + i).toString(), value: minYear + i })
     );
 
-    // Calculate container style based on alignment and width
-    const getContainerStyle = (): ViewStyle => {
-        const baseStyle: ViewStyle = {
-            ...styles.section,
-        };
-
-        // Apply width if specified
-        if (width) {
-            baseStyle.width = width;
-        }
-
-        // Apply alignment styles
-        switch (alignment) {
-            case "left":
-                baseStyle.alignSelf = "flex-start";
-                if (!width) baseStyle.width = "auto";
-                break;
-            case "right":
-                baseStyle.alignSelf = "flex-end";
-                if (!width) baseStyle.width = "auto";
-                break;
-            case "full":
-            default:
-                baseStyle.alignSelf = "stretch";
-                baseStyle.width = "100%";
-                break;
-        }
-
-        return baseStyle;
-    };
-
     return (
-        <View style={getContainerStyle()}>
-            <View style={styles.headingContainer}>
-                <Text style={styles.sectionHeading}>{title}</Text>
-                {isRequired && <Text style={styles.compulsoryStar}>*</Text>}
-            </View>
-
-            <TouchableOpacity
-                style={[
-                    styles.inputContainer,
-                    isFocused && styles.focusedInputContainer
-                ]}
-                onPress={handleFocus}
-                activeOpacity={0.7}
-            >
-                <TextInput
-                    style={styles.inputField}
-                    value={value}
-                    placeholder={placeholder}
-                    placeholderTextColor="#A0A0A0"
-                    editable={false}
-                    pointerEvents="none"
-                />
-                <Ionicons name="calendar-outline" size={18} color="#757575" />
-            </TouchableOpacity>
-
-            <Modal
-                animationType="slide"
-                transparent={true}
-                visible={modalVisible}
-                onRequestClose={handleCancel}
-            >
-                <TouchableWithoutFeedback onPress={handleCancel}>
-                    <View style={styles.modalOverlay}>
-                        <TouchableWithoutFeedback>
-                            <View style={styles.modalContent}>
-                                <View style={styles.modalHeader}>
-                                    <Text style={styles.modalTitle}>Select Month and Year</Text>
-                                    <TouchableOpacity onPress={handleCancel}>
-                                        <Ionicons name="close" size={24} color="#000" />
-                                    </TouchableOpacity>
-                                </View>
-                                
-                                <View style={styles.pickerContainer}>
-                                    <View style={styles.pickerColumn}>
-                                        <Text style={styles.pickerTitle}>Month</Text>
-                                        <FlatList
-                                            data={months}
-                                            keyExtractor={(item) => item.value.toString()}
-                                            renderItem={({ item }) => (
-                                                <TouchableOpacity
-                                                    style={[
-                                                        styles.pickerItem,
-                                                        tempMonth === item.value && styles.selectedPickerItem
-                                                    ]}
-                                                    onPress={() => setTempMonth(item.value)}
-                                                >
-                                                    <Text 
-                                                        style={[
-                                                            styles.pickerText,
-                                                            tempMonth === item.value && styles.selectedPickerText
-                                                        ]}
-                                                    >
-                                                        {item.label}
-                                                    </Text>
-                                                </TouchableOpacity>
-                                            )}
-                                        />
-                                    </View>
-                                    
-                                    <View style={styles.pickerColumn}>
-                                        <Text style={styles.pickerTitle}>Year</Text>
-                                        <FlatList
-                                            data={years}
-                                            keyExtractor={(item) => item.value.toString()}
-                                            renderItem={({ item }) => (
-                                                <TouchableOpacity
-                                                    style={[
-                                                        styles.pickerItem,
-                                                        tempYear === item.value && styles.selectedPickerItem
-                                                    ]}
-                                                    onPress={() => setTempYear(item.value)}
-                                                >
-                                                    <Text 
-                                                        style={[
-                                                            styles.pickerText,
-                                                            tempYear === item.value && styles.selectedPickerText
-                                                        ]}
-                                                    >
-                                                        {item.label}
-                                                    </Text>
-                                                </TouchableOpacity>
-                                            )}
-                                        />
-                                    </View>
-                                </View>
-                                
-                                <View style={styles.buttonContainer}>
-                                    <TouchableOpacity 
-                                        style={styles.cancelButton}
-                                        onPress={handleCancel}
-                                    >
-                                        <Text style={styles.cancelButtonText}>Cancel</Text>
-                                    </TouchableOpacity>
-                                    <TouchableOpacity 
-                                        style={[
-                                            styles.confirmButton,
-                                            (!tempMonth || !tempYear) && styles.disabledButton
-                                        ]}
-                                        onPress={handleConfirm}
-                                        disabled={!tempMonth || !tempYear}
-                                    >
-                                        <Text style={styles.confirmButtonText}>Confirm</Text>
-                                    </TouchableOpacity>
-                                </View>
-                            </View>
-                        </TouchableWithoutFeedback>
-                    </View>
-                </TouchableWithoutFeedback>
-            </Modal>
+      <View style={styles.section}>
+        <View style={styles.headingContainer}>
+          <Text style={styles.sectionHeading}>{title}</Text>
+          {required && <Text style={styles.compulsoryStar}>*</Text>}
         </View>
+
+        <TouchableOpacity
+          style={[
+            styles.inputContainer,
+            isFocused && styles.focusedInputContainer,
+          ]}
+          onPress={handleFocus}
+          activeOpacity={0.7}>
+          <TextInput
+            style={styles.inputField}
+            value={value}
+            placeholder={placeholder}
+            placeholderTextColor="#A0A0A0"
+            editable={false}
+            pointerEvents="none"
+          />
+          <Ionicons name="calendar-outline" size={18} color="#757575" />
+        </TouchableOpacity>
+
+        <Modal
+          animationType="slide"
+          transparent={true}
+          visible={modalVisible}
+          onRequestClose={handleCancel}>
+          <TouchableWithoutFeedback onPress={handleCancel}>
+            <View style={styles.modalOverlay}>
+              <TouchableWithoutFeedback>
+                <View style={styles.modalContent}>
+                  <View style={styles.modalHeader}>
+                    <Text style={styles.modalTitle}>Select Month and Year</Text>
+                    <TouchableOpacity onPress={handleCancel}>
+                      <Ionicons name="close" size={24} color="#000" />
+                    </TouchableOpacity>
+                  </View>
+
+                  <View style={styles.pickerContainer}>
+                    <View style={styles.pickerColumn}>
+                      <Text style={styles.pickerTitle}>Month</Text>
+                      <FlatList
+                        data={months}
+                        keyExtractor={(item) => item.value.toString()}
+                        renderItem={({ item }) => (
+                          <TouchableOpacity
+                            style={[
+                              styles.pickerItem,
+                              tempMonth === item.value &&
+                                styles.selectedPickerItem,
+                            ]}
+                            onPress={() => setTempMonth(item.value)}>
+                            <Text
+                              style={[
+                                styles.pickerText,
+                                tempMonth === item.value &&
+                                  styles.selectedPickerText,
+                              ]}>
+                              {item.label}
+                            </Text>
+                          </TouchableOpacity>
+                        )}
+                      />
+                    </View>
+
+                    <View style={styles.pickerColumn}>
+                      <Text style={styles.pickerTitle}>Year</Text>
+                      <FlatList
+                        data={years}
+                        keyExtractor={(item) => item.value.toString()}
+                        renderItem={({ item }) => (
+                          <TouchableOpacity
+                            style={[
+                              styles.pickerItem,
+                              tempYear === item.value &&
+                                styles.selectedPickerItem,
+                            ]}
+                            onPress={() => setTempYear(item.value)}>
+                            <Text
+                              style={[
+                                styles.pickerText,
+                                tempYear === item.value &&
+                                  styles.selectedPickerText,
+                              ]}>
+                              {item.label}
+                            </Text>
+                          </TouchableOpacity>
+                        )}
+                      />
+                    </View>
+                  </View>
+
+                  <View style={styles.buttonContainer}>
+                    <TouchableOpacity
+                      style={styles.cancelButton}
+                      onPress={handleCancel}>
+                      <Text style={styles.cancelButtonText}>Cancel</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity
+                      style={[
+                        styles.confirmButton,
+                        (!tempMonth || !tempYear) && styles.disabledButton,
+                      ]}
+                      onPress={handleConfirm}
+                      disabled={!tempMonth || !tempYear}>
+                      <Text style={styles.confirmButtonText}>Confirm</Text>
+                    </TouchableOpacity>
+                  </View>
+                </View>
+              </TouchableWithoutFeedback>
+            </View>
+          </TouchableWithoutFeedback>
+        </Modal>
+      </View>
     );
 };
 

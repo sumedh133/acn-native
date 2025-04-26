@@ -2,16 +2,13 @@ import React from "react";
 import { StyleSheet, Text, View, TouchableOpacity, ViewStyle, DimensionValue } from "react-native";
 import { Ionicons } from '@expo/vector-icons'; // Make sure to install expo/vector-icons if not already installed
 
-type AlignmentType = "left" | "right" | "full";
 
 interface CheckboxProps {
     checked: boolean;
     setChecked: (checked: boolean) => void;
     title?: string;
     label?: string;
-    isRequired?: boolean;
-    alignment?: AlignmentType;
-    width?: DimensionValue;
+    required?: boolean;
 }
 
 const Checkbox = ({
@@ -19,71 +16,32 @@ const Checkbox = ({
     setChecked,
     title,
     label,
-    isRequired = false,
-    alignment = "full",
-    width,
+    required = false,
 }: CheckboxProps) => {
     const toggleCheckbox = () => {
         setChecked(!checked);
     };
 
-    // Calculate container style based on alignment and width
-    const getContainerStyle = (): ViewStyle => {
-        const baseStyle: ViewStyle = {
-            ...styles.section,
-        };
-
-        // Apply width if specified
-        if (width) {
-            baseStyle.width = width;
-        }
-
-        // Apply alignment styles
-        switch (alignment) {
-            case "left":
-                baseStyle.alignSelf = "flex-start";
-                if (!width) baseStyle.width = "auto";
-                break;
-            case "right":
-                baseStyle.alignSelf = "flex-end";
-                if (!width) baseStyle.width = "auto";
-                break;
-            case "full":
-            default:
-                baseStyle.alignSelf = "stretch";
-                baseStyle.width = "100%";
-                break;
-        }
-
-        return baseStyle;
-    };
-
     return (
-        <View style={getContainerStyle()}>
-            {title && (
-                <View style={styles.headingContainer}>
-                    <Text style={styles.sectionHeading}>{title}</Text>
-                    {isRequired && <Text style={styles.compulsoryStar}>*</Text>}
-                </View>
-            )}
+      <View style={styles.section}>
+        {title && (
+          <View style={styles.headingContainer}>
+            <Text style={styles.sectionHeading}>{title}</Text>
+            {required && <Text style={styles.compulsoryStar}>*</Text>}
+          </View>
+        )}
 
-            <TouchableOpacity 
-                style={styles.checkboxContainer}
-                onPress={toggleCheckbox}
-                activeOpacity={0.7}
-            >
-                <View style={[
-                    styles.checkbox,
-                    checked && styles.checkboxChecked
-                ]}>
-                    {checked && (
-                        <Ionicons name="checkmark" size={16} color="#FFFFFF" />
-                    )}
-                </View>
-                
-                {label && <Text style={styles.label}>{label}</Text>}
-            </TouchableOpacity>
-        </View>
+        <TouchableOpacity
+          style={styles.checkboxContainer}
+          onPress={toggleCheckbox}
+          activeOpacity={0.7}>
+          <View style={[styles.checkbox, checked && styles.checkboxChecked]}>
+            {checked && <Ionicons name="checkmark" size={16} color="#FFFFFF" />}
+          </View>
+
+          {label && <Text style={styles.label}>{label}</Text>}
+        </TouchableOpacity>
+      </View>
     );
 };
 

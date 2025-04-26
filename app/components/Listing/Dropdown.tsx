@@ -11,7 +11,6 @@ import {
 } from "react-native";
 import { Ionicons } from '@expo/vector-icons'; // Make sure to install expo/vector-icons if not already installed
 
-type AlignmentType = "left" | "right" | "full";
 
 interface DropdownOption {
     label: string;
@@ -25,8 +24,6 @@ interface DropdownSelectProps {
     options: DropdownOption[];
     placeholder?: string;
     required?: boolean;
-    width?: DimensionValue;
-    alignment: AlignmentType;
 }
 
 const DropdownSelect = ({
@@ -36,8 +33,6 @@ const DropdownSelect = ({
     options,
     placeholder = "Select",
     required = false,
-    alignment = "full",
-    width,
 }: DropdownSelectProps) => {
     const [modalVisible, setModalVisible] = useState(false);
 
@@ -51,108 +46,67 @@ const DropdownSelect = ({
         ? options.find(option => option.value === value)?.label || value
         : placeholder;
 
-    // Calculate container style based on alignment and width
-    const getContainerStyle = (): ViewStyle => {
-        const baseStyle: ViewStyle = {
-            ...styles.section,
-        };
-
-        // Apply width if specified
-        if (width) {
-            baseStyle.width = width;
-        }
-
-        // Apply alignment styles
-        switch (alignment) {
-            case "left":
-                baseStyle.alignSelf = "flex-start";
-                if (!width) baseStyle.width = "auto";
-                break;
-            case "right":
-                baseStyle.alignSelf = "flex-end";
-                if (!width) baseStyle.width = "auto";
-                break;
-            case "full":
-            default:
-                baseStyle.alignSelf = "stretch";
-                baseStyle.width = "100%";
-                break;
-        }
-
-        return baseStyle;
-    };
-
     return (
-        <View style={getContainerStyle()}>
-            <View style={styles.headingContainer}>
-                <Text style={styles.sectionHeading}>{title}</Text>
-                {required && <Text style={styles.compulsoryStar}>*</Text>}
-            </View>
-
-            <TouchableOpacity
-                style={styles.dropdownButton}
-                onPress={() => setModalVisible(true)}
-                activeOpacity={0.7}
-            >
-                <Text 
-                    style={[
-                        styles.selectedText,
-                        !value && styles.placeholderText
-                    ]}
-                >
-                    {selectedLabel}
-                </Text>
-                <Ionicons name="chevron-down" size={16} color="#555" />
-            </TouchableOpacity>
-
-            <Modal
-                animationType="slide"
-                transparent={true}
-                visible={modalVisible}
-                onRequestClose={() => setModalVisible(false)}
-            >
-                <TouchableOpacity
-                    style={styles.modalOverlay}
-                    onPress={() => setModalVisible(false)}
-                    activeOpacity={1}
-                >
-                    <View style={styles.modalContent}>
-                        <View style={styles.modalHeader}>
-                            <Text style={styles.modalTitle}>{title}</Text>
-                            <TouchableOpacity onPress={() => setModalVisible(false)}>
-                                <Ionicons name="close" size={24} color="#000" />
-                            </TouchableOpacity>
-                        </View>
-                        
-                        <FlatList
-                            data={options}
-                            keyExtractor={(item) => item.value}
-                            renderItem={({ item }) => (
-                                <TouchableOpacity
-                                    style={[
-                                        styles.optionItem,
-                                        value === item.value && styles.selectedOptionItem
-                                    ]}
-                                    onPress={() => handleSelect(item)}
-                                >
-                                    <Text 
-                                        style={[
-                                            styles.optionText,
-                                            value === item.value && styles.selectedOptionText
-                                        ]}
-                                    >
-                                        {item.label}
-                                    </Text>
-                                    {value === item.value && (
-                                        <Ionicons name="checkmark" size={18} color="#0066FF" />
-                                    )}
-                                </TouchableOpacity>
-                            )}
-                        />
-                    </View>
-                </TouchableOpacity>
-            </Modal>
+      <View style={styles.section}>
+        <View style={styles.headingContainer}>
+          <Text style={styles.sectionHeading}>{title}</Text>
+          {required && <Text style={styles.compulsoryStar}>*</Text>}
         </View>
+
+        <TouchableOpacity
+          style={styles.dropdownButton}
+          onPress={() => setModalVisible(true)}
+          activeOpacity={0.7}>
+          <Text style={[styles.selectedText, !value && styles.placeholderText]}>
+            {selectedLabel}
+          </Text>
+          <Ionicons name="chevron-down" size={16} color="#555" />
+        </TouchableOpacity>
+
+        <Modal
+          animationType="slide"
+          transparent={true}
+          visible={modalVisible}
+          onRequestClose={() => setModalVisible(false)}>
+          <TouchableOpacity
+            style={styles.modalOverlay}
+            onPress={() => setModalVisible(false)}
+            activeOpacity={1}>
+            <View style={styles.modalContent}>
+              <View style={styles.modalHeader}>
+                <Text style={styles.modalTitle}>{title}</Text>
+                <TouchableOpacity onPress={() => setModalVisible(false)}>
+                  <Ionicons name="close" size={24} color="#000" />
+                </TouchableOpacity>
+              </View>
+
+              <FlatList
+                data={options}
+                keyExtractor={(item) => item.value}
+                renderItem={({ item }) => (
+                  <TouchableOpacity
+                    style={[
+                      styles.optionItem,
+                      value === item.value && styles.selectedOptionItem,
+                    ]}
+                    onPress={() => handleSelect(item)}>
+                    <Text
+                      style={[
+                        styles.optionText,
+                        value === item.value && styles.selectedOptionText,
+                      ]}>
+                      {item.label}
+                    </Text>
+                    {value === item.value && (
+                      <Ionicons name="checkmark" size={18} color="#0066FF" />
+                    )}
+                  </TouchableOpacity>
+                )}
+              />
+            </View>
+          </TouchableOpacity>
+        </Modal>
+      </View>
     );
 };
 
