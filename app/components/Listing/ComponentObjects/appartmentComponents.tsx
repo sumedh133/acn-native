@@ -81,7 +81,7 @@ export const appartmentComponents = [
   {
     label: "No of Bedrooms",
     type: "slider",
-    field: "noOfBedrooms",
+    field: "unitType",
     options: [
       { label: "1 BHK", value: "1 BHK" },
       { label: "2 BHK", value: "2 BHK" },
@@ -162,7 +162,7 @@ export const appartmentComponents = [
   {
     label: "Car Park",
     type: "textInput",
-    field: "capPark",
+    field: "carPark",
     placeholder: "0000",
     keyboardType: "numeric",
     colspan: 1,

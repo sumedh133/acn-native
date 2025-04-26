@@ -185,6 +185,14 @@ export const villaComponents = [
     colspan: 1,
   },
   {
+    label: "Rental Income",
+    type: "textInput",
+    field: "rentalIncome",
+    placeholder: "Type here",
+    // keyboardType: "numeric",
+    colspan: 2,
+  },
+  {
     label: "Building Khata",
     type: "Dropdown",
     field: "buildingKhata",
