@@ -25,7 +25,7 @@ export function getMicromarketFromCoordinates(selectedPlace: Places): string | n
         ) {
             if (turf.booleanPointInPolygon(point, feature as Feature<Polygon | MultiPolygon>)) {
                 return (
-                    feature.properties?.Micromarket ||
+                    feature.properties?.Ward_Name ||
                     feature.properties?.name ||
                     null
                 );

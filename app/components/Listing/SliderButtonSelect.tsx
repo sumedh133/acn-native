@@ -39,8 +39,7 @@ const SliderButtonSelect = ({
       <ScrollView
         horizontal
         showsHorizontalScrollIndicator={false}
-        contentContainerStyle={styles.optionContainer}
-      >
+        contentContainerStyle={styles.optionContainer}>
         {options.map((option) => {
           const isSelected = value === option.value;
           return (
@@ -48,8 +47,7 @@ const SliderButtonSelect = ({
               key={option.value}
               style={[styles.options, isSelected && styles.selectedOption]}
               onPress={() => handleSelect(option.value)}
-              activeOpacity={0.7}
-            >
+              activeOpacity={0.7}>
               <Text style={styles.optionText}>{option.label}</Text>
             </TouchableOpacity>
           );
@@ -65,7 +63,7 @@ const styles = StyleSheet.create({
     flex: 1,
     alignItems: "flex-start",
     justifyContent: "center",
-    gap: 8,
+    gap: 6,
   },
   headingContainer: {
     display: "flex",
@@ -86,7 +84,6 @@ const styles = StyleSheet.create({
     display: "flex",
     flexDirection: "row",
     gap: 8,
-    paddingVertical: 6,
   },
   options: {
     height: 40,

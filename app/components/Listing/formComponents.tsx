@@ -7,6 +7,7 @@ export const appartmentComponents = [
       { label: "Gated", value: "Gated" },
       { label: "Independent", value: "Independent" },
     ],
+    colspan: 2,
   },
   {
     label: "Apartment Type",
@@ -18,27 +19,18 @@ export const appartmentComponents = [
       { label: "Triplex", value: "triplex" },
       { label: "Penthouse", value: "penthouse" },
     ],
+    colspan: 2,
   },
   {
     label: "Unit No.",
     type: "textInput",
     field: "unitNo",
-    alignment: "left",
-  },
-  {
-    label: "Unit No.",
-    type: "textInput",
-    field: "unitNo",
-    alignment: "right",
-  },
-  {
-    label: "Unit No.",
-    type: "textInput",
-    field: "unitNo",
-    alignment: "full",
+    suffix: "Sqrt",
+    colspan: 1,
+    placeholder: "hi guysss",
   },
 ];
 
 export const assetTypes: { Apartment: any } = {
-    Apartment: appartmentComponents,
+  Apartment: appartmentComponents,
 };
