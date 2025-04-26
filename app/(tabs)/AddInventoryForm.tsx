@@ -94,15 +94,15 @@ const AddInventoryForm = () => {
   }, [selectedPlace]);
 
   const getFormComponents = () => {
-    const components = assetTypes?.[property?.assetType] || [];
+    const components = assetTypes?.[property?.assetType as keyof typeof assetTypes] || [];
 
     // Add an id property if not present
     return components.map((component: any, index: any) => ({
       ...component,
       id: `${component.field}-${index}`,
-      required: compulsoryFields[property?.assetType]?.includes(
+      required: property?.assetType ? compulsoryFields[property.assetType as keyof typeof compulsoryFields]?.includes(
         component.field
-      ),
+      ) : false,
     }));
   };
 

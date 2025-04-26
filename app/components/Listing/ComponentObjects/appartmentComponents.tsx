@@ -171,19 +171,25 @@ export const appartmentComponents = [
     label: "Corner Unit",
     type: "Checkbox",
     field: "cornerUnit",
-    colspan: 2,
+    colspan: 1,
   },
   {
-    label: "OC Received",
+    label: "Exclusive",
     type: "Checkbox",
-    field: "ocReceived",
-    colspan: 2,
+    field: "exclusive",
+    colspan: 1,
   },
   {
     label: "Tenanted",
     type: "Checkbox",
     field: "tenanted",
-    colspan: 2,
+    colspan: 1,
+  },
+  {
+    label: "OC Received",
+    type: "Checkbox",
+    field: "ocReceived",
+    colspan: 1,
   },
   {
     label: "Rental Income",
@@ -191,12 +197,6 @@ export const appartmentComponents = [
     field: "rentalIncome",
     placeholder: "Type here",
     // keyboardType: "numeric",
-    colspan: 2,
-  },
-  {
-    label: "Exclusive",
-    type: "Checkbox",
-    field: "exclusive",
     colspan: 2,
   },
   {
