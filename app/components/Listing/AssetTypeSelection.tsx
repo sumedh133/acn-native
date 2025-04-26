@@ -81,10 +81,10 @@ const AssetTypeSelection = ({
   };
 
   const handleSelect = (value: string) => {
-    if (selectedAsset === value) {
-      setSelectedAsset(null);
-      return;
-    }
+    // if (selectedAsset === value) {
+    //   setSelectedAsset(null);
+    //   return;
+    // }
     setSelectedAsset(value);
   };
 

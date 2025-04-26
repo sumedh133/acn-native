@@ -23,8 +23,7 @@ const SliderButtonSelect = ({
   required,
 }: SliderButtonSelectProps) => {
   const handleSelect = (val: string) => {
-    console.log(val, "value");
-    if (value === val) {
+    if (value === val && !required) {
       setvalue(null);
     } else {
       setvalue(val);

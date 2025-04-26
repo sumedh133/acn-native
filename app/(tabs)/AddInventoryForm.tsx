@@ -8,9 +8,9 @@ import React from "react";
 import AssetTypeSelection from "../components/Listing/AssetTypeSelection";
 import RadioButtonSelect from "../components/Listing/RadioButtonSelect";
 import {
-  appartmentComponents,
   assetTypes,
-} from "../components/Listing/formComponents";
+  compulsoryFields,
+} from "../components/Listing/ComponentObjects/formComponents";
 import SliderButtonSelect from "../components/Listing/SliderButtonSelect";
 import TextInputField from "../components/Listing/TextInput";
 import DropdownSelect from "../components/Listing/Dropdown";
@@ -80,6 +80,9 @@ const AddInventoryForm = () => {
     return components.map((component: any, index: any) => ({
       ...component,
       id: `${component.field}-${index}`,
+      required: compulsoryFields[property?.assetType]?.includes(
+        component.field
+      ),
     }));
   };
 
@@ -124,6 +127,7 @@ const AddInventoryForm = () => {
             title={component.label}
             options={component.option}
             required={component.required}
+            searchable={component.searchable}
           />
         );
       case "Checkbox":
@@ -221,7 +225,7 @@ const AddInventoryForm = () => {
 
 const styles = StyleSheet.create({
   scrollContent: {
-    backgroundColor: "#F5F6F7",
+    // backgroundColor: "#F5F6F7",
     paddingVertical: 16,
     paddingHorizontal: 12,
     width: "100%",

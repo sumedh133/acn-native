@@ -6,7 +6,7 @@ interface RadioButtonSelectProps {
   setvalue: (value: string | null) => void;
   title: string;
   options: Array<{ label: string; value: string }>;
-    required: boolean;
+  required: boolean;
 }
 
 const RadioButtonSelect = ({
@@ -14,11 +14,10 @@ const RadioButtonSelect = ({
   setvalue,
   title,
   options,
-    required,
+  required,
 }: RadioButtonSelectProps) => {
   const handleSelect = (val: string) => {
-    console.log(val, "value");
-    if (value === val) {
+    if (value === val && !required) {
       setvalue(null);
     } else {
       setvalue(val);

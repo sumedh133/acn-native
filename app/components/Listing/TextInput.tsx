@@ -9,7 +9,7 @@ import {
 } from "react-native";
 
 interface TextInputFieldProps {
-  value: string | null; // Changed to accept null since your state uses null
+  value: string | null;
   setValue: (value: string) => void;
   title: string;
   placeholder?: string;
@@ -58,8 +58,8 @@ const TextInputField = ({
           isFocused && styles.focusedInputContainer,
         ]}>
         <TextInput
-          style={[styles.inputField, isFocused && styles.focusedInput]}
-          value={value || ""} // Handle null values
+          style={styles.inputField}
+          value={value || ""}
           onChangeText={setValue}
           placeholder={placeholder}
           placeholderTextColor="#A0A0A0"
@@ -84,7 +84,7 @@ const styles = StyleSheet.create({
   headingContainer: {
     flexDirection: "row",
     gap: 6,
-    width: "100%", // Ensure heading takes full width
+    width: "100%",
   },
   sectionHeading: {
     fontFamily: "Montserrat_600SemiBold",
@@ -98,20 +98,13 @@ const styles = StyleSheet.create({
   },
   inputField: {
     flex: 1,
-    width: "100%", // Always make input field take full width of its container
+    width: "100%",
     height: 32,
-    // borderRadius: 8,
-    // borderWidth: 1,
     borderColor: "#E1E3E6",
     backgroundColor: "#FFFFFF",
-    // paddingHorizontal: 12,
     fontSize: 14,
     fontFamily: "sans-serif",
     color: "#000000",
-  },
-  focusedInput: {
-    borderColor: "#0066FF",
-    backgroundColor: "rgba(0, 102, 255, 0.05)",
   },
   inputContainer: {
     width: "100%",
@@ -126,8 +119,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
   },
   focusedInputContainer: {
-    borderColor: "#0066FF",
-    backgroundColor: "rgba(0, 102, 255, 0.05)",
+    borderColor: "#2B3034",
   },
   suffixText: {
     fontSize: 14,
