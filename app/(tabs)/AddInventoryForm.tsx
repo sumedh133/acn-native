@@ -16,6 +16,8 @@ import TextInputField from "../components/Listing/TextInput";
 import DropdownSelect from "../components/Listing/Dropdown";
 import Checkbox from "../components/Listing/CheckBox";
 import MonthYearPicker from "../components/Listing/MonthYearPicker";
+import TotalAskPrice from "../components/Listing/TotalAskPrice";
+import ExtraDetailsField from "../components/Listing/ExtraDetails";
 
 const initialState: ListingProperty = {
   name: null,
@@ -26,7 +28,7 @@ const initialState: ListingProperty = {
     lat: null,
     lng: null,
   },
-  assetType: null,
+  assetType: "Apartment",
   communityType: null,
 };
 
@@ -42,6 +44,17 @@ const AddInventoryForm = () => {
       [field]: value,
     }));
   };
+  
+  const handleSetTotalAskPrice = (field: string, value: string) => {
+    if (field === '/Sqft') {
+        if (property.assetType === "Plot" ) {
+
+        }
+        handleSetValue("totaslAskPrice", 1)
+    } else {
+        handleSetValue("askPricePerSqft", 1)
+    }
+  }
 
   useEffect(() => {
     if (selectedPlace) {
@@ -148,6 +161,23 @@ const AddInventoryForm = () => {
             required={component.required}
           />
         );
+        case "TotalAskPrice":
+            return (
+              <TotalAskPrice
+                initialPrice={property[component.field]}
+                onPriceChange={(field, value) => handleSetValue(field, value)}
+                title={component.label}
+                required={component.required}
+              />
+            );
+            case "ExtraDetails":
+                return (
+                  <ExtraDetailsField
+                    value={property[component.field]}
+                    setValue={(value) => handleSetValue(component.field, value)}
+                    required={component.required}
+                  />
+                );
 
       default:
         return null;
@@ -179,6 +209,22 @@ const AddInventoryForm = () => {
     if (currentRow.length > 0) {
       rows.push(currentRow);
     }
+
+
+
+    useEffect(() => {
+        if ( !property.assetType || property.assetType === "" ) {
+            return
+        } else if ( property.assetType === "Plot" ) {
+            if ( property.plotSize === "" ) {
+                return
+            }
+        } else {
+            if ( property.sbua === "" ) {
+                return
+            }
+        }
+    }, [property.assetType, property.totalAskPrice, property.askPricePerSqft, property.plotSize, property.sbua]);
 
     return (
       <View style={styles.formContainer}>
