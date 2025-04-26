@@ -12,6 +12,7 @@ interface SliderButtonSelectProps {
   setvalue: (value: string | null) => void;
   title: string;
   options: Array<{ label: string; value: string }>;
+  required: boolean;
 }
 
 const SliderButtonSelect = ({
@@ -19,6 +20,7 @@ const SliderButtonSelect = ({
   setvalue,
   title,
   options,
+  required,
 }: SliderButtonSelectProps) => {
   const handleSelect = (val: string) => {
     console.log(val, "value");
@@ -33,7 +35,7 @@ const SliderButtonSelect = ({
     <View style={styles.section}>
       <View style={styles.headingContainer}>
         <Text style={styles.sectionHeading}>{title}</Text>
-        <Text style={styles.compulsoryStar}>*</Text>
+        {required && <Text style={styles.compulsoryStar}>*</Text>}
       </View>
 
       <ScrollView

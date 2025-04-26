@@ -13,6 +13,9 @@ import {
 } from "../components/Listing/formComponents";
 import SliderButtonSelect from "../components/Listing/SliderButtonSelect";
 import TextInputField from "../components/Listing/TextInput";
+import DropdownSelect from "../components/Listing/Dropdown";
+import Checkbox from "../components/Listing/CheckBox";
+import MonthYearPicker from "../components/Listing/MonthYearPicker";
 
 const initialState: ListingProperty = {
   name: null,
@@ -23,7 +26,7 @@ const initialState: ListingProperty = {
     lat: null,
     lng: null,
   },
-  assetType: "Apartment",
+  assetType: null,
   communityType: null,
 };
 
@@ -71,10 +74,10 @@ const AddInventoryForm = () => {
   }, [selectedPlace]);
 
   const getFormComponents = () => {
-    const components = assetTypes?.[property?.assetType ?? "Apartment"] || [];
+    const components = assetTypes?.[property?.assetType] || [];
 
     // Add an id property if not present
-    return components.map((component, index) => ({
+    return components.map((component: any, index: any) => ({
       ...component,
       id: `${component.field}-${index}`,
     }));
@@ -86,9 +89,10 @@ const AddInventoryForm = () => {
         return (
           <RadioButtonSelect
             value={property[component.field]}
-            setvalue={(value) => handleSetValue(component.field, value)}
+            setvalue={(value: any) => handleSetValue(component.field, value)}
             title={component.label}
             options={component.options}
+                        required={component.required}
           />
         );
       case "slider":
@@ -98,18 +102,52 @@ const AddInventoryForm = () => {
             setvalue={(value) => handleSetValue(component.field, value)}
             title={component.label}
             options={component.options}
+                            required={component.required}
           />
         );
       case "textInput":
         return (
           <TextInputField
             value={property[component.field]}
-            setValue={(value) => handleSetValue(component.field, value)}
+            setValue={(value: any) => handleSetValue(component.field, value)}
             title={component.label}
-            placeholder={component.placeholder}
-            suffix={component.suffix}
-          />
-        );
+                                suffix={component.suffix}
+                                placeholder={component.placeholder}
+                            />
+                        );
+                        case "Dropdown":
+                            return (
+                                <DropdownSelect
+                                    value={property[component.field]}
+                                    setValue={(value) =>
+                                        handleSetValue(component.field, value)
+                                    }
+                                    title={component.label}
+                                    options={component.option}
+                                    alignment={component.alignment}
+                                />
+                            );
+                            case "Checkbox":
+                                return (
+                                    <Checkbox
+                                        checked={property[component.field]}
+                                        setChecked={(checked) =>
+                                            handleSetValue(component.field, checked)
+                                        }
+                                        title={component.label}
+                                        alignment={component.alignment}
+                                    />
+                                );
+                                case "MonthYearPicker":
+                                    return (
+                                        <MonthYearPicker
+                                            value={property[component.field]}
+                                            setValue={(value) =>
+                                                handleSetValue(component.field, value)
+                                            }
+                                            title={component.label}
+                      />
+                    );
 
       default:
         return null;
