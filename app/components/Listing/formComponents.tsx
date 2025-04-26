@@ -7,6 +7,7 @@ export const appartmentComponents = [
       { label: "Gated", value: "Gated" },
       { label: "Independent", value: "Independent" },
     ],
+    required: true,
   },
   {
     label: "Apartment Type",
@@ -18,6 +19,7 @@ export const appartmentComponents = [
       { label: "Triplex", value: "triplex" },
       { label: "Penthouse", value: "penthouse" },
     ],
+    required: true,
   },
   {
     label: "Unit No.",
@@ -37,8 +39,40 @@ export const appartmentComponents = [
     field: "unitNo",
     alignment: "full",
   },
+  {
+    label: "Furnishing",
+    type: "Dropdown",
+    field: "Furnishing",
+    option: [
+      { label: "Simplex", value: "simplex" },
+      { label: "Duplex", value: "duplex" },
+      { label: "Triplex", value: "triplex" },
+      { label: "Penthouse", value: "penthouse" },
+    ],
+    alignment: "full",
+  },
+  {
+    label: "SBUA",
+    type: "textInput",
+    field: "sbua",
+    alignment: "full",
+    suffix: 'Sqft',
+    placeholder:'1500',
+  },
+  {
+    label: "Corner Unit",
+    type: "Checkbox",
+    field: "cornerUnit",
+    alignment: "full",
+  },
+  {
+    label: "Hand Over Date",
+    type: "MonthYearPicker",
+    field: "HandOverDate",
+    alignment: "full",
+  },
 ];
 
 export const assetTypes: { Apartment: any } = {
-    Apartment: appartmentComponents,
+  Apartment: appartmentComponents,
 };

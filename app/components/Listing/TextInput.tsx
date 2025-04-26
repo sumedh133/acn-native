@@ -3,10 +3,11 @@ import { StyleSheet, Text, View, TextInput, ViewStyle, DimensionValue } from "re
 
 type AlignmentType = "left" | "right" | "full";
 
-interface TextInputFieldProps {
+interface InputWithSuffixProps {
     value: string;
     setValue: (value: string) => void;
     title: string;
+    suffix?: string;
     placeholder?: string;
     isRequired?: boolean;
     keyboardType?: "default" | "number-pad" | "decimal-pad" | "numeric" | "email-address" | "phone-pad";
@@ -15,17 +16,18 @@ interface TextInputFieldProps {
     width?: DimensionValue;
 }
 
-const TextInputField = ({
+const InputWithSuffix = ({
     value,
     setValue,
     title,
+    suffix,
     placeholder = "",
     isRequired = false,
     keyboardType = "default",
     maxLength,
     alignment = "full",
     width,
-}: TextInputFieldProps) => {
+}: InputWithSuffixProps) => {
     const [isFocused, setIsFocused] = useState(false);
 
     const handleFocus = () => {
@@ -74,20 +76,23 @@ const TextInputField = ({
                 {isRequired && <Text style={styles.compulsoryStar}>*</Text>}
             </View>
 
-            <TextInput
-                style={[
-                    styles.inputField,
-                    isFocused && styles.focusedInput
-                ]}
-                value={value}
-                onChangeText={setValue}
-                placeholder={placeholder}
-                placeholderTextColor="#A0A0A0"
-                onFocus={handleFocus}
-                onBlur={handleBlur}
-                keyboardType={keyboardType}
-                maxLength={maxLength}
-            />
+            <View style={[
+                styles.inputContainer,
+                isFocused && styles.focusedInputContainer
+            ]}>
+                <TextInput
+                    style={styles.inputField}
+                    value={value}
+                    onChangeText={setValue}
+                    placeholder={placeholder}
+                    placeholderTextColor="#A0A0A0"
+                    onFocus={handleFocus}
+                    onBlur={handleBlur}
+                    keyboardType={keyboardType}
+                    maxLength={maxLength}
+                />
+                <Text style={styles.suffixText}>{suffix}</Text>
+            </View>
         </View>
     );
 };
@@ -113,22 +118,35 @@ const styles = StyleSheet.create({
         fontSize: 14,
         fontWeight: "400",
     },
-    inputField: {
+    inputContainer: {
         width: "100%",
         height: 48,
         borderRadius: 8,
         borderWidth: 1,
         borderColor: "#E1E3E6",
         backgroundColor: "#FFFFFF",
+        flexDirection: "row",
+        alignItems: "center",
         paddingHorizontal: 12,
+    },
+    focusedInputContainer: {
+        borderColor: "#0066FF",
+        backgroundColor: "rgba(0, 102, 255, 0.05)",
+    },
+    inputField: {
+        flex: 1,
+        height: "100%",
         fontSize: 14,
         fontFamily: "sans-serif",
         color: "#000000",
+        padding: 0,
     },
-    focusedInput: {
-        borderColor: "#0066FF",
-        backgroundColor: "rgba(0, 102, 255, 0.05)",
+    suffixText: {
+        fontSize: 14,
+        fontFamily: "sans-serif",
+        color: "#757575",
+        marginLeft: 4,
     }
 });
 
-export default TextInputField;
+export default InputWithSuffix;

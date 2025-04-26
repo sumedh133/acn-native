@@ -13,6 +13,9 @@ import {
 } from "../components/Listing/formComponents";
 import SliderButtonSelect from "../components/Listing/SliderButtonSelect";
 import TextInputField from "../components/Listing/TextInput";
+import DropdownSelect from "../components/Listing/Dropdown";
+import Checkbox from "../components/Listing/CheckBox";
+import MonthYearPicker from "../components/Listing/MonthYearPicker";
 
 const initialState: ListingProperty = {
     name: null,
@@ -82,6 +85,7 @@ const AddInventoryForm = () => {
                         }
                         title={component.label}
                         options={component.options}
+                        required={component.required}
                     />
                 );
                 case "slider":
@@ -93,6 +97,7 @@ const AddInventoryForm = () => {
                             }
                             title={component.label}
                             options={component.options}
+                            required={component.required}
                         />
                     );
                     case "textInput":
@@ -105,8 +110,46 @@ const AddInventoryForm = () => {
                                 title={component.label}
                                 // alignment="left"
                                 alignment={component.alignment}
+                                suffix={component.suffix}
+                                placeholder={component.placeholder}
                             />
                         );
+                        case "Dropdown":
+                            return (
+                                <DropdownSelect
+                                    value={property[component.field]}
+                                    setValue={(value) =>
+                                        handleSetValue(component.field, value)
+                                    }
+                                    title={component.label}
+                                    options={component.option}
+                                    alignment={component.alignment}
+                                />
+                            );
+                            case "Checkbox":
+                                return (
+                                    <Checkbox
+                                        checked={property[component.field]}
+                                        setChecked={(checked) =>
+                                            handleSetValue(component.field, checked)
+                                        }
+                                        title={component.label}
+                                        // options={component.option}
+                                        alignment={component.alignment}
+                                    />
+                                );
+                                case "MonthYearPicker":
+                                    return (
+                                        <MonthYearPicker
+                                            value={property[component.field]}
+                                            setValue={(value) =>
+                                                handleSetValue(component.field, value)
+                                            }
+                                            title={component.label}
+                                            // options={component.option}
+                                            alignment={component.alignment}
+                                        />
+                                    );
             default:
                 return null;
         }
