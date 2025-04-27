@@ -137,6 +137,11 @@ export const villamentComponents = [
   },
   //Total Ask Price
   {
+    label: "Total Ask Price",
+    type: "TotalAskPrice",
+    colspan: 2,
+  },
+  {
     label: "Hand Over Date",
     type: "MonthYearPicker",
     field: "handoverDate",
