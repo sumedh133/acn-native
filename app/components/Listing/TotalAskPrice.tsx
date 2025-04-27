@@ -10,6 +10,7 @@ import {
   Modal,
   FlatList,
   SafeAreaView,
+  Pressable,
 } from "react-native";
 
 // Define a type for the dropdown options
@@ -23,6 +24,7 @@ interface TotalAskPricetProps {
   initialPrice?: string;
   title?: string;
   required: boolean;
+  searchable?: boolean; // New prop for searchable dropdown
 }
 
 const TotalAskPrice: React.FC<TotalAskPricetProps> = ({
@@ -30,9 +32,13 @@ const TotalAskPrice: React.FC<TotalAskPricetProps> = ({
   initialPrice = "",
   title,
   required,
+  searchable = false, // Default to false
 }) => {
   const [price, setPrice] = useState(initialPrice);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const [modalVisible, setModalVisible] = useState(false);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [hoveredItem, setHoveredItem] = useState<string | null>(null);
 
   // Define the unit options with both label and value
   const unitOptions: UnitOption[] = [
@@ -47,6 +53,13 @@ const TotalAskPrice: React.FC<TotalAskPricetProps> = ({
   );
 
   const [isFocused, setIsFocused] = useState(false);
+
+  // Filter options based on search term
+  const filteredOptions = searchTerm
+    ? unitOptions.filter((option) =>
+        option.label.toLowerCase().includes(searchTerm.toLowerCase())
+      )
+    : unitOptions;
 
   const handlePriceChange = (value: string) => {
     // Only allow numbers with commas and decimal points
@@ -69,6 +82,24 @@ const TotalAskPrice: React.FC<TotalAskPricetProps> = ({
 
   const toggleDropdown = () => {
     setIsDropdownOpen(!isDropdownOpen);
+    setModalVisible(!modalVisible);
+  };
+
+  const handleSearchChange = (text: string) => {
+    setSearchTerm(text);
+  };
+
+  const handleSelect = (option: UnitOption) => {
+    // Clear the old value with the previous unit
+    onPriceChange(selectedOption.value, "");
+
+    setSelectedOption(option);
+    setIsDropdownOpen(false);
+    setModalVisible(false);
+
+    if (onPriceChange) {
+      onPriceChange(option.value, price);
+    }
   };
 
   const selectUnit = (option: UnitOption) => {
@@ -77,6 +108,7 @@ const TotalAskPrice: React.FC<TotalAskPricetProps> = ({
 
     setSelectedOption(option);
     setIsDropdownOpen(false);
+    setModalVisible(false);
 
     if (onPriceChange) {
       onPriceChange(option.value, price);
@@ -161,19 +193,61 @@ const TotalAskPrice: React.FC<TotalAskPricetProps> = ({
 
         {/* Price in words */}
         <Text style={styles.priceInWords}>{price && getPriceInWords()}</Text>
+
+        {/* New dropdown UI */}
+        {modalVisible && (
+          <View style={styles.optionsContainer}>
+            {searchable && (
+              <TextInput
+                style={styles.searchInput}
+                value={searchTerm}
+                onChangeText={handleSearchChange}
+                placeholder="Search..."
+                placeholderTextColor="#6B7280"
+              />
+            )}
+            <FlatList
+              data={filteredOptions}
+              keyExtractor={(item, index) => `${item.value}-${index}`}
+              renderItem={({ item }) => (
+                <Pressable
+                  style={[
+                    styles.optionItem,
+                    hoveredItem === item.value && styles.hoveredOptionItem,
+                    selectedOption.value === item.value && styles.selectedOptionItem,
+                  ]}
+                  onPress={() => handleSelect(item)}
+                  onPressIn={() => setHoveredItem(item.value)}
+                  onPressOut={() => setHoveredItem(null)}>
+                  <Text style={styles.optionText}>{item.label}</Text>
+                </Pressable>
+              )}
+              keyboardShouldPersistTaps="handled"
+              scrollEnabled={true}
+              nestedScrollEnabled={true}
+              style={styles.resultsList}
+            />
+          </View>
+        )}
       </View>
 
-      {/* Dropdown Modal */}
+      {/* Original Dropdown Modal (keeping for compatibility) */}
       <Modal
-        visible={isDropdownOpen}
+        visible={isDropdownOpen && !modalVisible}
         transparent={true}
         animationType="fade"
-        onRequestClose={() => setIsDropdownOpen(false)}
+        onRequestClose={() => {
+          setIsDropdownOpen(false);
+          setModalVisible(false);
+        }}
       >
         <TouchableOpacity
           style={styles.modalOverlay}
           activeOpacity={1}
-          onPress={() => setIsDropdownOpen(false)}
+          onPress={() => {
+            setIsDropdownOpen(false);
+            setModalVisible(false);
+          }}
         >
           <SafeAreaView style={styles.modalContainer}>
             <View style={styles.dropdownList}>
@@ -309,6 +383,60 @@ const styles = StyleSheet.create({
   dropdownItemText: {
     fontSize: 16,
     color: "#000000",
+  },
+  // New styles for the added dropdown UI
+  optionsContainer: {
+    position: "absolute",
+    top: 80,
+    left: 0,
+    right: 0,
+    backgroundColor: "#FFFFFF",
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: "#E3E3E3",
+    maxHeight: 200,
+    zIndex: 1000,
+    elevation: 5,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 2,
+    padding: 4,
+    marginTop: 1,
+  },
+  searchInput: {
+    width: "100%",
+    padding: 10,
+    borderBottomWidth: 1,
+    borderBottomColor: "#E3E3E3",
+    backgroundColor: "#FFFFFF",
+    position: "relative",
+    top: 0,
+    fontFamily: "sans-serif",
+    fontSize: 14,
+  },
+  resultsList: {
+    width: "100%",
+  },
+  optionItem: {
+    width: "100%",
+    paddingHorizontal: 16,
+    paddingVertical: 6,
+    marginVertical: 1,
+    borderRadius: 6,
+  },
+  hoveredOptionItem: {
+    backgroundColor: "#F2F2F2",
+  },
+  selectedOptionItem: {
+    backgroundColor: "#DFF4F3",
+  },
+  optionText: {
+    fontFamily: "sans-serif",
+    fontWeight: "600",
+    fontSize: 14,
+    lineHeight: 21,
+    color: "#0A0B0A",
   },
 });
 

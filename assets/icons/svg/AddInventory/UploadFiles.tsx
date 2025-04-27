@@ -8,6 +8,7 @@ interface UploadFilesProps {
   fillColor?: string;
   strokeColor?: string;
   style?: ViewStyle;
+  circle?: boolean;
 }
 
 const UploadFiles: React.FC<UploadFilesProps> = ({
@@ -16,6 +17,7 @@ const UploadFiles: React.FC<UploadFilesProps> = ({
   fillColor = "white",
   strokeColor = "#CBD0DC",
   style,
+  circle = true,
 }) => {
   return (
     <Svg
@@ -25,14 +27,14 @@ const UploadFiles: React.FC<UploadFilesProps> = ({
       fill="none"
       style={style}
     >
-      <Circle
+      {circle && <Circle
         cx="14.3694"
         cy="14.3694"
         r="14.0637"
         fill={fillColor}
         stroke={strokeColor}
         strokeWidth="0.611465"
-      />
+      />}
       <Path
         d="M11.7093 18.6706H10.5842C8.86136 18.5476 8.08789 17.2232 8.08789 16.0454C8.08789 14.8676 8.86137 13.5374 10.5549 13.4202C10.7951 13.3968 11.0061 13.5843 11.0237 13.8304C11.0412 14.0706 10.8596 14.2816 10.6135 14.2992C9.47668 14.3812 8.96687 15.2367 8.96687 16.0513C8.96687 16.8658 9.47668 17.7213 10.6135 17.8034H11.7093C11.9495 17.8034 12.1488 18.0026 12.1488 18.2429C12.1488 18.4831 11.9495 18.6706 11.7093 18.6706Z"
         fill="#292D32"
