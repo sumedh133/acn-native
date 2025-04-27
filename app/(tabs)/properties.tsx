@@ -88,12 +88,6 @@ const MobileHits = () => {
     }, 1000);
   }, [refresh]);
 
-  useEffect(() => {
-    setLoading(
-      status === "loading" || status === "stalled" || status === "error"
-    );
-  }, [status]);
-
   const handleEndReached = useCallback(() => {
     if (!isLastPage && !isLoadingMore) {
       setIsLoadingMore(true);
@@ -124,6 +118,12 @@ const MobileHits = () => {
     }
     return null;
   }, [loading]);
+
+  useEffect(() => {
+    setLoading(
+      status === "loading" || status === "stalled" || status === "error"
+    );
+  }, [status]);
 
   useEffect(() => {
     const timer = requestAnimationFrame(() => {

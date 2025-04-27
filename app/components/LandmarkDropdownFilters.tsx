@@ -1,8 +1,17 @@
-import React, { useState, useEffect, useCallback, useRef } from 'react';
-import { View, Text, StyleSheet, TextInput, TouchableOpacity, FlatList, ActivityIndicator, Keyboard } from 'react-native';
-import Slider from '@react-native-community/slider';
-import { Ionicons } from '@expo/vector-icons';
-import { Landmark } from '../types';
+import React, { useState, useEffect, useCallback, useRef } from "react";
+import {
+  View,
+  Text,
+  StyleSheet,
+  TextInput,
+  TouchableOpacity,
+  FlatList,
+  ActivityIndicator,
+  Keyboard,
+} from "react-native";
+import Slider from "@react-native-community/slider";
+import { Ionicons } from "@expo/vector-icons";
+import { Landmark } from "../types";
 // import { PLACES_API_KEY } from '@env';
 
 // Define types for API responses
@@ -39,10 +48,10 @@ const LandmarkDropdownFilters = ({
   const [showResults, setShowResults] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [sliderValue, setSliderValue] = useState(
-    selectedLandmark?.radius || 5000,
+    selectedLandmark?.radius || 5000
   );
   const [sliderTempValue, setSliderTempValue] = useState(
-    selectedLandmark?.radius || 5000,
+    selectedLandmark?.radius || 5000
   );
   const [userInitiatedSearch, setUserInitiatedSearch] = useState(false);
 
@@ -60,7 +69,9 @@ const LandmarkDropdownFilters = ({
     try {
       setIsLoading(true);
       const response = await fetch(
-        `https://maps.googleapis.com/maps/api/place/autocomplete/json?input=${encodeURIComponent(query)}&key=${API_KEY}`,
+        `https://maps.googleapis.com/maps/api/place/autocomplete/json?input=${encodeURIComponent(
+          query
+        )}&key=${API_KEY}`
       );
       const data = await response.json();
 
@@ -69,7 +80,7 @@ const LandmarkDropdownFilters = ({
           data.predictions.map((prediction: any) => ({
             place_id: prediction.place_id,
             description: prediction.description,
-          })),
+          }))
         );
       } else {
         console.error("Places API error:", data.status);
@@ -88,7 +99,7 @@ const LandmarkDropdownFilters = ({
     async (placeId: string): Promise<PlaceDetails | null> => {
       try {
         const response = await fetch(
-          `https://maps.googleapis.com/maps/api/place/details/json?place_id=${placeId}&fields=name,geometry&key=${API_KEY}`,
+          `https://maps.googleapis.com/maps/api/place/details/json?place_id=${placeId}&fields=name,geometry&key=${API_KEY}`
         );
         const data = await response.json();
 
@@ -111,7 +122,7 @@ const LandmarkDropdownFilters = ({
         return null;
       }
     },
-    [],
+    []
   );
 
   // Update searchQuery when selectedLandmark changes without triggering a search
@@ -205,7 +216,7 @@ const LandmarkDropdownFilters = ({
         setIsLoading(false);
       }
     },
-    [getPlaceDetails, sliderValue, setSelectedLandmark],
+    [getPlaceDetails, sliderValue, setSelectedLandmark]
   );
 
   // Handle slider change - track temp value during sliding
@@ -224,7 +235,7 @@ const LandmarkDropdownFilters = ({
         });
       }
     },
-    [selectedLandmark, setSelectedLandmark],
+    [selectedLandmark, setSelectedLandmark]
   );
 
   // Clear search
@@ -271,7 +282,7 @@ const LandmarkDropdownFilters = ({
           <ActivityIndicator
             style={styles.rightIcon}
             size="small"
-            color="#666"
+            color="#153E3B"
           />
         ) : searchQuery ? (
           <TouchableOpacity

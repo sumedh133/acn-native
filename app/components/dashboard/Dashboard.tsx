@@ -538,7 +538,10 @@ export default function Dashboard({
           </StyledView>
         )}
         {renderingNewBatch && (
-          <ActivityIndicator className="absolute bottom-0 w-full" />
+          <ActivityIndicator
+            className="absolute bottom-0 w-full"
+            color="#153E3B"
+          />
         )}
       </StyledScrollView>
     </StyledView>

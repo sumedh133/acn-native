@@ -29,7 +29,7 @@ const EmptyTabContent: React.FC<EmptyTabContentProps> = ({
   buttonText,
   loading,
 }) => {
-  if (loading) return <ActivityIndicator className="mt-8" />;
+  if (loading) return <ActivityIndicator className="mt-8" color="#153E3B" />;
   return (
     <View style={styles.bgContainer}>
       <LinearGradient

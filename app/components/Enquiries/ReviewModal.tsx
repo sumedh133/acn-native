@@ -61,7 +61,7 @@ const ReviewModal: React.FC<Props> = ({ isOpen, onClose, enqId }) => {
       setLoader(true);
       const q = query(
         collection(db, "enquiries"),
-        where("enquiryId", "==", enqId),
+        where("enquiryId", "==", enqId)
       );
 
       const querySnapshot = await getDocs(q);
@@ -156,7 +156,7 @@ const ReviewModal: React.FC<Props> = ({ isOpen, onClose, enqId }) => {
             onPress={handleSubmit}
           >
             {loader ? (
-              <ActivityIndicator />
+              <ActivityIndicator color="#153E3B" />
             ) : (
               <Text className="text-white text-center font-medium text-xl">
                 Submit Review
