@@ -33,7 +33,7 @@ export interface Property {
   sbua?: number | null;
   status?: string | null;
   tenanted?: boolean | null;
-  totalAskPrice?: number | number;
+  totalAskPrice?: number | null;
   unitType?: string | null;
   photo?: string[] | null;
   video?: string[] | null;

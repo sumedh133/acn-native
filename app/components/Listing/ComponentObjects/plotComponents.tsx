@@ -111,7 +111,10 @@ export const plotComponents = [
     label: "Land Khata",
     type: "Dropdown",
     field: "landKhata",
-    option: [],
+    option: [
+      {label: "A-Khata", value: "A-Khata"},
+      {label: "B-Khata", value: "B-Khata"},
+    ],
     colspan: 2,
   },
   {

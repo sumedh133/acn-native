@@ -42,8 +42,8 @@ const TotalAskPrice: React.FC<TotalAskPricetProps> = ({
 
   // Define the unit options with both label and value
   const unitOptions: UnitOption[] = [
-    { label: "/Sq ft", value: "askPricePerSqft" },
     { label: "Total Ask Price", value: "totalAskPrice" },
+    { label: "/Sq ft", value: "askPricePerSqft" },
   ];
 
   // Find the initial selected option based on the initialUnit value

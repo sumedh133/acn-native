@@ -21,23 +21,62 @@ import ExtraDetailsField from "../components/Listing/ExtraDetails";
 import Document from "../components/Listing/document/Document";
 
 const initialState: ListingProperty = {
-  nameOfTheProperty: null,
-  address: null,
-  mapLocation: null,
-  micromarket: null,
   _geoloc: {
     lat: null,
-    lng: null,
+    lng: null
   },
+  address: null,
+  ageOfInventory: null,
+  ageOfStatus: null,
+  area: null,
+  askPricePerSqft: null,
   assetType: "Apartment",
-  communityType: null,
-  subType: null,
-  sbua: null,
+  biappaApproved: null,
+  bdaApproved: null,
+  buildingAge: null,
+  buildingKhata: null,
+  carPark: null,
   carpet: null,
-  floorNo: null,
+  cornerUnit: null,
+  cpCode: null,
+  currentStatus: null,
+  dateOfInventoryAdded: null,
+  dateOfStatusLastChecked: null,
+  driveLink: null,
+  eKhata: null,
+  exclusive: null,
+  extraDetails: null,
   facing: null,
-  unitNo: null,
+  floorNo: null,
   furnishing: null,
+  exactFloor: null,
+  handoverDate: null,
+  kamId: null,
+  kamStatus: null,
+  landKhata: null,
+  mapLocation: null,
+  micromarket: null,
+  nameOfTheProperty: null,
+  noOfBalconies: null,
+  noOfBathrooms: null,
+  ocReceived: null,
+  plotSize: null,
+  propertyId: null,
+  qcStatus: null,
+  rentalIncome: null,
+  sbua: null,
+  stage: null, //stage
+  status: null,
+  structure: null,
+  tenanted: null,
+  totalAskPrice: null,
+  uds: null,
+  unitNo: null,
+  unitType: null,
+  userStatus: null,
+  photo: null,
+  video: null,
+  document: null,
 };
 
 const AddInventoryForm = () => {
@@ -144,6 +183,7 @@ const AddInventoryForm = () => {
             value={property[component.field]}
             setValue={(value: any) => handleSetValue(component.field, value)}
             title={component.label}
+            prefix={component.prefix}
             suffix={component.suffix}
             placeholder={component.placeholder}
             required={component.required}

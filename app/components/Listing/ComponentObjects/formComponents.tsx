@@ -23,11 +23,11 @@ export const assetTypes: {
 
 export const compulsoryFields: {
   Apartment: string[];
-  Villa: any;
-  Plot: any;
-  Villament: any;
-  "Row House": any;
-  "Independent Building": any;
+  Villa: string[];
+  Plot: string[];
+  Villament: string[];
+  "Row House": string[];
+  "Independent Building": string[];
 } = {
   Apartment: ["communityType", "subType"],
   Villa: ["furnishing", "unitNo"],

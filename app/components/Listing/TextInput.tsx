@@ -23,6 +23,7 @@ interface TextInputFieldProps {
     | "phone-pad";
   maxLength?: number;
   suffix?: string;
+  prefix?: string;
 }
 
 const TextInputField = ({
@@ -34,6 +35,7 @@ const TextInputField = ({
   keyboardType = "default",
   maxLength,
   suffix,
+  prefix,
 }: TextInputFieldProps) => {
   const [isFocused, setIsFocused] = useState(false);
 
@@ -57,6 +59,7 @@ const TextInputField = ({
           styles.inputContainer,
           isFocused && styles.focusedInputContainer,
         ]}>
+        <Text style={styles.suffixText}>{prefix}</Text>
         <TextInput
           style={styles.inputField}
           value={value || ""}

@@ -52,6 +52,7 @@ import ShareIconInsidePropertyDetails from "@/assets/icons/svg/PropertiesPage/SH
 import DriveIcon from "@/assets/icons/svg/PropertiesPage/DriveIcon";
 import { selectPropertyStateData } from "@/store/slices/propertySlice";
 import Offline from "../Offline";
+import { getUnixDateTime } from "@/app/helpers/getUnixDateTime";
 
 interface AgentData {
   phonenumber: string;
@@ -122,14 +123,11 @@ export default function PropertyDetailsScreen() {
     async (id: string, status: string) => {
       const newStatus = status;
       try {
-        const propertyRef = collection(db, "ACN123");
-        const q = query(propertyRef, where("propertyId", "==", id));
-        const querySnapshot = await getDocs(q);
-
-        if (!querySnapshot.empty) {
-          const docRef = querySnapshot.docs[0].ref;
-          await updateDoc(docRef, { status: newStatus });
-        }
+        await updateDoc(doc(db, "ACN123", id), {
+          status: newStatus,
+          ageOfStatus: 0,
+          dateOfStatusLastChecked : getUnixDateTime() ,
+        });
         showSuccessToast("Inventory status updated Succesfully!");
       } catch (error) {
         showErrorToast("Error updating Inventory status!");

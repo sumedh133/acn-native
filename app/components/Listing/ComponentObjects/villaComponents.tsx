@@ -31,7 +31,7 @@ export const villaComponents = [
     label: "Structure",
     type: "textInput",
     field: "structure",
-    // suffix: "Sqft",
+    prefix: "G + ",
     placeholder: "0000",
     // keyboardType: "numeric",
     colspan: 1,
@@ -74,7 +74,13 @@ export const villaComponents = [
     label: "Furnishing",
     type: "Dropdown",
     field: "furnishing",
-    option: [],
+    option: [
+      {label: "Full Furnished", value: "fullFurnished"},
+      {label: "Semi Furnished", value: "semiFurnished"},
+      {label: "Warm Shell", value: "warmShell"},
+      {label: "Bare Shell", value: "bareShell"},
+      {label: "Plug & Play", value: "playAndPlay"},
+    ],
     colspan: 1,
   },
   {
@@ -201,14 +207,20 @@ export const villaComponents = [
     label: "Building Khata",
     type: "Dropdown",
     field: "buildingKhata",
-    option: [],
+    option: [
+      {label: "A-Khata", value: "A-Khata"},
+      {label: "B-Khata", value: "B-Khata"},
+    ],
     colspan: 1,
   },
   {
     label: "Land Khata",
     type: "Dropdown",
     field: "landKhata",
-    option: [],
+    option: [
+      {label: "A-Khata", value: "A-Khata"},
+      {label: "B-Khata", value: "B-Khata"},
+    ],
     colspan: 1,
   },
   {

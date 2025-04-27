@@ -42,7 +42,7 @@ export const appartmentComponents = [
   {
     label: "Floor No.",
     type: "textInput",
-    field: "floorNo",
+    field: "exactFloor",
     placeholder: "0000",
     keyboardType: "numeric",
     colspan: 1,
@@ -75,7 +75,13 @@ export const appartmentComponents = [
     label: "Furnishing",
     type: "Dropdown",
     field: "furnishing",
-    option: [],
+    option: [
+      {label: "Full Furnished", value: "fullFurnished"},
+      {label: "Semi Furnished", value: "semiFurnished"},
+      {label: "Warm Shell", value: "warmShell"},
+      {label: "Bare Shell", value: "bareShell"},
+      {label: "Plug & Play", value: "playAndPlay"},
+    ],
     colspan: 1,
   },
   {
@@ -142,7 +148,7 @@ export const appartmentComponents = [
   {
     label: "Ready to move",
     type: "Checkbox",
-    field: "readyToMove",
+    field: "currentStatus",
     colspan: 2,
   },
   {
@@ -208,14 +214,20 @@ export const appartmentComponents = [
     label: "Building Khata",
     type: "Dropdown",
     field: "buildingKhata",
-    option: [],
+    option: [
+      {label: "A-Khata", value: "A-Khata"},
+      {label: "B-Khata", value: "B-Khata"},
+    ],
     colspan: 1,
   },
   {
     label: "Land Khata",
     type: "Dropdown",
     field: "landKhata",
-    option: [],
+    option: [
+      {label: "A-Khata", value: "A-Khata"},
+      {label: "B-Khata", value: "B-Khata"},
+    ],
     colspan: 1,
   },
   {
