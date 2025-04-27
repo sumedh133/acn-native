@@ -101,10 +101,18 @@ export interface Places {
   mapLocation: string | null;
 }
 
+export interface FileObject {
+  name?: string | null;
+  size?: number | null;
+  uri?: string | null;
+  type?: string | null;
+}
+
 export interface DocsToUpload {
-  photo: any[];
-  video: any[];
-  document: any[];
+  [key: string]: FileObject[];
+  photo: FileObject[];
+  video: FileObject[];
+  document: FileObject[];
 }
 
 export interface ListingProperty extends Property {

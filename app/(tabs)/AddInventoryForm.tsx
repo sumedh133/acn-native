@@ -238,6 +238,13 @@ const AddInventoryForm = () => {
             required={component.required}
           />
         );
+        case "Document":
+            return (
+              <Document
+                setDocsToUpload={setDocsToUpload}
+                docsToUpload={docsToUpload}
+              />
+            );
 
       default:
         return null;
@@ -319,7 +326,7 @@ const styles = StyleSheet.create({
   scrollContent: {
     // backgroundColor: "#F5F6F7",
     paddingVertical: 16,
-    paddingHorizontal: 12,
+    paddingHorizontal: 16,
     width: "100%",
   },
   container: {
