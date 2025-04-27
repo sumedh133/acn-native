@@ -16,6 +16,7 @@ import {
   StyleSheet,
   FlatList,
   SafeAreaView,
+  Platform,
 } from "react-native";
 import { Ionicons, Octicons } from "@expo/vector-icons";
 import PropertyDetailsScreen from "./PropertyDetailsScreen";
@@ -184,7 +185,11 @@ const PropertyCard: React.FC<PropertyCardProps> = ({
       // ✅ Close the confirmation modal
       setIsConfirmModelOpen(false);
 
-      enquiryConfirmed.current = true;
+      if (Platform.OS === "ios") {
+        enquiryConfirmed.current = true;
+      } else {
+        setIsEnquiryCPModelOpen(true);
+      }
     } catch (error) {
       console.error("Error during enquiry process:", error);
       showErrorToast(

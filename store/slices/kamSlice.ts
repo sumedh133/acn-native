@@ -49,6 +49,7 @@ const kamSlice = createSlice({
     kamId: null as string | null,
     kamDocId: null as string | null,
     kamDocData: null as any,
+    kamModalVisible: false,
   },
   reducers: {
     setLoading: (state, action) => {
@@ -66,12 +67,16 @@ const kamSlice = createSlice({
         state.kamDocId = null;
       }
     },
+    setKamModalVisible: (state, action) => {
+      state.kamModalVisible = action.payload;
+    },
     resetKamState: (state) => {
       state.loading = false;
       state.error = null;
       state.kamId = null;
       state.kamDocData = null;
       state.kamDocId = null;
+      state.kamModalVisible = false;
     },
     setError: (state, action) => {
       state.error = action.payload;
@@ -87,6 +92,7 @@ export const {
   setLoading,
   setKamId,
   setKamDoc,
+  setKamModalVisible,
   resetKamState,
   setError,
   resetError,
@@ -96,5 +102,7 @@ export const selectKamState = (state: any) => state?.kam;
 export const selectKamName = (state: any) => state?.kam?.kamDocData?.name || "";
 export const selectKamNumber = (state: any) =>
   state?.kam?.kamDocData?.phonenumber || "";
+export const selectKamModalVisible = (state: any) =>
+  state?.kam?.kamModalVisible || false;
 
 export default kamSlice.reducer;

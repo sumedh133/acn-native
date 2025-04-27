@@ -70,9 +70,10 @@ import MyRequirementIcon from "@/assets/icons/svg/Dashboard/MyRequirementsIcon";
 import MyInverntoriesIcon from "@/assets/icons/svg/Dashboard/MyInventoriesIcon";
 import MyEnquiriesIcon from "@/assets/icons/svg/Dashboard/MyEnquiryIcon";
 import { showErrorToast, showSuccessToast } from "@/utils/toastUtils";
-import PropertyTabCarousel from "./InventoriesCarousel";
+import PropertyTabCarousel from "./PropertyTabCarousel";
 import PropertyCard from "./PropertyCard";
 import RequirementCard from "./RequirementCard";
+import PlusIconWithCircle from "@/assets/icons/svg/Common/PlusIconWithCircle";
 
 const StyledView = styled(View);
 const StyledScrollView = styled(ScrollView);
@@ -213,9 +214,9 @@ export default function Dashboard({
           {propertiesTab === "listed" ? (
             properties.length === 0 || bufferring ? (
               <EmptyTabContent
-                text="No inventory added yet."
-                sub_text="Contact your KAM on Whatsapp to add an inventory."
-                icon={<FontAwesome name="whatsapp" size={20} color="white" />}
+                text="No Inventory Added"
+                sub_text="Your dashboard is waiting for your first inventory! Start now and showcase your offerings to potential buyer agents."
+                icon={<PlusIconWithCircle />}
                 buttonText="Add Inventory"
                 handleOnPress={handleWhatsAppEnquiry}
                 loading={loading?.propertiesLoading || bufferring}
@@ -230,7 +231,7 @@ export default function Dashboard({
                       onStatusChange={handlePropertyStatusChange}
                       index={index}
                       totalCount={Math.min(batchSize, properties.length)}
-                      showEnquiriesSection={true}
+                      isListing={false}
                     />
                   );
                 })}
@@ -239,11 +240,8 @@ export default function Dashboard({
           ) : listings.filter((listing) => listing.userStatus === propertiesTab)
               .length === 0 || bufferring ? (
             <EmptyTabContent
-              text="No inventory added yet."
-              sub_text="Contact your KAM on Whatsapp to add an inventory."
-              icon={<FontAwesome name="whatsapp" size={20} color="white" />}
-              buttonText="Add Inventory"
-              handleOnPress={handleWhatsAppEnquiry}
+              text="No Inventory Added"
+              sub_text="Your dashboard is waiting for your first inventory! Start now and showcase your offerings to potential buyer agents."
               loading={loading?.listingLoading || bufferring}
             />
           ) : (
@@ -255,11 +253,16 @@ export default function Dashboard({
                   return (
                     <PropertyCard
                       key={listing.propertyId}
-                      property={listing as unknown as Property}
-                      onStatusChange={handlePropertyStatusChange}
+                      property={listing}
+                      onStatusChange={() => {}}
                       index={index}
-                      totalCount={Math.min(batchSize, properties.length)}
-                      showEnquiriesSection={false}
+                      totalCount={Math.min(
+                        batchSize,
+                        listings.filter(
+                          (listing) => listing.userStatus === propertiesTab
+                        ).length
+                      )}
+                      isListing={true}
                     />
                   );
                 })}
@@ -282,9 +285,7 @@ export default function Dashboard({
                 />
               }
               buttonText="Add Requirement"
-              handleOnPress={() =>
-                router.navigate("/(tabs)/UserRequirementForm")
-              }
+              handleOnPress={() => router.push("/(tabs)/UserRequirementForm")}
               loading={loading.requirementsLoading || bufferring}
             />
           ) : (
@@ -313,7 +314,10 @@ export default function Dashboard({
               sub_text="Browse and enquire about available properties."
               icon={<FontAwesome6 name="house" size={20} color="white" />}
               buttonText="Explore Inventories"
-              handleOnPress={() => router.push("/(tabs)/properties")}
+              handleOnPress={() => {
+                router.dismissAll();
+                router.push("/(tabs)/properties");
+              }}
               loading={loading.enquiriesLoading || bufferring}
             />
           ) : (
@@ -509,13 +513,16 @@ export default function Dashboard({
           activeSlug={propertiesTab}
           handleTabChange={handlePropertyTabChange}
           counts={propertyCounts}
+          loading={loading.listingLoading}
         />
       )}
 
       {/* Content Area */}
-      <StyledScrollView>
+      <StyledScrollView contentContainerStyle={{ flexGrow: 1 }}>
         {renderTabContent && (
-          <StyledView onLayout={renderMore}>{renderTabContent}</StyledView>
+          <StyledView onLayout={renderMore} style={{ flex: 1 }}>
+            {renderTabContent}
+          </StyledView>
         )}
         {renderingNewBatch && (
           <ActivityIndicator className="absolute bottom-0 w-full" />

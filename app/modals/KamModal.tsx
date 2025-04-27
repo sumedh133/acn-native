@@ -7,16 +7,17 @@ import {
   Modal,
   TouchableWithoutFeedback,
   Linking,
-  Image,
 } from "react-native";
 import { Ionicons, FontAwesome } from "@expo/vector-icons";
 import { Avatar } from "react-native-elements";
 import { useSelector } from "react-redux";
 import { selectMyKam } from "@/store/slices/agentSlice";
 import {
+  selectKamModalVisible,
   selectKamName,
   selectKamNumber,
   setKamDataState,
+  setKamModalVisible,
 } from "@/store/slices/kamSlice";
 import { useDispatch } from "react-redux";
 import { AnyAction, ThunkDispatch } from "@reduxjs/toolkit";
@@ -25,17 +26,13 @@ import { toCapitalizedWords } from "../helpers/common";
 import CloseIcon from "@/assets/icons/svg/CloseIcon";
 import { getInitials, getRandomColor } from "@/utils/userUtils";
 
-type KamManagerProps = {
-  visible: boolean;
-  setVisible: (visible: boolean) => void;
-};
-
-const KamManager: React.FC<KamManagerProps> = ({ visible, setVisible }) => {
+const KamManager = () => {
   const dispatch = useDispatch<ThunkDispatch<RootState, unknown, AnyAction>>();
 
   const myKamId = useSelector(selectMyKam);
   const kamName = useSelector(selectKamName);
   const kamNumber = useSelector(selectKamNumber);
+  const visible = useSelector(selectKamModalVisible);
   const initials = getInitials(kamName);
   const color = getRandomColor(initials);
 
@@ -45,13 +42,8 @@ const KamManager: React.FC<KamManagerProps> = ({ visible, setVisible }) => {
     }
   }, [myKamId, dispatch]);
 
-  const profilePicUrl = `https://ui-avatars.com/api/?name=${kamName.replace(
-    " ",
-    "+"
-  )}`;
-
-  const handleOutsidePress = () => {
-    setVisible(false);
+  const closeModal = () => {
+    dispatch(setKamModalVisible(false));
   };
 
   const handleCallPress = () => {
@@ -66,7 +58,7 @@ const KamManager: React.FC<KamManagerProps> = ({ visible, setVisible }) => {
 
   return (
     <Modal visible={visible} transparent animationType="fade">
-      <TouchableWithoutFeedback onPress={handleOutsidePress}>
+      <TouchableWithoutFeedback onPress={closeModal}>
         <View style={styles.overlay}>
           <TouchableWithoutFeedback>
             <View style={styles.modal}>
@@ -114,10 +106,7 @@ const KamManager: React.FC<KamManagerProps> = ({ visible, setVisible }) => {
                 </TouchableOpacity>
               </View>
 
-              <TouchableOpacity
-                style={styles.closeButton}
-                onPress={() => setVisible(false)}
-              >
+              <TouchableOpacity style={styles.closeButton} onPress={closeModal}>
                 <CloseIcon />
               </TouchableOpacity>
             </View>
@@ -128,7 +117,7 @@ const KamManager: React.FC<KamManagerProps> = ({ visible, setVisible }) => {
   );
 };
 
-export default KamManager;
+export default React.memo(KamManager);
 
 const styles = StyleSheet.create({
   overlay: {
