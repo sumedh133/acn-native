@@ -12,10 +12,15 @@ import {
   SafeAreaView,
 } from "react-native";
 
+// Define a type for the dropdown options
+interface UnitOption {
+  label: string; // What displays in the UI
+  value: string; // What's used in the data
+}
+
 interface TotalAskPricetProps {
-  onPriceChange: (price: string, unit: string) => void;
+  onPriceChange: (unit: string, price: string) => void;
   initialPrice?: string;
-  initialUnit?: string;
   title?: string;
   required: boolean;
 }
@@ -23,16 +28,25 @@ interface TotalAskPricetProps {
 const TotalAskPrice: React.FC<TotalAskPricetProps> = ({
   onPriceChange,
   initialPrice = "",
-  initialUnit = "/Sqft",
   title,
   required,
 }) => {
   const [price, setPrice] = useState(initialPrice);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
-  const [selectedUnit, setSelectedUnit] = useState(initialUnit);
-  const [isFocused, setIsFocused] = useState(false);
 
-  const units = ["/Sqft", "totalAskPrice"];
+  // Define the unit options with both label and value
+  const unitOptions: UnitOption[] = [
+    { label: "/Sq ft", value: "askPricePerSqft" },
+    { label: "Total Ask Price", value: "totalAskPrice" },
+  ];
+
+  // Find the initial selected option based on the initialUnit value
+  const initialSelectedOption = unitOptions[0];
+  const [selectedOption, setSelectedOption] = useState<UnitOption>(
+    initialSelectedOption
+  );
+
+  const [isFocused, setIsFocused] = useState(false);
 
   const handlePriceChange = (value: string) => {
     // Only allow numbers with commas and decimal points
@@ -40,7 +54,8 @@ const TotalAskPrice: React.FC<TotalAskPricetProps> = ({
     setPrice(validPrice);
 
     if (onPriceChange) {
-      onPriceChange(selectedUnit,validPrice);
+      onPriceChange(selectedOption.value, validPrice);
+      console.log(selectedOption.value, validPrice, "field and value");
     }
   };
 
@@ -56,13 +71,15 @@ const TotalAskPrice: React.FC<TotalAskPricetProps> = ({
     setIsDropdownOpen(!isDropdownOpen);
   };
 
-  const selectUnit = (unit: string) => {
-    onPriceChange(selectedUnit, "");
-    setSelectedUnit(unit);
+  const selectUnit = (option: UnitOption) => {
+    // Clear the old value with the previous unit
+    onPriceChange(selectedOption.value, "");
+
+    setSelectedOption(option);
     setIsDropdownOpen(false);
 
     if (onPriceChange) {
-      onPriceChange(unit, price);
+      onPriceChange(option.value, price);
     }
   };
 
@@ -135,7 +152,9 @@ const TotalAskPrice: React.FC<TotalAskPricetProps> = ({
             style={styles.dropdownButton}
             onPress={toggleDropdown}
           >
-            <Text style={styles.dropdownButtonText}>{selectedUnit}</Text>
+            <Text style={styles.dropdownButtonText}>
+              {selectedOption.label}
+            </Text>
             <Ionicons name="chevron-down" size={16} color="#555" />
           </TouchableOpacity>
         </View>
@@ -143,12 +162,6 @@ const TotalAskPrice: React.FC<TotalAskPricetProps> = ({
         {/* Price in words */}
         <Text style={styles.priceInWords}>{price && getPriceInWords()}</Text>
       </View>
-
-      {/* Right side display */}
-      {/* <View style={styles.rightContainer}>
-        <Text style={styles.unitText}>{selectedUnit}</Text>
-        <Text style={styles.totalPriceText}>Total Price</Text>
-      </View> */}
 
       {/* Dropdown Modal */}
       <Modal
@@ -165,14 +178,14 @@ const TotalAskPrice: React.FC<TotalAskPricetProps> = ({
           <SafeAreaView style={styles.modalContainer}>
             <View style={styles.dropdownList}>
               <FlatList
-                data={units}
-                keyExtractor={(item) => item}
+                data={unitOptions}
+                keyExtractor={(item) => item.value}
                 renderItem={({ item }) => (
                   <TouchableOpacity
                     style={styles.dropdownItem}
                     onPress={() => selectUnit(item)}
                   >
-                    <Text style={styles.dropdownItemText}>{item}</Text>
+                    <Text style={styles.dropdownItemText}>{item.label}</Text>
                   </TouchableOpacity>
                 )}
               />
@@ -239,7 +252,7 @@ const styles = StyleSheet.create({
     height: "100%",
     // borderLeftWidth: 1,
     borderLeftColor: "#E1E3E6",
-    minWidth: 10,
+    minWidth: 110, // Increased to accommodate longer text
   },
   dropdownButtonText: {
     fontSize: 14,

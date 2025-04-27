@@ -58,16 +58,18 @@ const AddInventoryForm = () => {
     }));
   };
 
+
   const handleSetTotalAskPrice = (field: string, value: string) => {
-    if (field === "/Sqft") {
-      if (property.assetType === "Plot") {
-      }
-      handleSetValue("totaslAskPrice", 1);
+    if (field === "askPricePerSqft") {
+      // console.log("inside askPricePerSqft");
+      // console.log(field, value, "field and value");
+      handleSetValue(field, value); 
     } else {
-      handleSetValue("askPricePerSqft", 1);
+      // console.log("inside askTotalAskPrice");
+      // console.log(field, value, "field and value");
+      handleSetValue(field, value); 
     }
   };
-
   useEffect(() => {
     if (selectedPlace) {
       const mm = getMicromarketFromCoordinates(selectedPlace);
@@ -181,7 +183,9 @@ const AddInventoryForm = () => {
         return (
           <TotalAskPrice
             initialPrice={property[component.field]}
-            onPriceChange={(field, value) => handleSetValue(field, value)}
+            onPriceChange={(field, value) =>
+              handleSetTotalAskPrice(field, value)
+            }
             title={component.label}
             required={component.required}
           />
@@ -192,13 +196,6 @@ const AddInventoryForm = () => {
             value={property[component.field]}
             setValue={(value) => handleSetValue(component.field, value)}
             required={component.required}
-          />
-        );
-      case "Document":
-        return (
-          <Document
-            setDocsToUpload={setDocsToUpload}
-            docsToUpload={docsToUpload}
           />
         );
 
@@ -232,26 +229,6 @@ const AddInventoryForm = () => {
     if (currentRow.length > 0) {
       rows.push(currentRow);
     }
-
-    useEffect(() => {
-      if (!property.assetType || property.assetType === "") {
-        return;
-      } else if (property.assetType === "Plot") {
-        if (property.plotSize === null) {
-          return;
-        }
-      } else {
-        if (property.sbua === null) {
-          return;
-        }
-      }
-    }, [
-      property.assetType,
-      property.totalAskPrice,
-      property.askPricePerSqft,
-      property.plotSize,
-      property.sbua,
-    ]);
 
     return (
       <View style={styles.formContainer}>
