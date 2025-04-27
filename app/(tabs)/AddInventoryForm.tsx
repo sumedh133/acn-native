@@ -37,6 +37,7 @@ const initialState: ListingProperty = {
   buildingKhata: null,
   carPark: null,
   carpet: null,
+  communityType: null,
   cornerUnit: null,
   cpCode: null,
   currentStatus: null,
@@ -74,9 +75,9 @@ const initialState: ListingProperty = {
   unitNo: null,
   unitType: null,
   userStatus: null,
-  photo: null,
-  video: null,
-  document: null,
+  photo: [],
+  video: [],
+  document: [],
 };
 
 const AddInventoryForm = () => {
