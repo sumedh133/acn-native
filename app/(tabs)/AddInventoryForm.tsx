@@ -1,5 +1,11 @@
-import { Montserrat_600SemiBold } from "@expo-google-fonts/montserrat";
-import { ActivityIndicator, ScrollView, StyleSheet, View } from "react-native";
+import {
+  ActivityIndicator,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
+} from "react-native";
 import PlacesSearch from "../components/Listing/PlacesSearch";
 import { useEffect, useState } from "react";
 import { DocsToUpload, ListingProperty, Places } from "../types";
@@ -22,6 +28,8 @@ import Document from "../components/Listing/document/Document";
 import { useSelector } from "react-redux";
 import { RootState } from "@/store/store";
 import Offline from "../components/Offline";
+import ArrowLeftIcon from "@/assets/icons/svg/Common/ArrowLeftIcon";
+import { router } from "expo-router";
 
 const initialState: ListingProperty = {
   _geoloc: {
@@ -33,7 +41,7 @@ const initialState: ListingProperty = {
   ageOfStatus: null,
   area: null,
   askPricePerSqft: null,
-  assetType: "Apartment",
+  assetType: null,
   biappaApproved: null,
   bdaApproved: null,
   buildingAge: null,
@@ -77,13 +85,13 @@ const initialState: ListingProperty = {
   uds: null,
   unitNo: null,
   unitType: null,
-  userStatus: null,
   photo: [],
   video: [],
   document: [],
 };
 
 const AddInventoryForm = () => {
+  const [saving, setSaving] = useState(false);
   const [selectedPlace, setSelectedPlace] = useState<Places | null>(null);
   const [property, setProperty] = useState<ListingProperty>(initialState);
   const [docsToUpload, setDocsToUpload] = useState<DocsToUpload>({
@@ -117,35 +125,6 @@ const AddInventoryForm = () => {
       handleSetValue(field, value);
     }
   };
-  useEffect(() => {
-    if (selectedPlace) {
-      const mm = getMicromarketFromCoordinates(selectedPlace);
-
-      setProperty((prevProperty) => ({
-        ...prevProperty,
-        nameOfTheProperty: selectedPlace.name,
-        address: selectedPlace.address,
-        mapLocation: selectedPlace.mapLocation,
-        micromarket: mm,
-        _geoloc: {
-          lat: selectedPlace.lat,
-          lng: selectedPlace.lng,
-        },
-      }));
-    } else if (!selectedPlace) {
-      setProperty((prevProperty) => ({
-        ...prevProperty,
-        nameOfTheProperty: null,
-        address: null,
-        mapLocation: null,
-        micromarket: null,
-        _geoloc: {
-          lat: null,
-          lng: null,
-        },
-      }));
-    }
-  }, [selectedPlace]);
 
   const getFormComponents = () => {
     const components =
@@ -308,6 +287,46 @@ const AddInventoryForm = () => {
     );
   };
 
+  const handleClear = () => {
+    setProperty(initialState);
+    setSelectedPlace(null);
+    setDocsToUpload({
+      photo: [],
+      video: [],
+      document: [],
+    });
+  };
+
+  useEffect(() => {
+    if (selectedPlace) {
+      const mm = getMicromarketFromCoordinates(selectedPlace);
+
+      setProperty((prevProperty) => ({
+        ...prevProperty,
+        nameOfTheProperty: selectedPlace.name,
+        address: selectedPlace.address,
+        mapLocation: selectedPlace.mapLocation,
+        micromarket: mm,
+        _geoloc: {
+          lat: selectedPlace.lat,
+          lng: selectedPlace.lng,
+        },
+      }));
+    } else if (!selectedPlace) {
+      setProperty((prevProperty) => ({
+        ...prevProperty,
+        nameOfTheProperty: null,
+        address: null,
+        mapLocation: null,
+        micromarket: null,
+        _geoloc: {
+          lat: null,
+          lng: null,
+        },
+      }));
+    }
+  }, [selectedPlace]);
+
   useEffect(() => {
     const timer = requestAnimationFrame(() => {
       setIsRendered(true);
@@ -328,28 +347,101 @@ const AddInventoryForm = () => {
     );
 
   return (
-    <ScrollView
-      contentContainerStyle={styles.scrollContent}
-      showsVerticalScrollIndicator={false}
-    >
-      <View style={styles.container}>
-        <PlacesSearch
-          selectedPlace={selectedPlace}
-          setSelectedPlace={setSelectedPlace}
-        />
+    <View style={styles.mainView}>
+      <View style={styles.headerContainer}>
+        <View style={styles.headerContent}>
+          <View style={styles.headerLeft}>
+            <TouchableOpacity onPress={() => router.back()}>
+              <ArrowLeftIcon />
+            </TouchableOpacity>
+            <Text style={styles.headerTitle}>Add Inventory</Text>
+          </View>
 
-        <AssetTypeSelection
-          selectedAsset={property.assetType}
-          setSelectedAsset={(value) => handleSetValue("assetType", value)}
-        />
-
-        {renderFormComponents()}
+          <TouchableOpacity style={styles.headerRight} onPress={handleClear}>
+            <Text style={styles.clearText}>Clear</Text>
+          </TouchableOpacity>
+        </View>
       </View>
-    </ScrollView>
+      <ScrollView
+        contentContainerStyle={styles.scrollContent}
+        showsVerticalScrollIndicator={false}
+      >
+        <View style={styles.container}>
+          <PlacesSearch
+            selectedPlace={selectedPlace}
+            setSelectedPlace={setSelectedPlace}
+          />
+
+          <AssetTypeSelection
+            selectedAsset={property.assetType}
+            setSelectedAsset={(value) => handleSetValue("assetType", value)}
+          />
+
+          {renderFormComponents()}
+        </View>
+      </ScrollView>
+      <View style={styles.footer}>
+        <TouchableOpacity style={styles.secondaryButton}>
+          <Text style={styles.secondaryButtonText}>Save as Draft</Text>
+        </TouchableOpacity>
+        <TouchableOpacity style={styles.primaryButton}>
+          {saving ? (
+            <ActivityIndicator size={"small"} color={"white"} />
+          ) : (
+            <Text style={styles.primaryButtonText}>Submit</Text>
+          )}
+        </TouchableOpacity>
+      </View>
+    </View>
   );
 };
 
 const styles = StyleSheet.create({
+  mainView: {
+    flex: 1,
+  },
+  headerContainer: {
+    backgroundColor: "#fff",
+    width: "100%",
+  },
+  headerContent: {
+    height: 56,
+    flexDirection: "row",
+    alignItems: "center",
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    justifyContent: "space-between",
+  },
+  headerLeft: {
+    display: "flex",
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 16,
+  },
+  headerTitleContainer: {
+    flex: 1,
+    alignItems: "flex-start",
+    marginLeft: 16, // Add margin from hamburger icon
+  },
+  headerTitle: {
+    fontFamily: "Montserrat_700Bold",
+    fontSize: 18,
+    fontWeight: "600",
+    color: "#000",
+  },
+  headerRight: {
+    display: "flex",
+    flexDirection: "row",
+    alignItems: "center",
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    gap: 10,
+  },
+  clearText: {
+    fontFamily: "Montserrat_500Medium",
+    fontSize: 16,
+    color: "#D92D20",
+  },
   scrollContent: {
     // backgroundColor: "#F5F6F7",
     paddingVertical: 16,
@@ -378,6 +470,56 @@ const styles = StyleSheet.create({
   halfWidthItem: {
     flex: 1,
     maxWidth: "48%",
+  },
+  footer: {
+    bottom: 0,
+    width: "100%",
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    backgroundColor: "#FAFAFA",
+    borderTopWidth: 1,
+    borderTopColor: "#CCCBCB",
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    gap: 8,
+  },
+  primaryButton: {
+    height: 40,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    width: "48%",
+    borderWidth: 1.25,
+    borderRadius: 4,
+    // paddingVertical: 8,
+    paddingHorizontal: 12,
+    backgroundColor: "#153E3B",
+    borderColor: "#153E3B",
+  },
+  primaryButtonText: {
+    fontFamily: "sans-serif",
+    fontWeight: "bold",
+    fontSize: 14,
+    color: "#FAFBFC",
+  },
+  secondaryButton: {
+    height: 40,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    width: "48%",
+    borderWidth: 1.25,
+    borderRadius: 4,
+    // paddingVertical: 8,
+    paddingHorizontal: 32,
+    borderColor: "#153E3B",
+  },
+  secondaryButtonText: {
+    fontFamily: "sans-serif",
+    fontWeight: "bold",
+    fontSize: 14,
+    color: "#153E3B",
   },
 });
 

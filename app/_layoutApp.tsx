@@ -155,7 +155,8 @@ export default function LayoutApp() {
         />
         <Stack.Screen
           name="(tabs)/AddInventoryForm"
-          options={{ title: "Add Inventory", headerBackVisible: true }}
+          // options={{ title: "Add Inventory", headerBackVisible: true }}
+          options={{ headerShown: false }}
           initialParams={{ showFooter: false }}
         />
         <Stack.Screen

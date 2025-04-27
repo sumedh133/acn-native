@@ -117,8 +117,21 @@ export interface DocsToUpload {
 
 export interface ListingProperty extends Property {
   address?: string | null;
+  biappaApproved?: boolean | null;
+  bdaApproved?: boolean | null;
+  carPark?: number | null;
   communityType?: string | null;
-  unitNo?: string | null;
+  cornerUnit?: boolean | null;
   furnishing?: string | null;
+  kamId?: string | null;
+  kamStatus?: string | null;
+  noOfBalconies?: number | null;
+  noOfBathrooms?: number | null;
+  qcStatus?: string | null;
+  rentalIncome?: number | null;
+  stage?: string | null; //stage
+  structure?: string | null;
+  uds?: number | null;
+  unitNo?: string | null;
   [key: string]: any;
 }

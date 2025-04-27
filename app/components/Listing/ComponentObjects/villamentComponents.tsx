@@ -215,7 +215,7 @@ export const villamentComponents = [
     type: "textInput",
     field: "rentalIncome",
     placeholder: "Type here",
-    // keyboardType: "numeric",
+    keyboardType: "numeric",
     colspan: 2,
   },
   {

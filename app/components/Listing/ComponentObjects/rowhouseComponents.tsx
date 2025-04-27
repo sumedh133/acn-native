@@ -205,8 +205,8 @@ export const rowhouseComponents = [
     label: "Rental Income",
     type: "textInput",
     field: "rentalIncome",
-    placeholder: "Type here",
-    // keyboardType: "numeric",
+    placeholder: "0000",
+    keyboardType: "numeric",
     colspan: 2,
   },
   {
