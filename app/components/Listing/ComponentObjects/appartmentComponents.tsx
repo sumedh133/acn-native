@@ -233,6 +233,10 @@ export const appartmentComponents = [
   },
   //DocumentUpload
   {
+    type: "Document",
+    colspan: 2,
+  },
+  {
     label: "Extra Details",
     type: "ExtraDetails",
     field: "extraDetails",

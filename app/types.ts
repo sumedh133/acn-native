@@ -101,6 +101,12 @@ export interface Places {
   mapLocation: string | null;
 }
 
+export interface DocsToUpload {
+  photo: any[];
+  video: any[];
+  document: any[];
+}
+
 export interface ListingProperty extends Property {
   address?: string | null;
   communityType?: string | null;

@@ -1,8 +1,8 @@
 import { Montserrat_600SemiBold } from "@expo-google-fonts/montserrat";
-import { FlatList, ScrollView, StyleSheet, View } from "react-native";
+import { ScrollView, StyleSheet, View } from "react-native";
 import PlacesSearch from "../components/Listing/PlacesSearch";
 import { useEffect, useState } from "react";
-import { ListingProperty, Places } from "../types";
+import { DocsToUpload, ListingProperty, Places } from "../types";
 import { getMicromarketFromCoordinates } from "../helpers/getMicromarketFromCoordinates";
 import React from "react";
 import AssetTypeSelection from "../components/Listing/AssetTypeSelection";
@@ -18,6 +18,7 @@ import Checkbox from "../components/Listing/CheckBox";
 import MonthYearPicker from "../components/Listing/MonthYearPicker";
 import TotalAskPrice from "../components/Listing/TotalAskPrice";
 import ExtraDetailsField from "../components/Listing/ExtraDetails";
+import Document from "../components/Listing/document/Document";
 
 const initialState: ListingProperty = {
   nameOfTheProperty: null,
@@ -42,6 +43,11 @@ const initialState: ListingProperty = {
 const AddInventoryForm = () => {
   const [selectedPlace, setSelectedPlace] = useState<Places | null>(null);
   const [property, setProperty] = useState<ListingProperty>(initialState);
+  const [docsToUpload, setDocsToUpload] = useState<DocsToUpload>({
+    photo: [],
+    video: [],
+    document: [],
+  });
 
   console.log("property", property);
 
@@ -51,17 +57,16 @@ const AddInventoryForm = () => {
       [field]: value,
     }));
   };
-  
-  const handleSetTotalAskPrice = (field: string, value: string) => {
-    if (field === '/Sqft') {
-        if (property.assetType === "Plot" ) {
 
-        }
-        handleSetValue("totaslAskPrice", 1)
+  const handleSetTotalAskPrice = (field: string, value: string) => {
+    if (field === "/Sqft") {
+      if (property.assetType === "Plot") {
+      }
+      handleSetValue("totaslAskPrice", 1);
     } else {
-        handleSetValue("askPricePerSqft", 1)
+      handleSetValue("askPricePerSqft", 1);
     }
-  }
+  };
 
   useEffect(() => {
     if (selectedPlace) {
@@ -94,15 +99,18 @@ const AddInventoryForm = () => {
   }, [selectedPlace]);
 
   const getFormComponents = () => {
-    const components = assetTypes?.[property?.assetType as keyof typeof assetTypes] || [];
+    const components =
+      assetTypes?.[property?.assetType as keyof typeof assetTypes] || [];
 
     // Add an id property if not present
     return components.map((component: any, index: any) => ({
       ...component,
       id: `${component.field}-${index}`,
-      required: property?.assetType ? compulsoryFields[property.assetType as keyof typeof compulsoryFields]?.includes(
-        component.field
-      ) : false,
+      required: property?.assetType
+        ? compulsoryFields[
+            property.assetType as keyof typeof compulsoryFields
+          ]?.includes(component.field)
+        : false,
     }));
   };
 
@@ -136,8 +144,8 @@ const AddInventoryForm = () => {
             title={component.label}
             suffix={component.suffix}
             placeholder={component.placeholder}
-                required={component.required}
-                keyboardType={component.keyboardType}
+            required={component.required}
+            keyboardType={component.keyboardType}
           />
         );
       case "Dropdown":
@@ -169,23 +177,30 @@ const AddInventoryForm = () => {
             required={component.required}
           />
         );
-        case "TotalAskPrice":
-            return (
-              <TotalAskPrice
-                initialPrice={property[component.field]}
-                onPriceChange={(field, value) => handleSetValue(field, value)}
-                title={component.label}
-                required={component.required}
-              />
-            );
-            case "ExtraDetails":
-                return (
-                  <ExtraDetailsField
-                    value={property[component.field]}
-                    setValue={(value) => handleSetValue(component.field, value)}
-                    required={component.required}
-                  />
-                );
+      case "TotalAskPrice":
+        return (
+          <TotalAskPrice
+            initialPrice={property[component.field]}
+            onPriceChange={(field, value) => handleSetValue(field, value)}
+            title={component.label}
+            required={component.required}
+          />
+        );
+      case "ExtraDetails":
+        return (
+          <ExtraDetailsField
+            value={property[component.field]}
+            setValue={(value) => handleSetValue(component.field, value)}
+            required={component.required}
+          />
+        );
+      case "Document":
+        return (
+          <Document
+            setDocsToUpload={setDocsToUpload}
+            docsToUpload={docsToUpload}
+          />
+        );
 
       default:
         return null;
@@ -218,21 +233,25 @@ const AddInventoryForm = () => {
       rows.push(currentRow);
     }
 
-
-
     useEffect(() => {
-        if ( !property.assetType || property.assetType === "" ) {
-            return
-        } else if ( property.assetType === "Plot" ) {
-            if ( property.plotSize === null ) {
-                return
-            }
-        } else {
-            if ( property.sbua === null ) {
-                return
-            }
+      if (!property.assetType || property.assetType === "") {
+        return;
+      } else if (property.assetType === "Plot") {
+        if (property.plotSize === null) {
+          return;
         }
-    }, [property.assetType, property.totalAskPrice, property.askPricePerSqft, property.plotSize, property.sbua]);
+      } else {
+        if (property.sbua === null) {
+          return;
+        }
+      }
+    }, [
+      property.assetType,
+      property.totalAskPrice,
+      property.askPricePerSqft,
+      property.plotSize,
+      property.sbua,
+    ]);
 
     return (
       <View style={styles.formContainer}>
