@@ -16,6 +16,7 @@ import {
   StyleSheet,
   FlatList,
   SafeAreaView,
+  Platform,
 } from "react-native";
 import { Ionicons, Octicons } from "@expo/vector-icons";
 import PropertyDetailsScreen from "./PropertyDetailsScreen";
@@ -39,7 +40,6 @@ import { setPropertyDataThunk } from "@/store/slices/propertySlice";
 
 interface PropertyCardProps {
   property: Property;
-  onCardClick?: (property: any) => void;
 }
 
 interface IdGenerationResult {
@@ -47,10 +47,7 @@ interface IdGenerationResult {
   nextId: string;
 }
 
-const PropertyCard: React.FC<PropertyCardProps> = ({
-  property,
-  onCardClick,
-}) => {
+const PropertyCard: React.FC<PropertyCardProps> = ({ property }) => {
   const dispatch = useDispatch<ThunkDispatch<RootState, unknown, AnyAction>>();
 
   const [selectedCPID, setSelectedCPID] = useState("");
@@ -184,7 +181,11 @@ const PropertyCard: React.FC<PropertyCardProps> = ({
       // ✅ Close the confirmation modal
       setIsConfirmModelOpen(false);
 
-      enquiryConfirmed.current = true;
+      if (Platform.OS === "ios") {
+        enquiryConfirmed.current = true;
+      } else {
+        setIsEnquiryCPModelOpen(true);
+      }
     } catch (error) {
       console.error("Error during enquiry process:", error);
       showErrorToast(

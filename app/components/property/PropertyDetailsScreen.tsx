@@ -10,6 +10,7 @@ import {
   Linking,
   Pressable,
   Alert,
+  Platform,
 } from "react-native";
 import { Ionicons, MaterialIcons } from "@expo/vector-icons";
 import { router, useLocalSearchParams } from "expo-router";
@@ -41,19 +42,19 @@ import HandOverIcon from "@/assets/icons/svg/HandoverIcon";
 import CloseIcon from "@/assets/icons/svg/CloseIcon";
 import { LinearGradient } from "react-native-linear-gradient";
 import { styled } from "nativewind";
-import { Platform } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
-
-const { width } = Dimensions.get("window");
-
-const StyledView = styled(View);
-const StyledText = styled(Text);
 import ShareIconInsidePropertyDetails from "@/assets/icons/svg/PropertiesPage/SHareIconPropertyDetailsModal";
 import DriveIcon from "@/assets/icons/svg/PropertiesPage/DriveIcon";
 import { selectPropertyStateData } from "@/store/slices/propertySlice";
 import Offline from "../Offline";
 import { getUnixDateTime } from "@/app/helpers/getUnixDateTime";
+import ArrowLeftIcon from "@/assets/icons/svg/Common/ArrowLeftIcon";
+import { propertyUserStatus } from "@/app/constants/PropertyConstants";
+import { setKamModalVisible } from "@/store/slices/kamSlice";
 
+const { width } = Dimensions.get("window");
+
+const StyledView = styled(View);
+const StyledText = styled(Text);
 interface AgentData {
   phonenumber: string;
   [key: string]: any;
@@ -109,15 +110,36 @@ const InfoRow = ({
 );
 
 export default function PropertyDetailsScreen() {
+  const dispatch = useDispatch<ThunkDispatch<RootState, unknown, AnyAction>>();
   const params = useLocalSearchParams();
-  const parent = (params.parent as string) || "properties";
-  const enqId = params.enqId as string;
 
-  const enquiryConfirmed = useRef<Boolean>(false);
-
+  const property = useSelector(selectPropertyStateData);
+  const agentData = useSelector(
+    (state: RootState) => state?.agent?.docData
+  ) as AgentData;
+  const phoneNumber = useSelector(
+    (state: RootState) => state?.agent?.docData?.phonenumber
+  );
+  const monthlyCredits = useSelector(
+    (state: RootState) => state?.agent?.docData?.monthlyCredits
+  );
   const isConnectedToInternet = useSelector(
     (state: RootState) => state.app.isConnectedToInternet
   );
+
+  const parent = (params.parent as string) || "properties";
+  const enqId = params.enqId as string;
+
+  const [localImages, setLocalImages] = useState<string[]>([]);
+  const [isImageViewerVisible, setIsImageViewerVisible] = useState(false);
+  const [currentImageIndex, setCurrentImageIndex] = useState(0);
+  const [selectedCPID, setSelectedCPID] = useState(property.cpCode);
+  const [isConfirmModelOpen, setIsConfirmModelOpen] = useState(false);
+  const [isEnquiryCPModelOpen, setIsEnquiryCPModelOpen] = useState(false);
+  const [isShareModalOpen, setIsShareModalOpen] = useState(false);
+  const [isReviewModalOpen, setIsReviewModalOpen] = useState(false);
+
+  const enquiryConfirmed = useRef<Boolean>(false);
 
   const handlePropertyStatusChange = useCallback(
     async (id: string, status: string) => {
@@ -137,33 +159,12 @@ export default function PropertyDetailsScreen() {
     []
   );
 
-  const property = useSelector(selectPropertyStateData);
-  const agentData = useSelector(
-    (state: RootState) => state?.agent?.docData
-  ) as AgentData;
-  const [localImages, setLocalImages] = useState<string[]>([]);
-  const [isImageViewerVisible, setIsImageViewerVisible] = useState(false);
-  const [currentImageIndex, setCurrentImageIndex] = useState(0);
-  const [selectedCPID, setSelectedCPID] = useState(property.cpCode);
-  const [isConfirmModelOpen, setIsConfirmModelOpen] = useState(false);
-  const [isEnquiryCPModelOpen, setIsEnquiryCPModelOpen] = useState(false);
-  const [isShareModalOpen, setIsShareModalOpen] = useState(false);
-  const phoneNumber = useSelector(
-    (state: RootState) => state?.agent?.docData?.phonenumber
-  );
-  const monthlyCredits = useSelector(
-    (state: RootState) => state?.agent?.docData?.monthlyCredits
-  );
-
-  const [isReviewModalOpen, setIsReviewModalOpen] = useState(false);
-
   const giveReviewClick = (e: any, enqId: string) => {
     e.preventDefault();
     e.stopPropagation();
     setIsReviewModalOpen(true);
   };
 
-  const dispatch = useDispatch<ThunkDispatch<RootState, unknown, AnyAction>>();
   const generateNextEnqId = async (): Promise<string | null> => {
     try {
       const type = "lastEnqId"; // Replace with "lastCpId" or others as needed
@@ -175,31 +176,9 @@ export default function PropertyDetailsScreen() {
     }
   };
 
-  // Get the property name with fallbacks
-  const getPropertyName = () => {
-    return property.nameOfTheProperty;
+  const openKamModal = () => {
+    dispatch(setKamModalVisible(true));
   };
-
-  useEffect(() => {
-    const photos = property.photo || [];
-    const videos = property.video || [];
-    setLocalImages([...photos, ...videos]);
-  }, [property.photo, property.video]);
-
-  // Update useEffect to handle loading state
-  useEffect(() => {
-    const initializeContent = async () => {
-      try {
-        // Initialize images array
-        const images = [...(property.photo || []), ...(property.video || [])];
-        setLocalImages(images);
-      } catch (error) {
-        console.error("Error loading images:", error);
-      }
-    };
-
-    initializeContent();
-  }, [property.photo, property.video]);
 
   // Return to previous screen
   const handleGoBack = () => {
@@ -293,7 +272,11 @@ export default function PropertyDetailsScreen() {
       // ✅ Close the confirmation modal
       setIsConfirmModelOpen(false);
 
-      enquiryConfirmed.current = true;
+      if (Platform.OS === "ios") {
+        enquiryConfirmed.current = true;
+      } else {
+        setIsEnquiryCPModelOpen(true);
+      }
     } catch (error) {
       showErrorToast(
         "An error occurred while processing your enquiry. Please try again."
@@ -305,6 +288,122 @@ export default function PropertyDetailsScreen() {
     setIsShareModalOpen(true);
   };
 
+  const renderFooter = useCallback(() => {
+    switch (parent) {
+      case "properties":
+        return (
+          <>
+            <TouchableOpacity
+              style={styles.secondaryButton}
+              onPress={handleOpenDriveDetails}
+            >
+              <DriveIcon />
+              <Text style={styles.secondaryButtonText}>Open Details</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={styles.primaryButton}
+              onPress={handleEnquireNowBtn}
+            >
+              <Ionicons name="call-outline" size={20} color="white" />
+              <Text style={styles.primaryButtonText}>Enquire Now</Text>
+            </TouchableOpacity>
+          </>
+        );
+      case "dashboardEnquiry":
+        return (
+          <>
+            <TouchableOpacity
+              style={styles.secondaryButton}
+              onPress={handleOpenDriveDetails}
+            >
+              <DriveIcon />
+              <Text style={styles.secondaryButtonText}>Open Details</Text>
+            </TouchableOpacity>
+            <Pressable
+              onPress={(e) => giveReviewClick(e, enqId!)}
+              style={styles.primaryButton}
+            >
+              <MaterialIcons name="edit" size={20} color="white" />
+              <Text style={styles.primaryButtonText}>Give review</Text>
+            </Pressable>
+          </>
+        );
+      case "dashboardInventory":
+        return (
+          <>
+            <TouchableOpacity
+              style={styles.secondaryButton}
+              onPress={handleOpenDriveDetails}
+            >
+              <DriveIcon />
+              <Text style={styles.secondaryButtonText}>Open Details</Text>
+            </TouchableOpacity>
+            <View>
+              <DashboardDropdown
+                value={property.status || "Available"}
+                setValue={(val) =>
+                  handlePropertyStatusChange!(property?.propertyId, val)
+                }
+                options={[
+                  { label: "Available", value: "Available" },
+                  { label: "Hold", value: "Hold" },
+                  { label: "Sold", value: "Sold" },
+                ]}
+                type={"inventory"}
+                openDropdownUp={true}
+                parent="dashboardInventory"
+                updatePropertySlice={true}
+              />
+            </View>
+          </>
+        );
+      case "dashboardListing":
+        return (
+          <>
+            <Text style={styles.footerText}>Have any Issue?</Text>
+            <TouchableOpacity
+              style={styles.primaryButton}
+              onPress={openKamModal}
+            >
+              <Ionicons name="call-outline" size={20} color="white" />
+              <Text style={styles.primaryButtonText}>Call your KAM</Text>
+            </TouchableOpacity>
+          </>
+        );
+      default:
+        break;
+    }
+  }, [
+    parent,
+    property,
+    handleOpenDriveDetails,
+    handlePropertyStatusChange,
+    giveReviewClick,
+    handleEnquireNowBtn,
+    openKamModal,
+  ]);
+
+  useEffect(() => {
+    const photos = property.photo || [];
+    const videos = property.video || [];
+    setLocalImages([...photos, ...videos]);
+  }, [property.photo, property.video]);
+
+  // Update useEffect to handle loading state
+  useEffect(() => {
+    const initializeContent = async () => {
+      try {
+        // Initialize images array
+        const images = [...(property.photo || []), ...(property.video || [])];
+        setLocalImages(images);
+      } catch (error) {
+        console.error("Error loading images:", error);
+      }
+    };
+
+    initializeContent();
+  }, [property.photo, property.video]);
+
   if (!isConnectedToInternet) return <Offline />;
 
   return (
@@ -313,17 +412,32 @@ export default function PropertyDetailsScreen() {
       <View style={styles.header}>
         <View style={styles.headerTop}>
           <View style={styles.headerInfo}>
+            <TouchableOpacity onPress={handleGoBack}>
+              <ArrowLeftIcon paddingHorizontal={0} paddingVertical={0} />
+            </TouchableOpacity>
             <View style={styles.propertyIdBadge}>
               <Text style={styles.propertyIdText}>
                 {property.propertyId || "Property ID"}
               </Text>
             </View>
-            <Text style={styles.propertyName}>{getPropertyName()}</Text>
           </View>
-          <TouchableOpacity onPress={handleGoBack}>
-            <CloseIcon />
-          </TouchableOpacity>
+          {property.userStatus && (
+            <View
+              style={[
+                styles.propertyStatusBadge,
+                {
+                  backgroundColor:
+                    propertyUserStatus?.[property.userStatus]?.color,
+                },
+              ]}
+            >
+              <Text style={styles.propertyStatusText}>
+                {propertyUserStatus?.[property.userStatus]?.displayName}
+              </Text>
+            </View>
+          )}
         </View>
+        <Text style={styles.propertyName}>{property.nameOfTheProperty}</Text>
 
         <View style={styles.locationInfo}>
           <View style={styles.infoItem}>
@@ -539,52 +653,7 @@ export default function PropertyDetailsScreen() {
       </TouchableOpacity>
 
       {/* Footer Actions */}
-      <View style={styles.footer}>
-        <TouchableOpacity
-          style={styles.secondaryButton}
-          onPress={handleOpenDriveDetails}
-        >
-          <DriveIcon />
-          <Text style={styles.secondaryButtonText}>Open Details</Text>
-        </TouchableOpacity>
-        {parent === "properties" && (
-          <TouchableOpacity
-            style={styles.primaryButton}
-            onPress={handleEnquireNowBtn}
-          >
-            <Ionicons name="call-outline" size={20} color="white" />
-            <Text style={styles.primaryButtonText}>Enquire Now</Text>
-          </TouchableOpacity>
-        )}
-        {parent === "dashboardEnquiry" && (
-          <Pressable
-            onPress={(e) => giveReviewClick(e, enqId!)}
-            style={styles.primaryButton}
-          >
-            <MaterialIcons name="edit" size={20} color="white" />
-            <Text style={styles.primaryButtonText}>Give review</Text>
-          </Pressable>
-        )}
-        {parent === "dashboardInventory" && (
-          <View>
-            <DashboardDropdown
-              value={property.status || "Available"}
-              setValue={(val) =>
-                handlePropertyStatusChange!(property?.propertyId, val)
-              }
-              options={[
-                { label: "Available", value: "Available" },
-                { label: "Hold", value: "Hold" },
-                { label: "Sold", value: "Sold" },
-              ]}
-              type={"inventory"}
-              openDropdownUp={true}
-              parent="dashboardInventory"
-              updatePropertySlice={true}
-            />
-          </View>
-        )}
-      </View>
+      <View style={styles.footer}>{renderFooter()}</View>
 
       {isReviewModalOpen && (
         <ReviewModal
@@ -657,23 +726,29 @@ const styles = StyleSheet.create({
     backgroundColor: "#F5F6F7",
   },
   header: {
+    display: "flex",
+    flexDirection: "column",
+    alignItems: "flex-start",
+    gap: 16,
     backgroundColor: "white",
     padding: 16,
     borderBottomWidth: 1,
     borderBottomColor: "#CFCECE",
   },
   headerTop: {
+    display: "flex",
     flexDirection: "row",
+    alignItems: "center",
     justifyContent: "space-between",
-    alignItems: "flex-start",
-    marginBottom: 16,
+    width: "100%",
   },
   headerInfo: {
-    flex: 1,
-    gap: 12,
+    display: "flex",
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 10,
   },
   propertyIdBadge: {
-    alignSelf: "flex-start",
     paddingHorizontal: 12,
     paddingVertical: 4,
     borderRadius: 24,
@@ -685,27 +760,39 @@ const styles = StyleSheet.create({
     color: "#FAFBFC",
     fontFamily: "Lato",
   },
+  propertyStatusBadge: {
+    borderRadius: 24,
+    paddingVertical: 4,
+    paddingHorizontal: 12,
+  },
+  propertyStatusText: {
+    fontFamily: "Lato",
+    fontWeight: 500,
+    fontSize: 12,
+    lineHeight: 18,
+    color: "#000000",
+  },
   propertyName: {
-    fontSize: 18,
-    fontWeight: "bold",
-    color: "#2B2928",
-    fontFamily: "montserrat-700bold",
+    fontFamily: "Montserrat_700Bold",
+    fontSize: 14,
+    lineHeight: 21,
+    color: "#0A0B0A",
   },
   locationInfo: {
     flexDirection: "row",
     flexWrap: "wrap",
     justifyContent: "space-between",
+    rowGap: 12,
   },
   infoItem: {
     flexDirection: "row",
     alignItems: "center",
-    paddingHorizontal: 12,
-    paddingVertical: 4,
     gap: 6,
     width: "48%",
   },
   infoText: {
     fontSize: 12,
+    lineHeight: 18,
     color: "#2B2928",
     fontFamily: "Lato",
   },
@@ -941,5 +1028,13 @@ const styles = StyleSheet.create({
     color: "white",
     fontSize: 16,
     fontWeight: "500",
+  },
+  footerText: {
+    fontFamily: "Lato",
+    fontSize: 14,
+    lineHeight: 21,
+    fontWeight: 700,
+    height: "100%",
+    textAlignVertical: "center",
   },
 });

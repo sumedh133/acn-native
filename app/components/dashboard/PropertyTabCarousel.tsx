@@ -25,8 +25,8 @@ const tabs: PropertyTabs[] = [
     slug: "primary",
   },
   {
-    text: "Reject",
-    slug: "reject",
+    text: "Rejected",
+    slug: "rejected",
   },
 ];
 
@@ -36,11 +36,13 @@ const TabItem = memo(
     isActive,
     count,
     onPress,
+    loading,
   }: {
     item: PropertyTabs;
     isActive: boolean;
     count: number;
     onPress: () => void;
+    loading: boolean;
   }) => (
     <TouchableOpacity
       style={[styles.tab, isActive ? { backgroundColor: "#153E3B" } : {}]}
@@ -48,7 +50,7 @@ const TabItem = memo(
     >
       <Text style={[styles.tabText, isActive ? { color: "#E3E3E3" } : {}]}>
         <Text>{item.text}</Text>
-        <Text>{` (${count || 0})`}</Text>
+        {!loading && <Text>{` (${count || 0})`}</Text>}
       </Text>
     </TouchableOpacity>
   )
@@ -58,10 +60,12 @@ const PropertyTabCarousel = ({
   activeSlug,
   handleTabChange,
   counts,
+  loading,
 }: {
   activeSlug: string;
   handleTabChange: (slug: string) => void;
   counts: { [slug: string]: number };
+  loading: boolean;
 }) => {
   const keyExtractor = useCallback((item: PropertyTabs) => item.slug, []);
 
@@ -81,10 +85,11 @@ const PropertyTabCarousel = ({
           item={item}
           count={counts?.[item?.slug]}
           onPress={getItemPressHandler(item?.slug)}
+          loading={loading}
         />
       );
     },
-    [activeSlug, counts, getItemPressHandler]
+    [activeSlug, counts, getItemPressHandler, loading]
   );
 
   return (
@@ -96,7 +101,7 @@ const PropertyTabCarousel = ({
       contentContainerStyle={styles.contentContainer}
       style={styles.container}
       showsHorizontalScrollIndicator={false}
-      extraData={[activeSlug, counts]}
+      extraData={[activeSlug, counts, loading]}
       initialNumToRender={5}
       maxToRenderPerBatch={5}
       windowSize={5}

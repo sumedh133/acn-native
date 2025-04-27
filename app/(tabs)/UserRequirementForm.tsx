@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
   View,
   Text,
@@ -46,6 +46,8 @@ const UserRequirementForm = () => {
   const [budgetFrom, setBudgetFrom] = useState<string>("");
   const [budgetTo, setBudgetTo] = useState<string>("");
   const [marketValue, setMarketValue] = useState(false);
+  const [isRendered, setIsRendered] = useState(false);
+  const [saving, setSaving] = useState(false);
 
   const [error, setError] = useState<{
     propertyName?: string;
@@ -55,7 +57,7 @@ const UserRequirementForm = () => {
   }>({});
 
   const isConnectedToInternet = useSelector(
-    (state: RootState) => state.app.isConnectedToInternet,
+    (state: RootState) => state.app.isConnectedToInternet
   );
 
   const assetTypes = [
@@ -205,7 +207,7 @@ const UserRequirementForm = () => {
       showSuccessToast("Requirement submitted successfully!");
     } catch (error) {
       showErrorToast(
-        "An error occurred while submitting the requirement. Please try again.",
+        "An error occurred while submitting the requirement. Please try again."
       );
       console.error("An error occurred:", error);
     } finally {
@@ -213,15 +215,24 @@ const UserRequirementForm = () => {
     }
   };
 
-  const [saving, setSaving] = useState(false);
+  useEffect(() => {
+    const timer = requestAnimationFrame(() => {
+      setIsRendered(true);
+    });
 
-  // Calculate if form is valid for submit button
-  const isSubmitEnabled =
-    propertyName.trim() !== "" &&
-    assetType.trim() !== "" &&
-    (marketValue || isBudgetValidRange());
+    return () => cancelAnimationFrame(timer);
+  }, []);
 
   if (!isConnectedToInternet) return <Offline />;
+
+  if (!isRendered)
+    return (
+      <ActivityIndicator
+        style={{ margin: "auto" }}
+        size="large"
+        color="#153E3B"
+      />
+    );
 
   return (
     <View style={styles.overlay}>

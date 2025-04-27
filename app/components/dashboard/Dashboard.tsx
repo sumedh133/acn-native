@@ -41,6 +41,7 @@ import { formatCost2, toCapitalizedWords } from "@/app/helpers/common";
 import DashboardDropdown from "./DashboardDropdown";
 import {
   collection,
+  doc,
   getCountFromServer,
   getDocs,
   query,
@@ -70,9 +71,15 @@ import MyRequirementIcon from "@/assets/icons/svg/Dashboard/MyRequirementsIcon";
 import MyInverntoriesIcon from "@/assets/icons/svg/Dashboard/MyInventoriesIcon";
 import MyEnquiriesIcon from "@/assets/icons/svg/Dashboard/MyEnquiryIcon";
 import { showErrorToast, showSuccessToast } from "@/utils/toastUtils";
-import PropertyTabCarousel from "./InventoriesCarousel";
+import PropertyTabCarousel from "./PropertyTabCarousel";
 import PropertyCard from "./PropertyCard";
 import RequirementCard from "./RequirementCard";
+import PlusIconWithCircle from "@/assets/icons/svg/Common/PlusIconWithCircle";
+import PropertiesIcon from "@/assets/icons/svg/Footer/PropertiesIcon";
+import AddRequirementsIcon from "@/assets/icons/svg/Footer/AddRequirementsIcon";
+import AddInventoryIcon from "@/assets/icons/svg/Footer/AddInventoryIcon";
+import { propertyUserStatus } from "@/app/constants/PropertyConstants";
+import { getUnixDateTime } from "@/app/helpers/getUnixDateTime";
 
 const StyledView = styled(View);
 const StyledScrollView = styled(ScrollView);
@@ -156,14 +163,11 @@ export default function Dashboard({
     async (id: string, status: string) => {
       const newStatus = status;
       try {
-        const propertyRef = collection(db, "ACN123");
-        const q = query(propertyRef, where("propertyId", "==", id));
-        const querySnapshot = await getDocs(q);
-
-        if (!querySnapshot.empty) {
-          const docRef = querySnapshot.docs[0].ref;
-          await updateDoc(docRef, { status: newStatus });
-        }
+        await updateDoc(doc(db, "ACN123", id), {
+          status: newStatus,
+          ageOfStatus: 0,
+          dateOfStatusLastChecked: getUnixDateTime(),
+        });
         showSuccessToast("Inventory status updated Succesfully!");
       } catch (error) {
         showErrorToast("Error updating Inventory status!");
@@ -200,9 +204,8 @@ export default function Dashboard({
     setPropertiesTab(slug);
   };
 
-  const handleWhatsAppEnquiry = (): void => {
-    if (!kam_number) return;
-    Linking.openURL(`whatsapp://send?phone=${kam_number}`);
+  const openAddInventory = (): void => {
+    router.push("/(tabs)/AddInventoryForm");
   };
 
   // Memoize the tab rendering to prevent unnecessary re-renders
@@ -210,14 +213,28 @@ export default function Dashboard({
     if (activeTab === "inventories") {
       return (
         <>
-          {propertiesTab === "listed" ? (
+          {myProperties.length === 0 ? (
+            propertiesTab === "listed" ? (
+              <EmptyTabContent
+                text="No Inventory Added"
+                sub_text="Your dashboard is waiting for your first inventory! Start now and showcase your offerings to potential buyer agents."
+                icon={<AddInventoryIcon width={24} height={24} />}
+                buttonText="Add Inventory"
+                handleOnPress={openAddInventory}
+                loading={loading?.propertiesLoading || bufferring}
+              />
+            ) : (
+              <EmptyTabContent
+                text="No Inventory Added"
+                sub_text="Your dashboard is waiting for your first inventory! Start now and showcase your offerings to potential buyer agents."
+                loading={loading?.listingLoading || bufferring}
+              />
+            )
+          ) : propertiesTab === "listed" ? (
             properties.length === 0 || bufferring ? (
               <EmptyTabContent
-                text="No inventory added yet."
-                sub_text="Contact your KAM on Whatsapp to add an inventory."
-                icon={<FontAwesome name="whatsapp" size={20} color="white" />}
-                buttonText="Add Inventory"
-                handleOnPress={handleWhatsAppEnquiry}
+                text="No Inventory"
+                sub_text={propertyUserStatus?.[propertiesTab]?.emptySubText}
                 loading={loading?.propertiesLoading || bufferring}
               />
             ) : (
@@ -230,7 +247,7 @@ export default function Dashboard({
                       onStatusChange={handlePropertyStatusChange}
                       index={index}
                       totalCount={Math.min(batchSize, properties.length)}
-                      showEnquiriesSection={true}
+                      isListing={false}
                     />
                   );
                 })}
@@ -239,11 +256,8 @@ export default function Dashboard({
           ) : listings.filter((listing) => listing.userStatus === propertiesTab)
               .length === 0 || bufferring ? (
             <EmptyTabContent
-              text="No inventory added yet."
-              sub_text="Contact your KAM on Whatsapp to add an inventory."
-              icon={<FontAwesome name="whatsapp" size={20} color="white" />}
-              buttonText="Add Inventory"
-              handleOnPress={handleWhatsAppEnquiry}
+              text="No Inventory"
+              sub_text={propertyUserStatus?.[propertiesTab]?.emptySubText}
               loading={loading?.listingLoading || bufferring}
             />
           ) : (
@@ -255,11 +269,16 @@ export default function Dashboard({
                   return (
                     <PropertyCard
                       key={listing.propertyId}
-                      property={listing as unknown as Property}
-                      onStatusChange={handlePropertyStatusChange}
+                      property={listing}
+                      onStatusChange={() => {}}
                       index={index}
-                      totalCount={Math.min(batchSize, properties.length)}
-                      showEnquiriesSection={false}
+                      totalCount={Math.min(
+                        batchSize,
+                        listings.filter(
+                          (listing) => listing.userStatus === propertiesTab
+                        ).length
+                      )}
+                      isListing={true}
                     />
                   );
                 })}
@@ -273,18 +292,10 @@ export default function Dashboard({
           {requirements?.length === 0 || bufferring ? (
             <EmptyTabContent
               text="You haven't added any requirements"
-              sub_text="Upload details of property type you need"
-              icon={
-                <Ionicons
-                  name="document-text-outline"
-                  size={20}
-                  color="white"
-                />
-              }
+              sub_text="Upload details of property type you need."
+              icon={<AddRequirementsIcon width={24} height={24} />}
               buttonText="Add Requirement"
-              handleOnPress={() =>
-                router.navigate("/(tabs)/UserRequirementForm")
-              }
+              handleOnPress={() => router.push("/(tabs)/UserRequirementForm")}
               loading={loading.requirementsLoading || bufferring}
             />
           ) : (
@@ -311,9 +322,14 @@ export default function Dashboard({
             <EmptyTabContent
               text="No enquiries made yet."
               sub_text="Browse and enquire about available properties."
-              icon={<FontAwesome6 name="house" size={20} color="white" />}
+              icon={
+                <PropertiesIcon width={24} height={24} fillColor="#FFFFFF" />
+              }
               buttonText="Explore Inventories"
-              handleOnPress={() => router.push("/(tabs)/properties")}
+              handleOnPress={() => {
+                router.dismissAll();
+                router.push("/(tabs)/properties");
+              }}
               loading={loading.enquiriesLoading || bufferring}
             />
           ) : (
@@ -509,16 +525,22 @@ export default function Dashboard({
           activeSlug={propertiesTab}
           handleTabChange={handlePropertyTabChange}
           counts={propertyCounts}
+          loading={loading.listingLoading}
         />
       )}
 
       {/* Content Area */}
-      <StyledScrollView>
+      <StyledScrollView contentContainerStyle={{ flexGrow: 1 }}>
         {renderTabContent && (
-          <StyledView onLayout={renderMore}>{renderTabContent}</StyledView>
+          <StyledView onLayout={renderMore} style={{ flex: 1 }}>
+            {renderTabContent}
+          </StyledView>
         )}
         {renderingNewBatch && (
-          <ActivityIndicator className="absolute bottom-0 w-full" />
+          <ActivityIndicator
+            className="absolute bottom-0 w-full"
+            color="#153E3B"
+          />
         )}
       </StyledScrollView>
     </StyledView>

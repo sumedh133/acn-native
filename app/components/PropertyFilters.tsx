@@ -84,7 +84,7 @@ export default function PropertyFilters({
         {/* Search Button */}
         <View style={styles.filters}>
           <TouchableOpacity onPress={handleSearchPress}>
-            {loading ? <ActivityIndicator /> : <SearchIcon />}
+            {loading ? <ActivityIndicator color="#153E3B" /> : <SearchIcon />}
           </TouchableOpacity>
         </View>
 

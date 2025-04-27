@@ -116,7 +116,7 @@ const EnquiryCPModal: React.FC<EnquiryCPModalProps> = ({
     <Modal
       visible={visible}
       transparent
-      animationType="slide"
+      animationType="fade"
       onShow={() => setForceRender((prev) => !prev)}
     >
       {forceRender && <View style={{ height: 0 }} />}

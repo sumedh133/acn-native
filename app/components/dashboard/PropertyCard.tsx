@@ -31,13 +31,13 @@ const PropertyCard = ({
   onStatusChange,
   index,
   totalCount,
-  showEnquiriesSection,
+  isListing,
 }: {
   property: Property;
   onStatusChange: (id: string, status: string) => void;
   index: number;
   totalCount: number;
-  showEnquiriesSection: boolean;
+  isListing: boolean;
 }) => {
   // State for share modal
   const [isShareModalOpen, setIsShareModalOpen] = useState(false);
@@ -71,7 +71,7 @@ const PropertyCard = ({
     router.push({
       pathname: "/components/property/PropertyDetailsScreen",
       params: {
-        parent: "dashboardInventory",
+        parent: isListing ? "dashboardListing" : "dashboardInventory",
       },
     });
   };
@@ -187,8 +187,8 @@ const PropertyCard = ({
         </StyledView>
 
         {/* Bottom Status Section */}
-        {showEnquiriesSection && (
-          <StyledView className="flex flex-row justify-between items-center p-4 bg-gray-50">
+        {!isListing && (
+          <StyledView className="flex flex-row justify-between items-center p-4 bg-gray-50 rounded-b-lg">
             {/* Enquiries */}
             <StyledView>
               <StyledText className="text-sm text-black font-semibold">
@@ -203,7 +203,10 @@ const PropertyCard = ({
             <StyledView className={`relative overflow-visible`}>
               <DashboardDropdown
                 value={property.status || "Available"}
-                setValue={(val) => onStatusChange(property.propertyId, val)}
+                setValue={(val) =>
+                  property.propertyId &&
+                  onStatusChange(property.propertyId, val)
+                }
                 options={[
                   { label: "Available", value: "Available" },
                   { label: "Hold", value: "Hold" },
@@ -229,11 +232,6 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
     left: 10,
-    // elevation: 1,
-    // shadowColor: '#000',
-    // shadowOffset: { width: 0, height: 2 },
-    // shadowOpacity: 0.25,
-    // shadowRadius: 3.84,
   },
 });
 
