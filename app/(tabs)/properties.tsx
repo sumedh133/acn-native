@@ -70,16 +70,11 @@ const MobileHits = () => {
   const { status } = useInstantSearch();
   const { query } = useSearchBox();
 
-  const [selectedProperty, setSelectedProperty] = useState<any>(null);
-
-  const handleCardClick = useCallback((property: any) => {
-    setSelectedProperty(property);
-  }, []);
-
   const { refresh } = useInstantSearch();
   const [refreshing, setRefreshing] = useState(false);
   const [loading, setLoading] = useState(false);
   const [isLoadingMore, setIsLoadingMore] = useState(false);
+  const [isRendered, setIsRendered] = useState(false);
 
   const onRefresh = useCallback(() => {
     setRefreshing(true);
@@ -114,19 +109,10 @@ const MobileHits = () => {
     []
   );
 
-  const renderItem = useCallback(
-    ({ item }: { item: Property }) => {
-      const transformedProperty: Property = item;
-      return (
-        <PropertyCard
-          key={item.objectID}
-          property={transformedProperty}
-          onCardClick={handleCardClick}
-        />
-      );
-    },
-    [handleCardClick]
-  );
+  const renderItem = useCallback(({ item }: { item: Property }) => {
+    const transformedProperty: Property = item;
+    return <PropertyCard key={item.objectID} property={transformedProperty} />;
+  }, []);
 
   const renderFooter = useCallback(() => {
     if (loading) {
@@ -139,15 +125,15 @@ const MobileHits = () => {
     return null;
   }, [loading]);
 
-  if (items?.length === 0 && query?.length !== 0) {
-    return (
-      <View className="flex items-center justify-center h-64">
-        <Text style={{ ...styles.text, fontFamily: "Montserrat_400Regular" }}>
-          No results found for "{query}"
-        </Text>
-      </View>
-    );
-  } else if (items.length === 0) {
+  useEffect(() => {
+    const timer = requestAnimationFrame(() => {
+      setIsRendered(true);
+    });
+
+    return () => cancelAnimationFrame(timer);
+  }, []);
+
+  if (!isRendered || (items?.length === 0 && loading))
     return (
       <View className="flex items-center justify-center h-64 gap-10 mt-20">
         <ActivityIndicator size={"large"} color={"#153E3B"} />
@@ -169,6 +155,15 @@ const MobileHits = () => {
             - Louis Glickman
           </Text>
         </View>
+      </View>
+    );
+
+  if (items?.length === 0 && query?.length !== 0) {
+    return (
+      <View className="flex items-center justify-center h-64">
+        <Text style={{ ...styles.text, fontFamily: "Montserrat_400Regular" }}>
+          No results found for "{query}"
+        </Text>
       </View>
     );
   }
@@ -213,65 +208,15 @@ export default function PropertiesScreen() {
   const [selectedLandmark, setSelectedLandmark] = useState<Landmark | null>(
     null
   );
-  const [filtersHeight, setFiltersHeight] = useState(0);
-  const [paginationHeight, setPaginationHeight] = useState(0);
-  const filtersRef = useRef<View>(null);
-  const paginationRef = useRef<View>(null);
-  const [refreshFunction, setRefreshFunction] = useState<Function | null>(null);
-  const scrollViewRef = useRef<Animated.ScrollView>(null);
 
   const isConnectedToInternet = useSelector(
     (state: RootState) => state.app.isConnectedToInternet
   );
 
-  useEffect(() => {
-    // Measure the height of the filters component
-    if (filtersRef.current) {
-      filtersRef.current.measure(
-        (_x: number, _y: number, _width: number, height: number) => {
-          setFiltersHeight(height);
-        }
-      );
-    }
-
-    // Measure the height of the pagination component
-    if (paginationRef.current) {
-      paginationRef.current.measure(
-        (_x: number, _y: number, _width: number, height: number) => {
-          setPaginationHeight(height);
-        }
-      );
-    }
-  }, []);
-
   const handleToggleMoreFilters = () => {
     setIsMoreFiltersModalOpen((prev) => !prev);
     Keyboard.dismiss(); // Dismiss the keyboard when toggling filters
   };
-
-  // Calculate the content height dynamically
-  const windowHeight = Dimensions.get("window").height;
-
-  const [refreshing, setRefreshing] = useState(false);
-
-  // Handle when refresh function becomes available
-  // const handleRefreshAvailable = useCallback((refresh: Function) => {
-  //   setRefreshFunction(() => refresh);
-  // }, []);
-
-  // const onRefresh = useCallback(() => {
-  //   setRefreshing(true);
-
-  //   // Call the Algolia refresh method if available
-  //   if (refreshFunction) {
-  //     refreshFunction();
-  //   }
-
-  //   // Set a timeout to stop the refreshing indicator after some time
-  //   setTimeout(() => {
-  //     setRefreshing(false);
-  //   }, 1000);
-  // }, [refreshFunction]);
 
   useDoubleBackPressExit();
 
@@ -280,10 +225,6 @@ export default function PropertiesScreen() {
   return (
     <View className="flex-1 bg-[#F5F6F7]">
       <InstantSearch searchClient={searchClient} indexName={indexName}>
-        {/* This component gets the refresh function and passes it up */}
-
-        {/* <SearchRefresher onRefreshAvailable={handleRefreshAvailable} /> */}
-
         <Configure
           analytics={true}
           hitsPerPage={20}
@@ -296,50 +237,16 @@ export default function PropertiesScreen() {
           aroundRadius={selectedLandmark?.radius || undefined}
         />
         <View className="flex-1 relative">
-          {/* Filters at the top */}
-          <View
-            ref={filtersRef}
-            onLayout={(event) => {
-              const { height } = event.nativeEvent.layout;
-              setFiltersHeight(height);
-            }}
-          >
+          <View>
             <PropertyFilters
               handleToggleMoreFilters={handleToggleMoreFilters}
               selectedLandmark={selectedLandmark}
               setSelectedLandmark={setSelectedLandmark}
             />
           </View>
-
-          {/* Main content area with dynamic height */}
-          {/* <ScrollView ref={scrollViewRef}
-            refreshControl={
-              <RefreshControl
-                refreshing={refreshing}
-                onRefresh={onRefresh}
-                colors={["#153E3B"]}
-                tintColor="#153E3B"
-                title="Refreshing..."
-                titleColor="#153E3B"
-              />
-            }
-          > */}
           <View className="w-full flex-1">
             <MobileHits />
           </View>
-          {/* </ScrollView> */}
-
-          {/* Pagination at the bottom */}
-          {/* <View
-            ref={paginationRef}
-            className="bg-white border-t border-gray-200"
-            onLayout={(event) => {
-              const { height } = event.nativeEvent.layout;
-              setPaginationHeight(height);
-            }}
-          >
-            <CustomPagination flatListRef={scrollViewRef} />
-          </View> */}
         </View>
         <MoreFilters
           isOpen={isMoreFiltersModalOpen}

@@ -40,7 +40,6 @@ import { setPropertyDataThunk } from "@/store/slices/propertySlice";
 
 interface PropertyCardProps {
   property: Property;
-  onCardClick?: (property: any) => void;
 }
 
 interface IdGenerationResult {
@@ -48,10 +47,7 @@ interface IdGenerationResult {
   nextId: string;
 }
 
-const PropertyCard: React.FC<PropertyCardProps> = ({
-  property,
-  onCardClick,
-}) => {
+const PropertyCard: React.FC<PropertyCardProps> = ({ property }) => {
   const dispatch = useDispatch<ThunkDispatch<RootState, unknown, AnyAction>>();
 
   const [selectedCPID, setSelectedCPID] = useState("");
