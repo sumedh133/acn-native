@@ -47,7 +47,7 @@ import DriveIcon from "@/assets/icons/svg/PropertiesPage/DriveIcon";
 import { selectPropertyStateData } from "@/store/slices/propertySlice";
 import Offline from "../Offline";
 import ArrowLeftIcon from "@/assets/icons/svg/Common/ArrowLeftIcon";
-import { userStatus } from "@/app/constants/PropertyConstants";
+import { propertyUserStatus } from "@/app/constants/PropertyConstants";
 import { setKamModalVisible } from "@/store/slices/kamSlice";
 
 const { width } = Dimensions.get("window");
@@ -427,11 +427,14 @@ export default function PropertyDetailsScreen() {
             <View
               style={[
                 styles.propertyStatusBadge,
-                { backgroundColor: userStatus?.[property.userStatus]?.color },
+                {
+                  backgroundColor:
+                    propertyUserStatus?.[property.userStatus]?.color,
+                },
               ]}
             >
               <Text style={styles.propertyStatusText}>
-                {userStatus?.[property.userStatus]?.displayName}
+                {propertyUserStatus?.[property.userStatus]?.displayName}
               </Text>
             </View>
           )}

@@ -1,8 +1,29 @@
-export const userStatus: {
-  [slug: string]: { color: string; displayName: string };
+export const propertyUserStatus: {
+  [slug: string]: {
+    color?: string;
+    displayName?: string;
+    emptySubText?: string;
+  };
 } = {
-  pending: { color: "#BFE9E6", displayName: "Pending QC" },
-  duplicate: { color: "#F6BC2F", displayName: "Duplicate" },
-  primary: { color: "#F6BC2F", displayName: "Primary" },
-  rejected: { color: "#FF8282", displayName: "Rejected" },
+  listed: { emptySubText: "No inventory is listed." },
+  pending: {
+    color: "#BFE9E6",
+    displayName: "Pending QC",
+    emptySubText: "There are no inventories currently under review.",
+  },
+  duplicate: {
+    color: "#F6BC2F",
+    displayName: "Duplicate",
+    emptySubText: "No inventory is flagged as duplicate.",
+  },
+  primary: {
+    color: "#F6BC2F",
+    displayName: "Primary",
+    emptySubText: "No inventory is flagged as primary.",
+  },
+  rejected: {
+    color: "#FF8282",
+    displayName: "Rejected",
+    emptySubText: "No inventory is rejected.",
+  },
 };

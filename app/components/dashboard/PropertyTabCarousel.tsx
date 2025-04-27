@@ -25,8 +25,8 @@ const tabs: PropertyTabs[] = [
     slug: "primary",
   },
   {
-    text: "Reject",
-    slug: "reject",
+    text: "Rejected",
+    slug: "rejected",
   },
 ];
 

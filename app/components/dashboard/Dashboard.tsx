@@ -74,6 +74,10 @@ import PropertyTabCarousel from "./PropertyTabCarousel";
 import PropertyCard from "./PropertyCard";
 import RequirementCard from "./RequirementCard";
 import PlusIconWithCircle from "@/assets/icons/svg/Common/PlusIconWithCircle";
+import PropertiesIcon from "@/assets/icons/svg/Footer/PropertiesIcon";
+import AddRequirementsIcon from "@/assets/icons/svg/Footer/AddRequirementsIcon";
+import AddInventoryIcon from "@/assets/icons/svg/Footer/AddInventoryIcon";
+import { propertyUserStatus } from "@/app/constants/PropertyConstants";
 
 const StyledView = styled(View);
 const StyledScrollView = styled(ScrollView);
@@ -201,9 +205,8 @@ export default function Dashboard({
     setPropertiesTab(slug);
   };
 
-  const handleWhatsAppEnquiry = (): void => {
-    if (!kam_number) return;
-    Linking.openURL(`whatsapp://send?phone=${kam_number}`);
+  const openAddInventory = (): void => {
+    router.push("/(tabs)/AddInventoryForm");
   };
 
   // Memoize the tab rendering to prevent unnecessary re-renders
@@ -211,14 +214,28 @@ export default function Dashboard({
     if (activeTab === "inventories") {
       return (
         <>
-          {propertiesTab === "listed" ? (
-            properties.length === 0 || bufferring ? (
+          {myProperties.length === 0 ? (
+            propertiesTab === "listed" ? (
               <EmptyTabContent
                 text="No Inventory Added"
                 sub_text="Your dashboard is waiting for your first inventory! Start now and showcase your offerings to potential buyer agents."
-                icon={<PlusIconWithCircle />}
+                icon={<AddInventoryIcon width={24} height={24} />}
                 buttonText="Add Inventory"
-                handleOnPress={handleWhatsAppEnquiry}
+                handleOnPress={openAddInventory}
+                loading={loading?.propertiesLoading || bufferring}
+              />
+            ) : (
+              <EmptyTabContent
+                text="No Inventory Added"
+                sub_text="Your dashboard is waiting for your first inventory! Start now and showcase your offerings to potential buyer agents."
+                loading={loading?.listingLoading || bufferring}
+              />
+            )
+          ) : propertiesTab === "listed" ? (
+            properties.length === 0 || bufferring ? (
+              <EmptyTabContent
+                text="No Inventory"
+                sub_text={propertyUserStatus?.[propertiesTab]?.emptySubText}
                 loading={loading?.propertiesLoading || bufferring}
               />
             ) : (
@@ -240,8 +257,8 @@ export default function Dashboard({
           ) : listings.filter((listing) => listing.userStatus === propertiesTab)
               .length === 0 || bufferring ? (
             <EmptyTabContent
-              text="No Inventory Added"
-              sub_text="Your dashboard is waiting for your first inventory! Start now and showcase your offerings to potential buyer agents."
+              text="No Inventory"
+              sub_text={propertyUserStatus?.[propertiesTab]?.emptySubText}
               loading={loading?.listingLoading || bufferring}
             />
           ) : (
@@ -276,14 +293,8 @@ export default function Dashboard({
           {requirements?.length === 0 || bufferring ? (
             <EmptyTabContent
               text="You haven't added any requirements"
-              sub_text="Upload details of property type you need"
-              icon={
-                <Ionicons
-                  name="document-text-outline"
-                  size={20}
-                  color="white"
-                />
-              }
+              sub_text="Upload details of property type you need."
+              icon={<AddRequirementsIcon width={24} height={24} />}
               buttonText="Add Requirement"
               handleOnPress={() => router.push("/(tabs)/UserRequirementForm")}
               loading={loading.requirementsLoading || bufferring}
@@ -312,7 +323,9 @@ export default function Dashboard({
             <EmptyTabContent
               text="No enquiries made yet."
               sub_text="Browse and enquire about available properties."
-              icon={<FontAwesome6 name="house" size={20} color="white" />}
+              icon={
+                <PropertiesIcon width={24} height={24} fillColor="#FFFFFF" />
+              }
               buttonText="Explore Inventories"
               handleOnPress={() => {
                 router.dismissAll();
