@@ -1,5 +1,5 @@
 import { Montserrat_600SemiBold } from "@expo-google-fonts/montserrat";
-import { ScrollView, StyleSheet, View } from "react-native";
+import { ActivityIndicator, ScrollView, StyleSheet, View } from "react-native";
 import PlacesSearch from "../components/Listing/PlacesSearch";
 import { useEffect, useState } from "react";
 import { DocsToUpload, ListingProperty, Places } from "../types";
@@ -19,11 +19,14 @@ import MonthYearPicker from "../components/Listing/MonthYearPicker";
 import TotalAskPrice from "../components/Listing/TotalAskPrice";
 import ExtraDetailsField from "../components/Listing/ExtraDetails";
 import Document from "../components/Listing/document/Document";
+import { useSelector } from "react-redux";
+import { RootState } from "@/store/store";
+import Offline from "../components/Offline";
 
 const initialState: ListingProperty = {
   _geoloc: {
     lat: null,
-    lng: null
+    lng: null,
   },
   address: null,
   ageOfInventory: null,
@@ -87,6 +90,11 @@ const AddInventoryForm = () => {
     video: [],
     document: [],
   });
+  const [isRendered, setIsRendered] = useState(false);
+
+  const isConnectedToInternet = useSelector(
+    (state: RootState) => state.app.isConnectedToInternet
+  );
 
   console.log("property", property);
 
@@ -97,16 +105,15 @@ const AddInventoryForm = () => {
     }));
   };
 
-
   const handleSetTotalAskPrice = (field: string, value: string) => {
     if (field === "askPricePerSqft") {
       // console.log("inside askPricePerSqft");
       // console.log(field, value, "field and value");
-      handleSetValue(field, value); 
+      handleSetValue(field, value);
     } else {
       // console.log("inside askTotalAskPrice");
       // console.log(field, value, "field and value");
-      handleSetValue(field, value); 
+      handleSetValue(field, value);
     }
   };
   useEffect(() => {
@@ -238,13 +245,13 @@ const AddInventoryForm = () => {
             required={component.required}
           />
         );
-        case "Document":
-            return (
-              <Document
-                setDocsToUpload={setDocsToUpload}
-                docsToUpload={docsToUpload}
-              />
-            );
+      case "Document":
+        return (
+          <Document
+            setDocsToUpload={setDocsToUpload}
+            docsToUpload={docsToUpload}
+          />
+        );
 
       default:
         return null;
@@ -299,6 +306,25 @@ const AddInventoryForm = () => {
       </View>
     );
   };
+
+  useEffect(() => {
+    const timer = requestAnimationFrame(() => {
+      setIsRendered(true);
+    });
+
+    return () => cancelAnimationFrame(timer);
+  }, []);
+
+  if (!isConnectedToInternet) return <Offline />;
+
+  if (!isRendered)
+    return (
+      <ActivityIndicator
+        style={{ margin: "auto" }}
+        size="large"
+        color="#153E3B"
+      />
+    );
 
   return (
     <ScrollView

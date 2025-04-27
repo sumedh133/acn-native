@@ -119,7 +119,7 @@ const TabCarousel: React.FC<TabCarouselProps> = ({
               {item.label}
             </StyledText>
             {item?.loading ? (
-              <ActivityIndicator />
+              <ActivityIndicator color="#153E3B" />
             ) : (
               <StyledText
                 className={`text-xl font-bold ${

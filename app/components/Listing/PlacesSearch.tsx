@@ -248,7 +248,7 @@ const PlacesSearch = ({
             <ActivityIndicator
               style={styles.rightIcon}
               size="small"
-              color="#666"
+              color="#153E3B"
             />
           ) : searchQuery ? (
             <TouchableOpacity
