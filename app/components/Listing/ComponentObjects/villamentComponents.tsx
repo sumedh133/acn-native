@@ -154,6 +154,12 @@ export const villamentComponents = [
     colspan: 2,
   },
   {
+    label: "Ready to move",
+    type: "Checkbox",
+    field: "readyToMove",
+    colspan: 2,
+  },
+  {
     label: "Inside or Outside Facing",
     type: "radioSelect",
     field: "insideOutside",

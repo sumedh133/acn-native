@@ -227,6 +227,15 @@ export default function LayoutApp() {
           }}
           initialParams={{ showFooter: false }}
         />
+        <Stack.Screen
+          name="(pages)/Drafts"
+          options={{
+            title: "Choose Inventory",
+            headerBackVisible: true,
+            // headerShown: false,
+          }}
+          initialParams={{ showFooter: false }}
+        />
       </Stack>
       <Toast config={toastConfig} />
       <StatusBar style="auto" />
