@@ -305,7 +305,92 @@ const AddInventoryForm = () => {
     });
   };
 
+  const fieldLabels: { [key: string]: string } = {
+    communityType: "Community Type",
+    subType: "Apartment Type",
+    sbua: "SBUA",
+    totalAskPrice: "Total Ask Price",
+    exactFloor: "Floor No.",
+    facing: "Door Facing",
+    unitType: "No. of Bedrooms",
+    structure: "Structure",
+    plotSize: "Plot Size",
+  };
+
   const checkCompulsoryFields = () => {
+    const assetType = property.assetType;
+
+    // If assetType is not valid, return false
+    if (!assetType || !(assetType in compulsoryFields)) {
+      return false;
+    }
+
+    switch (assetType) {
+      case "Apartment":
+        for (let elem of compulsoryFields[assetType]) {
+          console.log(elem);
+          if (property[elem] === null || property[elem] === "") {
+            const friendlyName = fieldLabels[elem] || elem;
+            showErrorToast(`missing field: ${friendlyName}`);
+            return false;
+          }
+        }
+        break;
+      case "Villa":
+        for (let elem of compulsoryFields[assetType]) {
+          console.log(elem);
+          if (property[elem] === null || property[elem] === "") {
+            const friendlyName = fieldLabels[elem] || elem;
+            showErrorToast(`missing field: ${friendlyName}`);
+            return false;
+          }
+        }
+        break;
+      case "Plot":
+        for (let elem of compulsoryFields[assetType]) {
+          console.log(elem);
+          if (property[elem] === null || property[elem] === "") {
+            const friendlyName = fieldLabels[elem] || elem;
+            showErrorToast(`missing field: ${friendlyName}`);
+            return false;
+          }
+        }
+        break;
+      case "Row House":
+        for (let elem of compulsoryFields[assetType]) {
+          console.log(elem);
+          if (property[elem] === null || property[elem] === "") {
+            const friendlyName = fieldLabels[elem] || elem;
+            showErrorToast(`missing field: ${friendlyName}`);
+            return false;
+          }
+        }
+        break;
+      case "Villament":
+        for (let elem of compulsoryFields[assetType]) {
+          console.log(elem);
+          if (property[elem] === null || property[elem] === "") {
+            const friendlyName = fieldLabels[elem] || elem;
+            showErrorToast(`missing field: ${friendlyName}`);
+            return false;
+          }
+        }
+        break;
+      case "Independent Building":
+        // Check if any required field is null or empty
+        for (let elem of compulsoryFields[assetType]) {
+          console.log(elem);
+          if (property[elem] === null || property[elem] === "") {
+            const friendlyName = fieldLabels[elem] || elem;
+            showErrorToast(`missing field: ${elem}`);
+            return false;
+          }
+        }
+        break;
+      default:
+        return false;
+    }
+
     return true;
   };
 
@@ -713,7 +798,7 @@ const AddInventoryForm = () => {
       console.log("flag2");
       handleSetValue("communityType", "Independent");
     }
-  }, [property.assetType, property.communityType])
+  }, [property.assetType, property.communityType]);
 
   if (!isConnectedToInternet) return <Offline />;
 
