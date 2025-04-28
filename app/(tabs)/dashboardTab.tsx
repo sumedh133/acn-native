@@ -323,7 +323,7 @@ const useListings = (): UseListingResult => {
     try {
       const q = query(
         collection(db, "QC_Inventories"),
-        where("agentCpid", "==", cpId)
+        where("cpCode", "==", cpId)
       );
 
       // Set up real-time listener

@@ -205,7 +205,7 @@ export default function Dashboard({
   };
 
   const openAddInventory = (): void => {
-    router.push("/(tabs)/AddInventoryForm");
+    router.push("/(pages)/Drafts");
   };
 
   // Memoize the tab rendering to prevent unnecessary re-renders
