@@ -259,6 +259,7 @@ const AddInventoryForm = () => {
       }
     });
 
+
     // Add the last row if it's not empty
     if (currentRow.length > 0) {
       rows.push(currentRow);
@@ -346,6 +347,37 @@ const AddInventoryForm = () => {
       />
     );
 
+    const handleSubmitButton = () => {
+      for (const [key, value] of Object.entries(property)) {
+        if (value === null || value === "" ) {
+          console.log(`${key} is null`);
+        }
+      }
+      // this is for apartment
+      // property.address                  // places API
+      property.ageOfInventory           // 0
+      property.ageOfStatus              // 0
+      property.area                     // places API
+      property.askPricePerSqft          // from totalAskPrice or vica versa
+      property.buildingAge              // input
+      property.cpCode                   // agentSlice
+      property.dateOfInventoryAdded     //unixtimestamp
+      property.dateOfStatusLastChecked  // unixtimestamp
+      property.driveLink                // from generate functiom
+      property.floorNo                  // from exactFloor No
+      property.kamId                    // from Kam DB according to the agent from the cpCode
+      property.kamStatus                // unnder verifcation
+      // property.mapLocation              // places API
+      // property.micromarket              // places API
+      // property.nameOfTheProperty        //places API
+      property.plotSize                 // input
+      property.propertyId               // QC___ function
+      property.qcStatus                 // with Kam
+      property.stage                    // kam 
+      property.status                   // under Verifcation
+      property.structure                // input
+    }
+
   return (
     <View style={styles.mainView}>
       <View style={styles.headerContainer}>
@@ -384,7 +416,7 @@ const AddInventoryForm = () => {
         <TouchableOpacity style={styles.secondaryButton}>
           <Text style={styles.secondaryButtonText}>Save as Draft</Text>
         </TouchableOpacity>
-        <TouchableOpacity style={styles.primaryButton}>
+        <TouchableOpacity style={styles.primaryButton} onPress={handleSubmitButton}>
           {saving ? (
             <ActivityIndicator size={"small"} color={"white"} />
           ) : (

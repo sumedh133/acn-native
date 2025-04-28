@@ -126,7 +126,7 @@ export const plotComponents = [
   {
     label: "BIAPPA Approved Khata",
     type: "Checkbox",
-    field: "biappaAppropved",
+    field: "biappaApproved",
     colspan: 2,
   },
   {
