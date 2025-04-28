@@ -192,7 +192,7 @@ const AddInventoryForm = () => {
     parsedItem ?? initialState
   );
   const [assetProperty, setAssetProperty] = useState<{
-    [key: string]: ListingProperty;
+    [key: string]: { property: ListingProperty; docs: DocsToUpload };
   }>({});
   const [isNew, setIsNew] = useState(true);
   const [docsToUpload, setDocsToUpload] = useState<DocsToUpload>({
@@ -834,11 +834,15 @@ const AddInventoryForm = () => {
   const handleChangeAssetType = (value: string) => {
     setAssetProperty((prev) => {
       if (property.assetType)
-        return { ...prev, [property.assetType]: property };
+        return {
+          ...prev,
+          [property.assetType]: { property: property, docs: docsToUpload },
+        };
       else return prev;
     });
     if (assetProperty?.[value]) {
-      setProperty(assetProperty?.[value]);
+      setProperty(assetProperty?.[value]?.property);
+      setDocsToUpload(assetProperty?.[value]?.docs);
     } else {
       setProperty((prev) => ({
         ...initialState,
@@ -855,6 +859,7 @@ const AddInventoryForm = () => {
         assetType: value,
         communityType: value === "Independent Building" ? "Independent" : null,
       }));
+      setDocsToUpload({ photo: [], video: [], document: [] });
     }
   };
 
