@@ -130,7 +130,7 @@ const AddInventoryForm = () => {
           const fileUrl = await fileref.getDownloadURL();
           returnValue.photo.push({
             firebaseUri: fileUrl,
-            name: fileName,
+            name: fileName.slice(14),
             size: fileMetadata.size,
           });
         }
@@ -147,7 +147,7 @@ const AddInventoryForm = () => {
           const fileUrl = await fileref.getDownloadURL();
           returnValue.video.push({
             firebaseUri: fileUrl,
-            name: fileName,
+            name: fileName.slice(14),
             size: fileMetadata.size,
           });
         }
@@ -164,7 +164,7 @@ const AddInventoryForm = () => {
           const fileUrl = await fileref.getDownloadURL();
           returnValue.document.push({
             firebaseUri: fileUrl,
-            name: fileName,
+            name: fileName.slice(14),
             size: fileMetadata.size,
           });
         }
@@ -961,7 +961,7 @@ const AddInventoryForm = () => {
           disabled={saving || savingDraft}
         >
           {savingDraft ? (
-            <ActivityIndicator size={"small"} color={"white"} />
+            <ActivityIndicator size={"small"} color={"#153E3B"} />
           ) : (
             <Text style={styles.secondaryButtonText}>Save as Draft</Text>
           )}
