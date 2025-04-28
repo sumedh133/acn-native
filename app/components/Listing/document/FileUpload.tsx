@@ -81,7 +81,6 @@ const FileUpload: React.FC<FileUploadProps> = ({
       name: file.name,
       size: file.size,
       uri: localCopy.localUri,
-      type: file.type,
     };
 
     if (file.type?.startsWith("image/")) {

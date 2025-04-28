@@ -79,7 +79,8 @@ const DropdownSelect = ({
       <TouchableOpacity
         style={styles.dropdownButton}
         onPress={toggleModal}
-        activeOpacity={0.7}>
+        activeOpacity={0.7}
+      >
         <Text style={[styles.selectedText, !value && styles.placeholderText]}>
           {selectedLabel}
         </Text>
@@ -109,7 +110,8 @@ const DropdownSelect = ({
                 ]}
                 onPress={() => handleSelect(item)}
                 onPressIn={() => setHoveredItem(item.value)}
-                onPressOut={() => setHoveredItem(null)}>
+                onPressOut={() => setHoveredItem(null)}
+              >
                 <Text style={styles.optionText}>{item.label}</Text>
               </Pressable>
             )}

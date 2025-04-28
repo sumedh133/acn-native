@@ -22,7 +22,7 @@ type AssetOption = {
 
 interface AssetTypeSelectionProps {
   selectedAsset: string | null | undefined;
-  setSelectedAsset: (value: string | null) => void;
+  setSelectedAsset: (value: string) => void;
 }
 
 const AssetTypeSelection = ({
@@ -102,7 +102,8 @@ const AssetTypeSelection = ({
           <Text
             style={styles.assetItemText}
             numberOfLines={2}
-            ellipsizeMode="tail">
+            ellipsizeMode="tail"
+          >
             {item.title}
           </Text>
         </TouchableOpacity>
@@ -114,7 +115,8 @@ const AssetTypeSelection = ({
     return (
       <TouchableOpacity
         style={[styles.assetItem, isSelected && styles.selectedAssetItem]}
-        onPress={() => handleSelect(item.assetType)}>
+        onPress={() => handleSelect(item.assetType)}
+      >
         {/* Icon */}
         {React.cloneElement(item.icon as React.ReactElement, {
           color: "#2B3034",
@@ -124,7 +126,8 @@ const AssetTypeSelection = ({
         <Text
           style={styles.assetItemText}
           numberOfLines={2}
-          ellipsizeMode="tail">
+          ellipsizeMode="tail"
+        >
           {item.title}
         </Text>
       </TouchableOpacity>

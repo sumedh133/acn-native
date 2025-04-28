@@ -7,9 +7,10 @@ import {
   View,
 } from "react-native";
 import PlacesSearch from "../components/Listing/PlacesSearch";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import {
   DocsToUpload,
+  FileObject,
   IdGenerationResult,
   ListingProperty,
   Places,
@@ -108,14 +109,91 @@ const initialState: ListingProperty = {
 };
 
 const AddInventoryForm = () => {
+  const getUploadedDocObjects = useCallback(
+    async (parsedItem: ListingProperty): Promise<DocsToUpload> => {
+      const returnValue: DocsToUpload = {
+        photo: [],
+        video: [],
+        document: [],
+      };
+      if (!parsedItem?.propertyId) return returnValue;
+
+      const storagePathPhoto = `media-files/${parsedItem.propertyId}/photo`;
+      const referencePhoto = storage().ref(storagePathPhoto);
+      if (parsedItem.photo) {
+        for (let i = 0; i < parsedItem.photo?.length; i++) {
+          const photoUri = parsedItem.photo[i];
+          const fileName = photoUri.split("/").at(-1)?.split("?").at(0);
+          if (!fileName) continue;
+          const fileref = referencePhoto.child(fileName);
+          const fileMetadata = await fileref.getMetadata();
+          const fileUrl = await fileref.getDownloadURL();
+          returnValue.photo.push({
+            firebaseUri: fileUrl,
+            name: fileName,
+            size: fileMetadata.size,
+          });
+        }
+      }
+      const storagePathVideo = `media-files/${parsedItem.propertyId}/video`;
+      const referenceVideo = storage().ref(storagePathVideo);
+      if (parsedItem.video) {
+        for (let i = 0; i < parsedItem.video?.length; i++) {
+          const videoUri = parsedItem.video[i];
+          const fileName = videoUri.split("/").at(-1)?.split("?").at(0);
+          if (!fileName) continue;
+          const fileref = referenceVideo.child(fileName);
+          const fileMetadata = await fileref.getMetadata();
+          const fileUrl = await fileref.getDownloadURL();
+          returnValue.video.push({
+            firebaseUri: fileUrl,
+            name: fileName,
+            size: fileMetadata.size,
+          });
+        }
+      }
+      const storagePathDocument = `media-files/${parsedItem.propertyId}/document`;
+      const referenceDocument = storage().ref(storagePathDocument);
+      if (parsedItem.document) {
+        for (let i = 0; i < parsedItem.document?.length; i++) {
+          const documentUri = parsedItem.document[i];
+          const fileName = documentUri.split("/").at(-1)?.split("?").at(0);
+          if (!fileName) continue;
+          const fileref = referenceDocument.child(fileName);
+          const fileMetadata = await fileref.getMetadata();
+          const fileUrl = await fileref.getDownloadURL();
+          returnValue.document.push({
+            firebaseUri: fileUrl,
+            name: fileName,
+            size: fileMetadata.size,
+          });
+        }
+      }
+      setDocsToUpload(returnValue);
+      return returnValue;
+    },
+    []
+  );
+
   const { item } = useLocalSearchParams();
+  const parsedItem = React.useMemo(() => {
+    if (item) {
+      const parsedData = JSON.parse(item as string) as ListingProperty;
+      getUploadedDocObjects(parsedData);
+      return parsedData;
+    }
+    return null;
+  }, [item, getUploadedDocObjects]);
 
   const [saving, setSaving] = useState(false);
   const [savingDraft, setSavingDraft] = useState(false);
   const [selectedPlace, setSelectedPlace] = useState<Places | null>(null);
   const [property, setProperty] = useState<ListingProperty>(
-    item ? (JSON.parse(item as string) as ListingProperty) : initialState
+    parsedItem ?? initialState
   );
+  const [assetProperty, setAssetProperty] = useState<{
+    [key: string]: ListingProperty;
+  }>({});
   const [isNew, setIsNew] = useState(true);
   const [docsToUpload, setDocsToUpload] = useState<DocsToUpload>({
     photo: [],
@@ -130,7 +208,7 @@ const AddInventoryForm = () => {
 
   const agentData = useSelector((state: RootState) => state.agent.docData);
 
-  const handleSetValue = (field: string, value: any) => {
+  const handleSetValue = (field: keyof ListingProperty, value: any) => {
     setProperty((prevProperty) => ({
       ...prevProperty,
       [field]: value,
@@ -164,7 +242,10 @@ const AddInventoryForm = () => {
             title={component.label}
             options={component.options}
             required={component.required}
-            disable={property.assetType === "Independent Building"}
+            disable={
+              property.assetType === "Independent Building" &&
+              component.field === "communityType"
+            }
           />
         );
       case "slider":
@@ -223,7 +304,9 @@ const AddInventoryForm = () => {
         return (
           <TotalAskPrice
             initialPrice={property[key] as string | undefined}
-            onPriceChange={(field, value) => handleSetValue(field, value)}
+            onPriceChange={(field, value) =>
+              handleSetValue(field as keyof ListingProperty, value)
+            }
             title={component.label}
             required={component.required}
           />
@@ -303,9 +386,10 @@ const AddInventoryForm = () => {
       video: [],
       document: [],
     });
+    setAssetProperty({});
   };
 
-  const fieldLabels: { [key: string]: string } = {
+  const fieldLabels: { [key in keyof ListingProperty]: string } = {
     communityType: "Community Type",
     subType: "Apartment Type",
     sbua: "SBUA",
@@ -504,18 +588,19 @@ const AddInventoryForm = () => {
     }
   };
 
-  const handleUploadToStorage = async (
-    propId: string,
-    docsToUpload: DocsToUpload
-  ) => {
+  const handleUploadToStorage = async (propId: string) => {
     const uploadedFileUrls: UploadedFileUrls = {
       photo: [],
       video: [],
       document: [],
     };
-
-    for (const [type, files] of Object.entries(docsToUpload)) {
+    const copyOfDocs = { ...docsToUpload };
+    for (const [type, files] of Object.entries(copyOfDocs)) {
       for (const file of files) {
+        if (file.firebaseUri) {
+          uploadedFileUrls[type].push(file.firebaseUri);
+          continue;
+        }
         try {
           const uniqueFileName = `${Date.now()}-${file.name}`;
           const storagePath = `media-files/${propId}/${type}/${uniqueFileName}`;
@@ -534,6 +619,7 @@ const AddInventoryForm = () => {
           const downloadURL = await reference.getDownloadURL();
 
           uploadedFileUrls[type].push(downloadURL);
+          file.firebaseUri = downloadURL;
         } catch (error: any) {
           console.error(`Failed to upload ${type} file (${file.name}):`, error);
           throw new Error(
@@ -542,7 +628,7 @@ const AddInventoryForm = () => {
         }
       }
     }
-
+    setDocsToUpload(copyOfDocs);
     return uploadedFileUrls; // Return the URLs of uploaded files
   };
 
@@ -623,7 +709,7 @@ const AddInventoryForm = () => {
         document: [],
       };
       try {
-        uploadedFileUrls = await handleUploadToStorage(propId, docsToUpload);
+        uploadedFileUrls = await handleUploadToStorage(propId);
       } catch (error) {
         console.error("Error uploading files to Firebase Storage:", error);
         showErrorToast("Error uploading files. Please try again.");
@@ -658,7 +744,9 @@ const AddInventoryForm = () => {
       await setDoc(doc(db, "QC_Inventories", propId), dataToSave);
       console.log("Document successfully written with ID:", propId);
       showSuccessToast("Property added successfully!");
-      handleClear();
+      handleSetValue("propertyId", propId);
+      router.dismissAll();
+      router.replace("/(tabs)/dashboardTab");
       setSaving(false);
     } catch (error) {
       console.log(error);
@@ -701,7 +789,7 @@ const AddInventoryForm = () => {
         document: [],
       };
       try {
-        uploadedFileUrls = await handleUploadToStorage(propId, docsToUpload);
+        uploadedFileUrls = await handleUploadToStorage(propId);
       } catch (error) {
         console.error("Error uploading files to Firebase Storage:", error);
         showErrorToast("Error uploading files. Please try again.");
@@ -734,12 +822,39 @@ const AddInventoryForm = () => {
 
       await setDoc(doc(db, "QC_Inventories", propId), dataToSave);
       showSuccessToast("Property added successfully!");
-      handleClear();
+      handleSetValue("propertyId", propId);
       setSavingDraft(false);
     } catch (error) {
       console.error("An unexpected error occurred during submission:", error);
       showErrorToast("An unexpected error occurred during submission");
       setSavingDraft(false);
+    }
+  };
+
+  const handleChangeAssetType = (value: string) => {
+    setAssetProperty((prev) => {
+      if (property.assetType)
+        return { ...prev, [property.assetType]: property };
+      else return prev;
+    });
+    if (assetProperty?.[value]) {
+      setProperty(assetProperty?.[value]);
+    } else {
+      setProperty((prev) => ({
+        ...initialState,
+        nameOfTheProperty: prev.nameOfTheProperty,
+        address: prev.address,
+        mapLocation: prev.mapLocation,
+        micromarket: prev.micromarket,
+        _geoloc: prev?._geoloc
+          ? {
+              lat: prev?._geoloc?.lat || null,
+              lng: prev?._geoloc?.lng || null,
+            }
+          : initialState._geoloc,
+        assetType: value,
+        communityType: value === "Independent Building" ? "Independent" : null,
+      }));
     }
   };
 
@@ -792,14 +907,6 @@ const AddInventoryForm = () => {
     return () => cancelAnimationFrame(timer);
   }, []);
 
-  useEffect(() => {
-    console.log("flag1");
-    if (property.assetType === "Independent Building") {
-      console.log("flag2");
-      handleSetValue("communityType", "Independent");
-    }
-  }, [property.assetType, property.communityType]);
-
   if (!isConnectedToInternet) return <Offline />;
 
   if (!isRendered)
@@ -839,7 +946,9 @@ const AddInventoryForm = () => {
 
           <AssetTypeSelection
             selectedAsset={property.assetType}
-            setSelectedAsset={(value) => handleSetValue("assetType", value)}
+            setSelectedAsset={(value) => {
+              handleChangeAssetType(value);
+            }}
           />
 
           {renderFormComponents()}

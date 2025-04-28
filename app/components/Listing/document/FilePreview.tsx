@@ -70,7 +70,7 @@ const FilePreview: React.FC<FilePreviewProps> = ({
                 <View key={index} style={styles.fileContainer}>
                   <View style={styles.fileContent}>
                     <View style={styles.iconContainer}>
-                      {getFileIcon(file.type)}
+                      {getFileIcon(type)}
                     </View>
 
                     <View style={styles.fileDetails}>
