@@ -8,7 +8,12 @@ import {
 } from "react-native";
 import PlacesSearch from "../components/Listing/PlacesSearch";
 import { useEffect, useState } from "react";
-import { DocsToUpload, IdGenerationResult, ListingProperty, Places } from "../types";
+import {
+  DocsToUpload,
+  IdGenerationResult,
+  ListingProperty,
+  Places,
+} from "../types";
 import { getMicromarketFromCoordinates } from "../helpers/getMicromarketFromCoordinates";
 import React from "react";
 import AssetTypeSelection from "../components/Listing/AssetTypeSelection";
@@ -34,6 +39,8 @@ import { showErrorToast, showSuccessToast } from "@/utils/toastUtils";
 import { areasData } from "../helpers/areasData";
 import { handleIdGeneration } from "../helpers/nextId";
 import { getUnixDateTime } from "../helpers/getUnixDateTime";
+import { collection, doc, setDoc } from "firebase/firestore";
+import { db } from "../config/firebase";
 
 const initialState: ListingProperty = {
   _geoloc: {
@@ -96,6 +103,7 @@ const initialState: ListingProperty = {
 
 const AddInventoryForm = () => {
   const [saving, setSaving] = useState(false);
+  const [savingDraft, setSavingDraft] = useState(false);
   const [selectedPlace, setSelectedPlace] = useState<Places | null>(null);
   const [property, setProperty] = useState<ListingProperty>(initialState);
   const [docsToUpload, setDocsToUpload] = useState<DocsToUpload>({
@@ -289,7 +297,7 @@ const AddInventoryForm = () => {
 
   const checkCompulsoryFields = () => {
     return true;
-  }
+  };
 
   const findArea = () => {
     if (!property.micromarket || property.micromarket === "") {
@@ -324,7 +332,7 @@ const AddInventoryForm = () => {
     }
 
     return { askPricePerSqft, totalAskPrice };
-  }
+  };
 
   const findFloor = () => {
     let val = property.exactFloor;
@@ -343,21 +351,20 @@ const AddInventoryForm = () => {
     } else {
       return "Higher Floor (20+)";
     }
-  }
+  };
 
   const generateNextQcId = async (): Promise<string | null> => {
-      try {
-        const type = "lastQcId"; // Replace with "lastCpId" or others as needed
-        const result = (await handleIdGeneration(type)) as IdGenerationResult;
-        return result.nextId;
-      } catch (error) {
-        console.error("Error generating IDs:", error);
-        return null;
-      }
-    };
+    try {
+      const type = "lastQcId"; // Replace with "lastCpId" or others as needed
+      const result = (await handleIdGeneration(type)) as IdGenerationResult;
+      return result.nextId;
+    } catch (error) {
+      console.error("Error generating IDs:", error);
+      return null;
+    }
+  };
 
   const handleSubmitButton = async () => {
-    
     // // this is for apartment
     // // property.address                  // places API
     // // property.ageOfInventory; // 0
@@ -419,19 +426,62 @@ const AddInventoryForm = () => {
         floorNo,
         kamStatus: "Under Verification",
         qcStatus: "Under Verification",
-        stage: "", //draft | kam
-        status: "", //Draft | Under Verification
+        stage: "kam",
+        status: "Under Verification",
       };
-      
+
+      const dataToSave = {
+        ...property,
+        ...autoFields,
+        // ...uploadedFileUrls,
+        // driveLink,
+      };
+
+      await setDoc(doc(db, "QC_Inventories", propId), dataToSave);
+      console.log("Document successfully written with ID:", propId);
+      showSuccessToast("Property added successfully!");
+      handleClear();
+      setSaving(false);
     } catch (error) {
       console.log(error);
       setSaving(false);
       showErrorToast("Please fill all mandatory fields before submiting.");
-    } finally {
-      setSaving(false);
-      setTimeout(() => {
-        console.log("property", property);
-      }, 1000)
+    }
+  };
+
+  const handleSaveDraft = async () => {
+    try {
+      setSavingDraft(true);
+
+      if (!property.assetType || !property.nameOfTheProperty) {
+        console.error("Asset Type or Name, missing or invalid.");
+        showErrorToast("Asset Type and Name are necessary for draft.");
+        setSavingDraft(false);
+        return;
+      }
+
+      const autoFields = {
+        lastModified: getUnixDateTime(),
+        cpCode: agentData.cpId,
+        status: "draft",
+      };
+
+      const dataToSave = {
+        ...property,
+        ...autoFields,
+        // ...uploadedFileUrls,
+        // driveLink,
+      };
+
+      await setDoc(doc(collection(db, "QC_Inventories")), dataToSave);
+
+      showSuccessToast("Property added successfully!");
+      handleClear();
+      setSavingDraft(false);
+    } catch (error) {
+      console.error("An unexpected error occurred during submission:", error);
+      showErrorToast("An unexpected error occurred during submission");
+      setSavingDraft(false);
     }
   };
 
@@ -519,13 +569,21 @@ const AddInventoryForm = () => {
         </View>
       </ScrollView>
       <View style={styles.footer}>
-        <TouchableOpacity style={styles.secondaryButton}>
-          <Text style={styles.secondaryButtonText}>Save as Draft</Text>
+        <TouchableOpacity
+          style={styles.secondaryButton}
+          onPress={handleSaveDraft}
+          disabled={saving || savingDraft}
+        >
+          {savingDraft ? (
+            <ActivityIndicator size={"small"} color={"white"} />
+          ) : (
+            <Text style={styles.secondaryButtonText}>Save as Draft</Text>
+          )}
         </TouchableOpacity>
         <TouchableOpacity
           style={styles.primaryButton}
           onPress={handleSubmitButton}
-          disabled={saving}
+          disabled={saving || savingDraft}
         >
           {saving ? (
             <ActivityIndicator size={"small"} color={"white"} />
