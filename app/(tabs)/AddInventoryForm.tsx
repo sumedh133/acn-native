@@ -490,7 +490,6 @@ const AddInventoryForm = () => {
       setSavingDraft(true);
 
       if (!property.assetType || !property.nameOfTheProperty) {
-        console.error("Asset Type or Name, missing or invalid.");
         showErrorToast("Asset Type and Name are necessary for draft.");
         setSavingDraft(false);
         return;

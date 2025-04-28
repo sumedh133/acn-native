@@ -35,7 +35,7 @@ const propertySlice = createSlice({
     },
     setPropertyData: (state, action: PayloadAction<Property>) => {
       const { propertyId, ...propertyData } = action.payload;
-      state.propertyId = propertyId;
+      state.propertyId = propertyId ?? null;
       state.propertyDocData = action.payload;
     },
     setPropertyStatus: (state, action: PayloadAction<string | null>) => {

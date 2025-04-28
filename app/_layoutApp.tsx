@@ -243,7 +243,6 @@ export default function LayoutApp() {
           options={{
             title: "Choose Inventory",
             headerBackVisible: true,
-            // headerShown: false,
           }}
           initialParams={{ showFooter: false }}
         />

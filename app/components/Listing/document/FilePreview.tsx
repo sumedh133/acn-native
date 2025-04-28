@@ -3,6 +3,7 @@ import { FontAwesome6, Ionicons } from "@expo/vector-icons";
 import React, { useCallback } from "react";
 import RNFS from "react-native-fs";
 import { View, Text, StyleSheet, TouchableOpacity } from "react-native";
+import TrashIcon from "@/assets/icons/svg/Common/TrashIcon";
 
 interface FilePreviewProps {
   docsToUpload: DocsToUpload;
@@ -31,13 +32,13 @@ const FilePreview: React.FC<FilePreviewProps> = ({
     setDocsToUpload(updatedDocs);
   };
 
-  const getFileIcon = (fileType: string | null | undefined) => {
+  const getFileIcon = useCallback((fileType: string | null | undefined) => {
     if (fileType?.startsWith("image/"))
       return <FontAwesome6 name="file-image" size={24} color="black" />;
     else if (fileType?.startsWith("video/"))
       return <FontAwesome6 name="file-video" size={24} color="black" />;
     else return <FontAwesome6 name="file-pdf" size={24} color="black" />;
-  };
+  }, []);
 
   const formatFileSize = (bytes?: number | null): string => {
     if (!bytes) return "0 KB";
@@ -91,7 +92,7 @@ const FilePreview: React.FC<FilePreviewProps> = ({
                       style={styles.deleteButton}
                       onPress={() => handleRemoveFile(type, index)}
                     >
-                      <Ionicons name="trash-outline" size={18} color="black" />
+                      <TrashIcon width={18} height={18} />
                     </TouchableOpacity>
                   </View>
                 </View>
