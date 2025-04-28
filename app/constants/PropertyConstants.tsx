@@ -27,3 +27,5 @@ export const propertyUserStatus: {
     emptySubText: "No inventory is rejected.",
   },
 };
+
+export const locationRestriction = "circle:100000@12.9731,77.5945";

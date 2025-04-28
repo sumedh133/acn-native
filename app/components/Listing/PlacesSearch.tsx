@@ -11,6 +11,7 @@ import {
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { Places } from "@/app/types";
+import { locationRestriction } from "@/app/constants/PropertyConstants";
 
 // Define types for API responses
 interface PlacePrediction {
@@ -63,7 +64,7 @@ const PlacesSearch = ({
       const response = await fetch(
         `https://maps.googleapis.com/maps/api/place/autocomplete/json?input=${encodeURIComponent(
           query
-        )}&key=${API_KEY}`
+        )}&locationrestriction=${locationRestriction}&key=${API_KEY}`
       );
       const data = await response.json();
 
@@ -253,7 +254,8 @@ const PlacesSearch = ({
           ) : searchQuery ? (
             <TouchableOpacity
               onPress={handleClearSearch}
-              style={styles.rightIcon}>
+              style={styles.rightIcon}
+            >
               <Text style={styles.clearButtonText}>✕</Text>
             </TouchableOpacity>
           ) : null}
@@ -270,7 +272,8 @@ const PlacesSearch = ({
                   style={styles.resultItem}
                   onPress={() =>
                     handleSelectPlace(item.place_id, item.description)
-                  }>
+                  }
+                >
                   <Text style={styles.resultText}>{item.description}</Text>
                 </TouchableOpacity>
               )}

@@ -149,11 +149,12 @@ const AddInventoryForm = () => {
   };
 
   const renderComponent = (component: any) => {
+    const key = component.field as keyof ListingProperty;
     switch (component.type) {
       case "radioSelect":
         return (
           <RadioButtonSelect
-            value={property[component.field]}
+            value={property[key] as string | null}
             setvalue={(value: any) => handleSetValue(component.field, value)}
             title={component.label}
             options={component.options}
@@ -163,7 +164,7 @@ const AddInventoryForm = () => {
       case "slider":
         return (
           <SliderButtonSelect
-            value={property[component.field]}
+            value={property[key] as string | null}
             setvalue={(value) => handleSetValue(component.field, value)}
             title={component.label}
             options={component.options}
@@ -173,7 +174,7 @@ const AddInventoryForm = () => {
       case "textInput":
         return (
           <TextInputField
-            value={property[component.field]}
+            value={property[key] as string | null}
             setValue={(value: any) => handleSetValue(component.field, value)}
             title={component.label}
             prefix={component.prefix}
@@ -186,7 +187,7 @@ const AddInventoryForm = () => {
       case "Dropdown":
         return (
           <DropdownSelect
-            value={property[component.field]}
+            value={property[key] as string | null}
             setValue={(value) => handleSetValue(component.field, value)}
             title={component.label}
             options={component.option}
@@ -197,7 +198,7 @@ const AddInventoryForm = () => {
       case "Checkbox":
         return (
           <Checkbox
-            checked={property[component.field]}
+            checked={property[key] as boolean}
             setChecked={(checked) => handleSetValue(component.field, checked)}
             title={component.label}
             required={component.required}
@@ -206,7 +207,7 @@ const AddInventoryForm = () => {
       case "MonthYearPicker":
         return (
           <MonthYearPicker
-            value={property[component.field]}
+            value={property[key] as string}
             setValue={(value) => handleSetValue(component.field, value)}
             title={component.label}
             required={component.required}
@@ -215,7 +216,7 @@ const AddInventoryForm = () => {
       case "TotalAskPrice":
         return (
           <TotalAskPrice
-            initialPrice={property[component.field]}
+            initialPrice={property[key] as string | undefined}
             onPriceChange={(field, value) => handleSetValue(field, value)}
             title={component.label}
             required={component.required}
@@ -224,7 +225,7 @@ const AddInventoryForm = () => {
       case "ExtraDetails":
         return (
           <ExtraDetailsField
-            value={property[component.field]}
+            value={property[key] as string | null}
             setValue={(value) => handleSetValue(component.field, value)}
             required={component.required}
           />

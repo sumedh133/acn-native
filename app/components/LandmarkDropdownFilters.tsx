@@ -12,6 +12,7 @@ import {
 import Slider from "@react-native-community/slider";
 import { Ionicons } from "@expo/vector-icons";
 import { Landmark } from "../types";
+import { locationRestriction } from "../constants/PropertyConstants";
 // import { PLACES_API_KEY } from '@env';
 
 // Define types for API responses
@@ -71,7 +72,7 @@ const LandmarkDropdownFilters = ({
       const response = await fetch(
         `https://maps.googleapis.com/maps/api/place/autocomplete/json?input=${encodeURIComponent(
           query
-        )}&key=${API_KEY}`
+        )}&locationrestriction=${locationRestriction}&key=${API_KEY}`
       );
       const data = await response.json();
 

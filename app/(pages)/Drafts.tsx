@@ -35,7 +35,7 @@ const DraftsScreen: React.FC = () => {
 
   const deleteDraft = useCallback(async (id: string) => {
     await deleteDoc(doc(db, "QC_Inventories", id));
-    setDrafts((prev) => prev?.filter((draft) => draft.id !== id));
+    setDrafts((prev) => prev?.filter((draft) => draft.propertyId !== id));
   }, []);
 
   const pressDraftCard = useCallback((item: ListingProperty) => {
@@ -80,15 +80,17 @@ const DraftsScreen: React.FC = () => {
     );
     const stateDrafts: ListingProperty[] = [];
     drafts.docs.forEach((draft) => {
-      stateDrafts.push({ id: draft.id, ...draft.data() });
+      stateDrafts.push(draft.data());
     });
     setDrafts(stateDrafts);
     setRendering(false);
   };
 
-  useFocusEffect(() => {
-    initialRender();
-  });
+  useFocusEffect(
+    useCallback(() => {
+      initialRender();
+    }, [])
+  );
 
   if (rendering)
     return (
@@ -111,7 +113,7 @@ const DraftsScreen: React.FC = () => {
       <FlatList
         data={drafts}
         renderItem={renderPropertyItem}
-        keyExtractor={(item) => item.id}
+        keyExtractor={(item, idx) => item.propertyId || idx.toString()}
       />
 
       <TouchableOpacity style={styles.addButton} onPress={addNewProperty}>
