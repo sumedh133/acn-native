@@ -37,26 +37,26 @@ const initialState: ListingProperty = {
     lng: null,
   },
   address: null,
-  ageOfInventory: null,
-  ageOfStatus: null,
+  ageOfInventory: 0,
+  ageOfStatus: 0,
   area: null,
   askPricePerSqft: null,
   assetType: null,
-  biappaApproved: null,
-  bdaApproved: null,
+  biappaApproved: false,
+  bdaApproved: false,
   buildingAge: null,
   buildingKhata: null,
   carPark: null,
   carpet: null,
   communityType: null,
-  cornerUnit: null,
+  cornerUnit: false,
   cpCode: null,
   currentStatus: null,
   dateOfInventoryAdded: null,
   dateOfStatusLastChecked: null,
   driveLink: null,
-  eKhata: null,
-  exclusive: null,
+  eKhata: false,
+  exclusive: false,
   extraDetails: null,
   facing: null,
   floorNo: null,
@@ -71,7 +71,7 @@ const initialState: ListingProperty = {
   nameOfTheProperty: null,
   noOfBalconies: null,
   noOfBathrooms: null,
-  ocReceived: null,
+  ocReceived: false,
   plotSize: null,
   propertyId: null,
   qcStatus: null,
@@ -80,7 +80,7 @@ const initialState: ListingProperty = {
   stage: null, //stage
   status: null,
   structure: null,
-  tenanted: null,
+  tenanted: false,
   totalAskPrice: null,
   uds: null,
   unitNo: null,
@@ -355,8 +355,8 @@ const AddInventoryForm = () => {
       }
       // this is for apartment
       // property.address                  // places API
-      property.ageOfInventory           // 0
-      property.ageOfStatus              // 0
+      // property.ageOfInventory           // 0
+      // property.ageOfStatus              // 0
       property.area                     // places API
       property.askPricePerSqft          // from totalAskPrice or vica versa
       property.buildingAge              // input

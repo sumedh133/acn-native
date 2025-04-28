@@ -137,6 +137,7 @@ export const appartmentComponents = [
   {
     label: "Total Ask Price",
     type: "TotalAskPrice",
+    field:"totalAskPrice",
     colspan: 2,
   },
   {
@@ -149,6 +150,15 @@ export const appartmentComponents = [
     label: "Ready to move",
     type: "Checkbox",
     field: "currentStatus",
+    colspan: 2,
+  },
+  {
+    label: "Building Age",
+    type: "textInput",
+    field: "buildingAge",
+    placeholder: "0000",
+    keyboardType: "numeric",
+    suffix: "Yr",
     colspan: 2,
   },
   {

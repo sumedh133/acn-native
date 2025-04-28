@@ -71,6 +71,7 @@ export const plotComponents = [
   {
     label: "Total Ask Price",
     type: "TotalAskPrice",
+    field:"totalAskPrice",
     colspan: 2,
   },
   {

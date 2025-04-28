@@ -29,10 +29,10 @@ export const compulsoryFields: {
   "Row House": string[];
   "Independent Building": string[];
 } = {
-  Apartment: ["communityType", "subType"],
-  Villa: ["furnishing", "unitNo"],
-  Plot: ["subType"],
-  Villament: ["cornerUnit"],
-  "Row House": ["unitNo"],
-  "Independent Building": ["handoverDate"],
+  Apartment: ["communityType", "subType", "sbua", "totalAskPrice", "exactFloor", "facing", "unitType", "handoverDate"],
+  Villa: ["communityType","sbua", "totalAskPrice", "facing", "unitType", "handoverDate", "structure"],
+  Plot: ["communityType", "plotSize", "totalAskPrice", "facing", "handoverDate"],
+  Villament: ["communityType", "facing", "exactFloor", "structure", "totalAskPrice", "sbua", "unitType", "handoverDate"],
+  "Row House": ["communityType","sbua", "unitType", "totalAskPrice", "facing", "handoverDate", "structure"],
+  "Independent Building": ["communityType", "plotSize", "sbua", "stucture", "facing", "totalAskPrice"],
 };
