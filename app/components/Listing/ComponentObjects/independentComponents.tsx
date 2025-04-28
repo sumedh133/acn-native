@@ -136,6 +136,7 @@ export const independentComponents = [
   {
     label: "Total Ask Price",
     type: "TotalAskPrice",
+    field:"totalAskPrice",
     colspan: 2,
   },
   {
@@ -148,6 +149,15 @@ export const independentComponents = [
     label: "Ready to move",
     type: "Checkbox",
     field: "readyToMove",
+    colspan: 2,
+  },
+  {
+    label: "Building Age",
+    type: "textInput",
+    field: "buildingAge",
+    placeholder: "0000",
+    keyboardType: "numeric",
+    suffix: "Yr",
     colspan: 2,
   },
   {
