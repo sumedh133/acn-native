@@ -86,7 +86,7 @@ export const independentComponents = [
   {
     label: "No of Bedrooms",
     type: "slider",
-    field: "noOfBedrooms",
+    field: "unitType",
     options: [
       { label: "1 BHK", value: "1 BHK" },
       { label: "2 BHK", value: "2 BHK" },

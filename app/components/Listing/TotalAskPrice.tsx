@@ -117,7 +117,7 @@ const TotalAskPrice: React.FC<TotalAskPricetProps> = ({
 
   // Calculate the total in words (for display below the input)
   const getPriceInWords = (): string => {
-    if (!price) return "";
+    if (!price) return "eg. Two Thousand";
     const numericPrice = parseFloat(price.replace(/,/g, ""));
     if (isNaN(numericPrice)) return "";
 
@@ -192,7 +192,7 @@ const TotalAskPrice: React.FC<TotalAskPricetProps> = ({
         </View>
 
         {/* Price in words */}
-        <Text style={styles.priceInWords}>{price && getPriceInWords()}</Text>
+        <Text style={styles.priceInWords}>{getPriceInWords()}</Text>
 
         {/* New dropdown UI */}
         {modalVisible && (

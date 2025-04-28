@@ -382,7 +382,7 @@ const AddInventoryForm = () => {
           console.log(elem);
           if (property[elem] === null || property[elem] === "") {
             const friendlyName = fieldLabels[elem] || elem;
-            showErrorToast(`missing field: ${elem}`);
+            showErrorToast(`missing field: ${friendlyName}`);
             return false;
           }
         }

@@ -33,19 +33,21 @@ const Checkbox = ({
       <TouchableOpacity
         style={styles.checkboxContainer}
         onPress={toggleCheckbox}
-        activeOpacity={0.7}>
+        activeOpacity={1}>
+        <View style ={{flexDirection: "row", gap: 8}}>
         <View style={[styles.checkbox, checked && styles.checkboxChecked]}>
           {checked && <Ionicons name="checkmark" size={12} color="#FFFFFF" />}
         </View>
 
         {label && <Text style={styles.label}>{label}</Text>}
-      </TouchableOpacity>
       {title && (
         <View style={styles.headingContainer}>
           <Text style={styles.sectionHeading}>{title}</Text>
           {required && <Text style={styles.compulsoryStar}>*</Text>}
         </View>
       )}
+      </View>
+      </TouchableOpacity>
     </View>
   );
 };
