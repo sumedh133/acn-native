@@ -163,7 +163,7 @@ export const rowhouseComponents = [
   {
     label: "Inside or Outside Facing",
     type: "radioSelect",
-    field: "insideOutside",
+    field: "balconyFacing",
     options: [
       { label: "Inside", value: "Inside" },
       { label: "Outside", value: "Outside" },

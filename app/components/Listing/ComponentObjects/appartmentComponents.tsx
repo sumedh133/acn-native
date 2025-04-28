@@ -137,7 +137,7 @@ export const appartmentComponents = [
   {
     label: "Total Ask Price",
     type: "TotalAskPrice",
-    field:"totalAskPrice",
+    field: "totalAskPrice",
     colspan: 2,
   },
   {
@@ -164,7 +164,7 @@ export const appartmentComponents = [
   {
     label: "Inside or Outside Facing",
     type: "radioSelect",
-    field: "insideOutside",
+    field: "balconyFacing",
     options: [
       { label: "Inside", value: "Inside" },
       { label: "Outside", value: "Outside" },

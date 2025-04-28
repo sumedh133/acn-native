@@ -387,8 +387,8 @@ const styles = StyleSheet.create({
   // New styles for the added dropdown UI
   optionsContainer: {
     position: "absolute",
-    top: 80,
-    left: 0,
+    top: 74,
+    width: 140,
     right: 0,
     backgroundColor: "#FFFFFF",
     borderRadius: 8,

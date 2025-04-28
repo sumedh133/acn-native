@@ -35,7 +35,7 @@ const Checkbox = ({
         onPress={toggleCheckbox}
         activeOpacity={0.7}>
         <View style={[styles.checkbox, checked && styles.checkboxChecked]}>
-          {checked && <Ionicons name="checkmark" size={16} color="#FFFFFF" />}
+          {checked && <Ionicons name="checkmark" size={12} color="#FFFFFF" />}
         </View>
 
         {label && <Text style={styles.label}>{label}</Text>}
@@ -78,8 +78,8 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   checkbox: {
-    width: 13,
-    height: 13,
+    width: 16,
+    height: 16,
     borderRadius: 2,
     borderWidth: 1,
     borderColor: "#000",

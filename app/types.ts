@@ -128,7 +128,7 @@ export interface ListingProperty extends Property {
   communityType?: string | null;
   cornerUnit?: boolean | null;
   furnishing?: string | null;
-  insideOutside?: string | null;
+  balconyFacing?: string | null;
   kamId?: string | null;
   kamStatus?: string | null;
   noOfBalconies?: number | null;
@@ -140,5 +140,6 @@ export interface ListingProperty extends Property {
   subType?: string | null;
   uds?: number | null;
   unitNo?: string | null;
+  lastModified?: number | null;
   [key: string]: any;
 }

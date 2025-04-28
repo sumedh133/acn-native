@@ -34,7 +34,7 @@ import { useSelector } from "react-redux";
 import { RootState } from "@/store/store";
 import Offline from "../components/Offline";
 import ArrowLeftIcon from "@/assets/icons/svg/Common/ArrowLeftIcon";
-import { router } from "expo-router";
+import { router, useLocalSearchParams } from "expo-router";
 import { showErrorToast, showSuccessToast } from "@/utils/toastUtils";
 import { areasData } from "../helpers/areasData";
 import { handleIdGeneration } from "../helpers/nextId";
@@ -74,7 +74,7 @@ const initialState: ListingProperty = {
   floorNo: null,
   furnishing: null,
   handoverDate: null,
-  insideOutside: null,
+  balconyFacing: null,
   kamId: null,
   kamStatus: null,
   landKhata: null,
@@ -104,10 +104,14 @@ const initialState: ListingProperty = {
 };
 
 const AddInventoryForm = () => {
+  const { item } = useLocalSearchParams();
+
   const [saving, setSaving] = useState(false);
   const [savingDraft, setSavingDraft] = useState(false);
   const [selectedPlace, setSelectedPlace] = useState<Places | null>(null);
-  const [property, setProperty] = useState<ListingProperty>(initialState);
+  const [property, setProperty] = useState<ListingProperty>(
+    item ? (JSON.parse(item as string) as ListingProperty) : initialState
+  );
   const [docsToUpload, setDocsToUpload] = useState<DocsToUpload>({
     photo: [],
     video: [],
@@ -238,7 +242,6 @@ const AddInventoryForm = () => {
     }
   };
 
-  // Instead of using FlatList, let's organize the components into rows
   const renderFormComponents = () => {
     const components = getFormComponents();
     const rows = [];
@@ -248,7 +251,6 @@ const AddInventoryForm = () => {
     components.forEach((component: any) => {
       const width = component.colspan === 2 ? 2 : 1;
 
-      // If adding this component would exceed the row width (2), start a new row
       if (currentWidth + width > 2) {
         rows.push([...currentRow]);
         currentRow = [component];
@@ -259,7 +261,6 @@ const AddInventoryForm = () => {
       }
     });
 
-    // Add the last row if it's not empty
     if (currentRow.length > 0) {
       rows.push(currentRow);
     }
@@ -288,7 +289,7 @@ const AddInventoryForm = () => {
   };
 
   const handleClear = () => {
-    setProperty(initialState);
+    setProperty({ ...initialState, propertyId: property.propertyId });
     setSelectedPlace(null);
     setDocsToUpload({
       photo: [],
@@ -301,7 +302,7 @@ const AddInventoryForm = () => {
     return true;
   };
 
-  const findArea = () => {
+  const getArea = () => {
     if (!property.micromarket || property.micromarket === "") {
       throw new Error(`micromarket is empty`);
     } else {
@@ -313,7 +314,7 @@ const AddInventoryForm = () => {
     }
   };
 
-  const findAskPrice = () => {
+  const getAskPrice = () => {
     let askPricePerSqft = property.askPricePerSqft || 0;
     let totalAskPrice = property.totalAskPrice || 0;
 
@@ -340,10 +341,10 @@ const AddInventoryForm = () => {
     return { askPricePerSqft, totalAskPrice };
   };
 
-  const findFloor = () => {
+  const getFloor = () => {
     let val = property.exactFloor;
     if (!val) {
-      throw new Error(`exactFloor is empty`);
+      return null;
     }
 
     if (val === 0) {
@@ -359,6 +360,47 @@ const AddInventoryForm = () => {
     }
   };
 
+  const getName = () => {
+    if (property.communityType === "Gated") {
+      return property.nameOfTheProperty;
+    } else if (property.assetType === "Independent Building") {
+      return `${property.assetType} in ${property.micromarket}`;
+    } else {
+      return `Independent ${property.assetType} in ${property.micromarket}`;
+    }
+  };
+
+  const parseHandoverDate = (handoverString: string): Date => {
+    const [month, year] = handoverString
+      .split("/")
+      .map((part) => parseInt(part, 10));
+    return new Date(year, month - 1);
+  };
+
+  const isUnderConstruction = (
+    handoverDate: string | null | undefined
+  ): boolean => {
+    if (!handoverDate) return false;
+
+    const parsedHandoverDate = parseHandoverDate(handoverDate);
+    const currentDate = new Date();
+
+    return parsedHandoverDate >= currentDate;
+  };
+
+  const getCurrentStatus = () => {
+    const crStatus = property.currentStatus;
+    const handover = property.handoverDate;
+
+    if (crStatus) {
+      return "Ready to move";
+    } else if (isUnderConstruction(handover)) {
+      return "Under Construction";
+    } else {
+      return "Unconfirmed";
+    }
+  };
+
   const generateNextQcId = async (): Promise<string | null> => {
     try {
       const type = "lastQcId"; // Replace with "lastCpId" or others as needed
@@ -371,29 +413,7 @@ const AddInventoryForm = () => {
   };
 
   const handleSubmitButton = async () => {
-    // // this is for apartment
-    // // property.address                  // places API
-    // // property.ageOfInventory; // 0
-    // // property.ageOfStatus; // 0
-    // // property.area; // places API
-    // // property.askPricePerSqft; // from totalAskPrice or vica versa
-    // // property.buildingAge; // input
-    // // property.cpCode; // agentSlice
-    // // property.dateOfInventoryAdded; //unixtimestamp
-    // // property.dateOfStatusLastChecked; // unixtimestamp
-    // property.driveLink; // from generate functiom
-    // // property.floorNo; // from exactFloor No
-    // // property.kamId; // from Kam DB according to the agent from the cpCode
-    // // property.kamStatus; // unnder verifcation
-    // // property.mapLocation              // places API
-    // // property.micromarket              // places API
-    // // property.nameOfTheProperty        //places API
-    // // property.plotSize; // input
-    // // property.propertyId; // QC___ function
-    // // property.qcStatus; // with Kam
-    // // property.stage; // kam
-    // // property.status; // under Verifcation
-    // // property.structure; // input
+    // property.driveLink;
 
     try {
       setSaving(true);
@@ -406,13 +426,20 @@ const AddInventoryForm = () => {
         return;
       }
 
-      const selectedArea = findArea();
+      const selectedArea = getArea();
 
-      const { askPricePerSqft, totalAskPrice } = findAskPrice();
+      const { askPricePerSqft, totalAskPrice } = getAskPrice();
 
-      const floorNo = findFloor();
+      const floorNo = getFloor();
 
-      const propId = await generateNextQcId();
+      const nameOfTheProperty = getName();
+
+      const currentStatus = getCurrentStatus();
+
+      let propId = property.propertyId;
+      if (!property.propertyId) {
+        propId = await generateNextQcId();
+      }
       if (!propId) {
         console.error("Error generating Property ID. Please try again later");
         showErrorToast("Error generating Property ID. Please try again later");
@@ -420,7 +447,7 @@ const AddInventoryForm = () => {
         return;
       }
 
-      const autoFields = {
+      const autoFields: ListingProperty = {
         propertyId: propId,
         dateOfInventoryAdded: getUnixDateTime(),
         dateOfStatusLastChecked: getUnixDateTime(),
@@ -430,19 +457,22 @@ const AddInventoryForm = () => {
         askPricePerSqft,
         totalAskPrice,
         floorNo,
+        nameOfTheProperty,
+        currentStatus,
         kamStatus: "Under Verification",
         qcStatus: "Under Verification",
         stage: "kam",
         status: "Under Verification",
       };
 
-      const dataToSave = {
+      const dataToSave: ListingProperty = {
         ...property,
         ...autoFields,
         // ...uploadedFileUrls,
         // driveLink,
       };
 
+      console.log("dataToSave", dataToSave);
       await setDoc(doc(db, "QC_Inventories", propId), dataToSave);
       console.log("Document successfully written with ID:", propId);
       showSuccessToast("Property added successfully!");
@@ -466,21 +496,32 @@ const AddInventoryForm = () => {
         return;
       }
 
-      const autoFields = {
+      let propId = property.propertyId;
+      if (!property.propertyId) {
+        propId = await generateNextQcId();
+      }
+      if (!propId) {
+        console.error("Error generating Property ID. Please try again later");
+        showErrorToast("Error generating Property ID. Please try again later");
+        setSaving(false);
+        return;
+      }
+
+      const autoFields: ListingProperty = {
+        propertyId: propId,
         lastModified: getUnixDateTime(),
         cpCode: agentData.cpId,
         status: "draft",
       };
 
-      const dataToSave = {
+      const dataToSave: ListingProperty = {
         ...property,
         ...autoFields,
         // ...uploadedFileUrls,
         // driveLink,
       };
 
-      await setDoc(doc(collection(db, "QC_Inventories")), dataToSave);
-
+      await setDoc(doc(db, "QC_Inventories", propId), dataToSave);
       showSuccessToast("Property added successfully!");
       handleClear();
       setSavingDraft(false);

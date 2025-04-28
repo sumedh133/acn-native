@@ -9,8 +9,8 @@ import {
 } from "react-native";
 
 interface TextInputFieldProps {
-  value: string | null;
-  setValue: (value: string) => void;
+  value: string | number | null;
+  setValue: (value: string | number) => void;
   title: string;
   placeholder?: string;
   required?: boolean;
@@ -47,6 +47,28 @@ const TextInputField = ({
     setIsFocused(false);
   };
 
+  const handleChangeText = (text: string) => {
+    if (
+      keyboardType === "numeric" ||
+      keyboardType === "number-pad" ||
+      keyboardType === "decimal-pad"
+    ) {
+      // Convert to number if the input is a numeric type
+      if (text === "") {
+        setValue(""); // Or you might want to set it to null or 0 depending on your requirements
+      } else {
+        const numericValue =
+          keyboardType === "decimal-pad"
+            ? parseFloat(text)
+            : parseInt(text, 10);
+        setValue(isNaN(numericValue) ? 0 : numericValue);
+      }
+    } else {
+      // For non-numeric inputs, keep as string
+      setValue(text);
+    }
+  };
+
   return (
     <View style={styles.section}>
       <View style={styles.headingContainer}>
@@ -58,12 +80,13 @@ const TextInputField = ({
         style={[
           styles.inputContainer,
           isFocused && styles.focusedInputContainer,
-        ]}>
-        <Text style={styles.suffixText}>{prefix}</Text>
+        ]}
+      >
+        {prefix && <Text style={styles.suffixText}>{prefix}</Text>}
         <TextInput
           style={styles.inputField}
-          value={value || ""}
-          onChangeText={setValue}
+          value={value?.toString() || ""}
+          onChangeText={handleChangeText}
           placeholder={placeholder}
           placeholderTextColor="#A0A0A0"
           onFocus={handleFocus}
@@ -71,7 +94,7 @@ const TextInputField = ({
           keyboardType={keyboardType}
           maxLength={maxLength}
         />
-        <Text style={styles.suffixText}>{suffix}</Text>
+        {suffix && <Text style={styles.suffixText}>{suffix}</Text>}
       </View>
     </View>
   );

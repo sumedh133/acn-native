@@ -71,7 +71,7 @@ export const plotComponents = [
   {
     label: "Total Ask Price",
     type: "TotalAskPrice",
-    field:"totalAskPrice",
+    field: "totalAskPrice",
     colspan: 2,
   },
   {
@@ -89,7 +89,7 @@ export const plotComponents = [
   {
     label: "Inside or Outside Facing",
     type: "radioSelect",
-    field: "insideOutside",
+    field: "balconyFacing",
     options: [
       { label: "Inside", value: "Inside" },
       { label: "Outside", value: "Outside" },
@@ -113,8 +113,8 @@ export const plotComponents = [
     type: "Dropdown",
     field: "landKhata",
     option: [
-      {label: "A-Khata", value: "A-Khata"},
-      {label: "B-Khata", value: "B-Khata"},
+      { label: "A-Khata", value: "A-Khata" },
+      { label: "B-Khata", value: "B-Khata" },
     ],
     colspan: 2,
   },

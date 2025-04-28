@@ -75,11 +75,11 @@ export const independentComponents = [
     type: "Dropdown",
     field: "furnishing",
     option: [
-      {label: "Full Furnished", value: "fullFurnished"},
-      {label: "Semi Furnished", value: "semiFurnished"},
-      {label: "Warm Shell", value: "warmShell"},
-      {label: "Bare Shell", value: "bareShell"},
-      {label: "Plug & Play", value: "playAndPlay"},
+      { label: "Full Furnished", value: "fullFurnished" },
+      { label: "Semi Furnished", value: "semiFurnished" },
+      { label: "Warm Shell", value: "warmShell" },
+      { label: "Bare Shell", value: "bareShell" },
+      { label: "Plug & Play", value: "playAndPlay" },
     ],
     colspan: 1,
   },
@@ -136,7 +136,7 @@ export const independentComponents = [
   {
     label: "Total Ask Price",
     type: "TotalAskPrice",
-    field:"totalAskPrice",
+    field: "totalAskPrice",
     colspan: 2,
   },
   {
@@ -163,7 +163,7 @@ export const independentComponents = [
   {
     label: "Inside or Outside Facing",
     type: "radioSelect",
-    field: "insideOutside",
+    field: "balconyFacing",
     options: [
       { label: "Inside", value: "Inside" },
       { label: "Outside", value: "Outside" },
@@ -224,8 +224,8 @@ export const independentComponents = [
     type: "Dropdown",
     field: "buildingKhata",
     option: [
-      {label: "A-Khata", value: "A-Khata"},
-      {label: "B-Khata", value: "B-Khata"},
+      { label: "A-Khata", value: "A-Khata" },
+      { label: "B-Khata", value: "B-Khata" },
     ],
     colspan: 1,
   },
@@ -234,8 +234,8 @@ export const independentComponents = [
     type: "Dropdown",
     field: "landKhata",
     option: [
-      {label: "A-Khata", value: "A-Khata"},
-      {label: "B-Khata", value: "B-Khata"},
+      { label: "A-Khata", value: "A-Khata" },
+      { label: "B-Khata", value: "B-Khata" },
     ],
     colspan: 1,
   },

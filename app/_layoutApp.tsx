@@ -31,6 +31,9 @@ import FooterNavigation from "@/components/FooterNavigation";
 import ArrowLeftIcon from "@/assets/icons/svg/Common/ArrowLeftIcon";
 import { useCustomBackBehavior } from "@/hooks/useCustomBackBehavior";
 import KamManager from "./modals/KamModal";
+import { selectMyKam } from "@/store/slices/agentSlice";
+import { setKamDataState } from "@/store/slices/kamSlice";
+import { AnyAction, ThunkDispatch } from "@reduxjs/toolkit";
 
 // Custom header component to apply the desired styling
 const CustomHeader = ({
@@ -78,8 +81,15 @@ export default function LayoutApp() {
     Montserrat_700Bold,
   });
 
-  const dispatch = useDispatch();
+  const dispatch = useDispatch<ThunkDispatch<RootState, unknown, AnyAction>>();
   const router = useRouter();
+
+  const myKamId = useSelector(selectMyKam);
+  useEffect(() => {
+      if (myKamId) {
+        dispatch(setKamDataState(myKamId));
+      }
+    }, [myKamId, dispatch]);
 
   const onLayoutRootView = useCallback(async () => {
     if (fontsLoaded) {
