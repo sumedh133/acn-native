@@ -858,6 +858,7 @@ const AddInventoryForm = () => {
           : initialState._geoloc,
         assetType: value,
         communityType: value === "Independent Building" ? "Independent" : null,
+        propertyId: prev?.propertyId ?? null,
       }));
       setDocsToUpload({ photo: [], video: [], document: [] });
     }
