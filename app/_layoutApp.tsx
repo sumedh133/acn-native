@@ -5,6 +5,8 @@ import ProfileModal from "./modals/ProfileModal";
 import Toast from "react-native-toast-message";
 import { StatusBar } from "expo-status-bar";
 import { toastConfig } from "@/utils/toastUtils";
+import OnboardingFlow, { useOnboardingContext } from "./components/Onboarding";
+import { updateAgentDocData } from "@/store/slices/agentSlice";
 import {
   Keyboard,
   Platform,
@@ -23,9 +25,10 @@ import {
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { HamburgerMenuButton } from "@/components/HamburgerMenuButton";
 import { KamModalButton } from "@/components/KamModalButton";
-import { useDispatch } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import NetInfo from "@react-native-community/netinfo";
 import { setIsConnectedToInternet } from "@/store/slices/appSlice";
+import { RootState } from "@/store/store";
 
 // Custom header component to apply the desired styling
 const CustomHeader = ({
@@ -64,6 +67,7 @@ const CustomHeader = ({
 export default function LayoutApp() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [profileModalVisible, setProfileModalVisible] = useState(false);
+  const [showOnboarding, setShowOnboarding] = useState(false);
   const colorScheme = useColorScheme();
   const [topMargin, setTopMargin] = useState(10);
   const [fontsLoaded] = useFonts({
@@ -91,6 +95,19 @@ export default function LayoutApp() {
       SplashScreen.hideAsync();
     }
   }, [fontsLoaded]);
+
+  // Check if onboarding should be shown
+  const { docData: agentData } = useSelector((state: RootState) => state.agent);
+  
+  useEffect(() => {
+    // Show onboarding modal if the user has not completed onboarding
+    if (agentData && agentData.onboardingComplete === false) {
+      setShowOnboarding(true);
+    } else if (agentData && agentData.onboardingComplete === true) {
+      // Close the modal when onboarding is completed
+      setShowOnboarding(false);
+    }
+  }, [agentData, agentData?.onboardingComplete]);
 
   useEffect(() => {
     // Subscribe to network state updates
@@ -182,6 +199,17 @@ export default function LayoutApp() {
         visible={profileModalVisible}
         setVisible={setProfileModalVisible}
       />
+      <OnboardingFlow
+        visible={false}
+        onComplete={() => {
+          dispatch(updateAgentDocData({ onboardingComplete: true }));
+          setShowOnboarding(false);
+        }}
+        onClose={() => {
+          setShowOnboarding(false);
+        }}
+      />
+
       <Toast config={toastConfig} />
       <StatusBar style="auto" />
     </View>

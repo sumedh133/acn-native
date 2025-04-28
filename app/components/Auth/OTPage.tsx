@@ -28,7 +28,7 @@ export default function OTPage() {
 
   const { width } = useWindowDimensions();
 
-  const { phonenumber } = useSelector((state: RootState) => state.agent);
+  const { phonenumber, docData } = useSelector((state: RootState) => state.agent);
   const [errorMessage, setErrorMessage] = useState('');
   const [otp, setOtp] = useState<String>('');
   const [resendTimer, setResendTimer] = useState(30);
@@ -68,7 +68,11 @@ export default function OTPage() {
       if (userCredential?.user?.phoneNumber) {
         dispatch(signIn());
         router.dismissAll();
+        
+        // Always navigate to main app after login
+        // The onboarding modal will show automatically based on onboardingComplete status
         router.replace('/(tabs)/properties');
+
         setIsVerifying(false);
       } else {
 

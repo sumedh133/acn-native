@@ -52,7 +52,7 @@ const menuItems: MenuItem[] = [
 ];
 
 const bottomMenuItems: MenuItem[] = [
-  { title: 'Billing', path: '/billings', icon: 'dollar-sign', iconType: 'Billing' },
+  // { title: 'Billing', path: '/billings', icon: 'dollar-sign', iconType: 'Billing' },
   { title: 'Help', path: '/help', icon: 'help-circle', iconType: 'Feather' },
 ];
 
