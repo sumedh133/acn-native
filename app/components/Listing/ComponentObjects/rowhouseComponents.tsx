@@ -33,7 +33,7 @@ export const rowhouseComponents = [
     field: "structure",
     prefix: "G + ",
     placeholder: "0000",
-    // keyboardType: "numeric",
+    keyboardType: "numeric",
     colspan: 1,
   },
   {
@@ -75,11 +75,11 @@ export const rowhouseComponents = [
     type: "Dropdown",
     field: "furnishing",
     option: [
-      {label: "Full Furnished", value: "fullFurnished"},
-      {label: "Semi Furnished", value: "semiFurnished"},
-      {label: "Warm Shell", value: "warmShell"},
-      {label: "Bare Shell", value: "bareShell"},
-      {label: "Plug & Play", value: "playAndPlay"},
+      { label: "Full Furnished", value: "fullFurnished" },
+      { label: "Semi Furnished", value: "semiFurnished" },
+      { label: "Warm Shell", value: "warmShell" },
+      { label: "Bare Shell", value: "bareShell" },
+      { label: "Plug & Play", value: "playAndPlay" },
     ],
     colspan: 1,
   },
@@ -136,7 +136,7 @@ export const rowhouseComponents = [
   {
     label: "Total Ask Price",
     type: "TotalAskPrice",
-    field:"totalAskPrice",
+    field: "totalAskPrice",
     colspan: 2,
   },
   {
@@ -224,8 +224,8 @@ export const rowhouseComponents = [
     type: "Dropdown",
     field: "buildingKhata",
     option: [
-      {label: "A-Khata", value: "A-Khata"},
-      {label: "B-Khata", value: "B-Khata"},
+      { label: "A-Khata", value: "A-Khata" },
+      { label: "B-Khata", value: "B-Khata" },
     ],
     colspan: 1,
   },
@@ -234,8 +234,8 @@ export const rowhouseComponents = [
     type: "Dropdown",
     field: "landKhata",
     option: [
-      {label: "A-Khata", value: "A-Khata"},
-      {label: "B-Khata", value: "B-Khata"},
+      { label: "A-Khata", value: "A-Khata" },
+      { label: "B-Khata", value: "B-Khata" },
     ],
     colspan: 1,
   },

@@ -67,13 +67,14 @@ const initialState: ListingProperty = {
   dateOfStatusLastChecked: null,
   driveLink: null,
   eKhata: false,
+  exactFloor: null,
   exclusive: false,
   extraDetails: null,
   facing: null,
   floorNo: null,
   furnishing: null,
-  exactFloor: null,
   handoverDate: null,
+  insideOutside: null,
   kamId: null,
   kamStatus: null,
   landKhata: null,
@@ -91,6 +92,7 @@ const initialState: ListingProperty = {
   stage: null, //stage
   status: null,
   structure: null,
+  subType: null,
   tenanted: false,
   totalAskPrice: null,
   uds: null,
@@ -323,9 +325,13 @@ const AddInventoryForm = () => {
       }
     } else if (totalAskPrice != 0) {
       if (property.assetType === "Plot") {
-        askPricePerSqft = totalAskPrice / (property?.plotSize ?? 0);
+        askPricePerSqft = parseInt(
+          (totalAskPrice / (property?.plotSize ?? 0)).toFixed(0)
+        );
       } else {
-        askPricePerSqft = totalAskPrice / (property?.sbua ?? 0);
+        askPricePerSqft = parseInt(
+          (totalAskPrice / (property?.sbua ?? 0)).toFixed(0)
+        );
       }
     } else {
       throw new Error(`ask price is empty`);

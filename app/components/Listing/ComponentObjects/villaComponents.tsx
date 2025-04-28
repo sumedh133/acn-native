@@ -33,7 +33,7 @@ export const villaComponents = [
     field: "structure",
     prefix: "G + ",
     placeholder: "0000",
-    // keyboardType: "numeric",
+    keyboardType: "numeric",
     colspan: 1,
   },
   {
