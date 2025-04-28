@@ -137,7 +137,7 @@ export default function Dashboard({
             break;
           default:
             totalCount = listings.filter(
-              (listing) => listing.userStatus === propertiesTab
+              (listing) => listing.status === propertiesTab
             ).length;
             break;
         }
@@ -253,7 +253,7 @@ export default function Dashboard({
                 })}
               </View>
             )
-          ) : listings.filter((listing) => listing.userStatus === propertiesTab)
+          ) : listings.filter((listing) => listing.status === propertiesTab)
               .length === 0 || bufferring ? (
             <EmptyTabContent
               text="No Inventory"
@@ -263,7 +263,7 @@ export default function Dashboard({
           ) : (
             <View className="mx-3 mb-3">
               {listings
-                .filter((listing) => listing.userStatus === propertiesTab)
+                .filter((listing) => listing.status === propertiesTab)
                 .slice(0, batchSize)
                 .map((listing, index) => {
                   return (
@@ -275,7 +275,7 @@ export default function Dashboard({
                       totalCount={Math.min(
                         batchSize,
                         listings.filter(
-                          (listing) => listing.userStatus === propertiesTab
+                          (listing) => listing.status === propertiesTab
                         ).length
                       )}
                       isListing={true}
@@ -490,8 +490,7 @@ export default function Dashboard({
   useEffect(() => {
     const listingCounts = listings.reduce(
       (acc: Record<string, number>, item) => {
-        if (item?.userStatus)
-          acc[item?.userStatus] = (acc[item?.userStatus] || 0) + 1;
+        if (item?.status) acc[item?.status] = (acc[item?.status] || 0) + 1;
         return acc;
       },
       {}

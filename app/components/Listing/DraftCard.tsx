@@ -48,7 +48,11 @@ const DraftCard = ({
           </Text>
         </Text>
       </View>
-      <TouchableOpacity onPress={() => deleteDraft(item.id)}>
+      <TouchableOpacity
+        onPress={() => {
+          item.propertyId && deleteDraft(item.propertyId);
+        }}
+      >
         <TrashIcon />
       </TouchableOpacity>
     </TouchableOpacity>

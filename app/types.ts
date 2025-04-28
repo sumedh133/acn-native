@@ -148,5 +148,5 @@ export interface ListingProperty extends Property {
   uds?: number | null;
   unitNo?: string | null;
   lastModified?: number | null;
-  [key: string]: any;
+  // [key: string]: any;
 }
