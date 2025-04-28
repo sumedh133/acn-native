@@ -115,6 +115,11 @@ export interface DocsToUpload {
   document: FileObject[];
 }
 
+export interface IdGenerationResult {
+  lastId: string;
+  nextId: string;
+}
+
 export interface ListingProperty extends Property {
   address?: string | null;
   biappaApproved?: boolean | null;

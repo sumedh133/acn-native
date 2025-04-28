@@ -15,7 +15,7 @@ import {
 import { Ionicons, MaterialIcons } from "@expo/vector-icons";
 import { router, useLocalSearchParams } from "expo-router";
 import ImageCarousel from "./ImageCarousel";
-import { Enquiry } from "@/app/types";
+import { Enquiry, IdGenerationResult } from "@/app/types";
 import { useSelector } from "react-redux";
 import { RootState } from "@/store/store";
 import { handleIdGeneration } from "@/app/helpers/nextId";
@@ -58,11 +58,6 @@ const StyledText = styled(Text);
 interface AgentData {
   phonenumber: string;
   [key: string]: any;
-}
-
-interface IdGenerationResult {
-  lastId: string;
-  nextId: string;
 }
 
 // Helper function to format currency similar to web implementation

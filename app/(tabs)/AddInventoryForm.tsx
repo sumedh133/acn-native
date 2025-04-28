@@ -8,7 +8,7 @@ import {
 } from "react-native";
 import PlacesSearch from "../components/Listing/PlacesSearch";
 import { useEffect, useState } from "react";
-import { DocsToUpload, ListingProperty, Places } from "../types";
+import { DocsToUpload, IdGenerationResult, ListingProperty, Places } from "../types";
 import { getMicromarketFromCoordinates } from "../helpers/getMicromarketFromCoordinates";
 import React from "react";
 import AssetTypeSelection from "../components/Listing/AssetTypeSelection";
@@ -30,6 +30,10 @@ import { RootState } from "@/store/store";
 import Offline from "../components/Offline";
 import ArrowLeftIcon from "@/assets/icons/svg/Common/ArrowLeftIcon";
 import { router } from "expo-router";
+import { showErrorToast, showSuccessToast } from "@/utils/toastUtils";
+import { areasData } from "../helpers/areasData";
+import { handleIdGeneration } from "../helpers/nextId";
+import { getUnixDateTime } from "../helpers/getUnixDateTime";
 
 const initialState: ListingProperty = {
   _geoloc: {
@@ -105,25 +109,13 @@ const AddInventoryForm = () => {
     (state: RootState) => state.app.isConnectedToInternet
   );
 
-  console.log("property", property);
+  const agentData = useSelector((state: RootState) => state.agent.docData);
 
   const handleSetValue = (field: string, value: any) => {
     setProperty((prevProperty) => ({
       ...prevProperty,
       [field]: value,
     }));
-  };
-
-  const handleSetTotalAskPrice = (field: string, value: string) => {
-    if (field === "askPricePerSqft") {
-      // console.log("inside askPricePerSqft");
-      // console.log(field, value, "field and value");
-      handleSetValue(field, value);
-    } else {
-      // console.log("inside askTotalAskPrice");
-      // console.log(field, value, "field and value");
-      handleSetValue(field, value);
-    }
   };
 
   const getFormComponents = () => {
@@ -210,9 +202,7 @@ const AddInventoryForm = () => {
         return (
           <TotalAskPrice
             initialPrice={property[component.field]}
-            onPriceChange={(field, value) =>
-              handleSetTotalAskPrice(field, value)
-            }
+            onPriceChange={(field, value) => handleSetValue(field, value)}
             title={component.label}
             required={component.required}
           />
@@ -259,7 +249,6 @@ const AddInventoryForm = () => {
       }
     });
 
-
     // Add the last row if it's not empty
     if (currentRow.length > 0) {
       rows.push(currentRow);
@@ -296,6 +285,154 @@ const AddInventoryForm = () => {
       video: [],
       document: [],
     });
+  };
+
+  const checkCompulsoryFields = () => {
+    return true;
+  }
+
+  const findArea = () => {
+    if (!property.micromarket || property.micromarket === "") {
+      throw new Error(`micromarket is empty`);
+    } else {
+      const selectedArea = areasData.find((area) =>
+        area.MicroMarkets.includes(property.micromarket || "")
+      )?.Area;
+      console.log("selectedArea", selectedArea);
+      return selectedArea;
+    }
+  };
+
+  const findAskPrice = () => {
+    let askPricePerSqft = property.askPricePerSqft || 0;
+    let totalAskPrice = property.totalAskPrice || 0;
+
+    if (askPricePerSqft != 0) {
+      if (property.assetType === "Plot") {
+        totalAskPrice = askPricePerSqft * (property?.plotSize ?? 0);
+      } else {
+        totalAskPrice = askPricePerSqft * (property?.sbua ?? 0);
+      }
+    } else if (totalAskPrice != 0) {
+      if (property.assetType === "Plot") {
+        askPricePerSqft = totalAskPrice / (property?.plotSize ?? 0);
+      } else {
+        askPricePerSqft = totalAskPrice / (property?.sbua ?? 0);
+      }
+    } else {
+      throw new Error(`ask price is empty`);
+    }
+
+    return { askPricePerSqft, totalAskPrice };
+  }
+
+  const findFloor = () => {
+    let val = property.exactFloor;
+    if (!val) {
+      throw new Error(`exactFloor is empty`);
+    }
+
+    if (val === 0) {
+      return "Ground Floor";
+    } else if (val <= 5) {
+      return "Lower Floor (1-5)";
+    } else if (val <= 10) {
+      return "Middle Floor (6-10)";
+    } else if (val <= 20) {
+      return "Higher Floor (10+)";
+    } else {
+      return "Higher Floor (20+)";
+    }
+  }
+
+  const generateNextQcId = async (): Promise<string | null> => {
+      try {
+        const type = "lastQcId"; // Replace with "lastCpId" or others as needed
+        const result = (await handleIdGeneration(type)) as IdGenerationResult;
+        return result.nextId;
+      } catch (error) {
+        console.error("Error generating IDs:", error);
+        return null;
+      }
+    };
+
+  const handleSubmitButton = async () => {
+    
+    // // this is for apartment
+    // // property.address                  // places API
+    // // property.ageOfInventory; // 0
+    // // property.ageOfStatus; // 0
+    // // property.area; // places API
+    // // property.askPricePerSqft; // from totalAskPrice or vica versa
+    // // property.buildingAge; // input
+    // // property.cpCode; // agentSlice
+    // // property.dateOfInventoryAdded; //unixtimestamp
+    // // property.dateOfStatusLastChecked; // unixtimestamp
+    // property.driveLink; // from generate functiom
+    // // property.floorNo; // from exactFloor No
+    // // property.kamId; // from Kam DB according to the agent from the cpCode
+    // // property.kamStatus; // unnder verifcation
+    // // property.mapLocation              // places API
+    // // property.micromarket              // places API
+    // // property.nameOfTheProperty        //places API
+    // // property.plotSize; // input
+    // // property.propertyId; // QC___ function
+    // // property.qcStatus; // with Kam
+    // // property.stage; // kam
+    // // property.status; // under Verifcation
+    // // property.structure; // input
+
+    try {
+      setSaving(true);
+
+      const areCompulsoryFieldsValid = checkCompulsoryFields();
+      if (!areCompulsoryFieldsValid) {
+        console.error("Compulsory fields are missing or invalid");
+        showErrorToast("Compulsory fields are missing or invalid");
+        setSaving(false);
+        return;
+      }
+
+      const selectedArea = findArea();
+
+      const { askPricePerSqft, totalAskPrice } = findAskPrice();
+
+      const floorNo = findFloor();
+
+      const propId = await generateNextQcId();
+      if (!propId) {
+        console.error("Error generating Property ID. Please try again later");
+        showErrorToast("Error generating Property ID. Please try again later");
+        setSaving(false);
+        return;
+      }
+
+      const autoFields = {
+        propertyId: propId,
+        dateOfInventoryAdded: getUnixDateTime(),
+        dateOfStatusLastChecked: getUnixDateTime(),
+        cpCode: agentData.cpId,
+        kamId: agentData.kam,
+        area: selectedArea,
+        askPricePerSqft,
+        totalAskPrice,
+        floorNo,
+        kamStatus: "Under Verification",
+        qcStatus: "Under Verification",
+        stage: "", //draft | kam
+        status: "", //Draft | Under Verification
+      };
+      
+    } catch (error) {
+      console.log(error);
+      setSaving(false);
+      showErrorToast("Please fill all mandatory fields before submiting.");
+    } finally {
+      setSaving(false);
+      setTimeout(() => {
+        console.log("property", property);
+      }, 1000)
+    }
   };
 
   useEffect(() => {
@@ -347,37 +484,6 @@ const AddInventoryForm = () => {
       />
     );
 
-    const handleSubmitButton = () => {
-      for (const [key, value] of Object.entries(property)) {
-        if (value === null || value === "" ) {
-          console.log(`${key} is null`);
-        }
-      }
-      // this is for apartment
-      // property.address                  // places API
-      property.ageOfInventory           // 0
-      property.ageOfStatus              // 0
-      property.area                     // places API
-      property.askPricePerSqft          // from totalAskPrice or vica versa
-      property.buildingAge              // input
-      property.cpCode                   // agentSlice
-      property.dateOfInventoryAdded     //unixtimestamp
-      property.dateOfStatusLastChecked  // unixtimestamp
-      property.driveLink                // from generate functiom
-      property.floorNo                  // from exactFloor No
-      property.kamId                    // from Kam DB according to the agent from the cpCode
-      property.kamStatus                // unnder verifcation
-      // property.mapLocation              // places API
-      // property.micromarket              // places API
-      // property.nameOfTheProperty        //places API
-      property.plotSize                 // input
-      property.propertyId               // QC___ function
-      property.qcStatus                 // with Kam
-      property.stage                    // kam 
-      property.status                   // under Verifcation
-      property.structure                // input
-    }
-
   return (
     <View style={styles.mainView}>
       <View style={styles.headerContainer}>
@@ -416,7 +522,11 @@ const AddInventoryForm = () => {
         <TouchableOpacity style={styles.secondaryButton}>
           <Text style={styles.secondaryButtonText}>Save as Draft</Text>
         </TouchableOpacity>
-        <TouchableOpacity style={styles.primaryButton} onPress={handleSubmitButton}>
+        <TouchableOpacity
+          style={styles.primaryButton}
+          onPress={handleSubmitButton}
+          disabled={saving}
+        >
           {saving ? (
             <ActivityIndicator size={"small"} color={"white"} />
           ) : (
