@@ -11,6 +11,7 @@ import {
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { Places } from "@/app/types";
+import { locationRestriction } from "@/app/constants/PropertyConstants";
 
 // Define types for API responses
 interface PlacePrediction {
@@ -63,7 +64,7 @@ const PlacesSearch = ({
       const response = await fetch(
         `https://maps.googleapis.com/maps/api/place/autocomplete/json?input=${encodeURIComponent(
           query
-        )}&key=${API_KEY}`
+        )}&locationrestriction=${locationRestriction}&key=${API_KEY}`
       );
       const data = await response.json();
 
@@ -124,7 +125,7 @@ const PlacesSearch = ({
     // Skip initial useEffect run when component mounts with a selectedPlace
     if (isInitialMount.current) {
       if (selectedPlace) {
-        setSearchQuery(selectedPlace.name);
+        setSearchQuery(selectedPlace.name!);
       }
       isInitialMount.current = false;
       return;
@@ -132,7 +133,7 @@ const PlacesSearch = ({
 
     // For subsequent updates to selectedPlace
     if (selectedPlace) {
-      setSearchQuery(selectedPlace.name);
+      setSearchQuery(selectedPlace.name!);
       // Don't show results when place is programmatically selected
       setShowResults(false);
     } else {
@@ -191,7 +192,7 @@ const PlacesSearch = ({
             lat: details.geometry.location.lat,
             lng: details.geometry.location.lng,
             address: details.formatted_address || description,
-            mapLink: details.url || "",
+            mapLocation: details.url || "",
           };
           // This will set searchQuery via useEffect, so reset userInitiatedSearch
           setUserInitiatedSearch(false);
@@ -226,58 +227,64 @@ const PlacesSearch = ({
   };
 
   return (
-    <View style={styles.container}>
-      {/* Search Input */}
-      <View style={styles.inputContainer}>
-        <Ionicons name="search-outline" size={20} color="#726C6C" />
-        <TextInput
-          style={styles.textInput}
-          placeholder="Search Project Name"
-          placeholderTextColor="#7A7B7C"
-          value={searchQuery}
-          onChangeText={handleSearchInputChange}
-          onFocus={handleSearchFocus}
-        />
-
-        {isLoading ? (
-          <ActivityIndicator
-            style={styles.rightIcon}
-            size="small"
-            color="#666"
-          />
-        ) : searchQuery ? (
-          <TouchableOpacity
-            onPress={handleClearSearch}
-            style={styles.rightIcon}
-          >
-            <Text style={styles.clearButtonText}>✕</Text>
-          </TouchableOpacity>
-        ) : null}
+    <View style={styles.section}>
+      <View style={styles.headingContainer}>
+        <Text style={styles.sectionHeading}>Project Name</Text>
+        <Text style={styles.compulsoryStar}>*</Text>
       </View>
-
-      {/* Search Results Dropdown */}
-      {showResults && searchResults.length > 0 && (
-        <View style={styles.resultsContainer}>
-          <FlatList
-            data={searchResults}
-            keyExtractor={(item) => item.place_id}
-            renderItem={({ item }) => (
-              <TouchableOpacity
-                style={styles.resultItem}
-                onPress={() =>
-                  handleSelectPlace(item.place_id, item.description)
-                }
-              >
-                <Text style={styles.resultText}>{item.description}</Text>
-              </TouchableOpacity>
-            )}
-            keyboardShouldPersistTaps="handled"
-            scrollEnabled={true}
-            nestedScrollEnabled={true}
-            style={styles.resultsList}
+      <View style={styles.container}>
+        {/* Search Input */}
+        <View style={styles.inputContainer}>
+          <Ionicons name="search-outline" size={20} color="#726C6C" />
+          <TextInput
+            style={styles.textInput}
+            placeholder="Search Project Name"
+            placeholderTextColor="#7A7B7C"
+            value={searchQuery}
+            onChangeText={handleSearchInputChange}
+            onFocus={handleSearchFocus}
           />
+
+          {isLoading ? (
+            <ActivityIndicator
+              style={styles.rightIcon}
+              size="small"
+              color="#153E3B"
+            />
+          ) : searchQuery ? (
+            <TouchableOpacity
+              onPress={handleClearSearch}
+              style={styles.rightIcon}
+            >
+              <Text style={styles.clearButtonText}>✕</Text>
+            </TouchableOpacity>
+          ) : null}
         </View>
-      )}
+
+        {/* Search Results Dropdown */}
+        {showResults && searchResults.length > 0 && (
+          <View style={styles.resultsContainer}>
+            <FlatList
+              data={searchResults}
+              keyExtractor={(item) => item.place_id}
+              renderItem={({ item }) => (
+                <TouchableOpacity
+                  style={styles.resultItem}
+                  onPress={() =>
+                    handleSelectPlace(item.place_id, item.description)
+                  }
+                >
+                  <Text style={styles.resultText}>{item.description}</Text>
+                </TouchableOpacity>
+              )}
+              keyboardShouldPersistTaps="handled"
+              scrollEnabled={true}
+              nestedScrollEnabled={true}
+              style={styles.resultsList}
+            />
+          </View>
+        )}
+      </View>
     </View>
   );
 };
@@ -286,6 +293,28 @@ const styles = StyleSheet.create({
   container: {
     width: "100%",
     zIndex: 100,
+  },
+  section: {
+    width: "100%",
+    flex: 1,
+    alignItems: "flex-start",
+    justifyContent: "center",
+    gap: 10,
+  },
+  headingContainer: {
+    display: "flex",
+    flexDirection: "row",
+    gap: 6,
+  },
+  sectionHeading: {
+    fontFamily: "Montserrat_600SemiBold",
+    fontSize: 14,
+  },
+  compulsoryStar: {
+    fontFamily: "sans-serif",
+    color: "#DC3545",
+    fontSize: 14,
+    fontWeight: "400",
   },
   inputContainer: {
     flexDirection: "row",
@@ -318,7 +347,7 @@ const styles = StyleSheet.create({
   },
   resultsContainer: {
     position: "absolute",
-    top: 45,
+    top: 50,
     left: 0,
     right: 0,
     backgroundColor: "white",

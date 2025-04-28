@@ -30,6 +30,10 @@ import CoinIcon from "@/assets/icons/svg/Sidebar/CoinIcon";
 import FooterNavigation from "@/components/FooterNavigation";
 import ArrowLeftIcon from "@/assets/icons/svg/Common/ArrowLeftIcon";
 import { useCustomBackBehavior } from "@/hooks/useCustomBackBehavior";
+import KamManager from "./modals/KamModal";
+import { selectMyKam } from "@/store/slices/agentSlice";
+import { setKamDataState } from "@/store/slices/kamSlice";
+import { AnyAction, ThunkDispatch } from "@reduxjs/toolkit";
 
 // Custom header component to apply the desired styling
 const CustomHeader = ({
@@ -51,7 +55,7 @@ const CustomHeader = ({
         <View style={styles.headerLeft}>
           <TouchableOpacity onPress={() => onMenuPress(headerBackVisible)}>
             {headerBackVisible ? (
-              <ArrowLeftIcon width={34} height={34} />
+              <ArrowLeftIcon />
             ) : (
               <UserIcon width={32} height={32} />
             )}
@@ -77,8 +81,15 @@ export default function LayoutApp() {
     Montserrat_700Bold,
   });
 
-  const dispatch = useDispatch();
+  const dispatch = useDispatch<ThunkDispatch<RootState, unknown, AnyAction>>();
   const router = useRouter();
+
+  const myKamId = useSelector(selectMyKam);
+  useEffect(() => {
+      if (myKamId) {
+        dispatch(setKamDataState(myKamId));
+      }
+    }, [myKamId, dispatch]);
 
   const onLayoutRootView = useCallback(async () => {
     if (fontsLoaded) {
@@ -136,6 +147,7 @@ export default function LayoutApp() {
               />
             );
           },
+          animation: "fade",
         }}
       >
         <Stack.Screen
@@ -153,14 +165,25 @@ export default function LayoutApp() {
         />
         <Stack.Screen
           name="(tabs)/AddInventoryForm"
-          options={{ title: "Add Inventory" }}
+          // options={{ title: "Add Inventory", headerBackVisible: true }}
+          options={{ headerShown: false }}
+          initialParams={{ showFooter: false }}
         />
         <Stack.Screen
           name="(tabs)/UserRequirementForm"
-          options={{ title: "Add Requirement" }}
+          options={{ title: "Add Requirement", headerBackVisible: true }}
+          initialParams={{ showFooter: false }}
         />
-        <Stack.Screen name="(tabs)/billings" options={{ title: "Billing" }} />
-        <Stack.Screen name="(tabs)/help" options={{ title: "Help" }} />
+        <Stack.Screen
+          name="(tabs)/billings"
+          options={{ title: "Billing", headerBackVisible: true }}
+          initialParams={{ showFooter: false }}
+        />
+        <Stack.Screen
+          name="(tabs)/help"
+          options={{ title: "Help", headerBackVisible: true }}
+          initialParams={{ showFooter: false }}
+        />
         <Stack.Screen
           name="(tabs)/dashboardTab"
           options={{ title: "Dashboard" }}
@@ -210,8 +233,15 @@ export default function LayoutApp() {
         <Stack.Screen
           name="(pages)/Profile"
           options={{
-            headerShown: true,
             title: "Settings",
+            headerBackVisible: true,
+          }}
+          initialParams={{ showFooter: false }}
+        />
+        <Stack.Screen
+          name="(pages)/Drafts"
+          options={{
+            title: "Choose Inventory",
             headerBackVisible: true,
           }}
           initialParams={{ showFooter: false }}
@@ -219,6 +249,7 @@ export default function LayoutApp() {
       </Stack>
       <Toast config={toastConfig} />
       <StatusBar style="auto" />
+      <KamManager />
       {isAuthenticated && <FooterNavigation />}
     </View>
   );

@@ -6,7 +6,7 @@ import DashboardIcon from "@/assets/icons/svg/Footer/DashboardIcon";
 import NotificationIcon from "@/assets/icons/svg/Footer/NotificationIcon";
 import PropertiesIcon from "@/assets/icons/svg/Footer/PropertiesIcon";
 import RequirementsIcon from "@/assets/icons/svg/Footer/RequirementsIcon";
-import PlusIcon from "@/assets/icons/svg/PlusIcon";
+import PlusIcon from "@/assets/icons/svg/Common/PlusIcon";
 import { useNavigation, usePathname, useRouter } from "expo-router";
 import React, { ReactNode, useState, useRef, useEffect } from "react";
 import {
@@ -161,7 +161,7 @@ const FooterNavigation = () => {
         navigateAtEndOfAnimation.current !== null &&
         navigateAtEndOfAnimation.current !== pathname
       ) {
-        router.replace(navigateAtEndOfAnimation.current as any);
+        router.push(navigateAtEndOfAnimation.current as any);
         navigateAtEndOfAnimation.current = null;
       }
     });

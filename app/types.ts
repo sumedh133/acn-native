@@ -1,35 +1,45 @@
 export interface Property {
-  propertyId: string;
-  title?: string;
-  nameOfTheProperty?: string;
-  micromarket?: string;
-  assetType?: string;
-  unitType?: string;
-  facing?: string;
-  totalAskPrice?: number;
-  askPricePerSqft?: number;
-  sbua?: number;
-  plotSize?: number;
-  carpet?: number;
-  floorNo?: string;
-  handoverDate?: string;
-  buildingKhata?: string;
-  landKhata?: string;
-  buildingAge?: string;
-  tenanted?: boolean;
-  area?: string;
-  dateOfInventoryAdded?: number;
-  extraDetails?: string;
-  driveLink?: string;
+  _geoloc?: {
+    lat: number | null;
+    lng: number | null;
+  };
+  ageOfInventory?: number | null;
+  ageOfStatus?: number | null;
+  area?: string | null;
+  askPricePerSqft?: number | null;
+  assetType?: string | null;
+  buildingAge?: number | null;
+  buildingKhata?: string | null;
+  carpet?: number | null;
+  cpCode?: string | null;
+  currentStatus?: string | null;
+  dateOfInventoryAdded?: number | null;
+  dateOfStatusLastChecked?: number | null;
+  driveLink?: string | null;
+  eKhata?: boolean | null;
+  exclusive?: boolean | null;
+  extraDetails?: string | null;
+  facing?: string | null;
+  floorNo?: string | null;
+  exactFloor?: number | null;
+  handoverDate?: string | null;
+  landKhata?: string | null;
+  mapLocation?: string | null;
+  micromarket?: string | null;
+  nameOfTheProperty?: string | null;
+  ocReceived?: boolean | null;
+  plotSize?: number | null;
+  propertyId?: string | null;
+  sbua?: number | null;
+  status?: string | null;
+  tenanted?: boolean | null;
+  totalAskPrice?: number | null;
+  unitType?: string | null;
   photo?: string[];
   video?: string[];
-  mapLocation?: string;
-  cpId?: string;
-  cpCode?: string;
-  description?: string;
-  status?: string;
+  document?: string[];
+
   objectID?: string;
-  dateOfStatusLastChecked?: number;
 }
 
 export interface Budget {
@@ -84,10 +94,59 @@ export interface Landmark {
 }
 
 export interface Places {
-  name: string;
-  lat: number;
-  lng: number;
-  address: string;
-  mapLink: string;
-  micromarket?: string;
+  name: string | null;
+  lat: number | null;
+  lng: number | null;
+  address: string | null;
+  mapLocation: string | null;
+}
+
+export interface UploadedFileUrls {
+  [key: string]: string[];
+  photo: string[];
+  video: string[];
+  document: string[];
+}
+
+export interface FileObject {
+  name?: string | null;
+  size?: number | null;
+  uri?: string | null;
+  firebaseUri?: string | null;
+}
+
+export interface DocsToUpload {
+  [key: string]: FileObject[];
+  photo: FileObject[];
+  video: FileObject[];
+  document: FileObject[];
+}
+
+export interface IdGenerationResult {
+  lastId: string;
+  nextId: string;
+}
+
+export interface ListingProperty extends Property {
+  address?: string | null;
+  biappaApproved?: boolean | null;
+  bdaApproved?: boolean | null;
+  carPark?: number | null;
+  communityType?: string | null;
+  cornerUnit?: boolean | null;
+  furnishing?: string | null;
+  balconyFacing?: string | null;
+  kamId?: string | null;
+  kamStatus?: string | null;
+  noOfBalconies?: number | null;
+  noOfBathrooms?: number | null;
+  qcStatus?: string | null;
+  rentalIncome?: number | null;
+  stage?: string | null; //stage
+  structure?: number | null;
+  subType?: string | null;
+  uds?: number | null;
+  unitNo?: string | null;
+  lastModified?: number | null;
+  // [key: string]: any;
 }

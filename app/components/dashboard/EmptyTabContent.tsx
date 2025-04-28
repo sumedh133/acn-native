@@ -1,17 +1,22 @@
 import { styled } from "nativewind";
 import React from "react";
-import { View, Text, TouchableOpacity, ActivityIndicator } from "react-native"; // Adjust import based on your setup
+import {
+  View,
+  Text,
+  TouchableOpacity,
+  ActivityIndicator,
+  StyleSheet,
+  Image,
+  Dimensions,
+} from "react-native";
+import LinearGradient from "react-native-linear-gradient";
 
-const StyledView = styled(View);
-const StyledText = styled(Text);
-const StyledTouchableOpacity = styled(TouchableOpacity);
-// Define props type
 type EmptyTabContentProps = {
-  text: string;
-  sub_text: string;
-  icon: React.ReactNode; // Use ReactNode for JSX elements like icons
-  handleOnPress: () => void; // Specific function type
-  buttonText: string;
+  text?: string;
+  sub_text?: string;
+  icon?: React.ReactNode;
+  handleOnPress?: () => void;
+  buttonText?: string;
   loading: boolean;
 };
 
@@ -24,29 +29,84 @@ const EmptyTabContent: React.FC<EmptyTabContentProps> = ({
   buttonText,
   loading,
 }) => {
-  if (loading) return <ActivityIndicator className="mt-8" />;
+  if (loading) return <ActivityIndicator className="mt-8" color="#153E3B" />;
   return (
-    <StyledView className="flex-1 items-center justify-center gap-[24px] mt-8">
-      <StyledView className="flex flex-col items-center justify-center gap-[12px]">
-        <StyledText className="text-lg text-[#2B2928] text-center">
-          {text}
-        </StyledText>
-        <StyledText className="text-base text-[#111827] text-center">
-          {sub_text}
-        </StyledText>
-      </StyledView>
-      <StyledTouchableOpacity
-        className="flex-row items-center justify-center bg-[#153E3B] py-3 px-4 rounded-lg mb-4"
-        onPress={handleOnPress}
+    <View style={styles.bgContainer}>
+      <LinearGradient
+        colors={["#E0F7F4", "#FFFFFF"]}
+        locations={[0, 1]}
+        style={styles.container}
       >
-        {icon}
-        <StyledText className="text-base font-medium text-white ml-2">
-          {buttonText}
-        </StyledText>
-      </StyledTouchableOpacity>
-    </StyledView>
+        <Image
+          source={require("../../../assets/icons/no-image-icon.webp")}
+          style={{ width: 96, height: 96 }} // You can adjust the size
+        />
+        <View style={styles.textContainer}>
+          <Text style={styles.text}>{text}</Text>
+          <Text style={styles.subText}>{sub_text}</Text>
+        </View>
+        {icon && buttonText && (
+          <TouchableOpacity onPress={handleOnPress} style={styles.button}>
+            {icon}
+            <Text style={styles.buttonText}>{buttonText}</Text>
+          </TouchableOpacity>
+        )}
+      </LinearGradient>
+    </View>
   );
 };
 
-// Memoize the component to prevent unnecessary re-renders
+const styles = StyleSheet.create({
+  bgContainer: {
+    height: "100%",
+    backgroundColor: "#FFFFFF",
+  },
+  container: {
+    display: "flex",
+    flexDirection: "column",
+    paddingTop: 72,
+    marginHorizontal: 12,
+    borderRadius: 8,
+    alignItems: "center",
+    gap: 12,
+  },
+  textContainer: {
+    display: "flex",
+    flexDirection: "column",
+    gap: 8,
+    alignItems: "center",
+  },
+  text: {
+    fontFamily: "Lato",
+    fontWeight: 700,
+    fontSize: 16,
+    lineHeight: 24,
+    textAlign: "center",
+  },
+  subText: {
+    fontFamily: "Lato",
+    fontWeight: 500,
+    fontSize: 14,
+    lineHeight: 21,
+    textAlign: "center",
+  },
+  button: {
+    backgroundColor: "#153E3B",
+    paddingVertical: 8,
+    paddingHorizontal: 32,
+    borderRadius: 4,
+    display: "flex",
+    flexDirection: "row",
+    gap: 8,
+    alignItems: "center",
+  },
+  buttonText: {
+    fontFamily: "Lato",
+    fontWeight: 600,
+    fontSize: 14,
+    lineHeight: 21,
+    textAlign: "center",
+    color: "#FAFBFC",
+  },
+});
 export default React.memo(EmptyTabContent);
