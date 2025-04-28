@@ -9,11 +9,18 @@ import {
   Alert,
 } from "react-native";
 import { Text } from "react-native";
-import DocumentPicker, {
+import {
+  DocumentPickerOptions,
   DocumentPickerResponse,
-  types,
-} from "react-native-document-picker";
+  errorCodes,
+  FileToCopy,
+  isErrorWithCode,
+  keepLocalCopy,
+  pick,
+} from "@react-native-documents/picker";
 import { PermissionsAndroid } from "react-native";
+import { showToast } from "@/utils/toastUtils";
+import { addInventoryDocumentTypes } from "@/app/constants/DocumentConstants";
 
 interface FileUploadProps {
   docsToUpload: DocsToUpload;
@@ -43,23 +50,37 @@ const FileUpload: React.FC<FileUploadProps> = ({
     //     }
     //   );
     //   setTimeout(() => {
-    //     console.log(granted, "granted");
     //     return granted === PermissionsAndroid.RESULTS.GRANTED;
-    //   }, 0) 
-      
+    //   }, 0)
+
     // } catch (err) {
     //   console.log(err);
     //   return false;
     // }
   };
 
-  const categorizeFile = (
+  const categorizeFile = async (
     file: DocumentPickerResponse
-  ): { category: string; fileObject: FileObject } => {
+  ): Promise<{ category?: string; fileObject?: FileObject }> => {
+    const fileToCopy: FileToCopy = {
+      uri: file.uri,
+      fileName: file.name ?? "fallbackName",
+    };
+
+    const [localCopy] = await keepLocalCopy({
+      files: [fileToCopy],
+      destination: "cachesDirectory",
+    });
+
+    if (localCopy.status !== "success") {
+      showToast("error", `An error occured in selecting ${file.name}`);
+      return {};
+    }
+
     const fileObject: FileObject = {
       name: file.name,
       size: file.size,
-      uri: file.fileCopyUri,
+      uri: localCopy.localUri,
       type: file.type,
     };
 
@@ -85,60 +106,55 @@ const FileUpload: React.FC<FileUploadProps> = ({
     setIsUploading(true);
 
     try {
-      // Launch document picker
-      const results = await DocumentPicker.pick({
+      const options: DocumentPickerOptions = {
         allowMultiSelection: true,
-        type: [
-          types.images,
-          types.video,
-          types.pdf,
-          types.plainText,
-          types.doc,
-          types.docx,
-          types.xls,
-          types.xlsx,
-        ],
-        // 100MB in bytes
-        copyTo: "cachesDirectory",
-      });
+        type: addInventoryDocumentTypes.allowedTypes,
+      };
 
-      // Process each selected file
+      const results = await pick(options);
+
       const newDocsToUpload = { ...docsToUpload };
 
-      console.log("results", results);
+      for (let index = 0; index < results.length; index++) {
+        const file = results[index];
 
-      results.forEach((file) => {
-        // Check file size (100MB limit)
-        if (file.size && file.size > 100 * 1024 * 1024) {
-          Alert.alert("File too large", `${file.name} exceeds the 100MB limit`);
-          return;
+        if (!file.hasRequestedType) {
+          showToast("error", `Invalid file type of ${file.name}`);
+          continue;
+        }
+        const maxSizeInMB =
+          addInventoryDocumentTypes?.allowedSizes?.filter((allowedSize) =>
+            file.type?.startsWith(allowedSize.type)
+          )?.[0]?.maxFileSizesInMB ?? 10;
+
+        if (file.size && file.size > maxSizeInMB * 1024 * 1024) {
+          showToast("error", `${file.name} exceeds the ${maxSizeInMB}MB limit`);
+          continue;
         }
 
-        const { category, fileObject } = categorizeFile(file);
-        newDocsToUpload[category].push(fileObject);
-      });
-
-      // Update state with new files
+        const { category, fileObject } = await categorizeFile(file);
+        if (category && fileObject) newDocsToUpload[category].push(fileObject);
+      }
       setDocsToUpload(newDocsToUpload);
     } catch (err) {
-      if (DocumentPicker.isCancel(err)) {
-        // User canceled the picker
-        console.log("User cancelled file picking");
+      if (isErrorWithCode(err) && err.code === errorCodes.OPERATION_CANCELED) {
+        return;
       } else {
         // Error occurred
-        console.error("Error picking documents:", err);
-        Alert.alert("Error", "An error occurred while selecting files");
+        showToast("error", "An error occurred while selecting files");
       }
     } finally {
       setIsUploading(false);
     }
   };
 
-  // Calculate total files
-  const totalFiles =
-    docsToUpload.photo.length +
-    docsToUpload.video.length +
-    docsToUpload.document.length;
+  const totalFiles = React.useMemo(
+    () =>
+      docsToUpload.photo.length +
+      docsToUpload.video.length +
+      docsToUpload.document.length,
+    [docsToUpload]
+  );
 
   return (
     <View style={styles.container}>
@@ -148,9 +164,7 @@ const FileUpload: React.FC<FileUploadProps> = ({
           <Text style={styles.staticText}>
             Choose a file or drag & drop it here
           </Text>
-          <Text style={styles.staticSubText}>
-            JPEG, PNG, PDF, and MP4 formats, up to 100MB
-          </Text>
+          <Text style={styles.staticSubText}>Images, Videos, or PDFs</Text>
           {totalFiles > 0 && (
             <Text style={styles.fileCountText}>
               {totalFiles} file{totalFiles !== 1 ? "s" : ""} selected

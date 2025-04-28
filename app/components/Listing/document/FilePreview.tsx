@@ -1,6 +1,7 @@
 import { DocsToUpload, FileObject } from "@/app/types";
 import { FontAwesome6, Ionicons } from "@expo/vector-icons";
-import React from "react";
+import React, { useCallback } from "react";
+import RNFS from "react-native-fs";
 import { View, Text, StyleSheet, TouchableOpacity } from "react-native";
 
 interface FilePreviewProps {
@@ -12,9 +13,16 @@ const FilePreview: React.FC<FilePreviewProps> = ({
   docsToUpload,
   setDocsToUpload,
 }) => {
-  const handleRemoveFile = (type: string, index: number) => {
+  const cleanUpDocument = async (uri: string) => {
+    if (await RNFS.exists(uri)) {
+      await RNFS.unlink(uri);
+    }
+  };
+  const handleRemoveFile = async (type: string, index: number) => {
     const updatedDocs = { ...docsToUpload };
-
+    if (updatedDocs?.[type]?.[index]?.uri) {
+      cleanUpDocument(updatedDocs?.[type]?.[index]?.uri);
+    }
     updatedDocs[type] = [
       ...updatedDocs[type].slice(0, index),
       ...updatedDocs[type].slice(index + 1),
@@ -47,59 +55,54 @@ const FilePreview: React.FC<FilePreviewProps> = ({
     return;
   };
 
-  console.log(docsToUpload);
-  return (
-    <View style={styles.container}>
-      {["photo", "video", "document"].map(
-        (type) =>
-          docsToUpload[type]?.length > 0 && (
-            <View key={type} style={styles.sectionContainer}>
-              <Text style={styles.sectionTitle}>
-                {type.charAt(0).toUpperCase() + type.slice(1)} Files
-              </Text>
+  const renderDocs = useCallback(() => {
+    return ["photo", "video", "document"].map(
+      (type) =>
+        docsToUpload[type]?.length > 0 && (
+          <View key={type} style={styles.sectionContainer}>
+            <Text style={styles.sectionTitle}>
+              {type.charAt(0).toUpperCase() + type.slice(1)} Files
+            </Text>
 
-              <View style={styles.fileListContainer}>
-                {docsToUpload[type].map((file, index) => (
-                  <View key={index} style={styles.fileContainer}>
-                    <View style={styles.fileContent}>
-                      <View style={styles.iconContainer}>
-                        {getFileIcon(file.type)}
-                      </View>
-
-                      <View style={styles.fileDetails}>
-                        <TouchableOpacity onPress={() => handleFilePress(file)}>
-                          <Text
-                            style={styles.fileName}
-                            numberOfLines={1}
-                            ellipsizeMode="middle"
-                          >
-                            {file.name || "Unnamed file"}
-                          </Text>
-                        </TouchableOpacity>
-                        <Text style={styles.fileSize}>
-                          {formatFileSize(file.size)}
-                        </Text>
-                      </View>
-
-                      <TouchableOpacity
-                        style={styles.deleteButton}
-                        onPress={() => handleRemoveFile(type, index)}
-                      >
-                        <Ionicons
-                          name="trash-outline"
-                          size={18}
-                          color="black"
-                        />
-                      </TouchableOpacity>
+            <View style={styles.fileListContainer}>
+              {docsToUpload[type].map((file, index) => (
+                <View key={index} style={styles.fileContainer}>
+                  <View style={styles.fileContent}>
+                    <View style={styles.iconContainer}>
+                      {getFileIcon(file.type)}
                     </View>
+
+                    <View style={styles.fileDetails}>
+                      <TouchableOpacity onPress={() => handleFilePress(file)}>
+                        <Text
+                          style={styles.fileName}
+                          numberOfLines={1}
+                          ellipsizeMode="middle"
+                        >
+                          {file.name || "Unnamed file"}
+                        </Text>
+                      </TouchableOpacity>
+                      <Text style={styles.fileSize}>
+                        {formatFileSize(file.size)}
+                      </Text>
+                    </View>
+
+                    <TouchableOpacity
+                      style={styles.deleteButton}
+                      onPress={() => handleRemoveFile(type, index)}
+                    >
+                      <Ionicons name="trash-outline" size={18} color="black" />
+                    </TouchableOpacity>
                   </View>
-                ))}
-              </View>
+                </View>
+              ))}
             </View>
-          )
-      )}
-    </View>
-  );
+          </View>
+        )
+    );
+  }, [docsToUpload]);
+
+  return <View style={styles.container}>{renderDocs()}</View>;
 };
 
 const styles = StyleSheet.create({
