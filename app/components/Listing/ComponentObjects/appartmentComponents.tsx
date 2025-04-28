@@ -133,7 +133,6 @@ export const appartmentComponents = [
     ],
     colspan: 2,
   },
-  //TotalAskPrice
   {
     label: "Total Ask Price",
     type: "TotalAskPrice",
@@ -258,7 +257,6 @@ export const appartmentComponents = [
     field: "bdaApproved",
     colspan: 2,
   },
-  //DocumentUpload
   {
     type: "Document",
     colspan: 2,

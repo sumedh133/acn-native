@@ -35,9 +35,9 @@ export interface Property {
   tenanted?: boolean | null;
   totalAskPrice?: number | null;
   unitType?: string | null;
-  photo?: string[] | null;
-  video?: string[] | null;
-  document?: string[] | null;
+  photo?: string[];
+  video?: string[];
+  document?: string[];
 
   objectID?: string;
 }
@@ -99,6 +99,13 @@ export interface Places {
   lng: number | null;
   address: string | null;
   mapLocation: string | null;
+}
+
+export interface UploadedFileUrls {
+  [key: string]: string[];
+  photo: string[];
+  video: string[];
+  document: string[];
 }
 
 export interface FileObject {

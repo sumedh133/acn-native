@@ -7,6 +7,7 @@ interface RadioButtonSelectProps {
   title: string;
   options: Array<{ label: string; value: string }>;
   required: boolean;
+  disable?: boolean;
 }
 
 const RadioButtonSelect = ({
@@ -15,6 +16,7 @@ const RadioButtonSelect = ({
   title,
   options,
   required,
+  disable = false,
 }: RadioButtonSelectProps) => {
   const handleSelect = (val: string) => {
     if (value === val && !required) {
@@ -38,7 +40,9 @@ const RadioButtonSelect = ({
             <TouchableOpacity
               key={index}
               style={styles.options}
-              onPress={() => handleSelect(option.value)}>
+              onPress={() => handleSelect(option.value)}
+              disabled={disable}
+            >
               <View style={styles.radioCircle}>
                 {isSelected && <View style={styles.selectedRadioCircle} />}
               </View>

@@ -67,7 +67,6 @@ export const plotComponents = [
     ],
     colspan: 2,
   },
-  //TotalAskPrice
   {
     label: "Total Ask Price",
     type: "TotalAskPrice",
@@ -136,7 +135,10 @@ export const plotComponents = [
     field: "bdaApproved",
     colspan: 2,
   },
-  //DocumentUpload
+  {
+    type: "Document",
+    colspan: 2,
+  },
   {
     label: "Extra Details",
     type: "ExtraDetails",

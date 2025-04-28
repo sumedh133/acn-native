@@ -13,6 +13,7 @@ import {
   IdGenerationResult,
   ListingProperty,
   Places,
+  UploadedFileUrls,
 } from "../types";
 import { getMicromarketFromCoordinates } from "../helpers/getMicromarketFromCoordinates";
 import React from "react";
@@ -41,6 +42,9 @@ import { handleIdGeneration } from "../helpers/nextId";
 import { getUnixDateTime } from "../helpers/getUnixDateTime";
 import { collection, doc, setDoc } from "firebase/firestore";
 import { db } from "../config/firebase";
+import storage from "@react-native-firebase/storage";
+
+const API_URL = "https://uploadtodrive-ouurm6pska-uc.a.run.app";
 
 const initialState: ListingProperty = {
   _geoloc: {
@@ -112,6 +116,7 @@ const AddInventoryForm = () => {
   const [property, setProperty] = useState<ListingProperty>(
     item ? (JSON.parse(item as string) as ListingProperty) : initialState
   );
+  const [isNew, setIsNew] = useState(true);
   const [docsToUpload, setDocsToUpload] = useState<DocsToUpload>({
     photo: [],
     video: [],
@@ -158,6 +163,7 @@ const AddInventoryForm = () => {
             title={component.label}
             options={component.options}
             required={component.required}
+            disable={property.assetType === "Independent Building"}
           />
         );
       case "slider":
@@ -412,9 +418,69 @@ const AddInventoryForm = () => {
     }
   };
 
-  const handleSubmitButton = async () => {
-    // property.driveLink;
+  const handleUploadToStorage = async (
+    propId: string,
+    docsToUpload: DocsToUpload
+  ) => {
+    const uploadedFileUrls: UploadedFileUrls = {
+      photo: [],
+      video: [],
+      document: [],
+    };
 
+    for (const [type, files] of Object.entries(docsToUpload)) {
+      for (const file of files) {
+        try {
+          const uniqueFileName = `${Date.now()}-${file.name}`;
+          const storagePath = `media-files/${propId}/${type}/${uniqueFileName}`;
+
+          const reference = storage().ref(storagePath);
+
+          const filePath = file.uri ? file.uri.replace("file://", "") : null;
+
+          if (!filePath) {
+            console.error(`File path not found for ${file.name}`);
+            continue;
+          }
+
+          await reference.putFile(filePath);
+
+          const downloadURL = await reference.getDownloadURL();
+
+          uploadedFileUrls[type].push(downloadURL);
+        } catch (error: any) {
+          console.error(`Failed to upload ${type} file (${file.name}):`, error);
+          throw new Error(
+            `Error uploading ${type} file (${file.name}): ${error.message}`
+          );
+        }
+      }
+    }
+
+    return uploadedFileUrls; // Return the URLs of uploaded files
+  };
+
+  const handleUploadToDrive = async (
+    propId: string,
+    uploadedFileUrls: UploadedFileUrls
+  ) => {
+    try {
+      const response = await fetch(API_URL, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ propId, uploadedFileUrls }),
+      });
+
+      const data = await response.json();
+      console.log("Google Drive Response:", data);
+      return data.sharableFolderUrl;
+    } catch (error: any) {
+      console.error("Error sending to Google Drive:", error);
+      throw new Error(`Error sending files to Google Drive: ${error.message}`);
+    }
+  };
+
+  const handleSubmitButton = async () => {
     try {
       setSaving(true);
 
@@ -459,17 +525,47 @@ const AddInventoryForm = () => {
         floorNo,
         nameOfTheProperty,
         currentStatus,
-        kamStatus: "Under Verification",
-        qcStatus: "Under Verification",
+        kamStatus: "pending",
+        qcStatus: "pending",
         stage: "kam",
-        status: "Under Verification",
+        status: "pending",
       };
+
+      let uploadedFileUrls: UploadedFileUrls = {
+        photo: [],
+        video: [],
+        document: [],
+      };
+      try {
+        uploadedFileUrls = await handleUploadToStorage(propId, docsToUpload);
+      } catch (error) {
+        console.error("Error uploading files to Firebase Storage:", error);
+        showErrorToast("Error uploading files. Please try again.");
+        setSaving(false);
+        return;
+      }
+
+      let driveLink = null;
+      if (
+        uploadedFileUrls?.document?.length > 0 ||
+        uploadedFileUrls?.photo?.length > 0 ||
+        uploadedFileUrls?.video?.length > 0
+      ) {
+        try {
+          driveLink = await handleUploadToDrive(propId, uploadedFileUrls);
+        } catch (error) {
+          console.error("Error uploading files to Drive:", error);
+          showErrorToast("Error uploading files. Please try again.");
+          setSaving(false);
+          return;
+        }
+      }
 
       const dataToSave: ListingProperty = {
         ...property,
         ...autoFields,
-        // ...uploadedFileUrls,
-        // driveLink,
+        ...uploadedFileUrls,
+        driveLink,
       };
 
       console.log("dataToSave", dataToSave);
@@ -513,11 +609,41 @@ const AddInventoryForm = () => {
         status: "draft",
       };
 
+      let uploadedFileUrls: UploadedFileUrls = {
+        photo: [],
+        video: [],
+        document: [],
+      };
+      try {
+        uploadedFileUrls = await handleUploadToStorage(propId, docsToUpload);
+      } catch (error) {
+        console.error("Error uploading files to Firebase Storage:", error);
+        showErrorToast("Error uploading files. Please try again.");
+        setSaving(false);
+        return;
+      }
+
+      let driveLink = null;
+      if (
+        uploadedFileUrls?.document?.length > 0 ||
+        uploadedFileUrls?.photo?.length > 0 ||
+        uploadedFileUrls?.video?.length > 0
+      ) {
+        try {
+          driveLink = await handleUploadToDrive(propId, uploadedFileUrls);
+        } catch (error) {
+          console.error("Error uploading files to Drive:", error);
+          showErrorToast("Error uploading files. Please try again.");
+          setSaving(false);
+          return;
+        }
+      }
+
       const dataToSave: ListingProperty = {
         ...property,
         ...autoFields,
-        // ...uploadedFileUrls,
-        // driveLink,
+        ...uploadedFileUrls,
+        driveLink,
       };
 
       await setDoc(doc(db, "QC_Inventories", propId), dataToSave);
@@ -546,7 +672,17 @@ const AddInventoryForm = () => {
           lng: selectedPlace.lng,
         },
       }));
-    } else if (!selectedPlace) {
+      setIsNew(false);
+    } else if (!selectedPlace && property.nameOfTheProperty && item && isNew) {
+      setSelectedPlace({
+        name: property?.nameOfTheProperty,
+        lat: property?._geoloc?.lat || null,
+        lng: property?._geoloc?.lng || null,
+        address: property?.address || null,
+        mapLocation: property?.mapLocation || null,
+      });
+      setIsNew(false);
+    } else {
       setProperty((prevProperty) => ({
         ...prevProperty,
         nameOfTheProperty: null,
@@ -558,6 +694,7 @@ const AddInventoryForm = () => {
           lng: null,
         },
       }));
+      setIsNew(false);
     }
   }, [selectedPlace]);
 
@@ -568,6 +705,14 @@ const AddInventoryForm = () => {
 
     return () => cancelAnimationFrame(timer);
   }, []);
+
+  useEffect(() => {
+    console.log("flag1");
+    if (property.assetType === "Independent Building") {
+      console.log("flag2");
+      handleSetValue("communityType", "Independent");
+    }
+  }, [property.assetType, property.communityType])
 
   if (!isConnectedToInternet) return <Offline />;
 

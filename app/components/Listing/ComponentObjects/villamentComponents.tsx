@@ -141,7 +141,6 @@ export const villamentComponents = [
     ],
     colspan: 2,
   },
-  //Total Ask Price
   {
     label: "Total Ask Price",
     type: "TotalAskPrice",
@@ -266,7 +265,10 @@ export const villamentComponents = [
     field: "bdaApproved",
     colspan: 2,
   },
-  //DocumentUpload
+  {
+    type: "Document",
+    colspan: 2,
+  },
   {
     label: "Extra Details",
     type: "ExtraDetails",
