@@ -9,15 +9,7 @@ import {
   Alert,
 } from "react-native";
 import { Text } from "react-native";
-import {
-  DocumentPickerOptions,
-  DocumentPickerResponse,
-  errorCodes,
-  FileToCopy,
-  isErrorWithCode,
-  keepLocalCopy,
-  pick,
-} from "@react-native-documents/picker";
+import * as DocumentPicker from "expo-document-picker";
 import { PermissionsAndroid } from "react-native";
 import { showToast } from "@/utils/toastUtils";
 import { addInventoryDocumentTypes } from "@/app/constants/DocumentConstants";
@@ -60,32 +52,30 @@ const FileUpload: React.FC<FileUploadProps> = ({
   };
 
   const categorizeFile = async (
-    file: DocumentPickerResponse
+    file: DocumentPicker.DocumentPickerResult
   ): Promise<{ category?: string; fileObject?: FileObject }> => {
-    const fileToCopy: FileToCopy = {
-      uri: file.uri,
-      fileName: file.name ?? "fallbackName",
-    };
-
-    const [localCopy] = await keepLocalCopy({
-      files: [fileToCopy],
-      destination: "cachesDirectory",
-    });
-
-    if (localCopy.status !== "success") {
-      showToast("error", `An error occured in selecting ${file.name}`);
+    // If the user cancelled the document selection
+    if (file.canceled) {
+      return {};
+    }
+    
+    // Get the first selected asset
+    const asset = file.assets?.[0];
+    if (!asset) {
+      showToast("error", "An error occurred while selecting file");
       return {};
     }
 
     const fileObject: FileObject = {
-      name: file.name,
-      size: file.size,
-      uri: localCopy.localUri,
+      name: asset.name,
+      size: asset.size,
+      uri: asset.uri,
     };
 
-    if (file.type?.startsWith("image/")) {
+    const mimeType = asset.mimeType || '';
+    if (mimeType.startsWith("image/")) {
       return { category: "photo", fileObject };
-    } else if (file.type?.startsWith("video/")) {
+    } else if (mimeType.startsWith("video/")) {
       return { category: "video", fileObject };
     } else {
       return { category: "document", fileObject };
@@ -105,43 +95,64 @@ const FileUpload: React.FC<FileUploadProps> = ({
     setIsUploading(true);
 
     try {
-      const options: DocumentPickerOptions = {
-        allowMultiSelection: true,
+      const result = await DocumentPicker.getDocumentAsync({
+        multiple: true,
         type: addInventoryDocumentTypes.allowedTypes,
-      };
-
-      const results = await pick(options);
-
+        copyToCacheDirectory: true,
+      });
+      
+      if (result.canceled) {
+        return;
+      }
+      
       const newDocsToUpload = { ...docsToUpload };
-
-      for (let index = 0; index < results.length; index++) {
-        const file = results[index];
-
-        if (!file.hasRequestedType) {
-          showToast("error", `Invalid file type of ${file.name}`);
+      
+      for (const asset of result.assets || []) {
+        // Check if the file type is allowed
+        const mimeType = asset.mimeType || '';
+        const isValidType = addInventoryDocumentTypes.allowedTypes.some(
+          type => mimeType.startsWith(type.split('/')[0] + '/') || type.includes('*')
+        );
+        
+        if (!isValidType) {
+          showToast("error", `Invalid file type of ${asset.name}`);
           continue;
         }
+        
+        // Check file size
         const maxSizeInMB =
           addInventoryDocumentTypes?.allowedSizes?.filter((allowedSize) =>
-            file.type?.startsWith(allowedSize.type)
+            mimeType.startsWith(allowedSize.type)
           )?.[0]?.maxFileSizesInMB ?? 10;
 
-        if (file.size && file.size > maxSizeInMB * 1024 * 1024) {
-          showToast("error", `${file.name} exceeds the ${maxSizeInMB}MB limit`);
+        if (asset.size && asset.size > maxSizeInMB * 1024 * 1024) {
+          showToast("error", `${asset.name} exceeds the ${maxSizeInMB}MB limit`);
           continue;
         }
-
-        const { category, fileObject } = await categorizeFile(file);
-        if (category && fileObject) newDocsToUpload[category].push(fileObject);
+        
+        const fileObject: FileObject = {
+          name: asset.name,
+          size: asset.size,
+          uri: asset.uri,
+        };
+        
+        // Categorize the file
+        let category: string;
+        if (mimeType.startsWith("image/")) {
+          category = "photo";
+        } else if (mimeType.startsWith("video/")) {
+          category = "video";
+        } else {
+          category = "document";
+        }
+        
+        newDocsToUpload[category].push(fileObject);
       }
+      
       setDocsToUpload(newDocsToUpload);
     } catch (err) {
-      if (isErrorWithCode(err) && err.code === errorCodes.OPERATION_CANCELED) {
-        return;
-      } else {
-        // Error occurred
-        showToast("error", "An error occurred while selecting files");
-      }
+      // Error occurred
+      showToast("error", "An error occurred while selecting files");
     } finally {
       setIsUploading(false);
     }
@@ -252,3 +263,4 @@ const styles = StyleSheet.create({
 });
 
 export default FileUpload;
+
