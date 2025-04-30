@@ -71,6 +71,9 @@ const Profile = () => {
       case "credits_card":
         router.push("/(pages)/Credits");
         break;
+      case "compare_plans":
+        router.push("/(pages)/ComparePlans");
+        break;
       default:
         break;
     }
@@ -98,7 +101,10 @@ const Profile = () => {
 
   return (
     <>
-      <ScrollView style={styles.container} contentContainerStyle={styles.contentContainer}>
+      <ScrollView
+        style={styles.container}
+        contentContainerStyle={styles.contentContainer}
+      >
         <UserDetailsCard userType={userType} />
         <View style={styles.cardsContainer}>
           {profileCards?.map((item, idx) => {
@@ -119,6 +125,7 @@ const Profile = () => {
           <LogoutIcon width={18} height={18} />
           <Text style={styles.logoutText}>Logout</Text>
         </TouchableOpacity>
+        
       </ScrollView>
     </>
   );

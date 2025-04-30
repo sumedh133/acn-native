@@ -64,7 +64,7 @@ const GetPremiumCard = ({
 
       <TouchableOpacity
         className="flex-row justify-center items-center"
-        // onPress={onComparePlans}
+        onPress={()=>handleClick("compare_plans")}
       >
         <Text className="text-white">Compare Plans</Text>
         <Ionicons name="arrow-forward" size={18} color="white" />

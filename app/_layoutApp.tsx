@@ -37,6 +37,8 @@ import { selectMyKam } from "@/store/slices/agentSlice";
 import { setKamDataState } from "@/store/slices/kamSlice";
 import { AnyAction, ThunkDispatch } from "@reduxjs/toolkit";
 import { TrialStatusNotification, TrialStatusType } from "./components/TrialStatusNotification";
+import PremiumModal from "./modals/PremiumModal";
+import PaymentUnsuccessfulModal from "./modals/PaymentUnsuccessfulModal";
 
 // Custom header component to apply the desired styling
 const CustomHeader = ({
@@ -79,7 +81,7 @@ const CustomHeader = ({
 export default function LayoutApp() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [profileModalVisible, setProfileModalVisible] = useState(false);
-  const [showOnboarding, setShowOnboarding] = useState(false);
+  const [showOnboarding, setShowOnboarding] = useState(true);
   const colorScheme = useColorScheme();
   const [topMargin, setTopMargin] = useState(10);
   const [fontsLoaded] = useFonts({
@@ -88,14 +90,13 @@ export default function LayoutApp() {
     Montserrat_600SemiBold,
     Montserrat_700Bold,
   });
-
-
   const [trialData, setTrialData] = useState({
     status: TrialStatusType.ACTIVE,
     daysLeft: 28,
     credits: 20,
     showNotification: true
   });
+
 
   const dispatch = useDispatch<ThunkDispatch<RootState, unknown, AnyAction>>();
   const router = useRouter();
@@ -176,16 +177,25 @@ export default function LayoutApp() {
             const title = options.title || route.name;
             const headerBackVisible = options.headerBackVisible || false;
             return (
+              <>
               <CustomHeader
                 title={title}
                 onMenuPress={onMenuPress}
                 headerBackVisible={headerBackVisible}
               />
+              <TrialStatusNotification 
+          status={trialData.status}
+          daysLeft={trialData.daysLeft}
+          credits={trialData.credits}
+          onDismiss={handleDismiss}
+        />
+              </>
             );
           },
           animation: "fade",
         }}
       >
+        
         <Stack.Screen
           name="(tabs)/index"
           options={{ headerShown: false }}
@@ -290,20 +300,18 @@ export default function LayoutApp() {
           }}
           initialParams={{ showFooter: false }}
         />
-      </Stack>
-      {trialData.showNotification && (
-        <View className="w-fit">
-  <TrialStatusNotification 
-          status={trialData.status}
-          daysLeft={trialData.daysLeft}
-          credits={trialData.credits}
-          onDismiss={handleDismiss}
+        <Stack.Screen
+          name="(pages)/ComparePlans"
+          options={{
+            title: "Plans Page",
+            headerBackVisible: true,
+          }}
+          initialParams={{ showFooter: false }}
         />
-        </View>
- 
-      )}
-      {/* <OnboardingFlow
-        visible={true}
+      </Stack>
+      
+       <OnboardingFlow
+        visible={false}
         onComplete={() => {
           // dispatch(updateAgentDocData({ onboardingComplete: true }));
           setShowOnboarding(false);
@@ -311,11 +319,16 @@ export default function LayoutApp() {
         onClose={() => {
           setShowOnboarding(false);
         }}
-      /> */}
+      />
+      
+      
 
       <Toast config={toastConfig} />
       <StatusBar style="auto" />
       <KamManager />
+      {/* <PremiumModal/>
+      <PaymentUnsuccessfulModal/> */}
+      
       {isAuthenticated && <FooterNavigation />}
     </View>
   );

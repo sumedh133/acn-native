@@ -113,7 +113,7 @@ const TrialStatusNotification: React.FC<TrialStatusNotificationProps> = ({
   
   return (
     <View
-      className="flex-row justify-between items-center px-6 py-3 border-b"
+      className="flex-row justify-between items-center pl-4 pr-8 py-3 border-b"
       style={[
         {
           backgroundColor: config.bgColor,
@@ -136,7 +136,7 @@ const TrialStatusNotification: React.FC<TrialStatusNotificationProps> = ({
       </View>
       {dismissible && (
         <TouchableOpacity
-          className="p-1"
+          
           onPress={handleDismiss}
           accessibilityLabel="Dismiss notification"
         >
