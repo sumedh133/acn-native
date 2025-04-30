@@ -249,7 +249,9 @@ export default function PropertyDetailsScreen() {
     try {
       const enquiryDocRef = doc(db, "enquiries", nextEnqId);
       await setDoc(enquiryDocRef, enq);
-      showSuccessToast("Enquiry submitted successfully!", { isInModal: true });
+      showSuccessToast("Enquiry submitted successfully!", {
+        isInModal: true,
+      });
     } catch (error) {
       showErrorToast("Error submitting enquiry. Please try again.", {
         isInModal: true,
@@ -294,8 +296,6 @@ export default function PropertyDetailsScreen() {
       setIsConfirmModelOpen(false);
 
       enquiryConfirmed.current = true;
-
-      console.log(isEnquiryCPModelOpen, "ra");
     } catch (error) {
       showErrorToast(
         "An error occurred while processing your enquiry. Please try again."
@@ -368,7 +368,10 @@ export default function PropertyDetailsScreen() {
               colors={["#E0F7F4", "#FFFFFF"]}
               locations={[0.0891, 0.7814]}
               className="w-full"
-              style={{ borderBottomWidth: 1, borderColor: "#CCCBCB" }}
+              style={{
+                borderBottomWidth: 1,
+                borderColor: "#CCCBCB",
+              }}
             >
               <View
                 style={{

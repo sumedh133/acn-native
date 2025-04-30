@@ -1,16 +1,20 @@
-import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native';
-import { useFonts } from 'expo-font';
-import { Stack } from 'expo-router';
-import * as SplashScreen from 'expo-splash-screen';
-import { StatusBar } from 'expo-status-bar';
-import { useEffect } from 'react';
-import 'react-native-reanimated';
-import '../../../global.css';
+import {
+  DarkTheme,
+  DefaultTheme,
+  ThemeProvider,
+} from "@react-navigation/native";
+import { useFonts } from "expo-font";
+import { Stack } from "expo-router";
+import * as SplashScreen from "expo-splash-screen";
+import { StatusBar } from "expo-status-bar";
+import { useEffect } from "react";
+import "react-native-reanimated";
+import "../../../global.css";
 
-import { useColorScheme } from '@/hooks/useColorScheme';
-import { useSelector } from 'react-redux';
-import { RootState } from '@/store/store';
-import Offline from '../Offline';
+import { useColorScheme } from "@/hooks/useColorScheme";
+import { useSelector } from "react-redux";
+import { RootState } from "@/store/store";
+import Offline from "../Offline";
 
 // Prevent the splash screen from auto-hiding before asset loading is complete.
 SplashScreen.preventAutoHideAsync();
@@ -18,7 +22,9 @@ SplashScreen.preventAutoHideAsync();
 export default function RootLayout() {
   const colorScheme = useColorScheme();
 
-  const isConnectedToInternet = useSelector((state: RootState) => state.app.isConnectedToInternet);
+  const isConnectedToInternet = useSelector(
+    (state: RootState) => state.app.isConnectedToInternet
+  );
 
   // const [loaded] = useFonts({
   //   SpaceMono: require('../assets/fonts/SpaceMono-Regular.ttf'),
@@ -34,11 +40,10 @@ export default function RootLayout() {
   //   return null;
   // }
 
-  if (!isConnectedToInternet)
-    return (<Offline />)
+  if (!isConnectedToInternet) return <Offline />;
 
   return (
-    <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
+    <ThemeProvider value={colorScheme === "dark" ? DarkTheme : DefaultTheme}>
       <Stack screenOptions={{ headerShown: false }}>
         <Stack.Screen name="Auth" />
         <Stack.Screen name="LandingPage" />

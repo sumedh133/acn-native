@@ -1,16 +1,31 @@
 // store/slices/agentSlice.ts
-import { createSlice, createAsyncThunk, ThunkAction, AnyAction } from '@reduxjs/toolkit';
-import { db } from '../../app/config/firebase';
-import { collection, query, where, getDocs, onSnapshot, doc } from 'firebase/firestore';
-import { signOut } from './authSlice';
-import { setAgentListener, clearAgentListener } from './listenerSlice';
-import { RootState } from '../store';
+import {
+  createSlice,
+  createAsyncThunk,
+  ThunkAction,
+  AnyAction,
+} from "@reduxjs/toolkit";
+import { db } from "../../app/config/firebase";
+import {
+  collection,
+  query,
+  where,
+  getDocs,
+  onSnapshot,
+  doc,
+} from "firebase/firestore";
+import { signOut } from "./authSlice";
+import { setAgentListener, clearAgentListener } from "./listenerSlice";
+import { RootState } from "../store";
 
 export const setAgentDataState = createAsyncThunk(
-  'agent/setAgentDataState',
+  "agent/setAgentDataState",
   async (phonenumber: string, { rejectWithValue, dispatch }) => {
     try {
-      const q = query(collection(db, 'agents'), where('phonenumber', '==', phonenumber));
+      const q = query(
+        collection(db, "agents"),
+        where("phonenumber", "==", phonenumber),
+      );
       const querySnapshot = await getDocs(q);
 
       if (!querySnapshot.empty) {
@@ -22,44 +37,46 @@ export const setAgentDataState = createAsyncThunk(
         };
       } else {
         dispatch(signOut());
-        throw new Error('No user found with this phone number.');
+        throw new Error("No user found with this phone number.");
       }
     } catch (error: any) {
       return rejectWithValue(error.message);
     }
-  }
+  },
 );
 
 export const listenToAgentChanges =
   (agentId: string): ThunkAction<void, RootState, unknown, AnyAction> =>
-    (dispatch) => {
-      dispatch(clearAgentListener());
-      const docRef = doc(db, 'agents', agentId);
+  (dispatch) => {
+    dispatch(clearAgentListener());
+    const docRef = doc(db, "agents", agentId);
 
-      const unsubscribe = onSnapshot(
-        docRef,
-        (docSnap) => {
-          if (docSnap.exists()) {
-            dispatch(setUserDoc({
+    const unsubscribe = onSnapshot(
+      docRef,
+      (docSnap) => {
+        if (docSnap.exists()) {
+          dispatch(
+            setUserDoc({
               docData: docSnap.data(),
               docId: docSnap.id,
-            }));
-          } else {
-            dispatch(resetAgentState());
-            dispatch(signOut());
-          }
-        },
-        (error) => {
-          console.error('Agent listener error:', error);
-          dispatch(setError(error.message));
+            }),
+          );
+        } else {
+          dispatch(resetAgentState());
+          dispatch(signOut());
         }
-      );
+      },
+      (error) => {
+        console.error("Agent listener error:", error);
+        dispatch(setError(error.message));
+      },
+    );
 
-      dispatch(setAgentListener(unsubscribe));
-    };
+    dispatch(setAgentListener(unsubscribe));
+  };
 
 const agentSlice = createSlice({
-  name: 'agent',
+  name: "agent",
   initialState: {
     loading: false,
     error: null as string | null,
@@ -88,7 +105,7 @@ const agentSlice = createSlice({
       if (state.docData) {
         state.docData = {
           ...state.docData,
-          monthlyCredits: action.payload
+          monthlyCredits: action.payload,
         };
       }
     },

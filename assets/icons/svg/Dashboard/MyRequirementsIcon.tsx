@@ -1,6 +1,6 @@
-import React from 'react';
-import Svg, { Path, Rect } from 'react-native-svg';
-import { ViewStyle } from 'react-native';
+import React from "react";
+import Svg, { Path, Rect } from "react-native-svg";
+import { ViewStyle } from "react-native";
 
 interface LayersIconProps {
   width?: number;
@@ -14,8 +14,8 @@ const MyRequirementIcon: React.FC<LayersIconProps> = ({
   width = 36,
   height = 36,
   // backgroundColor = '#E6F2F0', // Matching the background color from the image
-  layerColor,// Matching the layer color from the image
-  style
+  layerColor, // Matching the layer color from the image
+  style,
 }) => {
   return (
     <Svg
@@ -29,7 +29,7 @@ const MyRequirementIcon: React.FC<LayersIconProps> = ({
         width={36}
         height={36}
         rx={8}
-      // fill={backgroundColor}
+        // fill={backgroundColor}
       />
       <Path
         d="M18 11.25L12 14.625L18 18L24 14.625L18 11.25Z"
