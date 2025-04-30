@@ -36,6 +36,7 @@ import KamManager from "./modals/KamModal";
 import { selectMyKam } from "@/store/slices/agentSlice";
 import { setKamDataState } from "@/store/slices/kamSlice";
 import { AnyAction, ThunkDispatch } from "@reduxjs/toolkit";
+import { TrialStatusNotification, TrialStatusType } from "./components/TrialStatusNotification";
 
 // Custom header component to apply the desired styling
 const CustomHeader = ({
@@ -86,6 +87,14 @@ export default function LayoutApp() {
     Montserrat_500Medium,
     Montserrat_600SemiBold,
     Montserrat_700Bold,
+  });
+
+
+  const [trialData, setTrialData] = useState({
+    status: TrialStatusType.ACTIVE,
+    daysLeft: 28,
+    credits: 20,
+    showNotification: true
   });
 
   const dispatch = useDispatch<ThunkDispatch<RootState, unknown, AnyAction>>();
@@ -148,6 +157,13 @@ export default function LayoutApp() {
   if (!fontsLoaded) {
     return null;
   }
+
+  const handleDismiss = () => {
+    // You might want to store this preference in AsyncStorage
+    setTrialData(prev => ({ ...prev, showNotification: false }));
+  };
+
+
   return (
     <View style={{ flex: 1 }} onLayout={onLayoutRootView}>
       <Stack
@@ -266,12 +282,30 @@ export default function LayoutApp() {
           }}
           initialParams={{ showFooter: false }}
         />
+        <Stack.Screen
+          name="(pages)/Credits"
+          options={{
+            title: "ACN Credits",
+            headerBackVisible: true,
+          }}
+          initialParams={{ showFooter: false }}
+        />
       </Stack>
-
+      {trialData.showNotification && (
+        <View className="w-fit">
+  <TrialStatusNotification 
+          status={trialData.status}
+          daysLeft={trialData.daysLeft}
+          credits={trialData.credits}
+          onDismiss={handleDismiss}
+        />
+        </View>
+ 
+      )}
       {/* <OnboardingFlow
-        visible={false}
+        visible={true}
         onComplete={() => {
-          dispatch(updateAgentDocData({ onboardingComplete: true }));
+          // dispatch(updateAgentDocData({ onboardingComplete: true }));
           setShowOnboarding(false);
         }}
         onClose={() => {

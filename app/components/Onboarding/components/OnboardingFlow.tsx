@@ -1,5 +1,5 @@
 import React from 'react';
-import { Modal, View, StyleSheet } from 'react-native';
+import { Modal, View,Text, StyleSheet } from 'react-native';
 import PropTypes from 'prop-types';
 import { OnboardingProvider, useOnboardingContext } from './OnboardingContext';
 import WelcomeScreen from '../screens/WelcomeScreen';
@@ -56,7 +56,9 @@ const OnboardingFlowContent: React.FC<OnboardingFlowProps> = ({ visible, onCompl
       animationType="fade"
       onRequestClose={closeOnboarding}
     >
-      <View className='absolute bottom-0 left-0 right-0'>
+      <View
+       className='absolute bottom-0 left-0 right-0'
+       >
           {renderCurrentStep()}
       </View>
     </Modal>

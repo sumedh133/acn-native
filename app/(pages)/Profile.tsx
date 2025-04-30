@@ -8,6 +8,7 @@ import {
   View,
   StyleSheet,
   TouchableOpacity,
+  ScrollView,
 } from "react-native";
 import UserDetailsCard from "../components/ProfilePage/UserDetailsCard";
 import { useDispatch } from "react-redux";
@@ -68,7 +69,7 @@ const Profile = () => {
         router.push("/billings");
         break;
       case "credits_card":
-        router.push("/billings");
+        router.push("/(pages)/Credits");
         break;
       default:
         break;
@@ -97,7 +98,7 @@ const Profile = () => {
 
   return (
     <>
-      <View style={styles.container}>
+      <ScrollView style={styles.container} contentContainerStyle={styles.contentContainer}>
         <UserDetailsCard userType={userType} />
         <View style={styles.cardsContainer}>
           {profileCards?.map((item, idx) => {
@@ -110,15 +111,15 @@ const Profile = () => {
             );
           })}
         </View>
-        {/* {userType !== "premium" && (
+        {userType !== "premium" && (
           <GetPremiumCard handleClick={handleCardClick} slug={"get_premium"} />
-        )} */}
+        )}
         <CreditsCard handleCardClick={handleCardClick} slug={"credits_card"} />
         <TouchableOpacity style={styles.logoutButton} onPress={handleLogOut}>
           <LogoutIcon width={18} height={18} />
           <Text style={styles.logoutText}>Logout</Text>
         </TouchableOpacity>
-      </View>
+      </ScrollView>
     </>
   );
 };
@@ -127,10 +128,13 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: "#F5F6F7",
+  },
+  contentContainer: {
     padding: 12,
     display: "flex",
     flexDirection: "column",
     gap: 12,
+    paddingBottom: 24, // Extra padding at the bottom for better scrolling experience
   },
   cardsContainer: {
     display: "flex",
