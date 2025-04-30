@@ -28,7 +28,7 @@ const items: popupItems[] = [
     subText: "Add your inventory to increase visibility",
     colors: ["#FFFCEC", "#FFFFFF"],
     iconColor: "#FFE86A",
-    deeplink: "(tabs)/AddInventoryForm",
+    deeplink: "(pages)/Drafts",
   },
   {
     slug: "add_requirement",

@@ -23,7 +23,13 @@ import {
 } from "react-native";
 import { db } from "../config/firebase";
 import { useSelector } from "react-redux";
-import { Property, Requirement, Enquiry, EnquiryWithProperty } from "../types";
+import {
+  Property,
+  Requirement,
+  Enquiry,
+  EnquiryWithProperty,
+  ListingProperty,
+} from "../types";
 import Dashboard from "../components/dashboard/Dashboard";
 import { RootState } from "@/store/store";
 import Offline from "../components/Offline";
@@ -41,15 +47,17 @@ interface UseEnquiriesResult {
   handleGiveReview: (enqId: string, review: {}) => void;
 }
 
+interface UseListingResult {
+  myListings: ListingProperty[];
+  loading: boolean;
+  error: string | null;
+}
+
 const useCpId = (): string | undefined => {
   const reduxCpId: string | undefined = useSelector(
-    (state: RootState) => state.agent?.docData?.cpId,
+    (state: RootState) => state.agent?.docData?.cpId
   );
   return reduxCpId;
-};
-
-const getUnixDateTime = (): number => {
-  return Math.floor(Date.now() / 1000);
 };
 
 const useEnquiries = (): UseEnquiriesResult => {
@@ -71,7 +79,7 @@ const useEnquiries = (): UseEnquiriesResult => {
       // Create the query the same way as before
       const enquiriesQuery = query(
         collection(db, "enquiries"),
-        where("cpId", "==", cpId),
+        where("cpId", "==", cpId)
       );
 
       // Set up real-time listener for enquiries
@@ -92,7 +100,7 @@ const useEnquiries = (): UseEnquiriesResult => {
           for (let i = 0; i < propertyIds.length; i += 30) {
             const batch = propertyIds.slice(i, i + 30);
             const properties = await getDocs(
-              query(collection(db, "ACN123"), where(documentId(), "in", batch)),
+              query(collection(db, "ACN123"), where(documentId(), "in", batch))
             );
             properties.docs.map((item) => {
               propertyDocs.set(item.id, item.data());
@@ -122,7 +130,7 @@ const useEnquiries = (): UseEnquiriesResult => {
           setError(err.message || "Error fetching enquiries");
           console.error("Fetch error:", err);
           setLoading(false);
-        },
+        }
       );
 
       // Clean up the listener when the component unmounts
@@ -142,7 +150,7 @@ const useEnquiries = (): UseEnquiriesResult => {
             ? { ...enq, reviews: [...enq.reviews, review] }
             : { ...enq, reviews: [review] }
           : enq;
-      }),
+      })
     );
   };
 
@@ -176,7 +184,7 @@ const useProperties = (): UsePropertiesResult => {
             (docSnap) =>
               ({
                 ...docSnap.data(),
-              }) as Property,
+              } as Property)
           );
 
           setProperties(propertiesData);
@@ -186,7 +194,7 @@ const useProperties = (): UsePropertiesResult => {
           setError(err.message || "Error fetching properties");
           console.error("Fetch error:", err);
           setLoading(false);
-        },
+        }
       );
 
       // Clean up the listener when the component unmounts
@@ -200,7 +208,7 @@ const useProperties = (): UsePropertiesResult => {
 
   const handlePropertyStatusChange = (
     value: string,
-    propertyId: string,
+    propertyId: string
   ): void => {
     try {
       const newStatus = value;
@@ -210,8 +218,8 @@ const useProperties = (): UsePropertiesResult => {
         prev.map((property) =>
           property.propertyId === propertyId
             ? { ...property, status: newStatus }
-            : property,
-        ),
+            : property
+        )
       );
     } catch (err) {
       console.error("Error updating property status:", err);
@@ -240,7 +248,7 @@ const useRequirements = () => {
     try {
       const q = query(
         collection(db, "requirements"),
-        where("agentCpid", "==", cpId),
+        where("agentCpid", "==", cpId)
       );
 
       // Set up real-time listener
@@ -251,7 +259,7 @@ const useRequirements = () => {
             (doc) =>
               ({
                 ...doc.data(),
-              }) as Requirement,
+              } as Requirement)
           );
 
           setRequirements(requirementsData);
@@ -261,7 +269,7 @@ const useRequirements = () => {
           setError(err.message || "Error fetching requirements");
           console.error("Fetch error:", err);
           setLoading(false);
-        },
+        }
       );
 
       // Clean up the listener when the component unmounts
@@ -275,7 +283,7 @@ const useRequirements = () => {
 
   const hanldeRequirementsStatusChange = (
     value: string,
-    requirementsId: string,
+    requirementsId: string
   ): void => {
     try {
       const newStatus = value;
@@ -285,8 +293,8 @@ const useRequirements = () => {
         prev.map((requirements) =>
           requirements.requirementId === requirementsId
             ? { ...requirements, status: newStatus }
-            : requirements,
-        ),
+            : requirements
+        )
       );
     } catch (err) {
       console.error("Error updating enquiry status:", err);
@@ -295,6 +303,61 @@ const useRequirements = () => {
   };
 
   return { requirements, loading, error, hanldeRequirementsStatusChange };
+};
+
+const useListings = (): UseListingResult => {
+  const [myListings, setMyListings] = useState<ListingProperty[]>([]);
+  const [loading, setLoading] = useState<boolean>(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const cpId = useCpId();
+
+  useEffect(() => {
+    if (!cpId) {
+      setError("No channel partner ID found. Please login again.");
+      return;
+    }
+
+    setLoading(true);
+
+    try {
+      const q = query(
+        collection(db, "QC_Inventories"),
+        where("cpCode", "==", cpId)
+      );
+
+      // Set up real-time listener
+      const unsubscribe = onSnapshot(
+        q,
+        (querySnapshot) => {
+          const listingData: ListingProperty[] = querySnapshot.docs.map(
+            (doc) => {
+              return {
+                ...doc.data(),
+              } as ListingProperty;
+            }
+          );
+
+          setMyListings(listingData);
+          setLoading(false);
+        },
+        (err) => {
+          setError(err.message || "Error fetching requirements");
+          console.error("Fetch error:", err);
+          setLoading(false);
+        }
+      );
+
+      // Clean up the listener when the component unmounts
+      return () => unsubscribe();
+    } catch (err: any) {
+      setError(err.message || "Error fetching requirements");
+      console.error("Fetch error:", err);
+      setLoading(false);
+    }
+  }, [cpId]);
+
+  return { myListings, loading, error };
 };
 
 export default function DashboardTab() {
@@ -317,8 +380,14 @@ export default function DashboardTab() {
     hanldeRequirementsStatusChange: hanldeRequirementsStatusChange,
   } = useRequirements();
 
+  const {
+    myListings,
+    loading: listingLoading,
+    error: listingError,
+  } = useListings();
+
   const isConnectedToInternet = useSelector(
-    (state: RootState) => state.app.isConnectedToInternet,
+    (state: RootState) => state.app.isConnectedToInternet
   );
 
   if (!isConnectedToInternet) return <Offline />;
@@ -329,10 +398,12 @@ export default function DashboardTab() {
         myEnquiries={myEnquiries}
         myProperties={properties}
         myRequirements={requirements}
+        myListing={myListings}
         loading={{
           enquiriesLoading: enquiriesLoading,
           propertiesLoading: propertiesLoading,
           requirementsLoading: requirementsLoading,
+          listingLoading: listingLoading,
         }}
       />
     </View>

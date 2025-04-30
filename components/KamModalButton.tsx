@@ -13,16 +13,17 @@ import { Link, usePathname } from "expo-router";
 import { useSelector } from "react-redux";
 import { RootState } from "@/store/store";
 import { Button } from "react-native-elements";
-import KamManager from "@/app/modals/KamModal";
 import KamModalIcon from "@/assets/icons/svg/KamModalIcon";
 import { showToast } from "@/utils/toastUtils";
+import { useDispatch } from "react-redux";
+import { setKamModalVisible } from "@/store/slices/kamSlice";
 
 export const KamModalButton = () => {
+  const dispatch = useDispatch();
   const isAuthenticated = useSelector(
     (state: RootState) => state.auth.isAuthenticated
   );
   const pathName = usePathname();
-  const [kamModalVisible, setKamModalVisible] = useState(false);
 
   const isConnectedToInternet = useSelector(
     (state: RootState) => state.app.isConnectedToInternet
@@ -37,10 +38,6 @@ export const KamModalButton = () => {
         pathName != "/components/Auth/BlacklistedPage" &&
         pathName != "/components/Auth/VerificationPage" && (
           <>
-            <KamManager
-              visible={kamModalVisible}
-              setVisible={setKamModalVisible}
-            />
             <View style={styles.button}>
               <Button
                 onPress={() => {
@@ -49,7 +46,9 @@ export const KamModalButton = () => {
                       "error",
                       "You're offline! Please check your connection."
                     );
-                  else setKamModalVisible(true);
+                  else {
+                    dispatch(setKamModalVisible(true));
+                  }
                 }}
                 containerStyle={{ marginVertical: 10 }}
                 buttonStyle={{

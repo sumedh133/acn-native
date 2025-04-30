@@ -80,10 +80,9 @@ const styles = StyleSheet.create({
     color: "#8A8A8A",
   },
   creditsText: {
-    fontFamily: "Montserrat",
-    fontWeight: 700,
+    fontFamily: "Montserrat_700Bold",
     fontSize: 14,
-    lineHeight: 21,
+    lineHeight: 18,
     color: "#0A0B0A",
   },
   partition: {

@@ -16,6 +16,7 @@ import {
   StyleSheet,
   FlatList,
   SafeAreaView,
+  Platform,
 } from "react-native";
 import { Ionicons, Octicons } from "@expo/vector-icons";
 import PropertyDetailsScreen from "./PropertyDetailsScreen";
@@ -24,7 +25,7 @@ import ConfirmModal from "@/app/modals/ConfirmModal";
 import ShareModal from "@/app/modals/ShareModal";
 import { useSelector } from "react-redux";
 import { RootState } from "@/store/store";
-import { Enquiry } from "@/app/types";
+import { Enquiry, Property } from "@/app/types";
 import { doc, setDoc } from "firebase/firestore";
 import { db } from "@/app/config/firebase";
 import { handleIdGeneration } from "@/app/helpers/nextId";
@@ -38,21 +39,7 @@ import { router } from "expo-router";
 import { setPropertyDataThunk } from "@/store/slices/propertySlice";
 
 interface PropertyCardProps {
-  property: {
-    propertyId: string;
-    title?: string;
-    nameOfTheProperty?: string;
-    micromarket?: string;
-    assetType?: string;
-    unitType?: string;
-    facing?: string;
-    totalAskPrice?: number;
-    sbua?: number;
-    driveLink?: string;
-    cpId?: string;
-    cpCode?: string;
-  };
-  onCardClick?: (property: any) => void;
+  property: Property;
 }
 
 interface IdGenerationResult {
@@ -60,10 +47,7 @@ interface IdGenerationResult {
   nextId: string;
 }
 
-const PropertyCard: React.FC<PropertyCardProps> = ({
-  property,
-  onCardClick,
-}) => {
+const PropertyCard: React.FC<PropertyCardProps> = ({ property }) => {
   const dispatch = useDispatch<ThunkDispatch<RootState, unknown, AnyAction>>();
 
   const [selectedCPID, setSelectedCPID] = useState("");
@@ -115,7 +99,7 @@ const PropertyCard: React.FC<PropertyCardProps> = ({
 
   // Get property name with first letter capitalized
   const getPropertyName = () => {
-    const name = property.title || property.nameOfTheProperty || "";
+    const name = property.nameOfTheProperty || "";
     if (!name) return "Unnamed Property";
     return name.charAt(0).toUpperCase() + name.slice(1);
   };
@@ -197,7 +181,11 @@ const PropertyCard: React.FC<PropertyCardProps> = ({
       // ✅ Close the confirmation modal
       setIsConfirmModelOpen(false);
 
-      enquiryConfirmed.current = true;
+      if (Platform.OS === "ios") {
+        enquiryConfirmed.current = true;
+      } else {
+        setIsEnquiryCPModelOpen(true);
+      }
     } catch (error) {
       console.error("Error during enquiry process:", error);
       showErrorToast(

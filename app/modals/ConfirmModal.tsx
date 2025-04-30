@@ -95,8 +95,7 @@ const styles = StyleSheet.create({
   },
   title: {
     fontSize: 16,
-    fontWeight: "700",
-    fontFamily: "Montserrat",
+    fontFamily: "Montserrat_700Bold",
     marginBottom: 10,
   },
   message: {

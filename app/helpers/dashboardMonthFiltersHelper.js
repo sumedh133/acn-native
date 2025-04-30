@@ -64,6 +64,39 @@ export const generatePropertyMonths = (properties) => {
     });
 };
 
+export const generateListingAndPropertyMonths = (listings,properties)=>{
+  const monthSet = new Set();
+  listings.forEach((listing) => {
+    if (listing.dateOfInventoryAdded) {
+      const monthYear = formatDateToMonthYear(listing.dateOfInventoryAdded);
+      monthSet.add(monthYear);
+    }
+  });
+
+  properties.forEach((property) => {
+    if (property.dateOfInventoryAdded) {
+      const monthYear = formatDateToMonthYear(property.dateOfInventoryAdded);
+      monthSet.add(monthYear);
+    }
+  });
+
+  return Array.from(monthSet)
+    .map((monthYear) => {
+      const [month, year] = monthYear.split("-");
+      const monthName = new Date(year, month - 1).toLocaleString("en-IN", {
+        month: "long",
+      });
+      return { label: `${monthName} ${year}`, value: monthYear };
+    })
+    .sort((a, b) => {
+      // Sort by most recent first
+      const [monthA, yearA] = a.value.split("-");
+      const [monthB, yearB] = b.value.split("-");
+      if (yearA !== yearB) return yearB - yearA;
+      return monthB - monthA;
+    });
+}
+
 export const filterPropertiesByMonth = (properties, selectedMonth) => {
   if (!selectedMonth) return properties;
 
@@ -73,6 +106,16 @@ export const filterPropertiesByMonth = (properties, selectedMonth) => {
     return monthYear === selectedMonth;
   });
 };
+
+export const filterListingsByMonth = (listings, selectedMonth) => {
+  if (!selectedMonth) return listings;
+
+  return listings.filter((listing) => {
+    if (!listing.dateOfInventoryAdded) return false;
+    const monthYear = formatDateToMonthYear(listing.dateOfInventoryAdded);
+    return monthYear === selectedMonth;
+  });
+}
 
 export const generateRequirementMonths = (requirements) => {
   const monthSet = new Set();

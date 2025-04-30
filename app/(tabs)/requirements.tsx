@@ -40,28 +40,16 @@ const searchClient = algoliasearch(
   "146a46f31a26226786751f663e88ae33"
 );
 
-const MobileHits = forwardRef<FlatList>((props, ref) => {
+const MobileHits = React.memo(() => {
   const { items, isLastPage, showMore } = useInfiniteHits<Requirement>();
   const { status } = useInstantSearch();
   const { query } = useSearchBox();
-  const [selectedProperty, setSelectedProperty] = useState<any>(null);
 
   // Add state for tracking loading states
   const [refreshing, setRefreshing] = useState(false);
   const [loading, setLoading] = useState(false);
   const [isLoadingMore, setIsLoadingMore] = useState(false);
-
-  // Update loading state based on search status
-  useEffect(() => {
-    setLoading(
-      status === "loading" || status === "stalled" || status === "error"
-    );
-  }, [status]);
-
-  // Handle card click with useCallback for better performance
-  const handleCardClick = useCallback((property: any) => {
-    setSelectedProperty(property);
-  }, []);
+  const [isRendered, setIsRendered] = useState(false);
 
   // Add refresh functionality
   const { refresh } = useInstantSearch();
@@ -88,13 +76,8 @@ const MobileHits = forwardRef<FlatList>((props, ref) => {
   const keyExtractor = useCallback((item: Requirement) => item.objectID, []);
 
   const renderItem = useCallback(
-    ({ item }: { item: Requirement }) => (
-      <RequirementCard
-        requirement={item as Requirement}
-        onCardClick={handleCardClick}
-      />
-    ),
-    [handleCardClick]
+    ({ item }: { item: Requirement }) => <RequirementCard requirement={item} />,
+    []
   );
 
   // Improved footer component
@@ -109,14 +92,22 @@ const MobileHits = forwardRef<FlatList>((props, ref) => {
     return null;
   }, [loading]);
 
-  // Empty states handling
-  if (items?.length === 0 && query?.length !== 0) {
-    return (
-      <View className="flex items-center justify-center h-64">
-        <Text>No results found for "{query}"</Text>
-      </View>
+  // Update loading state based on search status
+  useEffect(() => {
+    setLoading(
+      status === "loading" || status === "stalled" || status === "error"
     );
-  } else if (items.length === 0) {
+  }, [status]);
+
+  useEffect(() => {
+    const timer = requestAnimationFrame(() => {
+      setIsRendered(true);
+    });
+
+    return () => cancelAnimationFrame(timer);
+  }, []);
+
+  if (!isRendered || (items?.length === 0 && loading))
     return (
       <View className="flex items-center justify-center h-64 gap-10 mt-20">
         <ActivityIndicator size="large" color="#153E3B" />
@@ -128,12 +119,19 @@ const MobileHits = forwardRef<FlatList>((props, ref) => {
         </View>
       </View>
     );
+
+  // Empty states handling
+  if (items?.length === 0 && query?.length !== 0) {
+    return (
+      <View className="flex items-center justify-center h-64">
+        <Text>No results found for "{query}"</Text>
+      </View>
+    );
   }
 
   return (
     <FlatList
       data={items}
-      ref={ref}
       keyExtractor={keyExtractor}
       renderItem={renderItem}
       refreshControl={
@@ -163,41 +161,7 @@ const MobileHits = forwardRef<FlatList>((props, ref) => {
   );
 });
 
-const RequirementsList = forwardRef<Animated.ScrollView>((props, ref) => {
-  // The generic type should be Requirement, not Requirement[]
-
-  // const handleCardClick = (requirement: Requirement) => {
-  //   setSelectedRequirement(requirement);
-  // };
-  // if (hits?.length === 0 && query?.length !== 0) {
-  //   return (
-  //     <View className="flex items-center justify-center h-64">
-  //       <Text style={styles.text}>No results found for "{query}"</Text>
-  //     </View>
-  //   );
-  // } else if (hits.length === 0) {
-  //   return (
-  //     <View className="flex items-center justify-center h-64">
-  //       <ActivityIndicator size={'large'} />
-  //     </View>
-  //   );
-  // }
-
-  const { refresh } = useInstantSearch();
-  const [refreshing, setRefreshing] = useState(false);
-
-  const onRefresh = useCallback(() => {
-    setRefreshing(true);
-
-    // Call the Algolia refresh method if available
-    refresh();
-
-    // Set a timeout to stop the refreshing indicator after some time
-    setTimeout(() => {
-      setRefreshing(false);
-    }, 1000);
-  }, []);
-
+const RequirementsList = React.memo(() => {
   return (
     <View style={[styles.mobileContent]}>
       <MobileHits />
@@ -208,34 +172,9 @@ const RequirementsList = forwardRef<Animated.ScrollView>((props, ref) => {
 const RequirementsPage = () => {
   const [isMoreFiltersModalOpen, setIsMoreFiltersModalOpen] = useState(false);
 
-  const [filtersHeight, setFiltersHeight] = useState(0);
-  const [paginationHeight, setPaginationHeight] = useState(0);
-  const filtersRef = useRef<View>(null);
-  const paginationRef = useRef<View>(null);
-
   const isConnectedToInternet = useSelector(
     (state: RootState) => state.app.isConnectedToInternet
   );
-
-  useEffect(() => {
-    // Measure the height of the filters component
-    if (filtersRef.current) {
-      filtersRef.current.measure(
-        (_x: number, _y: number, _width: number, height: number) => {
-          setFiltersHeight(height);
-        }
-      );
-    }
-
-    // Measure the height of the pagination component
-    if (paginationRef.current) {
-      paginationRef.current.measure(
-        (_x: number, _y: number, _width: number, height: number) => {
-          setPaginationHeight(height);
-        }
-      );
-    }
-  }, []);
 
   const handleToggleMoreFilters = () => {
     setIsMoreFiltersModalOpen((prev) => !prev);
@@ -265,17 +204,6 @@ const RequirementsPage = () => {
 
           <RequirementsList />
 
-          {/* <View
-            ref={paginationRef}
-            className="bg-white border-t border-gray-200 mt-4"
-            onLayout={(event) => {
-              const { height } = event.nativeEvent.layout;
-              setPaginationHeight(height);
-            }}
-          >
-            <CustomPagination scrollRef={scrollViewRef} />
-          </View> */}
-
           <MoreFiltersRequirement
             isOpen={isMoreFiltersModalOpen}
             setIsOpen={setIsMoreFiltersModalOpen}
@@ -297,11 +225,6 @@ const styles = StyleSheet.create({
     position: "relative",
     gap: 4,
   },
-  // text: {
-  //   fontFamily: 'Montserrat_400Regular',
-  //   color: '#6B7280',
-  //   fontSize: 16,
-  // },
   filtersContainer: {
     position: "absolute",
     top: 0,
@@ -311,7 +234,6 @@ const styles = StyleSheet.create({
   },
   mobileContent: {
     flex: 1,
-    // paddingHorizontal: 16,
     paddingTop: 14,
     marginTop: 60,
   },

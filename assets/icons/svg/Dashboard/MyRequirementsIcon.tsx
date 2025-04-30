@@ -1,54 +1,37 @@
 import React from "react";
-import Svg, { Path, Rect } from "react-native-svg";
-import { ViewStyle } from "react-native";
+import Svg, { Path } from "react-native-svg";
 
-interface LayersIconProps {
+interface LayeredStackIconProps {
   width?: number;
   height?: number;
-  // backgroundColor?: string;
-  layerColor: string;
-  style?: ViewStyle;
+  color?: string;
 }
 
-const MyRequirementIcon: React.FC<LayersIconProps> = ({
-  width = 36,
-  height = 36,
-  // backgroundColor = '#E6F2F0', // Matching the background color from the image
-  layerColor, // Matching the layer color from the image
-  style,
+const MyRequirementIcon: React.FC<LayeredStackIconProps> = ({
+  width = 32,
+  height = 32,
+  color = "#153E3B",
 }) => {
   return (
-    <Svg
-      width={width}
-      height={height}
-      viewBox="0 0 36 36"
-      fill="none"
-      style={style}
-    >
-      <Rect
-        width={36}
-        height={36}
-        rx={8}
-        // fill={backgroundColor}
-      />
+    <Svg width={width} height={height} viewBox="0 0 32 32" fill="none">
       <Path
-        d="M18 11.25L12 14.625L18 18L24 14.625L18 11.25Z"
-        stroke={layerColor}
-        strokeWidth={1.5}
+        d="M17.3464 3.89335L25.213 7.38669C27.4797 8.38669 27.4797 10.04 25.213 11.04L17.3464 14.5334C16.453 14.9334 14.9864 14.9334 14.093 14.5334L6.22637 11.04C3.9597 10.04 3.9597 8.38669 6.22637 7.38669L14.093 3.89335C14.9864 3.49335 16.453 3.49335 17.3464 3.89335Z"
+        stroke={color}
+        strokeWidth="2"
         strokeLinecap="round"
         strokeLinejoin="round"
       />
       <Path
-        d="M24 18L18 21.375L12 18"
-        stroke={layerColor}
-        strokeWidth={1.5}
+        d="M4 14.6667C4 15.7867 4.84 17.08 5.86667 17.5333L14.92 21.56C15.6133 21.8667 16.4 21.8667 17.08 21.56L26.1333 17.5333C27.16 17.08 28 15.7867 28 14.6667"
+        stroke={color}
+        strokeWidth="2"
         strokeLinecap="round"
         strokeLinejoin="round"
       />
       <Path
-        d="M24 21.375L18 24.75L12 21.375"
-        stroke={layerColor}
-        strokeWidth={1.5}
+        d="M4 21.3333C4 22.5733 4.73333 23.6933 5.86667 24.2L14.92 28.2267C15.6133 28.5333 16.4 28.5333 17.08 28.2267L26.1333 24.2C27.2667 23.6933 28 22.5733 28 21.3333"
+        stroke={color}
+        strokeWidth="2"
         strokeLinecap="round"
         strokeLinejoin="round"
       />

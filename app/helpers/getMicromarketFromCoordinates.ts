@@ -11,8 +11,12 @@ const geojson = rawGeojson as FeatureCollection;
  * @param selectedPlace - Object with lat and lng coordinates
  * @returns Micromarket name or null if not found
  */
-export function getMicromarketFromCoordinates(selectedPlace: Places): string | undefined {
-    const point = turf.point([selectedPlace.lng, selectedPlace.lat]);
+export function getMicromarketFromCoordinates(selectedPlace: Places): string | null {
+    if (!selectedPlace.lng || !selectedPlace.lat) {
+        return null;
+    }
+    
+    const point = turf.point([selectedPlace.lng || 0, selectedPlace.lat || 0]);
 
     for (const feature of geojson.features) {
         if (
@@ -21,13 +25,13 @@ export function getMicromarketFromCoordinates(selectedPlace: Places): string | u
         ) {
             if (turf.booleanPointInPolygon(point, feature as Feature<Polygon | MultiPolygon>)) {
                 return (
-                    feature.properties?.Micromarket ||
+                    feature.properties?.Ward_Name ||
                     feature.properties?.name ||
-                    undefined
+                    null
                 );
             }
         }
     }
 
-    return undefined;
+    return null;
 }

@@ -19,7 +19,7 @@ const StyledText = styled(Text);
 type TabItem = {
   key: string;
   label: string;
-  icon: React.ReactNode;
+  icon: React.FC<any>;
   count: number;
   loading: boolean;
 };
@@ -87,6 +87,7 @@ const TabCarousel: React.FC<TabCarouselProps> = ({
 
   const renderTabItem: ListRenderItem<TabItem> = ({ item }) => {
     const isActive = activeTab === item.key;
+    const TabIcon = item?.icon;
     return (
       <StyledTouchableOpacity
         className={`p-5 rounded-2xl ${
@@ -98,11 +99,15 @@ const TabCarousel: React.FC<TabCarouselProps> = ({
       >
         <StyledView className="flex flex-row items-center gap-[16px]">
           <StyledView
-            className={`p-[9.3]  rounded-full ${
+            className={`p-[16.9]  rounded-full ${
               isActive ? "bg-[#0E2C2A]" : "bg-[#EAF8F6]"
             }`}
           >
-            {item?.icon}
+            <TabIcon
+              width={21.33}
+              height={21.33}
+              color={isActive ? "#FFFFFF" : undefined}
+            />
           </StyledView>
           <StyledView className="flex flex-col items-start justify-center gap-[4px]">
             <StyledText
@@ -114,7 +119,7 @@ const TabCarousel: React.FC<TabCarouselProps> = ({
               {item.label}
             </StyledText>
             {item?.loading ? (
-              <ActivityIndicator />
+              <ActivityIndicator color="#153E3B" />
             ) : (
               <StyledText
                 className={`text-xl font-bold ${

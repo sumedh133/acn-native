@@ -23,10 +23,10 @@ import ProfileCard, {
   ProfileCardInterface,
 } from "../components/ProfilePage/ProfileCard";
 import KamIcon from "@/assets/icons/svg/ProfilePage/KamIcon";
-import KamManager from "../modals/KamModal";
 import GetPremiumCard from "../components/ProfilePage/GetPremiumCard";
 import LogoutIcon from "@/assets/icons/svg/Common/LogoutIcon";
 import CreditsCard from "../components/ProfilePage/CreditsCard";
+import { setKamModalVisible } from "@/store/slices/kamSlice";
 
 const profileCards: ProfileCardInterface[] = [
   {
@@ -50,27 +50,25 @@ const Profile = () => {
   const dispatch = useDispatch<ThunkDispatch<RootState, unknown, AnyAction>>();
   const router = useRouter();
 
-  const [kamModalVisible, setKamModalVisible] = useState(false);
-
   const userType: string | null =
     useSelector((state: RootState) => state?.agent?.docData?.userType) || "";
 
   const handleCardClick = (slug: string) => {
     switch (slug) {
       case "payment_records":
-        router.replace("/billings");
+        router.push("/billings");
         break;
       case "contact_kam":
-        setKamModalVisible(true);
+        dispatch(setKamModalVisible(true));
         break;
       case "help_support":
-        router.replace("/help");
+        router.push("/help");
         break;
       case "get_premium":
-        router.replace("/billings");
+        router.push("/billings");
         break;
       case "credits_card":
-        router.replace("/billings");
+        router.push("/billings");
         break;
       default:
         break;
@@ -99,7 +97,6 @@ const Profile = () => {
 
   return (
     <>
-      <KamManager visible={kamModalVisible} setVisible={setKamModalVisible} />
       <View style={styles.container}>
         <UserDetailsCard userType={userType} />
         <View style={styles.cardsContainer}>
