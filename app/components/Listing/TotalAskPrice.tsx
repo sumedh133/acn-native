@@ -118,7 +118,7 @@ const TotalAskPrice: React.FC<TotalAskPricetProps> = ({
   // Calculate the total in words (for display below the input)
   const getPriceInWords = (): string => {
     if (!price) 
-      if (selectedOption.value === 'totalAskPrice' ) return "Eg. 2.00 Cr | 2 Crore 0 Lakh Rupees only";
+      if (selectedOption.value === 'totalAskPrice' ) return "Eg. 2.20 Cr | 2 Crore 20 Lakh Rupees only";
       else return "Eg. 7.50 K | 7500 Rupees only";
     const numericPrice = parseFloat(price.replace(/,/g, ""));
     if (isNaN(numericPrice)) return "";
@@ -176,7 +176,7 @@ const TotalAskPrice: React.FC<TotalAskPricetProps> = ({
             onChangeText={handlePriceChange}
             onFocus={handleFocus}
             onBlur={handleBlur}
-            placeholder={selectedOption.value === 'totalAskPrice' ? "eg. 2,00,00,000" : "eg. 7,500"}
+            placeholder={selectedOption.value === 'totalAskPrice' ? "eg. 2,20,00,000" : "eg. 7,500"}
             placeholderTextColor="#A0A0A0"
             keyboardType="numeric"
           />
