@@ -21,7 +21,7 @@ const GetPremiumCard = ({
     >
       <View className="flex-row justify-between">
         <View>
-          <Text className="text-white text-2xl font-bold">ACN Premium</Text>
+          <Text className="text-white text-lg" style={{fontFamily: "Montserrat_700Bold"}}>ACN Premium</Text>
           <Text className="text-white text-xl font-bold mt-1">
             ₹10,000/year!
           </Text>
@@ -57,16 +57,16 @@ const GetPremiumCard = ({
         className="bg-white py-3 rounded-md mb-2"
         // onPress={onStartTrial}
       >
-        <Text className="text-center text-green-800 font-bold">
+        <Text className="text-center text-sm text-[#153E3B] font-bold">
           Start 1 month free trial
         </Text>
       </TouchableOpacity>
 
       <TouchableOpacity
-        className="flex-row justify-center items-center"
+        className="flex-row justify-center items-center gap-1"
         onPress={()=>handleClick("compare_plans")}
       >
-        <Text className="text-white">Compare Plans</Text>
+        <Text className="text-white text-sm font-bold">Compare Plans</Text>
         <Ionicons name="arrow-forward" size={18} color="white" />
       </TouchableOpacity>
     </LinearGradient>

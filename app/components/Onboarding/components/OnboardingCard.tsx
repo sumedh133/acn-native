@@ -7,7 +7,7 @@ interface OnboardingCardProps {
 
 const OnboardingCard: React.FC<OnboardingCardProps> = ({ children }) => {
   return (
-    <View className="bg-white p-4 w-full">
+    <View className="bg-white pb-4 px-4 w-full rounded-t-[12px]">
       {children}
     </View>
   );

@@ -310,8 +310,8 @@ export default function LayoutApp() {
         />
       </Stack>
       
-       <OnboardingFlow
-        visible={false}
+       {/* <OnboardingFlow
+        visible={true}
         onComplete={() => {
           // dispatch(updateAgentDocData({ onboardingComplete: true }));
           setShowOnboarding(false);
@@ -319,15 +319,15 @@ export default function LayoutApp() {
         onClose={() => {
           setShowOnboarding(false);
         }}
-      />
+      /> */}
       
       
 
       <Toast config={toastConfig} />
       <StatusBar style="auto" />
       <KamManager />
-      {/* <PremiumModal/>
-      <PaymentUnsuccessfulModal/> */}
+      {/* <PremiumModal/> */}
+      {/* <PaymentUnsuccessfulModal/> */}
       
       {isAuthenticated && <FooterNavigation />}
     </View>

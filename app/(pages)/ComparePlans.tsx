@@ -95,10 +95,10 @@ const ComparePlans = () => {
   ];
 
   return (
-    <SafeAreaView className="flex-1 bg-[#F5F6F7] pb-2">
-      <ScrollView>
-        <View className="p-4 mt-2">
-          <Text className="text-2xl font-bold text-[#111827] text-center mb-2">
+    <SafeAreaView className="flex-1 pb-2">
+      <ScrollView className="pb-2 bg-[#EEEEEE] gap-6">
+        <View className="px-4 pt-6 mt-2">
+          <Text className="text-lg  text-black text-center mb-2" style={{fontFamily: "Montserrat_700Bold"}}>
             Choose the right plan for you
           </Text>
         </View>
@@ -121,15 +121,15 @@ const ComparePlans = () => {
                   : "bg-[#1E3A37] border-[#1E3A37]"
               } p-5`}
             >
-              <View className=" top-0 left-0 right-0 items-center z-10">
-                <View className="px-3 py-1 rounded-2xl -mt-2.5 bg-[#FFF2D9]">
-                  <Text className="text-xs font-semibold text-[#111827]">
+              <View className="py-1 mr-auto w-auto">
+                <View className="px-3 py-1 rounded-[8px] -mt-2.5 bg-[#FFF2D9]">
+                  <Text className="text-[14px] font-medium text-[#000000]">
                     {plan.label}
                   </Text>
                 </View>
               </View>
 
-              <View className="flex flex-row mt-4 mb-3">
+              <View className="flex flex-row pt-4 mt-4 mb-3 gap-4">
                 <View className="mb-2">
                   <View className="w-14 h-14 rounded-full bg-[#E0F9F6] items-center justify-center">
                     <View
@@ -143,15 +143,16 @@ const ComparePlans = () => {
                 </View>
                 <View>
                   <Text
-                    className={`text-sm mb-1 ${
-                      index === 0 ? "text-[#6B7280]" : "text-white"
+                    className={`text-sm font-medium mb-1 ${
+                      index === 0 ? "text-[#726C6C]" : "text-[#CCCBCB]"
                     }`}
                   >
                     {plan.tagline}
                   </Text>
                   <Text
-                    className={`text-xl font-bold mb-2 ${
-                      index === 0 ? "text-[#111827]" : "text-white"
+                    style={{fontFamily: "Montserrat_700Bold"}}
+                    className={`text-[16px] mb-2 leading-[150%] tracking-[0.25px] align-middle ${
+                      index === 0 ? "text-[#0A0B0A]" : "text-white"
                     }`}
                   >
                     {plan.name}
@@ -160,46 +161,50 @@ const ComparePlans = () => {
               </View>
 
               <Text
-                className={`text-sm  mb-4 ${
+                className={`text-sm font-medium mb-4 ${
                   index === 0 ? "text-[#0A0B0A]" : "text-white"
                 }`}
               >
                 {plan.description}
               </Text>
 
-              <View className="flex flex-row items-end mb-4 gap-1">
+              <View className="flex flex-row items-end mb-4 gap-2">
                 <Text
-                  className={`text-3xl font-bold ${
+                style={{fontFamily: "Montserrat_700Bold"}}
+                  className={`text-3xl  ${
                     index === 0 ? "text-[#111827]" : "text-white"
                   }`}
                 >
                   {plan.price}
                 </Text>
                 <View>
-                <Text
-                  className={`text-base ${
-                    index === 0 ? "text-[#6B7280]" : "text-white"
-                  }`}
-                >
-                  {plan.period}
-                </Text>
-                {plan.monthlyPrice && (
                   <Text
-                    className={`text-sm mt-1 ${
-                      index === 0 ? "text-[#6B7280]" : "text-white"
+                    style={{fontFamily: "Montserrat_500Medium"}}
+                    className={`text-lg  ${
+                      index === 0 ? "text-[#6B7280]" : "text-[#CCCBCB]"
                     }`}
                   >
-                    {plan.monthlyPrice}
+                    {plan.period}
                   </Text>
-                )}
+                  {plan.monthlyPrice && (
+                    <Text
+                      style={{fontFamily: "Montserrat_500Medium"}}
+                      className={`text-[16px]  ${
+                        index === 0 ? "text-[#6B7280]" : "text-[#CCCBCB]"
+                      }`}
+                    >
+                      {plan.monthlyPrice}
+                    </Text>
+                  )}
                 </View>
               </View>
 
-              <View className="h-px bg-gray-200 my-4" />
+              {/* <View className="h-px bg-gray-200 my-4" /> */}
 
               <Text
-                className={`text-base font-semibold mb-4 ${
-                  index === 0 ? "text-[#111827]" : "text-white"
+                style={{fontFamily: "Montserrat_700Bold"}}
+                className={`text-base mb-4 ${
+                  index === 0 ? "text-[#000000]" : "text-white"
                 }`}
               >
                 What's included :
@@ -210,18 +215,18 @@ const ComparePlans = () => {
                   <View key={fidx} className="flex-row items-start mb-3">
                     <View
                       className={`w-5 h-5 rounded-full justify-center items-center mr-2 mt-0.5 ${
-                        index === 0 ? "bg-[#1E3A37]" : "bg-[#E0F9F6]"
+                        index === 0 ? "bg-[#153E3B]" : "bg-[#F4FBF8]"
                       }`}
                     >
                       <Ionicons
                         name="checkmark"
-                        size={16}
-                        color={index === 0 ? "#FFFFFF" : "#1E3A37"}
+                        size={18}
+                        color={index === 0 ? "#FFFFFF" : "#153E3B"}
                       />
                     </View>
                     <Text
-                      className={`text-sm flex-1 ${
-                        index === 0 ? "text-[#4B5563]" : "text-white"
+                      className={`text-base font-medium flex-1 ${
+                        index === 0 ? "text-[#0A0B0A]" : "text-[#F4FBF8]"
                       }`}
                     >
                       {feature.name}
@@ -234,19 +239,19 @@ const ComparePlans = () => {
                 {index === 1 && (
                   <>
                     <TouchableOpacity
-                      className="py-3 rounded-md items-center bg-white"
+                      className="py-2 h-[40px] rounded-md items-center bg-white"
                       onPress={plan.secondaryButton.action}
                     >
-                      <Text className="text-sm font-semibold text-[#1E3A37]">
+                      <Text className="text-sm font-medium text-[#153E3B]">
                         {plan.secondaryButton.text}
                       </Text>
                     </TouchableOpacity>
 
                     <TouchableOpacity
-                      className="py-3 rounded-md items-center bg-[#1E3A37] border border-white"
+                      className="py-2 h-[40px] rounded-md items-center bg-[#1E3A37] border border-white"
                       onPress={plan.primaryButton.action}
                     >
-                      <Text className="text-sm font-semibold text-white">
+                      <Text className="text-sm font-medium text-white">
                         {plan.primaryButton.text}
                       </Text>
                     </TouchableOpacity>

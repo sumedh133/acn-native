@@ -29,6 +29,7 @@ const PaymentUnsuccessfulModal: React.FC<PaymentUnsuccessfulModalProps> = ({
       onRequestClose={onClose}
     >
       <SafeAreaView style={styles.container}>
+        
         <View style={styles.modalContent}>
           {/* Close button */}
           <TouchableOpacity style={styles.closeButton} onPress={onClose}>
@@ -53,15 +54,29 @@ const PaymentUnsuccessfulModal: React.FC<PaymentUnsuccessfulModalProps> = ({
               {/* Gold strip */}
               <Rect
                 x="10"
+                y="48"
+                width="70"
+                height="3"
+                fill="black"
+              />
+              <Rect
+                x="10"
                 y="40"
                 width="70"
-                height="10"
+                height="8"
                 fill="#EFB72E"
+              />
+              <Rect
+                x="10"
+                y="38"
+                width="70"
+                height="3"
+                fill="black"
               />
               
               {/* Card details */}
-              <Rect x="20" y="60" width="15" height="5" rx="2" fill="#000" />
-              <Rect x="20" y="70" width="25" height="5" rx="2" fill="#000" />
+              <Rect x="20" y="55" width="15" height="5" rx="2" fill="#000" />
+              <Rect x="20" y="65" width="25" height="5" rx="2" fill="#000" />
               
               {/* Error circle */}
               <Circle cx="70" cy="70" r="16" fill="#E71D36" />
@@ -99,24 +114,23 @@ const { width } = Dimensions.get('window');
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: "flex-end",
     backgroundColor: 'rgba(0, 0, 0, 0.5)',
   },
   modalContent: {
-    width: width * 0.9,
+    width: width,
     paddingVertical: 40,
     paddingHorizontal: 20,
     borderRadius: 12,
     alignItems: 'center',
-    backgroundColor: '#FFF0F0', // Light pink background
+    backgroundColor: '#FFEDED', // Light pink background
   },
   closeButton: {
     position: 'absolute',
     top: 12,
     right: 12,
-    width: 30,
-    height: 30,
+    width: 28,
+    height: 28,
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -130,25 +144,26 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   title: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    color: '#333333',
+    fontSize: 18,
+    fontFamily: "Montserrat_700Bold",
+    color: "#433F3E",
     marginBottom: 16,
-    textAlign: 'center',
+    textAlign: "center",
   },
   description: {
-    fontSize: 16,
-    color: '#555555',
-    textAlign: 'center',
+    fontSize: 14,
+    fontWeight: 500,
+    color: "#464748",
+    textAlign: "center",
     lineHeight: 24,
     marginBottom: 30,
   },
   tryAgainButton: {
     backgroundColor: '#0A393A', // Dark teal/green button color
-    paddingVertical: 16,
+    paddingVertical: 12,
     paddingHorizontal: 24,
-    borderRadius: 8,
-    width: '100%',
+    borderRadius: 6,
+    width: '90%',
     alignItems: 'center',
   },
   tryAgainButtonText: {

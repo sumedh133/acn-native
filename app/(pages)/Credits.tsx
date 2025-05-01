@@ -6,6 +6,7 @@ import { RootState } from "@/store/store";
 import ARPrimaryButton from "../components/Button/ARPrimaryButton";
 import CoinIcon from "@/assets/icons/svg/Sidebar/CoinIcon";
 import GetPremiumCard from "../components/ProfilePage/GetPremiumCard";
+import LinearGradient from "react-native-linear-gradient";
 
 const Credits = () => {
   const router = useRouter();
@@ -39,40 +40,63 @@ const Credits = () => {
   };
 
   return (
-    <View className="flex-1 bg-gray-100">
+    <View className="flex-1 bg-[#EEEEEE]">
       <ScrollView className="flex-1" showsVerticalScrollIndicator={false}>
         <View className="p-4 flex flex-col space-y-4 ">
           {/* Credits Card */}
-          <View className="bg-yellow-50 rounded-xl p-5 border border-yellow-200 relative overflow-hidden">
-            <Text className="font-lato text-sm text-gray-600">
+          <LinearGradient
+            
+            start={{ x: 0, y: 0 }} 
+            end={{ x: 1, y: 0 }} 
+            colors={["#FFFFFF", "#FFF8D4"]} 
+            locations={[0.4904, 1.0]} 
+            style={{
+              borderRadius: 12,
+              padding: 20,
+              borderWidth: 1,
+              borderColor: "#FFF8D0",
+              position: "relative",
+              overflow: "hidden",
+            }}
+          >
+            <Text className="font-lato font-medium text-sm text-[#595959]">
               Available Credits
             </Text>
-            <Text className="font-montserrat-bold text-4xl font-bold mt-1 mb-1">
+            <Text
+              className=" text-4xl  mt-1 mb-1"
+              style={{ fontFamily: "Montserrat_700Bold" }}
+            >
               230
             </Text>
-            <Text className="font-lato text-xs text-gray-600 max-w-[80%]">
+            <Text className="font-lato font-normal text-xs text-gray-600 max-w-[80%]">
               Did you know? On Avg. agents spend 15 credits/week
             </Text>
             <View className="absolute right-5 top-5">
               <CoinIcon width={40} height={40} />
             </View>
-          </View>
+          </LinearGradient>
 
           {/* Buy More Credits Card */}
           <View className="bg-white rounded-xl p-5 border border-gray-200">
-            <Text className="font-montserrat-bold text-lg font-bold mb-2">
+            <Text
+              className=" text-lg text-[#433F3E] mb-2"
+              style={{ fontFamily: "Montserrat_700Bold" }}
+            >
               Need more enquiries?
             </Text>
-            <Text className="font-lato text-sm text-[#433F3E] mb-4">
+            <Text className="font-medium text-sm text-[#433F3E] mb-4">
               Credits are needed to get agent's contact details on ACN Platform.
             </Text>
 
             <View className="flex-row justify-between items-center mb-4">
               <View>
-                <Text className="font-heading text-4xl font-bold text-[#153E3B]">
+                <Text
+                  className="font-heading text-4xl  text-[#153E3B]"
+                  style={{ fontFamily: "Montserrat_700Bold" }}
+                >
                   ₹249
                 </Text>
-                <Text className="font-lato text-xs text-[#153E3B]">
+                <Text className="font-medium text-xs text-[#153E3B]">
                   Price is all-inclusive**
                 </Text>
               </View>
@@ -81,17 +105,22 @@ const Credits = () => {
                 className="bg-[#153E3B] rounded-lg py-3.5 px-5"
                 onPress={handleAddCredits}
               >
-                <Text className="text-white font-montserrat-semibold font-semibold text-sm">
+                <Text
+                  className="text-white text-sm"
+                  style={{ fontFamily: "Montserrat_600SemiBold" }}
+                >
                   Add 5 Credits
                 </Text>
               </TouchableOpacity>
             </View>
 
-            <View className="bg-[#1B665D1A] rounded-lg p-3 flex-row items-center">
+            <View className="bg-[#1B665D1A] rounded-lg p-3 flex-row justify-center items-center">
               <View className="w-5 h-5 rounded-full bg-white border border-gray-300 justify-center items-center mr-2">
-                <Text className="text-xs text-gray-600">i</Text>
+                <Text className="text-xs text-[#757575]">i</Text>
               </View>
-              <Text className=" text-sm">5 credits = 5 fresh leads</Text>
+              <Text className=" text-sm font-bold">
+                5 credits = 5 fresh leads
+              </Text>
             </View>
           </View>
 
