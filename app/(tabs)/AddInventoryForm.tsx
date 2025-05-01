@@ -90,6 +90,7 @@ const initialState: ListingProperty = {
   noOfBalconies: null,
   noOfBathrooms: null,
   ocReceived: false,
+  plotFacing: null,
   plotSize: null,
   propertyId: null,
   qcStatus: null,
@@ -290,6 +291,7 @@ const AddInventoryForm = () => {
             required={component.required}
             keyboardType={component.keyboardType}
             numberToStringFooter={component.numberToStringFooter}
+            footer={component.footer}
           />
         );
       case "Dropdown":

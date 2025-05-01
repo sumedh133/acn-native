@@ -25,6 +25,7 @@ interface TextInputFieldProps {
   suffix?: string;
   prefix?: string;
   numberToStringFooter?: boolean;
+  footer?: string;
 }
 
 const TextInputField = ({
@@ -38,6 +39,7 @@ const TextInputField = ({
   suffix,
   prefix,
   numberToStringFooter = false,
+  footer = "",
 }: TextInputFieldProps) => {
   const [isFocused, setIsFocused] = useState(false);
 
@@ -150,6 +152,7 @@ const numberToWords = (num: number): string => {
         {suffix && <Text style={styles.suffixText}>{suffix}</Text>}
       </View>
       {numberToStringFooter ? <Text style={styles.priceInWords}>{getPriceInWords()}</Text> : <></>}
+      {footer === "" ? <></> :  <Text style={styles.priceInWords}>{footer}</Text>}
     </View>
   );
 };

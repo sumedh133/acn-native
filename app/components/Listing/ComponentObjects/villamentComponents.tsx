@@ -23,13 +23,14 @@ export const villamentComponents = [
     colspan: 1,
   },
   {
-    label: "Floors",
+    label: "Floor No.",
     type: "textInput",
     field: "exactFloor",
     // suffix: "Sqft",
     placeholder: "4",
     keyboardType: "numeric",
     colspan: 1,
+    footer: "",
   },
   {
     label: "SBUA",

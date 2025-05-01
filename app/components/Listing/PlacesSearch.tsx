@@ -34,7 +34,7 @@ interface PlaceDetails {
 interface PlacesSearchProps {
   selectedPlace: Places | null;
   setSelectedPlace: (place: Places | null) => void;
-  communityType : string | null | undefined;
+  communityType: string | null | undefined;
 }
 
 // Note: In production, use environment variables or a secure config approach
@@ -231,7 +231,9 @@ const PlacesSearch = ({
   return (
     <View style={styles.section}>
       <View style={styles.headingContainer}>
-        <Text style={styles.sectionHeading}>{communityType === "Independent" ? "Nearby LandMark" : "Project Name"}</Text>
+        <Text style={styles.sectionHeading}>
+          {communityType === "Independent" ? "Nearby LandMark" : "Project Name"}
+        </Text>
         <Text style={styles.compulsoryStar}>*</Text>
       </View>
       <View style={styles.container}>
@@ -240,7 +242,11 @@ const PlacesSearch = ({
           <Ionicons name="search-outline" size={20} color="#726C6C" />
           <TextInput
             style={styles.textInput}
-            placeholder={communityType === "Independent" ? "Nearby LandMark" : "Project Name"}
+            placeholder={
+              communityType === "Independent"
+                ? "Nearby LandMark"
+                : "Project Name"
+            }
             placeholderTextColor="#7A7B7C"
             value={searchQuery}
             onChangeText={handleSearchInputChange}

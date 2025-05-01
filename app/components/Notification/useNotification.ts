@@ -3,7 +3,6 @@ import { doc, updateDoc } from "firebase/firestore";
 import { db } from "@/app/config/firebase";
 import { useSelector } from "react-redux";
 import { RootState } from "@/store/store";
-import { showSuccessToast } from "@/utils/toastUtils";
 import { PermissionsAndroid } from "react-native";
 export default function useNotification() {
   const cpId =
@@ -24,7 +23,6 @@ export default function useNotification() {
       const token = await getMessaging().getToken();
       const docRef = doc(db, "agents", cpId);
       await updateDoc(docRef, { fsm: token });
-      // showSuccessToast("Notifications are enabled 👉👈");
     } catch (error) {
       console.error("Failed to get FCM Token", error);
     }
