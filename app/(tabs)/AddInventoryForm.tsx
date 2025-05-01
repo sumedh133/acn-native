@@ -1,5 +1,6 @@
 import {
   ActivityIndicator,
+  BackHandler,
   ScrollView,
   StyleSheet,
   Text,
@@ -37,6 +38,7 @@ import { RootState } from "@/store/store";
 import Offline from "../components/Offline";
 import ArrowLeftIcon from "@/assets/icons/svg/Common/ArrowLeftIcon";
 import { router, useLocalSearchParams } from "expo-router";
+import { useFocusEffect } from "@react-navigation/native";
 import { showErrorToast, showSuccessToast } from "@/utils/toastUtils";
 import { areasData } from "../helpers/areasData";
 import { handleIdGeneration } from "../helpers/nextId";
@@ -44,6 +46,8 @@ import { getUnixDateTime } from "../helpers/getUnixDateTime";
 import { collection, doc, setDoc } from "firebase/firestore";
 import { db } from "../config/firebase";
 import storage from "@react-native-firebase/storage";
+import SaveAsDraft from "../modals/SaveAsDraft";
+import { useBackToSaveDraft } from "@/hooks/useBackToSaveDraft";
 
 const API_URL = "https://uploadtodrive-ouurm6pska-uc.a.run.app";
 
@@ -210,6 +214,8 @@ const AddInventoryForm = () => {
 
   const agentData = useSelector((state: RootState) => state.agent.docData);
 
+  const [saveAsDraftModalVisible, setSaveAsDraftModalVisible] = useState(false);
+
   const handleSetValue = (field: keyof ListingProperty, value: any) => {
     setProperty((prevProperty) => ({
       ...prevProperty,
@@ -251,34 +257,33 @@ const AddInventoryForm = () => {
           />
         );
       case "slider":
-        
-      if (component.field === "buildingAge") {
-        if (!!property.currentStatus) {
+        if (component.field === "buildingAge") {
+          if (!!property.currentStatus) {
+            return (
+              <SliderButtonSelect
+                value={property[key] as string | null}
+                setvalue={(value) => handleSetValue(component.field, value)}
+                title={component.label}
+                options={component.options}
+                required={component.required}
+                footer={component.footer}
+              />
+            );
+          } else {
+            return <></>;
+          }
+        } else {
           return (
             <SliderButtonSelect
-            value={property[key] as string | null}
-            setvalue={(value) => handleSetValue(component.field, value)}
-            title={component.label}
-            options={component.options}
-            required={component.required}
-            footer={component.footer}
-          />
+              value={property[key] as string | null}
+              setvalue={(value) => handleSetValue(component.field, value)}
+              title={component.label}
+              options={component.options}
+              required={component.required}
+              footer={component.footer}
+            />
           );
-        } else {
-          return <></>;
         }
-      } else {
-        return (
-          <SliderButtonSelect
-            value={property[key] as string | null}
-            setvalue={(value) => handleSetValue(component.field, value)}
-            title={component.label}
-            options={component.options}
-            required={component.required}
-            footer={component.footer}
-          />
-        );
-      }
       case "textInput":
         return (
           <TextInputField
@@ -611,16 +616,15 @@ const AddInventoryForm = () => {
 
   const getUnitType = () => {
     let unitType = property.unitType;
-    if ( property.extraRoom ) {
-      let unit = (unitType?.split(" "));
-      if ( unit ){
-        unit[0] +=  ".5";
+    if (property.extraRoom) {
+      let unit = unitType?.split(" ");
+      if (unit) {
+        unit[0] += ".5";
       }
       unitType = unit?.join(" ");
     }
-    console.log(unitType)
     return unitType;
-  }
+  };
 
   const generateNextQcId = async (): Promise<string | null> => {
     try {
@@ -974,12 +978,30 @@ const AddInventoryForm = () => {
       />
     );
 
+  // useEffect(() => {
+  //   // Back button handler
+  //   const backHandler = BackHandler.addEventListener(
+  //     "hardwareBackPress",
+  //     () => {
+  //       // Only handle back press when the form is visible
+  //       if (!saveAsDraftModalVisible) {
+  //         setSaveAsDraftModalVisible(true);
+  //         return true; // Prevent default back behavior
+  //       }
+  //       return false; // Allow default back behavior when modal is showing
+  //     }
+  //   );
+
+  //   return () => backHandler.remove();
+  // }, [saveAsDraftModalVisible]);
+
+
   return (
     <View style={styles.mainView}>
       <View style={styles.headerContainer}>
         <View style={styles.headerContent}>
           <View style={styles.headerLeft}>
-            <TouchableOpacity onPress={() => router.back()}>
+            <TouchableOpacity onPress={() => setSaveAsDraftModalVisible(true)}>
               <ArrowLeftIcon />
             </TouchableOpacity>
             <Text style={styles.headerTitle}>Add Inventory</Text>
@@ -1029,6 +1051,12 @@ const AddInventoryForm = () => {
           )}
         </TouchableOpacity>
       </View>
+      <SaveAsDraft
+        visible={saveAsDraftModalVisible}
+        onClose={() => setSaveAsDraftModalVisible(false)}
+        handleSaveDraft={handleSaveDraft}
+        isSaving={savingDraft}
+      />
     </View>
   );
 };
