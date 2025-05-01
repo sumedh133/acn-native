@@ -33,9 +33,9 @@ const FilePreview: React.FC<FilePreviewProps> = ({
   };
 
   const getFileIcon = useCallback((fileType: string | null | undefined) => {
-    if (fileType?.startsWith("image/"))
+    if (fileType?.startsWith("photo"))
       return <FontAwesome6 name="file-image" size={24} color="black" />;
-    else if (fileType?.startsWith("video/"))
+    else if (fileType?.startsWith("video"))
       return <FontAwesome6 name="file-video" size={24} color="black" />;
     else return <FontAwesome6 name="file-pdf" size={24} color="black" />;
   }, []);

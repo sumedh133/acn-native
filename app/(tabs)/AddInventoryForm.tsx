@@ -73,6 +73,7 @@ const initialState: ListingProperty = {
   driveLink: null,
   eKhata: false,
   exactFloor: null,
+  extraRoom: null,
   exclusive: false,
   extraDetails: null,
   facing: null,
@@ -249,6 +250,23 @@ const AddInventoryForm = () => {
           />
         );
       case "slider":
+        
+      if (component.field === "buildingAge") {
+        if (!!property.currentStatus) {
+          return (
+            <SliderButtonSelect
+            value={property[key] as string | null}
+            setvalue={(value) => handleSetValue(component.field, value)}
+            title={component.label}
+            options={component.options}
+            required={component.required}
+            footer={component.footer}
+          />
+          );
+        } else {
+          return <></>;
+        }
+      } else {
         return (
           <SliderButtonSelect
             value={property[key] as string | null}
@@ -256,8 +274,10 @@ const AddInventoryForm = () => {
             title={component.label}
             options={component.options}
             required={component.required}
+            footer={component.footer}
           />
         );
+      }
       case "textInput":
         return (
           <TextInputField
@@ -269,6 +289,7 @@ const AddInventoryForm = () => {
             placeholder={component.placeholder}
             required={component.required}
             keyboardType={component.keyboardType}
+            numberToStringFooter={component.numberToStringFooter}
           />
         );
       case "Dropdown":
@@ -298,6 +319,7 @@ const AddInventoryForm = () => {
             setValue={(value) => handleSetValue(component.field, value)}
             title={component.label}
             required={component.required}
+            disabled={!!property.currentStatus}
           />
         );
       case "TotalAskPrice":
@@ -324,6 +346,14 @@ const AddInventoryForm = () => {
           <Document
             setDocsToUpload={setDocsToUpload}
             docsToUpload={docsToUpload}
+          />
+        );
+      case "Project Name":
+        return (
+          <PlacesSearch
+            selectedPlace={selectedPlace}
+            setSelectedPlace={setSelectedPlace}
+            communityType={property.communityType}
           />
         );
 
@@ -478,17 +508,17 @@ const AddInventoryForm = () => {
     return true;
   };
 
-  const getArea = () => {
-    if (!property.micromarket || property.micromarket === "") {
-      throw new Error(`micromarket is empty`);
-    } else {
-      const selectedArea = areasData.find((area) =>
-        area.MicroMarkets.includes(property.micromarket || "")
-      )?.Area;
-      console.log("selectedArea", selectedArea);
-      return selectedArea;
-    }
-  };
+  // const getArea = () => {
+  //   if (!property.micromarket || property.micromarket === "") {
+  //     throw new Error(`micromarket is empty`);
+  //   } else {
+  //     const selectedArea = areasData.find((area) =>
+  //       area.MicroMarkets.includes(property.micromarket || "")
+  //     )?.Area;
+  //     console.log("selectedArea", selectedArea);
+  //     return "selectArea";
+  //   }
+  // };
 
   const getAskPrice = () => {
     let askPricePerSqft = property.askPricePerSqft || 0;
@@ -514,7 +544,7 @@ const AddInventoryForm = () => {
       throw new Error(`ask price is empty`);
     }
 
-    return { askPricePerSqft, totalAskPrice };
+    return { askPricePerSqft, totalAskPrice: totalAskPrice / 100000 };
   };
 
   const getFloor = () => {
@@ -576,6 +606,19 @@ const AddInventoryForm = () => {
       return "Unconfirmed";
     }
   };
+
+  const getUnitType = () => {
+    let unitType = property.unitType;
+    if ( property.extraRoom ) {
+      let unit = (unitType?.split(" "));
+      if ( unit ){
+        unit[0] +=  ".5";
+      }
+      unitType = unit?.join(" ");
+    }
+    console.log(unitType)
+    return unitType;
+  }
 
   const generateNextQcId = async (): Promise<string | null> => {
     try {
@@ -664,7 +707,7 @@ const AddInventoryForm = () => {
         return;
       }
 
-      const selectedArea = getArea();
+      // const selectedArea = getArea();
 
       const { askPricePerSqft, totalAskPrice } = getAskPrice();
 
@@ -673,6 +716,8 @@ const AddInventoryForm = () => {
       const nameOfTheProperty = getName();
 
       const currentStatus = getCurrentStatus();
+
+      const unitType = getUnitType();
 
       let propId = property.propertyId;
       if (!property.propertyId) {
@@ -691,12 +736,13 @@ const AddInventoryForm = () => {
         dateOfStatusLastChecked: getUnixDateTime(),
         cpCode: agentData.cpId,
         kamId: agentData.kam,
-        area: selectedArea,
+        // area: selectedArea,
         askPricePerSqft,
         totalAskPrice,
         floorNo,
         nameOfTheProperty,
         currentStatus,
+        unitType: unitType,
         kamStatus: "pending",
         qcStatus: "pending",
         stage: "kam",
@@ -850,6 +896,7 @@ const AddInventoryForm = () => {
         address: prev.address,
         mapLocation: prev.mapLocation,
         micromarket: prev.micromarket,
+        area: prev.area,
         _geoloc: prev?._geoloc
           ? {
               lat: prev?._geoloc?.lat || null,
@@ -873,7 +920,8 @@ const AddInventoryForm = () => {
         nameOfTheProperty: selectedPlace.name,
         address: selectedPlace.address,
         mapLocation: selectedPlace.mapLocation,
-        micromarket: mm,
+        micromarket: mm[0],
+        area: mm[1],
         _geoloc: {
           lat: selectedPlace.lat,
           lng: selectedPlace.lng,
@@ -945,11 +993,6 @@ const AddInventoryForm = () => {
         showsVerticalScrollIndicator={false}
       >
         <View style={styles.container}>
-          <PlacesSearch
-            selectedPlace={selectedPlace}
-            setSelectedPlace={setSelectedPlace}
-          />
-
           <AssetTypeSelection
             selectedAsset={property.assetType}
             setSelectedAsset={(value) => {

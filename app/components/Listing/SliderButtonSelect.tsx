@@ -13,6 +13,7 @@ interface SliderButtonSelectProps {
   title: string;
   options: Array<{ label: string; value: string }>;
   required: boolean;
+  footer: string;
 }
 
 const SliderButtonSelect = ({
@@ -21,6 +22,7 @@ const SliderButtonSelect = ({
   title,
   options,
   required,
+  footer ='',
 }: SliderButtonSelectProps) => {
   const handleSelect = (val: string) => {
     if (value === val && !required) {
@@ -54,6 +56,13 @@ const SliderButtonSelect = ({
           );
         })}
       </ScrollView>
+      {footer === ''
+        ?
+        <></>
+        :
+        <Text style={styles.priceInWords}>
+          {footer}
+        </Text>}
     </View>
   );
 };
@@ -106,6 +115,10 @@ const styles = StyleSheet.create({
     fontWeight: "400",
     fontSize: 14,
     color: "#000000",
+  },
+  priceInWords: {
+    fontSize: 12,
+    color: "#757575",
   },
 });
 

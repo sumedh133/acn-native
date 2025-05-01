@@ -34,6 +34,7 @@ interface PlaceDetails {
 interface PlacesSearchProps {
   selectedPlace: Places | null;
   setSelectedPlace: (place: Places | null) => void;
+  communityType : string | null | undefined;
 }
 
 // Note: In production, use environment variables or a secure config approach
@@ -42,6 +43,7 @@ const API_KEY = "AIzaSyBsygl4y777lWd7M7mMQMwvnTyYFjPwoaM";
 const PlacesSearch = ({
   selectedPlace,
   setSelectedPlace,
+  communityType,
 }: PlacesSearchProps) => {
   const [searchQuery, setSearchQuery] = useState("");
   const [searchResults, setSearchResults] = useState<PlacePrediction[]>([]);
@@ -229,7 +231,7 @@ const PlacesSearch = ({
   return (
     <View style={styles.section}>
       <View style={styles.headingContainer}>
-        <Text style={styles.sectionHeading}>Project Name</Text>
+        <Text style={styles.sectionHeading}>{communityType === "Independent" ? "Nearby LandMark" : "Project Name"}</Text>
         <Text style={styles.compulsoryStar}>*</Text>
       </View>
       <View style={styles.container}>
@@ -238,7 +240,7 @@ const PlacesSearch = ({
           <Ionicons name="search-outline" size={20} color="#726C6C" />
           <TextInput
             style={styles.textInput}
-            placeholder="Search Project Name"
+            placeholder={communityType === "Independent" ? "Nearby LandMark" : "Project Name"}
             placeholderTextColor="#7A7B7C"
             value={searchQuery}
             onChangeText={handleSearchInputChange}

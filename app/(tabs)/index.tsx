@@ -8,6 +8,7 @@ import * as Notifications from "expo-notifications";
 // import * as Permissions from 'expo-permissions';
 import { RootState } from "@/store/store";
 import Offline from "../components/Offline";
+import messaging from '@react-native-firebase/messaging'
 
 // Keep splash screen visible until explicitly hidden
 SplashScreen.preventAutoHideAsync();
@@ -65,6 +66,10 @@ export default function TabOneScreen() {
   if (!isStoreReady) {
     return null;
   }
+
+  messaging().setBackgroundMessageHandler(async remoteMessage => {
+    console.log('', remoteMessage)
+  })
 
   if (!isConnectedToInternet) return <Offline />;
 

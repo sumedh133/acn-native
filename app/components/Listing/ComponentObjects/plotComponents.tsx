@@ -10,6 +10,10 @@ export const plotComponents = [
     colspan: 2,
   },
   {
+    type: "Project Name",
+    colspan: 2,
+  },
+  {
     label: "Plot No.",
     type: "textInput",
     field: "unitNo",
@@ -85,16 +89,16 @@ export const plotComponents = [
     field: "readyToMove",
     colspan: 2,
   },
-  {
-    label: "Inside or Outside Facing",
-    type: "radioSelect",
-    field: "balconyFacing",
-    options: [
-      { label: "Inside", value: "Inside" },
-      { label: "Outside", value: "Outside" },
-    ],
-    colspan: 2,
-  },
+  // {
+  //   label: "Inside or Outside Facing",
+  //   type: "radioSelect",
+  //   field: "balconyFacing",
+  //   options: [
+  //     { label: "Inside", value: "Inside" },
+  //     { label: "Outside", value: "Outside" },
+  //   ],
+  //   colspan: 2,
+  // },
   {
     label: "Corner Plot",
     type: "Checkbox",
