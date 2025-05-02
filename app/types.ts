@@ -8,7 +8,7 @@ export interface Property {
   area?: string | null;
   askPricePerSqft?: number | null;
   assetType?: string | null;
-  buildingAge?: number | null;
+  buildingAge?: string | null;
   buildingKhata?: string | null;
   carpet?: number | null;
   cpCode?: string | null;
@@ -148,5 +148,7 @@ export interface ListingProperty extends Property {
   uds?: number | null;
   unitNo?: string | null;
   lastModified?: number | null;
+  extraRoom?: string[] | null;
+  plotFacing?: string | null;
   // [key: string]: any;
 }

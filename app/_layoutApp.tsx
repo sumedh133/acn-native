@@ -39,6 +39,7 @@ import { AnyAction, ThunkDispatch } from "@reduxjs/toolkit";
 import { TrialStatusNotification, TrialStatusType } from "./components/TrialStatusNotification";
 import PremiumModal from "./modals/PremiumModal";
 import PaymentUnsuccessfulModal from "./modals/PaymentUnsuccessfulModal";
+import useNotification from "./components/Notification/useNotification";
 
 // Custom header component to apply the desired styling
 const CustomHeader = ({
@@ -153,6 +154,29 @@ export default function LayoutApp() {
 
   const isAuthenticated =
     useSelector((state: RootState) => state.auth.isAuthenticated) || false;
+
+    const cpId =
+        useSelector((state: RootState) => state?.agent?.docData?.cpId) || null;
+
+  const notification = useNotification();
+
+  useEffect(() => {
+    notification.requestPermission();
+  }, [])
+
+  useEffect(() => {
+    if (isAuthenticated && cpId != null) {
+      const getTokenAsync = async () => {
+        try {
+          notification.refreshToken();
+        } catch (error) {
+          console.error("Error getting token:", error);
+        }
+      };
+      
+      getTokenAsync();
+    }
+  }, [isAuthenticated, cpId]);
 
   useCustomBackBehavior();
   if (!fontsLoaded) {

@@ -1,5 +1,6 @@
 import {
   ActivityIndicator,
+  BackHandler,
   ScrollView,
   StyleSheet,
   Text,
@@ -37,6 +38,7 @@ import { RootState } from "@/store/store";
 import Offline from "../components/Offline";
 import ArrowLeftIcon from "@/assets/icons/svg/Common/ArrowLeftIcon";
 import { router, useLocalSearchParams } from "expo-router";
+import { useFocusEffect } from "@react-navigation/native";
 import { showErrorToast, showSuccessToast } from "@/utils/toastUtils";
 import { areasData } from "../helpers/areasData";
 import { handleIdGeneration } from "../helpers/nextId";
@@ -44,6 +46,9 @@ import { getUnixDateTime } from "../helpers/getUnixDateTime";
 import { collection, doc, setDoc } from "firebase/firestore";
 import { db } from "../config/firebase";
 import storage from "@react-native-firebase/storage";
+import SaveAsDraft from "../modals/SaveAsDraft";
+import { useBackToSaveDraft } from "@/hooks/useBackToSaveDraft";
+import MultiSelectSlider from "../components/Listing/MuliSelectSliderButton";
 
 const API_URL = "https://uploadtodrive-ouurm6pska-uc.a.run.app";
 
@@ -73,6 +78,7 @@ const initialState: ListingProperty = {
   driveLink: null,
   eKhata: false,
   exactFloor: null,
+  extraRoom: null,
   exclusive: false,
   extraDetails: null,
   facing: null,
@@ -89,6 +95,7 @@ const initialState: ListingProperty = {
   noOfBalconies: null,
   noOfBathrooms: null,
   ocReceived: false,
+  plotFacing: null,
   plotSize: null,
   propertyId: null,
   qcStatus: null,
@@ -208,12 +215,22 @@ const AddInventoryForm = () => {
 
   const agentData = useSelector((state: RootState) => state.agent.docData);
 
+  const [saveAsDraftModalVisible, setSaveAsDraftModalVisible] = useState(false);
+
   const handleSetValue = (field: keyof ListingProperty, value: any) => {
     setProperty((prevProperty) => ({
       ...prevProperty,
       [field]: value,
     }));
   };
+
+  const handleSetValueMultiSelect = ( field : keyof ListingProperty, value: string[] ) => {
+    setProperty((prevProperty) => ({
+      ...prevProperty,
+      [field]: value,
+    }));
+    console.log(value, "This is value from function");
+  }
 
   const getFormComponents = () => {
     const components =
@@ -248,16 +265,45 @@ const AddInventoryForm = () => {
             }
           />
         );
+        case "multiSelectSlider":
+          return (
+            <MultiSelectSlider
+              value={property[key] as string[] || []}
+              setvalue={(value: string[]) => handleSetValueMultiSelect(component.field, value)}
+              title={component.label}
+              options={component.options}
+              required={component.required}
+              footer=""
+            />
+          );
       case "slider":
-        return (
-          <SliderButtonSelect
-            value={property[key] as string | null}
-            setvalue={(value) => handleSetValue(component.field, value)}
-            title={component.label}
-            options={component.options}
-            required={component.required}
-          />
-        );
+        if (component.field === "buildingAge") {
+          if (!!property.currentStatus) {
+            return (
+              <SliderButtonSelect
+                value={property[key] as string | null}
+                setvalue={(value) => handleSetValue(component.field, value)}
+                title={component.label}
+                options={component.options}
+                required={component.required}
+                footer={component.footer}
+              />
+            );
+          } else {
+            return <></>;
+          }
+        } else {
+          return (
+            <SliderButtonSelect
+              value={property[key] as string | null}
+              setvalue={(value) => handleSetValue(component.field, value)}
+              title={component.label}
+              options={component.options}
+              required={component.required}
+              footer={component.footer}
+            />
+          );
+        }
       case "textInput":
         return (
           <TextInputField
@@ -269,6 +315,8 @@ const AddInventoryForm = () => {
             placeholder={component.placeholder}
             required={component.required}
             keyboardType={component.keyboardType}
+            numberToStringFooter={component.numberToStringFooter}
+            footer={component.footer}
           />
         );
       case "Dropdown":
@@ -298,6 +346,7 @@ const AddInventoryForm = () => {
             setValue={(value) => handleSetValue(component.field, value)}
             title={component.label}
             required={component.required}
+            disabled={!!property.currentStatus}
           />
         );
       case "TotalAskPrice":
@@ -324,6 +373,14 @@ const AddInventoryForm = () => {
           <Document
             setDocsToUpload={setDocsToUpload}
             docsToUpload={docsToUpload}
+          />
+        );
+      case "Project Name":
+        return (
+          <PlacesSearch
+            selectedPlace={selectedPlace}
+            setSelectedPlace={setSelectedPlace}
+            communityType={property.communityType}
           />
         );
 
@@ -478,17 +535,17 @@ const AddInventoryForm = () => {
     return true;
   };
 
-  const getArea = () => {
-    if (!property.micromarket || property.micromarket === "") {
-      throw new Error(`micromarket is empty`);
-    } else {
-      const selectedArea = areasData.find((area) =>
-        area.MicroMarkets.includes(property.micromarket || "")
-      )?.Area;
-      console.log("selectedArea", selectedArea);
-      return selectedArea;
-    }
-  };
+  // const getArea = () => {
+  //   if (!property.micromarket || property.micromarket === "") {
+  //     throw new Error(`micromarket is empty`);
+  //   } else {
+  //     const selectedArea = areasData.find((area) =>
+  //       area.MicroMarkets.includes(property.micromarket || "")
+  //     )?.Area;
+  //     console.log("selectedArea", selectedArea);
+  //     return "selectArea";
+  //   }
+  // };
 
   const getAskPrice = () => {
     let askPricePerSqft = property.askPricePerSqft || 0;
@@ -514,7 +571,7 @@ const AddInventoryForm = () => {
       throw new Error(`ask price is empty`);
     }
 
-    return { askPricePerSqft, totalAskPrice };
+    return { askPricePerSqft, totalAskPrice: totalAskPrice / 100000 };
   };
 
   const getFloor = () => {
@@ -575,6 +632,18 @@ const AddInventoryForm = () => {
     } else {
       return "Unconfirmed";
     }
+  };
+
+  const getUnitType = () => {
+    let unitType = property.unitType;
+    if (property.extraRoom) {
+      let unit = unitType?.split(" ");
+      if (unit) {
+        unit[0] += ".5";
+      }
+      unitType = unit?.join(" ");
+    }
+    return unitType;
   };
 
   const generateNextQcId = async (): Promise<string | null> => {
@@ -664,7 +733,7 @@ const AddInventoryForm = () => {
         return;
       }
 
-      const selectedArea = getArea();
+      // const selectedArea = getArea();
 
       const { askPricePerSqft, totalAskPrice } = getAskPrice();
 
@@ -673,6 +742,8 @@ const AddInventoryForm = () => {
       const nameOfTheProperty = getName();
 
       const currentStatus = getCurrentStatus();
+
+      const unitType = getUnitType();
 
       let propId = property.propertyId;
       if (!property.propertyId) {
@@ -691,12 +762,13 @@ const AddInventoryForm = () => {
         dateOfStatusLastChecked: getUnixDateTime(),
         cpCode: agentData.cpId,
         kamId: agentData.kam,
-        area: selectedArea,
+        // area: selectedArea,
         askPricePerSqft,
         totalAskPrice,
         floorNo,
         nameOfTheProperty,
         currentStatus,
+        unitType: unitType,
         kamStatus: "pending",
         qcStatus: "pending",
         stage: "kam",
@@ -819,6 +891,7 @@ const AddInventoryForm = () => {
         ...uploadedFileUrls,
         driveLink,
       };
+      console.log(property);
 
       await setDoc(doc(db, "QC_Inventories", propId), dataToSave);
       showSuccessToast("Property added successfully!");
@@ -850,6 +923,7 @@ const AddInventoryForm = () => {
         address: prev.address,
         mapLocation: prev.mapLocation,
         micromarket: prev.micromarket,
+        area: prev.area,
         _geoloc: prev?._geoloc
           ? {
               lat: prev?._geoloc?.lat || null,
@@ -873,7 +947,8 @@ const AddInventoryForm = () => {
         nameOfTheProperty: selectedPlace.name,
         address: selectedPlace.address,
         mapLocation: selectedPlace.mapLocation,
-        micromarket: mm,
+        micromarket: mm[0],
+        area: mm[1],
         _geoloc: {
           lat: selectedPlace.lat,
           lng: selectedPlace.lng,
@@ -924,12 +999,30 @@ const AddInventoryForm = () => {
       />
     );
 
+  // useEffect(() => {
+  //   // Back button handler
+  //   const backHandler = BackHandler.addEventListener(
+  //     "hardwareBackPress",
+  //     () => {
+  //       // Only handle back press when the form is visible
+  //       if (!saveAsDraftModalVisible) {
+  //         setSaveAsDraftModalVisible(true);
+  //         return true; // Prevent default back behavior
+  //       }
+  //       return false; // Allow default back behavior when modal is showing
+  //     }
+  //   );
+
+  //   return () => backHandler.remove();
+  // }, [saveAsDraftModalVisible]);
+
+
   return (
     <View style={styles.mainView}>
       <View style={styles.headerContainer}>
         <View style={styles.headerContent}>
           <View style={styles.headerLeft}>
-            <TouchableOpacity onPress={() => router.back()}>
+            <TouchableOpacity onPress={() => setSaveAsDraftModalVisible(true)}>
               <ArrowLeftIcon />
             </TouchableOpacity>
             <Text style={styles.headerTitle}>Add Inventory</Text>
@@ -945,11 +1038,6 @@ const AddInventoryForm = () => {
         showsVerticalScrollIndicator={false}
       >
         <View style={styles.container}>
-          <PlacesSearch
-            selectedPlace={selectedPlace}
-            setSelectedPlace={setSelectedPlace}
-          />
-
           <AssetTypeSelection
             selectedAsset={property.assetType}
             setSelectedAsset={(value) => {
@@ -984,6 +1072,12 @@ const AddInventoryForm = () => {
           )}
         </TouchableOpacity>
       </View>
+      <SaveAsDraft
+        visible={saveAsDraftModalVisible}
+        onClose={() => setSaveAsDraftModalVisible(false)}
+        handleSaveDraft={handleSaveDraft}
+        isSaving={savingDraft}
+      />
     </View>
   );
 };

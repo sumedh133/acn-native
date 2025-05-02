@@ -10,6 +10,10 @@ export const plotComponents = [
     colspan: 2,
   },
   {
+    type: "Project Name",
+    colspan: 2,
+  },
+  {
     label: "Plot No.",
     type: "textInput",
     field: "unitNo",
@@ -57,13 +61,13 @@ export const plotComponents = [
     field: "facing",
     option: [
       { label: "North", value: "North" },
-      { label: "North-East", value: "North-East" },
       { label: "East", value: "East" },
-      { label: "South-East", value: "South-East" },
       { label: "South", value: "South" },
-      { label: "South-West", value: "South-West" },
       { label: "West", value: "West" },
+      { label: "North-East", value: "North-East" },
       { label: "North-West", value: "North-West" },
+      { label: "South-West", value: "South-West" },
+      { label: "South-East", value: "South-East" },
     ],
     colspan: 2,
   },
@@ -85,16 +89,16 @@ export const plotComponents = [
     field: "readyToMove",
     colspan: 2,
   },
-  {
-    label: "Inside or Outside Facing",
-    type: "radioSelect",
-    field: "balconyFacing",
-    options: [
-      { label: "Inside", value: "Inside" },
-      { label: "Outside", value: "Outside" },
-    ],
-    colspan: 2,
-  },
+  // {
+  //   label: "Inside or Outside Facing",
+  //   type: "radioSelect",
+  //   field: "balconyFacing",
+  //   options: [
+  //     { label: "Inside", value: "Inside" },
+  //     { label: "Outside", value: "Outside" },
+  //   ],
+  //   colspan: 2,
+  // },
   {
     label: "Corner Plot",
     type: "Checkbox",
