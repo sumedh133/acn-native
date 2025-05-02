@@ -372,6 +372,7 @@ const styles = StyleSheet.create({
   },
   resultsList: {
     width: "100%",
+    
   },
   resultItem: {
     padding: 12,
