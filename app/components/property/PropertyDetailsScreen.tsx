@@ -81,6 +81,20 @@ const formatDate = (timestamp?: number) => {
     year: "numeric",
   });
 };
+export const formatNumber = (value: number | string | undefined): string => {
+  if (value === undefined || value === null) return '';
+  const stringValue = String(value);
+  const numericPart = stringValue.replace(/[^\d.]/g, '');
+  const numValue = parseFloat(numericPart);
+  
+  if (isNaN(numValue)) return stringValue;
+  const formattedNumber = numValue.toLocaleString('en-US', {
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 2
+  });
+
+  return stringValue.replace(numericPart, formattedNumber);
+};
 
 // InfoRow component for property details
 const InfoRow = ({
@@ -100,7 +114,7 @@ const InfoRow = ({
   >
     <Text style={styles.infoLabel}>{label}:</Text>
     <View style={styles.infoSeparator} />
-    <Text style={styles.infoValue}>{value || "-"}</Text>
+    <Text style={styles.infoValue}>{formatNumber(value) || "-"}</Text>
   </View>
 );
 

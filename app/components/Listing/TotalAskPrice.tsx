@@ -68,7 +68,7 @@ const TotalAskPrice: React.FC<TotalAskPricetProps> = ({
 
     if (onPriceChange) {
       onPriceChange(selectedOption.value, validPrice);
-      console.log(selectedOption.value, validPrice, "field and value");
+      // console.log(selectedOption.value, validPrice, "field and value");
     }
   };
 
@@ -117,7 +117,9 @@ const TotalAskPrice: React.FC<TotalAskPricetProps> = ({
 
   // Calculate the total in words (for display below the input)
   const getPriceInWords = (): string => {
-    if (!price) return "eg. Two Thousand";
+    if (!price) 
+      if (selectedOption.value === 'totalAskPrice' ) return "Eg. 2.20 Cr | 2 Crore 20 Lakh Rupees only";
+      else return "Eg. 7.50 K | 7500 Rupees only";
     const numericPrice = parseFloat(price.replace(/,/g, ""));
     if (isNaN(numericPrice)) return "";
 
@@ -174,7 +176,7 @@ const TotalAskPrice: React.FC<TotalAskPricetProps> = ({
             onChangeText={handlePriceChange}
             onFocus={handleFocus}
             onBlur={handleBlur}
-            placeholder="eg. 2,000"
+            placeholder={selectedOption.value === 'totalAskPrice' ? "eg. 2,20,00,000" : "eg. 7,500"}
             placeholderTextColor="#A0A0A0"
             keyboardType="numeric"
           />
@@ -192,7 +194,10 @@ const TotalAskPrice: React.FC<TotalAskPricetProps> = ({
         </View>
 
         {/* Price in words */}
-        <Text style={styles.priceInWords}>{getPriceInWords()}</Text>
+        <Text style={styles.priceInWords}>
+          {getPriceInWords()}{" "}
+          {selectedOption.value === "totalAskPrice" ? "" : "per sq ft"}
+        </Text>
 
         {/* New dropdown UI */}
         {modalVisible && (
@@ -214,11 +219,13 @@ const TotalAskPrice: React.FC<TotalAskPricetProps> = ({
                   style={[
                     styles.optionItem,
                     hoveredItem === item.value && styles.hoveredOptionItem,
-                    selectedOption.value === item.value && styles.selectedOptionItem,
+                    selectedOption.value === item.value &&
+                      styles.selectedOptionItem,
                   ]}
                   onPress={() => handleSelect(item)}
                   onPressIn={() => setHoveredItem(item.value)}
-                  onPressOut={() => setHoveredItem(null)}>
+                  onPressOut={() => setHoveredItem(null)}
+                >
                   <Text style={styles.optionText}>{item.label}</Text>
                 </Pressable>
               )}
@@ -280,10 +287,10 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   titleText: {
-    fontSize: 16,
-    fontWeight: "600",
-    // marginBottom: 8,
+    fontSize: 14,
+    marginBottom:6,
     color: "#000000",
+    fontFamily:"Montserrat_600SemiBold",
   },
   compulsoryStar: {
     fontFamily: "sans-serif",
