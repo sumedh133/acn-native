@@ -3,6 +3,7 @@ import { View, Text, Image, TouchableOpacity } from "react-native";
 import PropTypes from "prop-types";
 import OnboardingCard from "../components/OnboardingCard";
 import PrimaryButton from "../components/PrimaryButton";
+import { router } from "expo-router";
 
 interface TrialInfoScreenProps {
   onContinue: () => void;
@@ -13,6 +14,10 @@ const TrialInfoScreen: React.FC<TrialInfoScreenProps> = ({
   onContinue,
   onSkip,
 }) => {
+  const handleClick = () => {
+    router.push("/(pages)/ComparePlans");
+    onSkip();
+  }
   return (
     <View className="">
       <OnboardingCard>
@@ -58,7 +63,9 @@ const TrialInfoScreen: React.FC<TrialInfoScreenProps> = ({
             className="mb-2"
           />
 
-          <TouchableOpacity className="items-center pt-1">
+          <TouchableOpacity className="items-center pt-1"
+          onPress={()=>handleClick()}
+          >
             <Text className="text-[#1B665D] text-xs" style={{ fontFamily: "Montserrat_700Bold" }}>See paid plans</Text>
           </TouchableOpacity>
 

@@ -82,7 +82,7 @@ const CustomHeader = ({
 export default function LayoutApp() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [profileModalVisible, setProfileModalVisible] = useState(false);
-  const [showOnboarding, setShowOnboarding] = useState(true);
+  const [showOnboarding, setShowOnboarding] = useState(false);
   const colorScheme = useColorScheme();
   const [topMargin, setTopMargin] = useState(10);
   const [fontsLoaded] = useFonts({
@@ -335,7 +335,7 @@ export default function LayoutApp() {
       </Stack>
       
        {/* <OnboardingFlow
-        visible={showOnboarding}
+        visible={true}
         onComplete={() => {
          // dispatch(updateAgentDocData({ onboardingComplete: true }));
           setShowOnboarding(false);
@@ -344,9 +344,6 @@ export default function LayoutApp() {
           setShowOnboarding(false);
         }}
       /> */}
-      
-      
-
       <Toast config={toastConfig} />
       <StatusBar style="auto" />
       <KamManager />

@@ -19,10 +19,10 @@ const WelcomeScreen: React.FC<WelcomeScreenProps> = ({
       <OnboardingCard >
         <View className="items-center mb-4  w-full relative">
           <TouchableOpacity
-            className="absolute -right-2 top-5 z-10 px-1.5 py-1 rounded-full bg-gray-400 "
+            className="absolute -right-1.5 top-2 z-10 px-2 py-1 rounded-full bg-[#BABABA] "
             onPress={onSkip}
           >
-            <Text className="text-white text-md font-bold">✕</Text>
+            <Text className="text-black text-md font-bold">✕</Text>
           </TouchableOpacity>
           <Image
             source={require("../../../../assets/images/welcome-image.png")}
