@@ -61,12 +61,13 @@ const TrialInfoScreen: React.FC<TrialInfoScreenProps> = ({
             title="Start Free Trial"
             onPress={onContinue || (() => {})}
             className="mb-2"
+            
           />
 
-          <TouchableOpacity className="items-center pt-1"
+          <TouchableOpacity className="items-center pt-2"
           onPress={()=>handleClick()}
           >
-            <Text className="text-[#1B665D] text-xs" style={{ fontFamily: "Montserrat_700Bold" }}>See paid plans</Text>
+            <Text className="text-[#1B665D] text-xs font-bold" style={{fontFamily:"Lato"}}>See paid plans</Text>
           </TouchableOpacity>
 
           <Text className="text-[10px] font-normal text-[#726C6C] text-center mt-4">

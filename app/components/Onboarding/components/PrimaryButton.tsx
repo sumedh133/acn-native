@@ -14,7 +14,7 @@ const PrimaryButton: React.FC<PrimaryButtonProps> = ({ title, onPress, className
       className={`bg-[#153E3B] rounded-md py-3 items-center ${className}`}
       onPress={onPress}
     >
-      <Text className="text-white text-sm font-medium">{title}</Text>
+      <Text className="text-white text-sm font-medium" style={{fontFamily:"Lato"}}>{title}</Text>
     </TouchableOpacity>
   );
 };

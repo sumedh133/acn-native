@@ -85,7 +85,10 @@ const ComparePlans = () => {
       description: "Unlock ACN's full potential with additional features.",
       primaryButton: {
         text: "Unlock Full Access",
-        action: () => router.push("/billings"),
+        action: () => router.push({
+          pathname: '/CheckoutScreen',
+          params: { planId: 'premium' }
+        }),
       },
       secondaryButton: {
         text: "Start 1 month trial",

@@ -30,7 +30,8 @@ const WelcomeScreen: React.FC<WelcomeScreenProps> = ({
             style={{width:width ,height:width*0.9,
               borderTopLeftRadius: 12,  
               borderTopRightRadius: 12, 
-              overflow: 'hidden', 
+              overflow: 'hidden',
+              opacity:80, 
               }}
             // resizeMode="contain"
           />

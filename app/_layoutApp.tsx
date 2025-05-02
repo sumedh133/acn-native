@@ -332,6 +332,14 @@ export default function LayoutApp() {
           }}
           initialParams={{ showFooter: false }}
         />
+         <Stack.Screen
+          name="(pages)/CheckoutScreen"
+          options={{
+            title: "Checkout",
+            headerBackVisible: true,
+          }}
+          initialParams={{ showFooter: false }}
+        />
       </Stack>
       
        {/* <OnboardingFlow

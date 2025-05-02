@@ -7,6 +7,7 @@ import ARPrimaryButton from "../components/Button/ARPrimaryButton";
 import CoinIcon from "@/assets/icons/svg/Sidebar/CoinIcon";
 import GetPremiumCard from "../components/ProfilePage/GetPremiumCard";
 import LinearGradient from "react-native-linear-gradient";
+import CheckoutScreen from "./CheckoutScreen";
 
 const Credits = () => {
   const router = useRouter();
@@ -21,7 +22,10 @@ const Credits = () => {
   };
 
   const handleAddCredits = () => {
-    router.push("/billings");
+    router.push({
+      pathname: '/CheckoutScreen',
+      params: { planId: 'booster' }
+    });
   };
 
   const handleStartTrial = () => {
@@ -91,7 +95,7 @@ const Credits = () => {
             <View className="flex-row justify-between items-center mb-4">
               <View>
                 <Text
-                  className="font-heading text-4xl  text-[#153E3B]"
+                  className="font-heading text-[22px]  text-[#153E3B]"
                   style={{ fontFamily: "Montserrat_700Bold" }}
                 >
                   ₹249
@@ -118,7 +122,7 @@ const Credits = () => {
               <View className="w-5 h-5 rounded-full bg-white border border-gray-300 justify-center items-center mr-2">
                 <Text className="text-xs text-[#757575]">i</Text>
               </View>
-              <Text className=" text-sm font-bold">
+              <Text className=" text-sm font-bold" style={{fontFamily:"Lato"}}>
                 5 credits = 5 fresh leads
               </Text>
             </View>
@@ -134,6 +138,13 @@ const Credits = () => {
           )}
 
           {/* Recent Enquiries Section */}
+          {/* <View className="bg-white rounded-xl p-5 border border-gray-200">
+          <RecentEnquiries 
+            enquiries={sampleEnquiries} 
+            maxDisplay={3} 
+            onViewMore={handleViewMoreEnquiries} 
+          />
+          </View> */}
           <View className="bg-white rounded-xl p-5 border border-gray-200">
             <Text className="font-montserrat-bold text-lg font-bold mb-4 text-center">
               Recent Enquiries

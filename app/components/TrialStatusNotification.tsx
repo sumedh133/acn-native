@@ -11,6 +11,7 @@ import {
   MaterialIcons,
   MaterialCommunityIcons
 } from '@expo/vector-icons';
+import { Montserrat_700Bold } from '@expo-google-fonts/montserrat';
 
 // Define trial status types as enum
 export enum TrialStatusType {
@@ -113,7 +114,7 @@ const TrialStatusNotification: React.FC<TrialStatusNotificationProps> = ({
   
   return (
     <View
-      className="flex-row justify-between items-center pl-4 pr-8 py-3 border-b"
+      className="flex-row justify-between items-center pl-5 pr-10 py-3 border-b"
       style={[
         {
           backgroundColor: config.bgColor,
@@ -130,8 +131,8 @@ const TrialStatusNotification: React.FC<TrialStatusNotificationProps> = ({
           {config.icon}
         </View>
         <View className="flex-1">
-          <Text className="font-semibold text-base text-gray-800">{config.title}</Text>
-          <Text className="text-sm text-gray-700">{config.message}</Text>
+          <Text className="font-bold text-sm text-[#0A0B0A]" style={{fontFamily:"Lato"}}>{config.title}</Text>
+          <Text className="text-xs text-[#0A0B0A]">{config.message}</Text>
         </View>
       </View>
       {dismissible && (
@@ -140,7 +141,7 @@ const TrialStatusNotification: React.FC<TrialStatusNotificationProps> = ({
           onPress={handleDismiss}
           accessibilityLabel="Dismiss notification"
         >
-          <Feather name="x" size={25} color="#6B7280" />
+          <Feather name="x" size={25} color="#0A0B0A" />
         </TouchableOpacity>
       )}
     </View>
