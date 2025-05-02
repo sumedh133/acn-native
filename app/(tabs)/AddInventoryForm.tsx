@@ -636,7 +636,7 @@ const AddInventoryForm = () => {
 
   const getUnitType = () => {
     let unitType = property.unitType;
-    if (property.extraRoom) {
+    if (property.extraRoom && property.unitType != "studio") {
       let unit = unitType?.split(" ");
       if (unit) {
         unit[0] += ".5";
