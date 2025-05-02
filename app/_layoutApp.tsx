@@ -335,9 +335,9 @@ export default function LayoutApp() {
       </Stack>
       
        {/* <OnboardingFlow
-        visible={true}
+        visible={showOnboarding}
         onComplete={() => {
-          //dispatch(updateAgentDocData({ onboardingComplete: true }));
+         // dispatch(updateAgentDocData({ onboardingComplete: true }));
           setShowOnboarding(false);
         }}
         onClose={() => {

@@ -58,7 +58,9 @@ const OnboardingFlowContent: React.FC<OnboardingFlowProps> = ({ visible, onCompl
       
     >
       <SafeAreaView
-       className='absolute bottom-0 left-0 right-0 bg-[#EEEEEE]'
+       style={{ flex: 1,
+        justifyContent: "flex-end",
+        backgroundColor: "rgba(0, 0, 0, 0.5)",}}
        >
           {renderCurrentStep()}
       </SafeAreaView>

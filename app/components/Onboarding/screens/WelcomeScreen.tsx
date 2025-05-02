@@ -26,9 +26,13 @@ const WelcomeScreen: React.FC<WelcomeScreenProps> = ({
           </TouchableOpacity>
           <Image
             source={require("../../../../assets/images/welcome-image.png")}
-            className="rounded-md"
-            style={{width:width ,height:width*0.9}}
-            resizeMode="contain"
+            className="-top-2"
+            style={{width:width ,height:width*0.9,
+              borderTopLeftRadius: 12,  
+              borderTopRightRadius: 12, 
+              overflow: 'hidden', 
+              }}
+            // resizeMode="contain"
           />
         </View>
 
