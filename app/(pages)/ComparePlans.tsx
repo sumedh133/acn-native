@@ -240,10 +240,10 @@ const ComparePlans = () => {
                   <>
                     <TouchableOpacity
                       className="py-2 h-[40px] rounded-md items-center bg-white"
-                      onPress={plan.secondaryButton.action}
+                      onPress={plan.secondaryButton?.action}
                     >
                       <Text className="text-sm font-medium text-[#153E3B]">
-                        {plan.secondaryButton.text}
+                        {plan.secondaryButton?.text}
                       </Text>
                     </TouchableOpacity>
 

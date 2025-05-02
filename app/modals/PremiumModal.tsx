@@ -6,9 +6,6 @@ import {
   TouchableOpacity,
   StyleSheet,
   Dimensions,
-  TouchableWithoutFeedback,
-  Platform,
-  StatusBar,
   SafeAreaView,
 } from "react-native";
 import { Svg, Path, Circle } from "react-native-svg";
@@ -25,6 +22,14 @@ const PremiumModal: React.FC<PremiumModalProps> = ({
   onClose,
   onBrowsePress,
 }) => {
+  const desc = [
+    {
+    description:`Your account is now on ACN Premium. Unlimited-ish enquiries, zero friction—go check out the latest listings.`,
+    },
+    {
+      description:`We’ve added 5 credits to your account. Start enquiring.`,
+    }
+  ]
   return (
     <Modal
       animationType="fade"
@@ -34,20 +39,20 @@ const PremiumModal: React.FC<PremiumModalProps> = ({
     >
       <SafeAreaView style={styles.container}>
         <LinearGradient
-          // Horizontal gradient, from left to right
-          start={{ x: 0, y: 0 }} // Start from left
-          end={{ x: 1, y: 0 }} // End at right
-          colors={["#8EE8DE", "#EFFCFA", "#FFFFFF"]} // Gradient colors (start, middle, end)
-          locations={[-0.1051, 0.4663, 0.9107]} // Positions for each color in the gradient
+         
+          start={{ x: 0, y: 0 }} 
+          end={{ x: 1, y: 0 }} 
+          colors={["#8EE8DE", "#EFFCFA", "#FFFFFF"]} 
+          locations={[-0.1051, 0.4663, 0.9107]} 
           style={{borderTopRightRadius:12,borderTopLeftRadius:12}}
         >
           <View style={styles.modalContent}>
-            {/* Close button */}
+            
             <TouchableOpacity style={styles.closeButton} onPress={onClose}>
               <Text style={styles.closeButtonText}>✕</Text>
             </TouchableOpacity>
 
-            {/* Phone with checkmark icon */}
+            
             <View style={styles.iconContainer}>
               <Svg width={100} height={100} viewBox="0 0 100 100" fill="none">
                 {/* Phone outline */}
@@ -92,15 +97,13 @@ const PremiumModal: React.FC<PremiumModalProps> = ({
               </Svg>
             </View>
 
-            {/* Text content */}
+            
             <Text style={styles.title}>Premium Activated!</Text>
             <Text style={styles.description}>
-              Your account is now on ACN Premium.{"\n"}
-              Unlimited-ish enquiries, zero friction—go check{"\n"}
-              out the latest listings.
+              {desc[0].description}
             </Text>
 
-            {/* Browse button */}
+            
             <View style={styles.button}>
               <TouchableOpacity
                 style={styles.browseButton}
@@ -127,7 +130,7 @@ const styles = StyleSheet.create({
   
   modalContent: {
     width: width,
-    paddingVertical: 40,
+    paddingVertical: 36,
     paddingHorizontal: 20,
     borderTopEndRadius: 12,
     alignItems: "center",
@@ -170,7 +173,6 @@ const styles = StyleSheet.create({
     width: width,
     borderRadius: 12,
     paddingHorizontal: 26,
-    
     gap: 12,
   },
   browseButton: {
