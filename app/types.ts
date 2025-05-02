@@ -148,7 +148,7 @@ export interface ListingProperty extends Property {
   uds?: number | null;
   unitNo?: string | null;
   lastModified?: number | null;
-  extraRoom?: string | null;
+  extraRoom?: string[] | null;
   plotFacing?: string | null;
   // [key: string]: any;
 }

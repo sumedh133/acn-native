@@ -109,7 +109,7 @@ export const appartmentComponents = [
   },
   {
     label: "Extra Room",
-    type: "slider",
+    type: "multiSelectSlider",
     field: "extraRoom",
     options: [
       { label: "Servent Room", value: "serventRoom" },

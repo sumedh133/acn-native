@@ -48,6 +48,7 @@ import { db } from "../config/firebase";
 import storage from "@react-native-firebase/storage";
 import SaveAsDraft from "../modals/SaveAsDraft";
 import { useBackToSaveDraft } from "@/hooks/useBackToSaveDraft";
+import MultiSelectSlider from "../components/Listing/MuliSelectSliderButton";
 
 const API_URL = "https://uploadtodrive-ouurm6pska-uc.a.run.app";
 
@@ -223,6 +224,14 @@ const AddInventoryForm = () => {
     }));
   };
 
+  const handleSetValueMultiSelect = ( field : keyof ListingProperty, value: string[] ) => {
+    setProperty((prevProperty) => ({
+      ...prevProperty,
+      [field]: value,
+    }));
+    console.log(value, "This is value from function");
+  }
+
   const getFormComponents = () => {
     const components =
       assetTypes?.[property?.assetType as keyof typeof assetTypes] || [];
@@ -256,6 +265,17 @@ const AddInventoryForm = () => {
             }
           />
         );
+        case "multiSelectSlider":
+          return (
+            <MultiSelectSlider
+              value={property[key] as string[] || []}
+              setvalue={(value: string[]) => handleSetValueMultiSelect(component.field, value)}
+              title={component.label}
+              options={component.options}
+              required={component.required}
+              footer=""
+            />
+          );
       case "slider":
         if (component.field === "buildingAge") {
           if (!!property.currentStatus) {
@@ -871,6 +891,7 @@ const AddInventoryForm = () => {
         ...uploadedFileUrls,
         driveLink,
       };
+      console.log(property);
 
       await setDoc(doc(db, "QC_Inventories", propId), dataToSave);
       showSuccessToast("Property added successfully!");

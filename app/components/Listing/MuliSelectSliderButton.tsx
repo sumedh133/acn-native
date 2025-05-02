@@ -7,29 +7,36 @@ import {
   ScrollView,
 } from "react-native";
 
-interface SliderButtonSelectProps {
-  value: string | null;
-  setvalue: (value: string | null) => void;
+interface MultiSelectSliderProps {
+  value: string[];  // Array of selected values
+  setvalue: (value: string[]) => void;  // Function to update the array
   title: string;
   options: Array<{ label: string; value: string }>;
   required: boolean;
-  footer: string;
+  footer?: string;  // Make it optional with a default
 }
 
-const SliderButtonSelect = ({
+const MultiSelectSlider = ({
   value,
   setvalue,
   title,
   options,
   required,
-  footer ='',
-}: SliderButtonSelectProps) => {
+  footer = '',
+}: MultiSelectSliderProps) => {
+  const minSelection = 0;
+  const maxSelection = Infinity;
   const handleSelect = (val: string) => {
-    console.log(val,"SLIDER");
-    if (value === val && !required) {
-      setvalue(null);
+    if (value.includes(val)) {
+      // If already selected and we're above minSelection, remove it
+      if (!required || value.length > minSelection) {
+        setvalue(value.filter((item) => item !== val));
+      }
     } else {
-      setvalue(val);
+      // If not at max selection limit, add it
+      if (value.length < maxSelection) {
+        setvalue([...value, val]);
+      }
     }
   };
 
@@ -43,27 +50,28 @@ const SliderButtonSelect = ({
       <ScrollView
         horizontal
         showsHorizontalScrollIndicator={false}
-        contentContainerStyle={styles.optionContainer}>
+        contentContainerStyle={styles.optionContainer}
+      >
         {options.map((option) => {
-          const isSelected = value === option.value;
+          const isSelected = value.includes(option.value);
           return (
             <TouchableOpacity
               key={option.value}
               style={[styles.options, isSelected && styles.selectedOption]}
               onPress={() => handleSelect(option.value)}
-              activeOpacity={0.7}>
+              activeOpacity={0.7}
+            >
               <Text style={styles.optionText}>{option.label}</Text>
             </TouchableOpacity>
           );
         })}
       </ScrollView>
-      {footer === ''
-        ?
-        <></>
-        :
+      
+      {footer !== '' && (
         <Text style={styles.priceInWords}>
           {footer}
-        </Text>}
+        </Text>
+      )}
     </View>
   );
 };
@@ -98,6 +106,7 @@ const styles = StyleSheet.create({
   },
   options: {
     height: 40,
+    flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
     borderRadius: 8,
@@ -106,6 +115,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     borderColor: "#E1E3E6",
     backgroundColor: "#FFFFFF",
+    gap: 8,
   },
   selectedOption: {
     borderColor: "#2B3034",
@@ -117,10 +127,22 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: "#000000",
   },
+  selectionLimitText: {
+    fontSize: 12,
+    color: "#757575",
+    marginTop: 4,
+  },
   priceInWords: {
     fontSize: 12,
     color: "#757575",
   },
+  selectedCountContainer: {
+    marginTop: 8,
+    backgroundColor: "#F0F0F0",
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 4,
+  },
 });
 
-export default SliderButtonSelect;
+export default MultiSelectSlider;
