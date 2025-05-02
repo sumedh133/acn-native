@@ -230,7 +230,14 @@ export default function PropertyDetailsScreen() {
   };
 
   const submitEnquiry = async (nextEnqId: string) => {
-    const enq: Enquiry = {} as Enquiry;
+    const enq: Enquiry = {
+      enquiryId: nextEnqId,
+      cpId: agentData?.cpId,
+      propertyId: property?.propertyId,
+      status: "pending",
+      added: getUnixDateTime(),
+      lastModified: getUnixDateTime(),
+    } as Enquiry;
 
     try {
       const enquiryDocRef = doc(db, "enquiries", nextEnqId);

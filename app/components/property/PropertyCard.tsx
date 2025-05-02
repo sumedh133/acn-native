@@ -37,6 +37,7 @@ import ShareIconOutSide from "@/assets/icons/svg/PropertiesPage/ShareIcon";
 import DriveIcon from "@/assets/icons/svg/PropertiesPage/DriveIcon";
 import { router } from "expo-router";
 import { setPropertyDataThunk } from "@/store/slices/propertySlice";
+import { getUnixDateTime } from "@/app/helpers/getUnixDateTime";
 
 interface PropertyCardProps {
   property: Property;
@@ -133,7 +134,14 @@ const PropertyCard: React.FC<PropertyCardProps> = ({ property }) => {
   };
 
   const submitEnquiry = async (nextEnqId: string) => {
-    const enq: Enquiry = {} as Enquiry;
+    const enq: Enquiry = {
+      enquiryId: nextEnqId,
+      cpId: agentData?.cpId,
+      propertyId: property?.propertyId,
+      status: "pending",
+      added: getUnixDateTime(),
+      lastModified: getUnixDateTime(),
+    } as Enquiry;
 
     try {
       const enquiryDocRef = doc(db, "enquiries", nextEnqId);
