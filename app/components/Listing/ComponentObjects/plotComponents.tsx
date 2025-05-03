@@ -27,8 +27,8 @@ export const plotComponents = [
     type: "textInput",
     field: "plotSize",
     suffix: "Sqft",
-    placeholder: "A - 03",
-    // keyboardType: "numeric",
+    placeholder: "0000",
+    keyboardType: "numeric",
     colspan: 1,
   },
   {

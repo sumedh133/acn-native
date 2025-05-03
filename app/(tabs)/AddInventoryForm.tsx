@@ -352,7 +352,7 @@ const AddInventoryForm = () => {
       case "TotalAskPrice":
         return (
           <TotalAskPrice
-            initialPrice={property[key] as string | undefined}
+            initialPrice={property[key] as number | undefined}
             onPriceChange={(field, value) =>
               handleSetValue(field as keyof ListingProperty, value)
             }
@@ -470,9 +470,9 @@ const AddInventoryForm = () => {
       case "Apartment":
         for (let elem of compulsoryFields[assetType]) {
           console.log(elem);
-          if (property[elem] === null || property[elem] === "") {
+          if ((property[elem] === null || property[elem] === "") && ((property['totalAskPrice'] === null || property['totalAskPrice'] === 0) && (property['askPricePerSqft'] !== null || property['askPricePerSqft'] !== 0))) {
             const friendlyName = fieldLabels[elem] || elem;
-            showErrorToast(`missing field: ${friendlyName}`);
+            showErrorToast(`Missing field: ${friendlyName}`);
             return false;
           }
         }
@@ -480,9 +480,9 @@ const AddInventoryForm = () => {
       case "Villa":
         for (let elem of compulsoryFields[assetType]) {
           console.log(elem);
-          if (property[elem] === null || property[elem] === "") {
+          if ((property[elem] === null || property[elem] === "") && ((property['totalAskPrice'] === null || property['totalAskPrice'] === 0) && (property['askPricePerSqft'] !== null || property['askPricePerSqft'] !== 0))) {
             const friendlyName = fieldLabels[elem] || elem;
-            showErrorToast(`missing field: ${friendlyName}`);
+            showErrorToast(`Missing field: ${friendlyName}`);
             return false;
           }
         }
@@ -490,9 +490,9 @@ const AddInventoryForm = () => {
       case "Plot":
         for (let elem of compulsoryFields[assetType]) {
           console.log(elem);
-          if (property[elem] === null || property[elem] === "") {
+          if ((property[elem] === null || property[elem] === "") && ((property['totalAskPrice'] === null || property['totalAskPrice'] === 0) && (property['askPricePerSqft'] !== null || property['askPricePerSqft'] !== 0))) {
             const friendlyName = fieldLabels[elem] || elem;
-            showErrorToast(`missing field: ${friendlyName}`);
+            showErrorToast(`Missing field: ${friendlyName}`);
             return false;
           }
         }
@@ -500,9 +500,9 @@ const AddInventoryForm = () => {
       case "Row House":
         for (let elem of compulsoryFields[assetType]) {
           console.log(elem);
-          if (property[elem] === null || property[elem] === "") {
+          if ((property[elem] === null || property[elem] === "") && ((property['totalAskPrice'] === null || property['totalAskPrice'] === 0) && (property['askPricePerSqft'] !== null || property['askPricePerSqft'] !== 0))) {
             const friendlyName = fieldLabels[elem] || elem;
-            showErrorToast(`missing field: ${friendlyName}`);
+            showErrorToast(`Missing field: ${friendlyName}`);
             return false;
           }
         }
@@ -510,9 +510,9 @@ const AddInventoryForm = () => {
       case "Villament":
         for (let elem of compulsoryFields[assetType]) {
           console.log(elem);
-          if (property[elem] === null || property[elem] === "") {
+          if ((property[elem] === null || property[elem] === "") && ((property['totalAskPrice'] === null || property['totalAskPrice'] === 0) && (property['askPricePerSqft'] !== null || property['askPricePerSqft'] !== 0))) {
             const friendlyName = fieldLabels[elem] || elem;
-            showErrorToast(`missing field: ${friendlyName}`);
+            showErrorToast(`Missing field: ${friendlyName}`);
             return false;
           }
         }
@@ -521,9 +521,9 @@ const AddInventoryForm = () => {
         // Check if any required field is null or empty
         for (let elem of compulsoryFields[assetType]) {
           console.log(elem);
-          if (property[elem] === null || property[elem] === "") {
+          if ((property[elem] === null || property[elem] === "") && ((property['totalAskPrice'] === null || property['totalAskPrice'] === 0) && (property['askPricePerSqft'] !== null || property['askPricePerSqft'] !== 0))) {
             const friendlyName = fieldLabels[elem] || elem;
-            showErrorToast(`missing field: ${friendlyName}`);
+            showErrorToast(`Missing field: ${friendlyName}`);
             return false;
           }
         }
@@ -728,7 +728,7 @@ const AddInventoryForm = () => {
       const areCompulsoryFieldsValid = checkCompulsoryFields();
       if (!areCompulsoryFieldsValid) {
         console.error("Compulsory fields are missing or invalid");
-        showErrorToast("Compulsory fields are missing or invalid");
+        // showErrorToast("Compulsory fields are missing or invalid");
         setSaving(false);
         return;
       }
@@ -815,7 +815,7 @@ const AddInventoryForm = () => {
       console.log("dataToSave", dataToSave);
       await setDoc(doc(db, "QC_Inventories", propId), dataToSave);
       console.log("Document successfully written with ID:", propId);
-      showSuccessToast("Property added successfully!");
+      showSuccessToast("Property sent for verification!");
       handleSetValue("propertyId", propId);
       router.dismissAll();
       router.replace("/(tabs)/dashboardTab");
@@ -894,7 +894,7 @@ const AddInventoryForm = () => {
       console.log(property);
 
       await setDoc(doc(db, "QC_Inventories", propId), dataToSave);
-      showSuccessToast("Property added successfully!");
+      showSuccessToast("Property saved as draft successfully!");
       handleSetValue("propertyId", propId);
       setSavingDraft(false);
     } catch (error) {
@@ -902,6 +902,7 @@ const AddInventoryForm = () => {
       showErrorToast("An unexpected error occurred during submission");
       setSavingDraft(false);
     }
+    router.back();
   };
 
   const handleChangeAssetType = (value: string) => {

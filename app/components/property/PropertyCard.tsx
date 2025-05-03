@@ -304,17 +304,31 @@ const PropertyCard: React.FC<PropertyCardProps> = ({ property }) => {
             </View>
 
             {/* SBUA */}
-            <View className="flex-col items-start">
+            {property.assetType === "Plot" ? (
+              <View className="flex-col items-start">
               <Text
                 className="text-gray-600 text-xs"
                 style={{ fontFamily: "Montserrat_600SemiBold" }}
               >
-                SBUA:
+                Plot Size:
               </Text>
               <Text className="text-sm font-semibold text-gray-900">
-                {property.sbua ? `${property.sbua} Sq Ft` : "-"}
+                {property.plotSize ? `${property.plotSize} Sq Ft` : "-"}
               </Text>
             </View>
+            ) : (
+              <View className="flex-col items-start">
+                <Text
+                  className="text-gray-600 text-xs"
+                  style={{ fontFamily: "Montserrat_600SemiBold" }}
+                >
+                  SBUA:
+                </Text>
+                <Text className="text-sm font-semibold text-gray-900">
+                  {property.sbua ? `${property.sbua} Sq Ft` : "-"}
+                </Text>
+              </View>
+            )}
           </View>
 
           {/* Buttons for Drive Details and Enquire Now */}

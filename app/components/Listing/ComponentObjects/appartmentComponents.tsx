@@ -50,7 +50,7 @@ export const appartmentComponents = [
     placeholder: "0000",
     keyboardType: "numeric",
     colspan: 1,
-    footer: "Footer",
+    footer: "Note: Exact Floor wont be mentioned",
   },
   {
     label: "Door Facing",

@@ -20,8 +20,8 @@ interface UnitOption {
 }
 
 interface TotalAskPricetProps {
-  onPriceChange: (unit: string, price: string) => void;
-  initialPrice?: string;
+  onPriceChange: (unit: string, price: number) => void; // Changed to number
+  initialPrice?: number; // Changed to number
   title?: string;
   required: boolean;
   searchable?: boolean; // New prop for searchable dropdown
@@ -29,12 +29,13 @@ interface TotalAskPricetProps {
 
 const TotalAskPrice: React.FC<TotalAskPricetProps> = ({
   onPriceChange,
-  initialPrice = "",
+  initialPrice = 0, // Default to 0 instead of empty string
   title,
   required,
   searchable = false, // Default to false
 }) => {
-  const [price, setPrice] = useState(initialPrice);
+  // Convert number to string for display
+  const [price, setPrice] = useState(initialPrice ? initialPrice.toString() : "");
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [modalVisible, setModalVisible] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
@@ -67,8 +68,10 @@ const TotalAskPrice: React.FC<TotalAskPricetProps> = ({
     setPrice(validPrice);
 
     if (onPriceChange) {
-      onPriceChange(selectedOption.value, validPrice);
-      // console.log(selectedOption.value, validPrice, "field and value");
+      // Convert string to number before passing to callback
+      // Remove commas before converting to number
+      const numericPrice = validPrice ? parseFloat(validPrice.replace(/,/g, "")) : 0;
+      onPriceChange(selectedOption.value, numericPrice);
     }
   };
 
@@ -91,27 +94,31 @@ const TotalAskPrice: React.FC<TotalAskPricetProps> = ({
 
   const handleSelect = (option: UnitOption) => {
     // Clear the old value with the previous unit
-    onPriceChange(selectedOption.value, "");
+    onPriceChange(selectedOption.value, 0);
 
     setSelectedOption(option);
     setIsDropdownOpen(false);
     setModalVisible(false);
 
     if (onPriceChange) {
-      onPriceChange(option.value, price);
+      // Convert current price string to number
+      const numericPrice = price ? parseFloat(price.replace(/,/g, "")) : 0;
+      onPriceChange(option.value, numericPrice);
     }
   };
 
   const selectUnit = (option: UnitOption) => {
     // Clear the old value with the previous unit
-    onPriceChange(selectedOption.value, "");
+    onPriceChange(selectedOption.value, 0);
 
     setSelectedOption(option);
     setIsDropdownOpen(false);
     setModalVisible(false);
 
     if (onPriceChange) {
-      onPriceChange(option.value, price);
+      // Convert current price string to number
+      const numericPrice = price ? parseFloat(price.replace(/,/g, "")) : 0;
+      onPriceChange(option.value, numericPrice);
     }
   };
 
