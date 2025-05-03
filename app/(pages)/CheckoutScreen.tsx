@@ -8,6 +8,10 @@ import {
   SafeAreaView,
   TextInput,
   ScrollView,
+  Alert,
+  Platform,
+  UIManager,
+  Modal,
 } from "react-native";
 import Icon from "react-native-vector-icons/Ionicons";
 import Checkbox from "../components/Listing/CheckBox";
@@ -26,6 +30,19 @@ import { db } from "../config/firebase";
 import { useRoute, RouteProp } from "@react-navigation/native";
 import CloseIcon from "@/assets/icons/svg/CloseIcon";
 import { formatCost } from "../helpers/common.js";
+import { getFunctions, httpsCallable } from "firebase/functions";
+import { WebViewNavigationEvent } from "react-native-webview/lib/RNCWebViewNativeComponent.js";
+import WebView from "react-native-webview";
+import PaymentUnsuccessfulModal from "../modals/PaymentUnsuccessfulModal";
+import PremiumModal from "../modals/PremiumModal";
+import { router } from "expo-router";
+
+if (
+  Platform.OS === "android" &&
+  UIManager.setLayoutAnimationEnabledExperimental
+) {
+  UIManager.setLayoutAnimationEnabledExperimental(true);
+}
 
 // Define plan interface
 interface Plan {
@@ -85,12 +102,21 @@ const CheckoutScreen: React.FC = () => {
     AVAILABLE_PLANS.find((plan) => plan.id === planId) || AVAILABLE_PLANS[1]
   );
 
+  const redirectUrl = "https://acnonline.in/billing";
+  const [processing, setProcessing] = useState(false);
+
+  const [showFailedModal, setshowFailedModal] = useState(false);
+  const [showSuccessModal, setshowSuccessModal] = useState(false);
+
   const [useGSTInvoice, setUseGSTInvoice] = useState(false);
   const [appliedDiscount, setAppliedDiscount] = useState(selectedPlan.discount);
   const [showModal, setShowModal] = useState(false);
   const [allCoupons, setAllCoupons] = useState<Coupon[] | []>([]);
   const [couponCode, setCouponCode] = useState("");
   const [matchedCoupon, setMatchedCoupon] = useState<Coupon | null>(null);
+
+  const [showWebView, setShowWebView] = useState<boolean>(false);
+  const [paymentUrl, setPaymentUrl] = useState<string>("");
   const businessName =
     useSelector((state: RootState) => state?.agent?.docData?.businessName) ||
     null;
@@ -103,6 +129,66 @@ const CheckoutScreen: React.FC = () => {
   // Calculate tax amount
   const calculateTax = (price: number) => {
     return (price * selectedPlan.taxPercentage) / 100;
+  };
+
+  const initiatePayment = async () => {
+    setProcessing(true);
+
+    const functions = getFunctions();
+    const initiatePhonePePayment = httpsCallable(
+      functions,
+      "initiatePhonePePayment"
+    );
+
+    try {
+      const transactionId = "TXN" + Date.now();
+      //figure out and validate anoter redirect url for app.
+      const mobileNumber = phoneNumber;
+      const userId = cpId;
+
+      const response: any = await initiatePhonePePayment({
+        amount: totalAmount,
+        transactionId,
+        redirectUrl,
+        mobileNumber,
+        userId,
+      });
+
+      if (response.data.success) {
+        const paymentUrl: string = response.data.paymentUrl;
+        setPaymentUrl(paymentUrl);
+        setShowWebView(true);
+      } else {
+        console.error("Payment failed:", response.data.error);
+        Alert.alert(
+          "Payment Failed",
+          response.data.error || "Something went wrong."
+        );
+        setshowFailedModal(true);
+      }
+    } catch (error: any) {
+      console.error("Payment initiation error:", error.message);
+      Alert.alert("Error", error.message || "Payment could not be initiated.");
+    }
+
+    setProcessing(false);
+  };
+
+  const handleNavigationStateChange = async (
+    navState: WebViewNavigationEvent
+  ) => {
+    if (navState.url.startsWith(redirectUrl)) {
+      // const url = new URL(navState.url);
+      // const status = url.searchParams.get("status");
+      // const transactionId = url.searchParams.get("transactionId");
+
+      // if (status === "SUCCESS") {
+      //   setshowSuccessModal(true);
+      // } else {
+      //   setshowFailedModal(true);
+      // }
+      setShowWebView(false);
+    }
   };
 
   const applyCoupon = () => {
@@ -133,7 +219,7 @@ const CheckoutScreen: React.FC = () => {
 
   const taxAmount = calculateTax(selectedPlan.productPrice);
   const total = selectedPlan.basePrice + taxAmount;
-  const [totalAmount, setTotalAmount] = useState(total);
+  const [totalAmount, setTotalAmount] = useState(selectedPlan.productPrice);
 
   // Handle plan changes (can be triggered from outside)
   const changePlan = (newPlanId: string) => {
@@ -176,245 +262,297 @@ const CheckoutScreen: React.FC = () => {
   }, [matchedCoupon]);
 
   return (
-    <SafeAreaView style={styles.container}>
-      <ScrollView>
-        {/* Product Details Card */}
-        <View style={styles.card}>
-          <View style={styles.productDetails}>
-            <View>
-              <Text style={styles.productTitle}>
-                {selectedPlan.productName}
-              </Text>
-              <Text style={styles.productDescription}>
-                {selectedPlan.productDescription}
-              </Text>
-            </View>
-            <View>
-              <Text style={styles.productPrice}>
-                ₹{selectedPlan.productPrice.toLocaleString("en-IN")}
-              </Text>
-              {selectedPlan.validityPeriod && (
-                <Text style={styles.validityText}>
-                  {selectedPlan.validityPeriod}
-                </Text>
-              )}
-            </View>
-          </View>
-
-          {selectedPlan.monthlyCredits > 0 && (
-            <View style={styles.timeline}>
-              <View style={styles.timelineItem}>
-                <View style={styles.timelineDot} />
-                <Text style={styles.timelineText}>
-                  Today: {selectedPlan.monthlyCredits} Credits per month for a
-                  year
-                </Text>
-              </View>
-              {selectedPlan.validUntil && (
-                <>
-                  <View style={styles.timelineConnector} />
-                  <View style={styles.timelineItem}>
-                    <View
-                      style={[styles.timelineDot, styles.timelineDotEmpty]}
-                    />
-                    <Text style={styles.timelineText}>
-                      Valid till {selectedPlan.validUntil}
-                    </Text>
-                  </View>
-                </>
-              )}
-            </View>
-          )}
-
-          <Text style={styles.productTerms}>
-            Non-refundable & Non-transferable.*
-          </Text>
-          {!(businessName || gstNo) && (
-            <>
-              <View style={styles.divider} />
-              <View style={styles.gstOption}>
-                <Checkbox
-                  checked={useGSTInvoice}
-                  setChecked={setUseGSTInvoice}
-                />
-
-                <Text style={styles.gstText}>Use GST Invoice</Text>
-              </View>
-            </>
-          )}
-        </View>
-        {(businessName || gstNo) && (
-          <View style={[styles.card]}>
-            <View style={styles.gstheader}>
-              <Text style={[styles.title, { fontSize: 16, lineHeight: 24 }]}>
-                GST details added :
-              </Text>
-              <TouchableOpacity
-                style={styles.gstEditButton}
-                onPress={() => setShowModal(true)}
-              >
-                {/* <Icon name="edit" size={20} color="#000000" /> */}
-                <Feather name="edit-3" size={20} color="black" />
-              </TouchableOpacity>
-            </View>
-
-            <View style={{ width: "100%", gap: 12 }}>
-              <View style={{ width: "100%", gap: 8 }}>
-                <Text style={styles.validityText}>
-                  Business Name: <Text style={styles.bold}>{businessName}</Text>
-                </Text>
-                <Text style={styles.validityText}>
-                  GSTIN: <Text style={styles.bold}>{gstNo}</Text>
-                </Text>
-              </View>
-              <Text style={styles.refundText}>
-                Your invoice will include the submitted GST details.
-              </Text>
-            </View>
-          </View>
-        )}
-
-        {planId == "premium" &&
-          (!matchedCoupon ? (
-            <View style={styles.card}>
-              <Text style={styles.couponTitle}>Coupon code</Text>
-              <Text style={styles.couponDescription}>
-                Have a coupon? Enter the code here to avail discounts!
-              </Text>
-              <View style={styles.couponInputContainer}>
-                <TextInput
-                  style={styles.couponInput}
-                  placeholder="Coupon code"
-                  value={couponCode}
-                  onChangeText={setCouponCode}
-                />
-                <TouchableOpacity
-                  style={styles.applyButton}
-                  onPress={applyCoupon}
-                >
-                  <Text style={styles.applyButtonText}>Apply</Text>
-                </TouchableOpacity>
-              </View>
-            </View>
-          ) : (
-            <View style={styles.card}>
-              <View style={styles.couponTitle}>
-                <FAIcon name="tag" size={20} style={styles.icon} />
-                <Text style={styles.couponCodeText}>{matchedCoupon?.code}</Text>
-              </View>
-              <TouchableOpacity style={styles.removeBtn} onPress={removeCoupon}>
-                <CloseIcon />
-                <Text style={styles.removeText}>Remove</Text>
-              </TouchableOpacity>
-            </View>
-          ))}
-
-        {/* Order Summary Card */}
-        <View style={styles.card}>
-          <Text style={styles.summaryTitle}>Order Summary</Text>
-          <View style={styles.summaryContainer}>
-            <View style={styles.summaryItem}>
-              <Text style={styles.summaryText}>
-                {selectedPlan.id === "premium"
-                  ? "Annual membership"
-                  : "5 Credits"}
-              </Text>
-              <Text style={styles.summaryPrice}>
-                ₹{selectedPlan.basePrice.toLocaleString("en-IN")}
-              </Text>
-            </View>
-
-            {appliedDiscount > 0 && (
-              <View style={styles.summaryItem}>
-                <Text style={styles.summaryText}>Discount</Text>
-                <Text style={styles.summaryPrice}>
-                  -₹{appliedDiscount.toLocaleString("en-IN")}
-                </Text>
-              </View>
-            )}
-            
-            <View style={styles.summaryItem}>
-              <Text style={styles.summaryText}>
-                Tax {selectedPlan.taxPercentage}%
-              </Text>
-              <Text style={styles.summaryPrice}>
-                ₹{taxAmount.toLocaleString("en-IN")}
-              </Text>
-            </View>
-            {matchedCoupon && (
+    <>
+      <Modal
+        visible={showWebView}
+        animationType="slide"
+        transparent={false}
+        onRequestClose={() => setShowWebView(false)}
+      >
+        <WebView
+          source={{ uri: 'http://localhost:5173/CheckoutPage' }}
+          onNavigationStateChange={handleNavigationStateChange}
+        ></WebView>
+      </Modal>
+      <SafeAreaView style={styles.container}>
+        <ScrollView>
+          {/* Product Details Card */}
+          <View style={styles.card}>
+            <View style={styles.productDetails}>
               <View>
-                <View style={styles.summaryItem}>
-                  <Text style={styles.summaryText}>{matchedCoupon.name}</Text>
-                  <Text style={[styles.summaryPrice, { color: "#898483" }]}>
-                    - {formatCost(matchedCoupon.discount)}
+                <Text style={styles.productTitle}>
+                  {selectedPlan.productName}
+                </Text>
+                <Text style={styles.productDescription}>
+                  {selectedPlan.productDescription}
+                </Text>
+              </View>
+              <View>
+                <Text style={styles.productPrice}>
+                  ₹{selectedPlan.productPrice.toLocaleString("en-IN")}
+                </Text>
+                {selectedPlan.validityPeriod && (
+                  <Text style={styles.validityText}>
+                    {selectedPlan.validityPeriod}
+                  </Text>
+                )}
+              </View>
+            </View>
+
+            {selectedPlan.monthlyCredits > 0 && (
+              <View style={styles.timeline}>
+                <View style={styles.timelineItem}>
+                  <View style={styles.timelineDot} />
+                  <Text style={styles.timelineText}>
+                    Today: {selectedPlan.monthlyCredits} Credits per month for a
+                    year
                   </Text>
                 </View>
-                <Text style={styles.taxNote}>
-                  {matchedCoupon.description}
-                </Text>
+                {selectedPlan.validUntil && (
+                  <>
+                    <View style={styles.timelineConnector} />
+                    <View style={styles.timelineItem}>
+                      <View
+                        style={[styles.timelineDot, styles.timelineDotEmpty]}
+                      />
+                      <Text style={styles.timelineText}>
+                        Valid till {selectedPlan.validUntil}
+                      </Text>
+                    </View>
+                  </>
+                )}
               </View>
             )}
 
-            <View style={styles.divider} />
+            <Text style={styles.productTerms}>
+              Non-refundable & Non-transferable.*
+            </Text>
+            {!(businessName || gstNo) && (
+              <>
+                <View style={styles.divider} />
+                <View style={styles.gstOption}>
+                  <Checkbox
+                    checked={useGSTInvoice}
+                    setChecked={setUseGSTInvoice}
+                  />
 
-            <View style={styles.totalContainer}>
-              <Text style={styles.totalText}>Total (INR)</Text>
-              <Text style={styles.totalPrice}>
-                ₹{totalAmount.toLocaleString("en-IN")}
+                  <Text style={styles.gstText}>Use GST Invoice</Text>
+                </View>
+              </>
+            )}
+          </View>
+          {(businessName || gstNo) && (
+            <View style={[styles.card]}>
+              <View style={styles.gstheader}>
+                <Text style={[styles.title, { fontSize: 16, lineHeight: 24 }]}>
+                  GST details added :
+                </Text>
+                <TouchableOpacity
+                  style={styles.gstEditButton}
+                  onPress={() => setShowModal(true)}
+                >
+                  {/* <Icon name="edit" size={20} color="#000000" /> */}
+                  <Feather name="edit-3" size={20} color="black" />
+                </TouchableOpacity>
+              </View>
+
+              <View style={{ width: "100%", gap: 12 }}>
+                <View style={{ width: "100%", gap: 8 }}>
+                  <Text style={styles.validityText}>
+                    Business Name:{" "}
+                    <Text style={styles.bold}>{businessName}</Text>
+                  </Text>
+                  <Text style={styles.validityText}>
+                    GSTIN: <Text style={styles.bold}>{gstNo}</Text>
+                  </Text>
+                </View>
+                <Text style={styles.refundText}>
+                  Your invoice will include the submitted GST details.
+                </Text>
+              </View>
+            </View>
+          )}
+
+          {planId == "premium" &&
+            (!matchedCoupon ? (
+              <View style={styles.card}>
+                <Text style={styles.couponTitle}>Coupon code</Text>
+                <Text style={styles.couponDescription}>
+                  Have a coupon? Enter the code here to avail discounts!
+                </Text>
+                <View style={styles.couponInputContainer}>
+                  <TextInput
+                    style={styles.couponInput}
+                    placeholder="Coupon code"
+                    value={couponCode}
+                    onChangeText={setCouponCode}
+                  />
+                  <TouchableOpacity
+                    style={styles.applyButton}
+                    onPress={applyCoupon}
+                  >
+                    <Text style={styles.applyButtonText}>Apply</Text>
+                  </TouchableOpacity>
+                </View>
+              </View>
+            ) : (
+              <View style={styles.card}>
+                <Text style={styles.couponTitle}>Coupon code</Text>
+                <Text style={styles.couponDescription}>
+                  Have a coupon? Enter the code here to avail discounts!
+                </Text>
+                <View style={styles.couponRow}>
+                  <View style={styles.appliedCoupon}>
+                    <FAIcon name="tag" size={20} style={styles.icon} />
+                    <Text style={styles.couponCodeText}>
+                      {matchedCoupon.code}
+                    </Text>
+                  </View>
+                  <TouchableOpacity
+                    style={styles.removeBtn}
+                    onPress={removeCoupon}
+                  >
+                    <CloseIcon />
+                    <Text style={styles.removeText}>Remove</Text>
+                  </TouchableOpacity>
+                </View>
+              </View>
+            ))}
+
+          {/* Order Summary Card */}
+          <View style={styles.card}>
+            <Text style={styles.summaryTitle}>Order Summary</Text>
+            <View style={styles.summaryContainer}>
+              <View style={styles.summaryItem}>
+                <Text style={styles.summaryText}>
+                  {selectedPlan.id === "premium"
+                    ? "Annual membership"
+                    : "5 Credits"}
+                </Text>
+                <Text style={styles.summaryPrice}>
+                  ₹{selectedPlan.basePrice.toLocaleString("en-IN")}
+                </Text>
+              </View>
+
+              {appliedDiscount > 0 && (
+                <View style={styles.summaryItem}>
+                  <Text style={styles.summaryText}>Discount</Text>
+                  <Text style={styles.summaryPrice}>
+                    -₹{appliedDiscount.toLocaleString("en-IN")}
+                  </Text>
+                </View>
+              )}
+
+              <View style={styles.summaryItem}>
+                <Text style={styles.summaryText}>
+                  Tax {selectedPlan.taxPercentage}%
+                </Text>
+                <Text style={styles.summaryPrice}>
+                  ₹{taxAmount.toLocaleString("en-IN")}
+                </Text>
+              </View>
+              {matchedCoupon && (
+                <View>
+                  <View style={styles.summaryItem}>
+                    <Text style={styles.summaryText}>{matchedCoupon.name}</Text>
+                    <Text style={[styles.summaryPrice, { color: "#898483" }]}>
+                      - {formatCost(matchedCoupon.discount)}
+                    </Text>
+                  </View>
+                  <Text style={styles.taxNote}>
+                    {matchedCoupon.description}
+                  </Text>
+                </View>
+              )}
+
+              <View style={styles.divider} />
+
+              <View style={styles.totalContainer}>
+                <Text style={styles.totalText}>Total (INR)</Text>
+                <Text style={styles.totalPrice}>
+                  ₹{totalAmount.toLocaleString("en-IN")}
+                </Text>
+              </View>
+              <Text style={styles.taxNote}>
+                Total includes applicable taxes**
               </Text>
             </View>
-            <Text style={styles.taxNote}>
-              Total includes applicable taxes**
-            </Text>
-          </View>
 
-          {/* Payment Section */}
-          <View style={styles.paymentSection}>
-            <View style={styles.securePayment}>
-              <Icon name="lock-closed" size={18} color="#000" />
-              <Text style={styles.securePaymentText}>Secure Payment</Text>
+            {/* Payment Section */}
+            <View style={styles.paymentSection}>
+              <View style={styles.securePayment}>
+                <Icon name="lock-closed" size={18} color="#000" />
+                <Text style={styles.securePaymentText}>Secure Payment</Text>
+              </View>
+              <View style={styles.row}>
+                <Image
+                  source={require("../../assets/icons/billing/visa-icon.png")}
+                  style={styles.upiIcon}
+                />
+                <Image
+                  source={require("../../assets/icons/billing/master-card-icon.png")}
+                  style={styles.upiIcon}
+                />
+                <Image
+                  source={require("../../assets/icons/billing/credit-card-color-icon.png")}
+                  style={styles.upiIcon}
+                />
+                <Image
+                  source={require("../../assets/icons/billing/upi-icon (3).png")}
+                  style={styles.upiIcon}
+                />
+                <Image
+                  source={require("../../assets/icons/billing/rupay-logo-icon.png")}
+                  style={styles.upiIcon}
+                />
+              </View>
             </View>
+          </View>
+        </ScrollView>
+
+        {/* Bottom Payment Button */}
+        <TouchableOpacity
+          style={styles.paymentButton}
+          onPress={initiatePayment}
+          disabled={processing}
+        >
+          {processing ? (
+            <Text style={styles.payText}>Processing...</Text>
+          ) : (
             <View style={styles.row}>
-              <Image
-                source={require("../../assets/icons/billing/visa-icon.png")}
-                style={styles.upiIcon}
-              />
-              <Image
-                source={require("../../assets/icons/billing/master-card-icon.png")}
-                style={styles.upiIcon}
-              />
-              <Image
-                source={require("../../assets/icons/billing/credit-card-color-icon.png")}
-                style={styles.upiIcon}
-              />
-              <Image
-                source={require("../../assets/icons/billing/upi-icon (3).png")}
-                style={styles.upiIcon}
-              />
-              <Image
-                source={require("../../assets/icons/billing/rupay-logo-icon.png")}
-                style={styles.upiIcon}
+              <Text style={styles.paymentButtonText}>
+                Pay ₹{totalAmount.toLocaleString("en-IN")}
+              </Text>
+              <FAIcon
+                name="arrow-right"
+                size={20}
+                style={styles.iconSmall}
+                color={"white"}
               />
             </View>
-          </View>
-        </View>
-      </ScrollView>
-
-      {/* Bottom Payment Button */}
-      <TouchableOpacity style={styles.paymentButton}>
-        <Text style={styles.paymentButtonText}>
-          Pay ₹{totalAmount.toLocaleString("en-IN")}
-        </Text>
-        <Icon name="arrow-forward" size={20} color="#fff" />
-      </TouchableOpacity>
-      <BusinessDetailsModal
-        isVisible={showModal}
-        onClose={() => {
-          setShowModal(false);
-          setUseGSTInvoice(false);
-        }}
+          )}
+        </TouchableOpacity>
+        <BusinessDetailsModal
+          isVisible={showModal}
+          onClose={() => {
+            setShowModal(false);
+            setUseGSTInvoice(false);
+          }}
+        />
+      </SafeAreaView>
+      <PremiumModal
+        visible={showSuccessModal}
+        onClose={() => setshowSuccessModal(false)}
+        onBrowsePress={() => router.push("/(tabs)/properties")}
+        planId={planId}
       />
-    </SafeAreaView>
+      <PaymentUnsuccessfulModal
+        visible={showFailedModal}
+        onClose={() => setshowFailedModal(false)}
+        onTryAgain={initiatePayment}
+        planId={planId}
+      />
+    </>
   );
 };
 export default CheckoutScreen;
@@ -560,6 +698,16 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     marginRight: 12,
     fontSize: 16,
+  },
+  payText: {
+    color: "#FFFFFF",
+    fontSize: 18,
+    fontWeight: "500",
+  },
+  iconSmall: {
+    width: 20,
+    height: 20,
+    resizeMode: "contain",
   },
   applyButton: {
     backgroundColor: "#153E3B",
@@ -716,6 +864,36 @@ const styles = StyleSheet.create({
   bold: {
     color: "#0A0B0A",
     fontWeight: "700",
+  },
+  appliedCoupon: {
+    height: 45,
+    flex: 1,
+    flexDirection: "row",
+    alignItems: "center",
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: "#CCCBCB",
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    backgroundColor: "#E3E3E3",
+    ...Platform.select({
+      ios: {
+        shadowColor: "#000",
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.8,
+        shadowRadius: 5,
+      },
+      android: {
+        elevation: 8, // Android shadow
+      },
+    }),
+  },
+  couponRow: {
+    padding: 5,
+    flexDirection: "row",
+    // alignItems: 's',
+    gap: 10,
+    width: "100%",
   },
   couponCodeText: {
     height: 45,

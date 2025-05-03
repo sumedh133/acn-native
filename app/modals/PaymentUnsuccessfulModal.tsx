@@ -15,21 +15,34 @@ interface PaymentUnsuccessfulModalProps {
   visible: boolean;
   onClose: () => void;
   onTryAgain: () => void;
+  planId?:string,
 }
+interface Plan {
+  description: string;
+}
+
+interface Desc {
+  booster: Plan;
+  premium: Plan;
+}
+
+
+const Desc: Desc = {
+  premium: {
+    description: `Payment failed—subscription not activated. Please retry or use another method.`,
+  },
+  booster: {
+    description: `Transaction declined—no credits added. Please try again or use a different payment method.`,
+  },
+};
 
 const PaymentUnsuccessfulModal: React.FC<PaymentUnsuccessfulModalProps> = ({
   visible,
   onClose,
   onTryAgain,
+  planId,
 }) => {
-  const desc = [
-    {
-      description: `Payment failed—subscription not activated. Please retry or use another method.`,
-    },
-    {
-      description: `Transaction declined—no credits added. Please try again or use a different payment method.`,
-    },
-  ];
+ 
   return (
     <Modal
       animationType="fade"
@@ -97,7 +110,7 @@ const PaymentUnsuccessfulModal: React.FC<PaymentUnsuccessfulModalProps> = ({
 
             {/* Text content */}
             <Text style={styles.title}>Payment unsuccessful</Text>
-            <Text style={styles.description}>{desc[1].description}</Text>
+            <Text style={styles.description}>{Desc[planId as keyof Desc]?.description}</Text>
 
             {/* Try again button */}
             <TouchableOpacity

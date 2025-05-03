@@ -11,25 +11,37 @@ import {
 import { Svg, Path, Circle } from "react-native-svg";
 import LinearGradient from "react-native-linear-gradient";
 
+interface Plan {
+  description: string;
+}
+
+
+interface Desc {
+  booster: Plan;
+  premium: Plan;
+}
 interface PremiumModalProps {
   visible: boolean;
   onClose: () => void;
   onBrowsePress: () => void;
+  planId?:string;
 }
-
+const Desc: Desc = {
+  premium: {
+    description: `Your account is now on ACN Premium. Unlimited-ish enquiries, zero friction—go check out the latest listings.`,
+  },
+  booster: {
+    description: `We’ve added 5 credits to your account. Start enquiring.`,
+  },
+};
 const PremiumModal: React.FC<PremiumModalProps> = ({
   visible,
   onClose,
   onBrowsePress,
+  planId,
 }) => {
-  const desc = [
-    {
-    description:`Your account is now on ACN Premium. Unlimited-ish enquiries, zero friction—go check out the latest listings.`,
-    },
-    {
-      description:`We’ve added 5 credits to your account. Start enquiring.`,
-    }
-  ]
+  
+  
   return (
     <Modal
       animationType="fade"
@@ -100,7 +112,7 @@ const PremiumModal: React.FC<PremiumModalProps> = ({
             
             <Text style={styles.title}>Premium Activated!</Text>
             <Text style={styles.description}>
-              {desc[0].description}
+            {Desc[planId as keyof Desc]?.description}
             </Text>
 
             

@@ -70,7 +70,7 @@ const Credits = () => {
               className=" text-4xl  mt-1 mb-1"
               style={{ fontFamily: "Montserrat_700Bold" }}
             >
-              230
+             {monthlyCredits}
             </Text>
             <Text className="font-lato font-normal text-xs text-gray-600 max-w-[80%]">
               Did you know? On Avg. agents spend 15 credits/week

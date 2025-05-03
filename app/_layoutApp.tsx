@@ -207,12 +207,12 @@ export default function LayoutApp() {
                 onMenuPress={onMenuPress}
                 headerBackVisible={headerBackVisible}
               />
-              <TrialStatusNotification 
+              {/* <TrialStatusNotification 
           status={trialData.status}
           daysLeft={trialData.daysLeft}
           credits={trialData.credits}
           onDismiss={handleDismiss}
-        />
+        /> */}
               </>
             );
           },
@@ -257,6 +257,10 @@ export default function LayoutApp() {
         <Stack.Screen
           name="(tabs)/dashboardTab"
           options={{ title: "Dashboard" }}
+        />
+        <Stack.Screen
+          name="(tabs)/NotificationPage"
+          options={{ title: "Notifications" }}
         />
 
         <Stack.Screen

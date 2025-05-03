@@ -11,6 +11,7 @@ import listenerReducer from "./slices/listenerSlice";
 import appReducer from "./slices/appSlice";
 import propertyReducer from "./slices/propertySlice";
 import requirementReducer from "./slices/requirementSlice";
+// import  paymentReducer from "./slices/paymentSlics";
 
 const rootReducer = combineReducers({
   auth: authReducer,
@@ -21,6 +22,7 @@ const rootReducer = combineReducers({
   app: appReducer,
   property: propertyReducer,
   requirement: requirementReducer,
+  // payment: paymentReducer,
 });
 
 const persistConfig = {
