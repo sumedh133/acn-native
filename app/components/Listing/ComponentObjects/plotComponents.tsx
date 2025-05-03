@@ -86,7 +86,7 @@ export const plotComponents = [
   {
     label: "Ready to move",
     type: "Checkbox",
-    field: "readyToMove",
+    field: "currentStatus",
     colspan: 2,
   },
   // {

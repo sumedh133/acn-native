@@ -96,30 +96,30 @@ const TotalAskPrice: React.FC<TotalAskPricetProps> = ({
     // Clear the old value with the previous unit
     onPriceChange(selectedOption.value, 0);
 
+    // CHANGE HERE: Reset the price state to empty string
+    setPrice("");
+    
     setSelectedOption(option);
     setIsDropdownOpen(false);
     setModalVisible(false);
 
-    if (onPriceChange) {
-      // Convert current price string to number
-      const numericPrice = price ? parseFloat(price.replace(/,/g, "")) : 0;
-      onPriceChange(option.value, numericPrice);
-    }
+    // Since the price is now reset to empty, we're passing 0 to the callback
+    onPriceChange(option.value, 0);
   };
 
   const selectUnit = (option: UnitOption) => {
     // Clear the old value with the previous unit
     onPriceChange(selectedOption.value, 0);
 
+    // CHANGE HERE: Reset the price state to empty string
+    setPrice("");
+    
     setSelectedOption(option);
     setIsDropdownOpen(false);
     setModalVisible(false);
 
-    if (onPriceChange) {
-      // Convert current price string to number
-      const numericPrice = price ? parseFloat(price.replace(/,/g, "")) : 0;
-      onPriceChange(option.value, numericPrice);
-    }
+    // Since the price is now reset to empty, we're passing 0 to the callback
+    onPriceChange(option.value, 0);
   };
 
   // Calculate the total in words (for display below the input)
