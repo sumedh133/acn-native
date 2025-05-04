@@ -266,67 +266,6 @@ const MoreFilters = ({
         </View>
 
         <ScrollView className="flex-1 px-4 py-2 mb-2">
-          {/* Asset Type & Configuration - First Row */}
-          <View className="flex-row flex-wrap justify-between mb-4">
-            {/* Asset Type Dropdown - Now with higher z-index */}
-            <View
-              className="p-4 border border-gray-200 rounded-xl w-[48%] "
-              style={{ zIndex: 30 }}
-            >
-              <Text
-                className="text-base text-[14px] text-black mb-2"
-                style={{ fontFamily: "Montserrat_600SemiBold" }}
-              >
-                {outsideFilters[0].title}
-              </Text>
-              <DropdownMoreFilters
-                title="Please Select"
-                items={assetTypeItems}
-                refine={refineAssetType}
-                isAssetType={true}
-              />
-            </View>
-
-            {/* Configuration Dropdown - Now with lower z-index than Asset Type */}
-            <View
-              className="p-4 border border-gray-200 rounded-xl w-[48%] "
-              style={{ zIndex: 30 }}
-            >
-              <Text
-                className="text-base text-[14px] text-black mb-2 "
-                style={{ fontFamily: "Montserrat_600SemiBold" }}
-              >
-                {outsideFilters[1].title}
-              </Text>
-              <DropdownMoreFilters
-                title="Please Select"
-                items={unitTypeItems}
-                refine={refineUnitType}
-                isRight={true}
-              />
-            </View>
-          </View>
-
-          {/* SBUA Range - Lower z-index */}
-          <View style={{ zIndex: 10 }}>
-            <RangeMoreFilters
-              title={outsideFilters[2].title}
-              refine={sbuaRangeState.refine}
-              range={sbuaRangeState.range}
-              start={sbuaRangeState.start}
-            />
-          </View>
-
-          {/* Total Ask Price Range - Lower z-index */}
-          <View style={{ zIndex: 10 }}>
-            <RangeMoreFilters
-              title={outsideFilters[3].title}
-              refine={totalAskPriceState.refine}
-              range={totalAskPriceState.range}
-              start={totalAskPriceState.start}
-            />
-          </View>
-
           {/* Location Filter - Lower z-index */}
           <View
             className="border border-gray-200 rounded-xl mb-4"
@@ -401,6 +340,68 @@ const MoreFilters = ({
             </View>
           </View>
 
+          {/* Asset Type & Configuration - First Row */}
+          <View className="flex-row flex-wrap justify-between mb-4">
+            {/* Asset Type Dropdown - Now with higher z-index */}
+            <View
+              className="p-4 border border-gray-200 rounded-xl w-[48%] "
+              style={{ zIndex: 30 }}
+            >
+              <Text
+                className="text-base text-[14px] text-black mb-2"
+                style={{ fontFamily: "Montserrat_600SemiBold" }}
+              >
+                {outsideFilters[0].title}
+              </Text>
+              <DropdownMoreFilters
+                title="Please Select"
+                items={assetTypeItems}
+                refine={refineAssetType}
+                isAssetType={true}
+              />
+            </View>
+
+            {/* Configuration Dropdown - Now with lower z-index than Asset Type */}
+            <View
+              className="p-4 border border-gray-200 rounded-xl w-[48%] "
+              style={{ zIndex: 30 }}
+            >
+              <Text
+                className="text-base text-[14px] text-black mb-2 "
+                style={{ fontFamily: "Montserrat_600SemiBold" }}
+              >
+                {outsideFilters[1].title}
+              </Text>
+              <DropdownMoreFilters
+                title="Please Select"
+                items={unitTypeItems}
+                refine={refineUnitType}
+                isRight={true}
+              />
+            </View>
+          </View>
+
+          {/* SBUA Range - Lower z-index */}
+          <View style={{ zIndex: 10 }}>
+            <RangeMoreFilters
+              title={outsideFilters[2].title}
+              refine={sbuaRangeState.refine}
+              range={sbuaRangeState.range}
+              start={sbuaRangeState.start}
+            />
+          </View>
+
+          {/* Total Ask Price Range - Lower z-index */}
+          <View style={{ zIndex: 10 }}>
+            <RangeMoreFilters
+              title={outsideFilters[3].title}
+              refine={totalAskPriceState.refine}
+              range={totalAskPriceState.range}
+              start={totalAskPriceState.start}
+            />
+          </View>
+
+          
           {/* Plot Size Range - Lower z-index */}
           <View style={{ zIndex: 5 }}>
             <RangeMoreFilters

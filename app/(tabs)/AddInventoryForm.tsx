@@ -8,7 +8,7 @@ import {
   View,
 } from "react-native";
 import PlacesSearch from "../components/Listing/PlacesSearch";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import {
   DocsToUpload,
   FileObject,
@@ -208,6 +208,7 @@ const AddInventoryForm = () => {
     document: [],
   });
   const [isRendered, setIsRendered] = useState(false);
+  const [emptyState, setEmptyState] = useState(true);
 
   const isConnectedToInternet = useSelector(
     (state: RootState) => state.app.isConnectedToInternet
@@ -216,6 +217,34 @@ const AddInventoryForm = () => {
   const agentData = useSelector((state: RootState) => state.agent.docData);
 
   const [saveAsDraftModalVisible, setSaveAsDraftModalVisible] = useState(false);
+
+  // New state to track if the form has any data filled
+  const isFormEmpty = useMemo(() => {
+    // Check if property has any non-default values
+    for (const key in property) {
+      if (key === '_geoloc') {
+        if (property._geoloc?.lat !== initialState._geoloc?.lat || 
+            property._geoloc?.lng !== initialState._geoloc?.lng) {
+          return false;
+        }
+      } else if (key in property && Array.isArray(property[key as keyof ListingProperty])) {
+        if ((property[key as keyof ListingProperty] as unknown[]).length > 0) {
+          return false;
+        }
+      } else if (property[key as keyof ListingProperty] !== initialState[key as keyof ListingProperty]) {
+        return false;
+      }
+    }
+    
+    // Check if there are any documents to upload
+    if (docsToUpload.photo.length > 0 || 
+        docsToUpload.video.length > 0 || 
+        docsToUpload.document.length > 0) {
+      return false;
+    }
+    
+    return true;
+  }, [property, docsToUpload]);
 
   const handleSetValue = (field: keyof ListingProperty, value: any) => {
     setProperty((prevProperty) => ({
@@ -1202,11 +1231,30 @@ const styles = StyleSheet.create({
     paddingHorizontal: 32,
     borderColor: "#153E3B",
   },
+  disabledSaveAsDraftButton : {
+    height: 40,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    width: "48%",
+    borderWidth: 1.25,
+    borderRadius: 4,
+    // paddingVertical: 8,
+    paddingHorizontal: 32,
+    borderColor: "#153E3B",
+    backgroundColor: "FAFAFA",
+  },
   secondaryButtonText: {
     fontFamily: "sans-serif",
     fontWeight: "bold",
     fontSize: 14,
     color: "#153E3B",
+  },
+  disabledSaveAsDraft: {
+    fontFamily: "sans-serif",
+    fontWeight: "bold",
+    fontSize: 14,
+    color: "#9E9E9E",
   },
 });
 
