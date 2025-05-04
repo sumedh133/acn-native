@@ -1,4 +1,4 @@
-import { SplashScreen, Stack, useRouter } from "expo-router";
+import { router, SplashScreen, Stack, useRouter } from "expo-router";
 import React, { useCallback, useEffect, useState } from "react";
 import Toast from "react-native-toast-message";
 import { StatusBar } from "expo-status-bar";
@@ -69,10 +69,10 @@ const CustomHeader = ({
           <Text style={styles.headerTitle}>{title}</Text>
         </View>
         {!headerBackVisible && (
-          <View style={styles.headerRight}>
+          <TouchableOpacity style={styles.headerRight} onPress={()=>router.push('/(pages)/Credits')}>
             <Text style={styles.creditsText}>{monthlyCredits}</Text>
             <CoinIcon width={18} height={18} />
-          </View>
+          </TouchableOpacity>
         )}
       </View>
     </View>
@@ -207,12 +207,12 @@ export default function LayoutApp() {
                 onMenuPress={onMenuPress}
                 headerBackVisible={headerBackVisible}
               />
-              {/* <TrialStatusNotification 
+              <TrialStatusNotification 
           status={trialData.status}
           daysLeft={trialData.daysLeft}
           credits={trialData.credits}
           onDismiss={handleDismiss}
-        /> */}
+        />
               </>
             );
           },

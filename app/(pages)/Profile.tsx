@@ -30,11 +30,11 @@ import CreditsCard from "../components/ProfilePage/CreditsCard";
 import { setKamModalVisible } from "@/store/slices/kamSlice";
 
 const profileCards: ProfileCardInterface[] = [
-  // {
-  //   title: "Payment Records",
-  //   icon: <PaymentRecordsIcon width={24} height={24} />,
-  //   slug: "payment_records",
-  // },
+  {
+    title: "Payment Records",
+    icon: <PaymentRecordsIcon width={24} height={24} />,
+    slug: "payment_records",
+  },
   {
     title: "Contact KAM",
     icon: <KamIcon width={24} height={24} />,
@@ -56,9 +56,9 @@ const Profile = () => {
 
   const handleCardClick = (slug: string) => {
     switch (slug) {
-      // case "payment_records":
-      //   router.push("/billings");
-      //   break;
+      case "payment_records":
+        router.push("/billings");
+        break;
       case "contact_kam":
         dispatch(setKamModalVisible(true));
         break;
@@ -117,10 +117,10 @@ const Profile = () => {
             );
           })}
         </View>
-        {/* {userType !== "premium" && (
+        {userType !== "premium" && (
           <GetPremiumCard handleClick={handleCardClick} slug={"get_premium"} />
         )}
-        <CreditsCard handleCardClick={handleCardClick} slug={"credits_card"} /> */}
+        <CreditsCard handleCardClick={handleCardClick} slug={"credits_card"} />
         <TouchableOpacity style={styles.logoutButton} onPress={handleLogOut}>
           <LogoutIcon width={18} height={18} />
           <Text style={styles.logoutText}>Logout</Text>
