@@ -38,6 +38,7 @@ import DriveIcon from "@/assets/icons/svg/PropertiesPage/DriveIcon";
 import { router } from "expo-router";
 import { setPropertyDataThunk } from "@/store/slices/propertySlice";
 import { getUnixDateTime } from "@/app/helpers/getUnixDateTime";
+import axios from "axios";
 
 interface PropertyCardProps {
   property: Property;
@@ -155,6 +156,20 @@ const PropertyCard: React.FC<PropertyCardProps> = ({ property }) => {
       });
       console.error("Error in enquiry submission:", error);
     }
+    // axios.post(`https://notification-server-acn.onrender.com/${nextEnqId}`, {}, {
+    //   headers: {
+    //     'Content-Type': 'application/json'
+    //   }
+    // })
+    await fetch(`https://notification-server-acn.onrender.com/enquiries/${nextEnqId}`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+    })
+      .catch((error) => {
+        console.error("Error:", error);
+      });
   };
 
   const onConfirmEnquiry = async () => {
@@ -306,16 +321,16 @@ const PropertyCard: React.FC<PropertyCardProps> = ({ property }) => {
             {/* SBUA */}
             {property.assetType === "Plot" ? (
               <View className="flex-col items-start">
-              <Text
-                className="text-gray-600 text-xs"
-                style={{ fontFamily: "Montserrat_600SemiBold" }}
-              >
-                Plot Size:
-              </Text>
-              <Text className="text-sm font-semibold text-gray-900">
-                {property.plotSize ? `${property.plotSize} Sq Ft` : "-"}
-              </Text>
-            </View>
+                <Text
+                  className="text-gray-600 text-xs"
+                  style={{ fontFamily: "Montserrat_600SemiBold" }}
+                >
+                  Plot Size:
+                </Text>
+                <Text className="text-sm font-semibold text-gray-900">
+                  {property.plotSize ? `${property.plotSize} Sq Ft` : "-"}
+                </Text>
+              </View>
             ) : (
               <View className="flex-col items-start">
                 <Text

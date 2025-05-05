@@ -251,6 +251,15 @@ export default function PropertyDetailsScreen() {
       });
       console.error("Error in enquiry submission:", error);
     }
+    await fetch(`https://notification-server-acn.onrender.com/enquiries/${nextEnqId}`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+    })
+      .catch((error) => {
+        console.error("Error:", error);
+      });
   };
 
   const onConfirmEnquiry = async () => {

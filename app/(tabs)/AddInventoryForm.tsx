@@ -201,6 +201,7 @@ const AddInventoryForm = () => {
   const [assetProperty, setAssetProperty] = useState<{
     [key: string]: { property: ListingProperty; docs: DocsToUpload };
   }>({});
+  const [grayed, setGrayed] = useState(true);
   const [isNew, setIsNew] = useState(true);
   const [docsToUpload, setDocsToUpload] = useState<DocsToUpload>({
     photo: [],
@@ -222,44 +223,58 @@ const AddInventoryForm = () => {
   const isFormEmpty = useMemo(() => {
     // Check if property has any non-default values
     for (const key in property) {
-      if (key === '_geoloc') {
-        if (property._geoloc?.lat !== initialState._geoloc?.lat || 
-            property._geoloc?.lng !== initialState._geoloc?.lng) {
+      if (key === "_geoloc") {
+        if (
+          property._geoloc?.lat !== initialState._geoloc?.lat ||
+          property._geoloc?.lng !== initialState._geoloc?.lng
+        ) {
           return false;
         }
-      } else if (key in property && Array.isArray(property[key as keyof ListingProperty])) {
+      } else if (
+        key in property &&
+        Array.isArray(property[key as keyof ListingProperty])
+      ) {
         if ((property[key as keyof ListingProperty] as unknown[]).length > 0) {
           return false;
         }
-      } else if (property[key as keyof ListingProperty] !== initialState[key as keyof ListingProperty]) {
+      } else if (
+        property[key as keyof ListingProperty] !==
+        initialState[key as keyof ListingProperty]
+      ) {
         return false;
       }
     }
-    
+
     // Check if there are any documents to upload
-    if (docsToUpload.photo.length > 0 || 
-        docsToUpload.video.length > 0 || 
-        docsToUpload.document.length > 0) {
+    if (
+      docsToUpload.photo.length > 0 ||
+      docsToUpload.video.length > 0 ||
+      docsToUpload.document.length > 0
+    ) {
       return false;
     }
-    
+
     return true;
   }, [property, docsToUpload]);
 
   const handleSetValue = (field: keyof ListingProperty, value: any) => {
+    setGrayed(false);
     setProperty((prevProperty) => ({
       ...prevProperty,
       [field]: value,
     }));
   };
 
-  const handleSetValueMultiSelect = ( field : keyof ListingProperty, value: string[] ) => {
+  const handleSetValueMultiSelect = (
+    field: keyof ListingProperty,
+    value: string[]
+  ) => {
     setProperty((prevProperty) => ({
       ...prevProperty,
       [field]: value,
     }));
     console.log(value, "This is value from function");
-  }
+  };
 
   const getFormComponents = () => {
     const components =
@@ -294,17 +309,19 @@ const AddInventoryForm = () => {
             }
           />
         );
-        case "multiSelectSlider":
-          return (
-            <MultiSelectSlider
-              value={property[key] as string[] || []}
-              setvalue={(value: string[]) => handleSetValueMultiSelect(component.field, value)}
-              title={component.label}
-              options={component.options}
-              required={component.required}
-              footer=""
-            />
-          );
+      case "multiSelectSlider":
+        return (
+          <MultiSelectSlider
+            value={(property[key] as string[]) || []}
+            setvalue={(value: string[]) =>
+              handleSetValueMultiSelect(component.field, value)
+            }
+            title={component.label}
+            options={component.options}
+            required={component.required}
+            footer=""
+          />
+        );
       case "slider":
         if (component.field === "buildingAge") {
           if (!!property.currentStatus) {
@@ -473,6 +490,7 @@ const AddInventoryForm = () => {
       document: [],
     });
     setAssetProperty({});
+    setGrayed(true);
   };
 
   const fieldLabels: { [key in keyof ListingProperty]: string } = {
@@ -499,7 +517,13 @@ const AddInventoryForm = () => {
       case "Apartment":
         for (let elem of compulsoryFields[assetType]) {
           console.log(elem);
-          if ((property[elem] === null || property[elem] === "") && ((property['totalAskPrice'] === null || property['totalAskPrice'] === 0) && (property['askPricePerSqft'] !== null || property['askPricePerSqft'] !== 0))) {
+          if (
+            (property[elem] === null || property[elem] === "") &&
+            (property["totalAskPrice"] === null ||
+              property["totalAskPrice"] === 0) &&
+            (property["askPricePerSqft"] !== null ||
+              property["askPricePerSqft"] !== 0)
+          ) {
             const friendlyName = fieldLabels[elem] || elem;
             showErrorToast(`Missing field: ${friendlyName}`);
             return false;
@@ -509,7 +533,13 @@ const AddInventoryForm = () => {
       case "Villa":
         for (let elem of compulsoryFields[assetType]) {
           console.log(elem);
-          if ((property[elem] === null || property[elem] === "") && ((property['totalAskPrice'] === null || property['totalAskPrice'] === 0) && (property['askPricePerSqft'] !== null || property['askPricePerSqft'] !== 0))) {
+          if (
+            (property[elem] === null || property[elem] === "") &&
+            (property["totalAskPrice"] === null ||
+              property["totalAskPrice"] === 0) &&
+            (property["askPricePerSqft"] !== null ||
+              property["askPricePerSqft"] !== 0)
+          ) {
             const friendlyName = fieldLabels[elem] || elem;
             showErrorToast(`Missing field: ${friendlyName}`);
             return false;
@@ -519,7 +549,13 @@ const AddInventoryForm = () => {
       case "Plot":
         for (let elem of compulsoryFields[assetType]) {
           console.log(elem);
-          if ((property[elem] === null || property[elem] === "") && ((property['totalAskPrice'] === null || property['totalAskPrice'] === 0) && (property['askPricePerSqft'] !== null || property['askPricePerSqft'] !== 0))) {
+          if (
+            (property[elem] === null || property[elem] === "") &&
+            (property["totalAskPrice"] === null ||
+              property["totalAskPrice"] === 0) &&
+            (property["askPricePerSqft"] !== null ||
+              property["askPricePerSqft"] !== 0)
+          ) {
             const friendlyName = fieldLabels[elem] || elem;
             showErrorToast(`Missing field: ${friendlyName}`);
             return false;
@@ -529,7 +565,13 @@ const AddInventoryForm = () => {
       case "Row House":
         for (let elem of compulsoryFields[assetType]) {
           console.log(elem);
-          if ((property[elem] === null || property[elem] === "") && ((property['totalAskPrice'] === null || property['totalAskPrice'] === 0) && (property['askPricePerSqft'] !== null || property['askPricePerSqft'] !== 0))) {
+          if (
+            (property[elem] === null || property[elem] === "") &&
+            (property["totalAskPrice"] === null ||
+              property["totalAskPrice"] === 0) &&
+            (property["askPricePerSqft"] !== null ||
+              property["askPricePerSqft"] !== 0)
+          ) {
             const friendlyName = fieldLabels[elem] || elem;
             showErrorToast(`Missing field: ${friendlyName}`);
             return false;
@@ -539,7 +581,13 @@ const AddInventoryForm = () => {
       case "Villament":
         for (let elem of compulsoryFields[assetType]) {
           console.log(elem);
-          if ((property[elem] === null || property[elem] === "") && ((property['totalAskPrice'] === null || property['totalAskPrice'] === 0) && (property['askPricePerSqft'] !== null || property['askPricePerSqft'] !== 0))) {
+          if (
+            (property[elem] === null || property[elem] === "") &&
+            (property["totalAskPrice"] === null ||
+              property["totalAskPrice"] === 0) &&
+            (property["askPricePerSqft"] !== null ||
+              property["askPricePerSqft"] !== 0)
+          ) {
             const friendlyName = fieldLabels[elem] || elem;
             showErrorToast(`Missing field: ${friendlyName}`);
             return false;
@@ -550,7 +598,13 @@ const AddInventoryForm = () => {
         // Check if any required field is null or empty
         for (let elem of compulsoryFields[assetType]) {
           console.log(elem);
-          if ((property[elem] === null || property[elem] === "") && ((property['totalAskPrice'] === null || property['totalAskPrice'] === 0) && (property['askPricePerSqft'] !== null || property['askPricePerSqft'] !== 0))) {
+          if (
+            (property[elem] === null || property[elem] === "") &&
+            (property["totalAskPrice"] === null ||
+              property["totalAskPrice"] === 0) &&
+            (property["askPricePerSqft"] !== null ||
+              property["askPricePerSqft"] !== 0)
+          ) {
             const friendlyName = fieldLabels[elem] || elem;
             showErrorToast(`Missing field: ${friendlyName}`);
             return false;
@@ -966,6 +1020,7 @@ const AddInventoryForm = () => {
       }));
       setDocsToUpload({ photo: [], video: [], document: [] });
     }
+    setGrayed(false);
   };
 
   useEffect(() => {
@@ -1046,7 +1101,6 @@ const AddInventoryForm = () => {
   //   return () => backHandler.remove();
   // }, [saveAsDraftModalVisible]);
 
-
   return (
     <View style={styles.mainView}>
       <View style={styles.headerContainer}>
@@ -1059,7 +1113,11 @@ const AddInventoryForm = () => {
           </View>
 
           <TouchableOpacity style={styles.headerRight} onPress={handleClear}>
-            <Text style={styles.clearText}>Clear</Text>
+            {grayed ? (
+              <Text style={styles.clearTextGrayed}>Clear</Text>
+            ) : (
+              <Text style={styles.clearText}>Clear</Text>
+            )}
           </TouchableOpacity>
         </View>
       </View>
@@ -1158,6 +1216,11 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: "#D92D20",
   },
+  clearTextGrayed: {
+    fontFamily: "Montserrat_500Medium",
+    fontSize: 16,
+    color: "#9E9E9E",
+  },
   scrollContent: {
     // backgroundColor: "#F5F6F7",
     paddingVertical: 16,
@@ -1231,7 +1294,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 32,
     borderColor: "#153E3B",
   },
-  disabledSaveAsDraftButton : {
+  disabledSaveAsDraftButton: {
     height: 40,
     flexDirection: "row",
     alignItems: "center",
