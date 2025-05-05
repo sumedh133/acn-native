@@ -185,7 +185,7 @@ const Credits = () => {
             >
              {monthlyCredits}
             </Text>
-            <Text className="font-lato font-normal text-xs text-gray-600 max-w-[80%]">
+            <Text className=" text-xs text-gray-600 max-w-[80%]" style={{fontFamily:'Lato_400Regular'}}>
               Did you know? On Avg. agents spend 15 credits/week
             </Text>
             <View className="absolute right-5 top-5">
@@ -236,7 +236,7 @@ const Credits = () => {
               <View className="w-5 h-5 rounded-full bg-white border border-gray-300 justify-center items-center mr-2">
                 <Text className="text-xs text-[#757575]">i</Text>
               </View>
-              <Text className="text-sm" style={{fontFamily:"Montserrat_700Bold"}}>
+              <Text className="text-sm" style={{fontFamily:"Lato_700Bold"}}>
                 5 credits = 5 fresh leads
               </Text>
             </View>

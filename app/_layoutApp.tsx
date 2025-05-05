@@ -409,22 +409,23 @@ export default function LayoutApp() {
           }}
           initialParams={{ showFooter: false }}
         />
+       
       </Stack>
-
+      {showOnboarding &&
       <OnboardingFlow
-        visible={showOnboarding}
+        visible={true}
         onComplete={() => {
           setShowOnboarding(false);
         }}
         onClose={() => {
           setShowOnboarding(false);
         }}
-      />
+        />
+      }
       <Toast config={toastConfig} />
       <StatusBar style="auto" />
       <KamManager />
-      {/* <PremiumModal/> */}
-      {/* <PaymentUnsuccessfulModal/> */}
+      
 
       {isAuthenticated && <FooterNavigation />}
     </View>

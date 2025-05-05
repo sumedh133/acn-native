@@ -7,11 +7,6 @@ import TrialInfoScreen from '../screens/TrialInfoScreen';
 import BenefitsScreen from '../screens/BenefitsScreen';
 import SuccessScreen from '../screens/SuccessScreen';
 
-import { useDispatch, useSelector } from 'react-redux';
-import { updateAgentDocData } from '@/store/slices/agentSlice';
-import { doc, updateDoc } from 'firebase/firestore';
-import { db } from '@/app/config/firebase';
-import { RootState } from '@/store/store';
 
 interface OnboardingFlowProps {
   visible: boolean;
