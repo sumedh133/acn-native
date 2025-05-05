@@ -20,11 +20,18 @@ const GetPremiumCard = ({
   const [showOnboarding, setShowOnboarding] = useState(false);
   const trialUsed: boolean | null =
     useSelector(
-      (state: RootState) => state?.agent?.docData?.onboardingComplete
+      (state: RootState) => state?.agent?.docData?.trialUsed
     ) || false;
 
   const handleStartTrial = () => {
-    setShowOnboarding(true);
+    if (!trialUsed) {
+      setShowOnboarding(true);
+    } else {
+      router.push({
+        pathname: "/CheckoutScreen",
+        params: { planId: "premium" },
+      });
+    }
   };
 
   return (
@@ -33,7 +40,7 @@ const GetPremiumCard = ({
         colors={["#153E3B", "#05635C"]}
         start={{ x: 0, y: 0 }}
         end={{ x: 1, y: 0 }}
-        locations={[-0.1051, 0.4663, 0.9999999999]}
+        
         style={styles.gradientContainer}
       >
         <View className="flex-row justify-between">
@@ -77,13 +84,12 @@ const GetPremiumCard = ({
         <TouchableOpacity
           className="bg-white py-3 rounded-md mb-2"
           onPress={handleStartTrial}
-         disabled={trialUsed ?? false}
         >
           <Text
             className="text-center text-sm text-[#153E3B]"
             style={{ fontFamily: "Lato_700Bold" }}
           >
-            Start 1 month free trial
+            {!trialUsed ? "1 month free trial" : "Get Premium"}
           </Text>
         </TouchableOpacity>
 
@@ -100,15 +106,17 @@ const GetPremiumCard = ({
           <Ionicons name="arrow-forward" size={18} color="white" />
         </TouchableOpacity>
       </LinearGradient>
-      <OnboardingFlow
-        visible={showOnboarding}
-        onComplete={() => {
-          setShowOnboarding(false);
-        }}
-        onClose={() => {
-          setShowOnboarding(false);
-        }}
-      />
+      {showOnboarding && (
+        <OnboardingFlow
+          visible={showOnboarding}
+          onComplete={() => {
+            setShowOnboarding(false);
+          }}
+          onClose={() => {
+            setShowOnboarding(false);
+          }}
+        />
+      )}
     </>
   );
 };
@@ -121,16 +129,7 @@ const styles = StyleSheet.create({
     padding: 20,
     overflow: "hidden",
   },
-  ellipseBackground: {
-    position: "absolute",
-    overflow: "hidden",
-    width: 203,
-    height: 208,
-    left: 203,
-    top: -69.5,
-    backgroundColor: "rgba(244, 168, 0, 0.2)",
-    borderRadius: 104,
-  },
+ 
   card: {
     display: "flex",
     flexDirection: "column",
