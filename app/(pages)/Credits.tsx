@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { Text, View, ScrollView, TouchableOpacity } from "react-native";
 import { useRouter } from "expo-router";
 import { useSelector } from "react-redux";
@@ -7,7 +7,118 @@ import ARPrimaryButton from "../components/Button/ARPrimaryButton";
 import CoinIcon from "@/assets/icons/svg/Sidebar/CoinIcon";
 import GetPremiumCard from "../components/ProfilePage/GetPremiumCard";
 import LinearGradient from "react-native-linear-gradient";
-import CheckoutScreen from "./CheckoutScreen";
+
+import CreditCoin from '../../assets/icons/CreditCoin.svg'
+
+import {
+  Property,
+  Enquiry,
+  EnquiryWithProperty,
+  
+} from "../types";
+import { collection, DocumentData, documentId, getDocs, onSnapshot, query, where } from "firebase/firestore";
+import { db } from "../config/firebase";
+import { formatUnixDate } from "../helpers/getUnixDateTime";
+
+
+interface UseEnquiriesResult {
+
+  myEnquiries: EnquiryWithProperty[];
+}
+
+const useCpId = (): string | undefined => {
+  const reduxCpId: string | undefined = useSelector(
+    (state: RootState) => state.agent?.docData?.cpId
+  );
+  return reduxCpId;
+};
+
+const useEnquiries = (): UseEnquiriesResult => {
+  const [myEnquiries, setMyEnquiries] = useState<EnquiryWithProperty[]>([]);
+  const [loading, setLoading] = useState<boolean>(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const cpId = useCpId();
+
+  useEffect(() => {
+    if (!cpId) {
+      setError("No channel partner ID found. Please login again.");
+      return;
+    }
+
+    setLoading(true);
+
+    try {
+      // Create the query the same way as before
+      const enquiriesQuery = query(
+        collection(db, "enquiries"),
+        where("cpId", "==", cpId)
+      );
+
+      // Set up real-time listener for enquiries
+      const unsubscribe = onSnapshot(
+        enquiriesQuery,
+        async (snapshot) => {
+          const enquiriesData: Enquiry[] = snapshot.docs.map((docSnap) => ({
+            id: docSnap.id,
+            ...docSnap.data(),
+          }));
+
+          // Now fetch property details for each of myEnquiries - keeping your original logic
+          const propertyIds = [
+            ...new Set(enquiriesData.map((enquiry) => enquiry.propertyId)),
+          ];
+          let propertyDocs: Map<string, DocumentData> = new Map();
+
+          for (let i = 0; i < propertyIds.length; i += 30) {
+            const batch = propertyIds.slice(i, i + 30);
+            const properties = await getDocs(
+              query(collection(db, "ACN123"), where(documentId(), "in", batch))
+            );
+            properties.docs.map((item) => {
+              propertyDocs.set(item.id, item.data());
+            });
+          }
+
+          const enquiriesWithProperty = enquiriesData.map((enquiry) => {
+            if (enquiry.propertyId && propertyDocs.has(enquiry.propertyId)) {
+              return {
+                ...enquiry,
+                property: {
+                  ...propertyDocs.get(enquiry.propertyId),
+                } as Property,
+              };
+            }
+            // Return the enquiry without property if propertyId doesn't exist or fetch fails
+            return {
+              ...enquiry,
+              property: null,
+            };
+          });
+
+          setMyEnquiries(enquiriesWithProperty);
+          setLoading(false);
+        },
+        (err) => {
+          setError(err.message || "Error fetching enquiries");
+          console.error("Fetch error:", err);
+          setLoading(false);
+        }
+      );
+
+      // Clean up the listener when the component unmounts
+      return () => unsubscribe();
+    } catch (err: any) {
+      setError(err.message || "Error fetching enquiries");
+      console.error("Fetch error:", err);
+      setLoading(false);
+    }
+  }, [cpId]);
+
+  
+
+  return { myEnquiries};
+};
 
 const Credits = () => {
   const router = useRouter();
@@ -16,6 +127,8 @@ const Credits = () => {
   );
   const userType: string | null =
     useSelector((state: RootState) => state?.agent?.docData?.userType) || "";
+
+    const { myEnquiries } = useEnquiries();
 
   const handleBackPress = () => {
     router.back();
@@ -28,10 +141,7 @@ const Credits = () => {
     });
   };
 
-  const handleStartTrial = () => {
-    // Handle trial subscription logic
-    console.log("Starting 1 month free trial");
-  };
+ 
 
   const handleComparePlans = () => {
     // Navigate to plans comparison
@@ -39,8 +149,11 @@ const Credits = () => {
   };
 
   const handleViewMore = () => {
-    // Handle view more enquiries
-    console.log("View more enquiries");
+    router.push({
+      pathname: '/dashboardTab',
+      params: { tab: 'enquiries' }
+    });
+    
   };
 
   return (
@@ -63,7 +176,7 @@ const Credits = () => {
               overflow: "hidden",
             }}
           >
-            <Text className="font-lato font-medium text-sm text-[#595959]">
+            <Text className="text-sm text-[#595959]" style={{fontFamily:'Lato_700Bold'}}>
               Available Credits
             </Text>
             <Text
@@ -76,7 +189,8 @@ const Credits = () => {
               Did you know? On Avg. agents spend 15 credits/week
             </Text>
             <View className="absolute right-5 top-5">
-              <CoinIcon width={40} height={40} />
+              
+              <CreditCoin width={70} height={70} />
             </View>
           </LinearGradient>
 
@@ -122,7 +236,7 @@ const Credits = () => {
               <View className="w-5 h-5 rounded-full bg-white border border-gray-300 justify-center items-center mr-2">
                 <Text className="text-xs text-[#757575]">i</Text>
               </View>
-              <Text className=" text-sm font-bold" style={{fontFamily:"Lato"}}>
+              <Text className="text-sm" style={{fontFamily:"Montserrat_700Bold"}}>
                 5 credits = 5 fresh leads
               </Text>
             </View>
@@ -151,15 +265,15 @@ const Credits = () => {
             </Text>
 
             {/* Enquiry Items */}
-            {[1, 2, 3].map((item, index) => (
+            {myEnquiries && myEnquiries.slice(0, 3).map((enquiry, index) => (
               <View key={index} className="mb-3">
                 <View className="flex-row justify-between items-start">
                   <View className="flex-1">
                     <Text className="font-lato text-sm font-medium text-gray-900">
-                      Tangled Up In The Green - Total Environment
+                      {enquiry.property?.nameOfTheProperty || "Property Name Not Available"}
                     </Text>
                     <Text className="font-lato text-xs text-gray-500 mt-1">
-                      1 Sep 2024, 06:16PM
+                      {enquiry.added? formatUnixDate(enquiry.added) : "Date not available"}
                     </Text>
                   </View>
 
@@ -167,13 +281,20 @@ const Credits = () => {
                     <Text className="font-montserrat-bold text-base font-bold text-red-600 mr-2">
                       - 1
                     </Text>
-                    <View className="w-3 h-3 rounded-full bg-yellow-400" />
+                    <CoinIcon width={16} height={16} />
                   </View>
                 </View>
 
-                {index < 2 && <View className="h-px bg-gray-200 my-3" />}
+                {index < 2 && myEnquiries.length > 1 && <View className="h-px bg-gray-200 my-3" />}
               </View>
             ))}
+
+            {/* Show message if no enquiries available */}
+            {(!myEnquiries || myEnquiries.length === 0) && (
+              <Text className="font-lato text-sm text-gray-500 text-center py-2">
+                No recent enquiries available
+              </Text>
+            )}
 
             <TouchableOpacity
               className="items-center mt-2"

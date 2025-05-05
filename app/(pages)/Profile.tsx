@@ -54,10 +54,12 @@ const Profile = () => {
   const userType: string | null =
     useSelector((state: RootState) => state?.agent?.docData?.userType) || "";
 
+    console.log("userType", userType);
+
   const handleCardClick = (slug: string) => {
     switch (slug) {
       case "payment_records":
-        router.push("/billings");
+        router.push("/(pages)/PaymentRecords");
         break;
       case "contact_kam":
         dispatch(setKamModalVisible(true));

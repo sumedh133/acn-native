@@ -7,6 +7,12 @@ import TrialInfoScreen from '../screens/TrialInfoScreen';
 import BenefitsScreen from '../screens/BenefitsScreen';
 import SuccessScreen from '../screens/SuccessScreen';
 
+import { useDispatch, useSelector } from 'react-redux';
+import { updateAgentDocData } from '@/store/slices/agentSlice';
+import { doc, updateDoc } from 'firebase/firestore';
+import { db } from '@/app/config/firebase';
+import { RootState } from '@/store/store';
+
 interface OnboardingFlowProps {
   visible: boolean;
   onComplete: () => void;
@@ -15,6 +21,9 @@ interface OnboardingFlowProps {
 
 const OnboardingFlowContent: React.FC<OnboardingFlowProps> = ({ visible, onComplete, onClose }) => {
   const { currentStep, nextStep, resetOnboarding, onboardingCompleted } = useOnboardingContext();
+
+   
+   
 
   // When onboarding is completed, call the onComplete callback
   React.useEffect(() => {
@@ -28,9 +37,7 @@ const OnboardingFlowContent: React.FC<OnboardingFlowProps> = ({ visible, onCompl
     onClose();
   };
   
-  const completeOnboarding = (): void => {
-    // Mark onboarding as completed using context's nextStep
-    // This will trigger the effect that calls onComplete
+  const completeOnboarding = async() => {
     nextStep();
   };
 

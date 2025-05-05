@@ -110,7 +110,8 @@ const ComparePlans = () => {
           horizontal
           showsHorizontalScrollIndicator={false}
           contentContainerStyle={{
-            paddingHorizontal: 8,
+            paddingHorizontal: 12,
+            paddingBottom:10,
             gap: 16,
           }}
         >

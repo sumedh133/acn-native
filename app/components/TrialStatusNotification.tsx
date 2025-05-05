@@ -53,7 +53,7 @@ const TrialStatusNotification: React.FC<TrialStatusNotificationProps> = ({
   status = TrialStatusType.ACTIVE,
   daysLeft = 28,
   credits = 20,
-  dismissible = true,
+  dismissible =true,
   onDismiss = () => {},
   customMessage = '',
   style

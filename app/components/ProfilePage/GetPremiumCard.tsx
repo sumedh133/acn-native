@@ -1,31 +1,52 @@
 import DoubleRightArrowIcon from "@/assets/icons/svg/Common/DoubleRightArrow";
 import PremiumIcon from "@/assets/icons/svg/ProfilePage/PremiumIcon";
+import { RootState } from "@/store/store";
 import { Ionicons } from "@expo/vector-icons";
+import { router } from "expo-router";
 import React from "react";
 import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import LinearGradient from "react-native-linear-gradient";
+import { useSelector } from "react-redux";
+
+
 
 const GetPremiumCard = ({
   handleClick,
   slug,
 }: {
   handleClick: (slug: string) => void;
+
   slug: string;
 }) => {
+
+
+  const trialUsed:boolean | null =
+  useSelector((state: RootState) => state?.agent?.docData?.onboardingComplete) || false;
+
+ 
+  const handleStartTrial = () => {
+     
+  };
+
   return (
+    <>
+    
     <LinearGradient
       colors={['#153E3B', '#05635C']}
       start={{x: 0, y: 0}}
       end={{x: 1, y: 0}}
+      locations={[-0.1051, 0.4663, 0.9999999999]} 
+      
       style={styles.gradientContainer}
     >
+      
       <View className="flex-row justify-between">
         <View>
           <Text className="text-white text-lg" style={{fontFamily: "Montserrat_700Bold"}}>ACN Premium</Text>
-          <Text className="text-white text-xl font-bold mt-1">
+          <Text className="text-white text-xl font-extrabold mt-1">
             ₹10,000/year!
           </Text>
-          <Text className="text-white">₹833/month</Text>
+          
         </View>
         <View className="justify-center">
           <Ionicons
@@ -36,11 +57,11 @@ const GetPremiumCard = ({
         </View>
       </View>
 
-      <View className="border-t border-green-500 my-4" />
+      <View className="border-t border-[#FAFAFA] my-4" />
 
       <View className="mb-4">
         <View className="flex-row items-center mb-2">
-          <View className="w-2 h-2 bg-white rounded-full mr-2" />
+          <View className="w-2 h-2 bg-white font-normal rounded-full mr-2" />
           <Text className="text-white">Unlimited enquiries</Text>
         </View>
         <View className="flex-row items-center mb-2">
@@ -55,9 +76,10 @@ const GetPremiumCard = ({
 
       <TouchableOpacity
         className="bg-white py-3 rounded-md mb-2"
-        // onPress={onStartTrial}
+         onPress={handleStartTrial}
+        disabled={trialUsed ?? false}
       >
-        <Text className="text-center text-sm text-[#153E3B] font-bold">
+        <Text className="text-center text-sm text-[#153E3B]" style={{fontFamily:'Lato_700Bold'}} >
           Start 1 month free trial
         </Text>
       </TouchableOpacity>
@@ -66,10 +88,11 @@ const GetPremiumCard = ({
         className="flex-row justify-center items-center gap-1"
         onPress={()=>handleClick("compare_plans")}
       >
-        <Text className="text-white text-sm font-bold">Compare Plans</Text>
+        <Text className="text-white text-sm" style={{fontFamily:'Lato_700Bold'}}>Compare Plans</Text>
         <Ionicons name="arrow-forward" size={18} color="white" />
       </TouchableOpacity>
     </LinearGradient>
+    </>
   );
 };
 
@@ -79,6 +102,17 @@ const styles = StyleSheet.create({
   gradientContainer: {
     borderRadius: 8,
     padding: 20,
+    overflow: 'hidden', 
+  },
+  ellipseBackground: {
+    position: 'absolute',
+    overflow:'hidden',
+    width: 203,
+    height: 208,
+    left: 203,
+    top: -69.5,
+    backgroundColor: 'rgba(244, 168, 0, 0.2)',
+    borderRadius: 104,  
   },
   card: {
     display: "flex",

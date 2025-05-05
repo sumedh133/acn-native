@@ -1,5 +1,12 @@
 import React, { createContext, useContext, useState, ReactNode, useEffect } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useDispatch } from 'react-redux';
+import { useSelector } from 'react-redux';
+import { RootState } from '@/store/store';
+import { doc, updateDoc } from 'firebase/firestore';
+import { db } from '@/app/config/firebase';
+import { updateAgentDocData } from '@/store/slices/agentSlice';
+import { formatUnixDateTime } from '@/app/helpers/getUnixDateTime';
 
 interface OnboardingContextType {
   currentStep: number;
@@ -17,6 +24,8 @@ interface OnboardingProviderProps {
 export function OnboardingProvider({ children }: OnboardingProviderProps): JSX.Element {
   const [currentStep, setCurrentStep] = useState<number>(0);
   const [onboardingCompleted, setOnboardingCompleted] = useState<boolean>(false);
+  const dispatch = useDispatch();
+  const cpId = useSelector((state: RootState) => state?.agent?.docData?.cpId);
   
   // Initialize state from AsyncStorage on component mount
   useEffect(() => {
@@ -49,7 +58,7 @@ export function OnboardingProvider({ children }: OnboardingProviderProps): JSX.E
     }
   };
   
-  const nextStep = (): void => {
+  const nextStep = async() => {
     const newStep = currentStep + 1;
     setCurrentStep(newStep);
     saveOnboardingProgress(newStep);
@@ -58,7 +67,17 @@ export function OnboardingProvider({ children }: OnboardingProviderProps): JSX.E
     // You may need to adjust the final step number based on your flow
     if (newStep === 3) { // Assuming 3 is the final step index
       setOnboardingCompleted(true);
+          const agentRef = doc(db, "agents", cpId);
+          const updatedData={
+            onboardingComplete: true,
+            trialStartedAt: formatUnixDateTime(new Date()),
+            monthlyCredits: 100,
+            userType: "Trial"
+          }
+          await updateDoc(agentRef, updatedData);
+          dispatch(updateAgentDocData(  updatedData));
       AsyncStorage.setItem('onboardingCompleted', 'true').catch(error =>
+        
         console.error('Error saving onboarding completion status:', error)
       );
     }

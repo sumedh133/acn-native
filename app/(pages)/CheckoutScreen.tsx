@@ -10,14 +10,17 @@ import {
   StatusBar
 } from 'react-native';
 import { WebView } from 'react-native-webview';
-import { useSelector } from 'react-redux';
+
 import { RouteProp, useRoute } from '@react-navigation/native';
 import PremiumModal from '../modals/PremiumModal';
 import PaymentUnsuccessfulModal from '../modals/PaymentUnsuccessfulModal';
 import { router } from 'expo-router';
 import { RootState } from '@/store/store';
-import { doc, onSnapshot, serverTimestamp, updateDoc } from 'firebase/firestore';
+import { doc, getDoc, onSnapshot, serverTimestamp, updateDoc } from 'firebase/firestore';
 import { db } from '../config/firebase'; 
+import { useDispatch, useSelector } from 'react-redux';
+import { updateAgentDocData } from '@/store/slices/agentSlice';
+
 
 type CheckoutScreenRouteProp = RouteProp<{
   CheckoutScreen: {
@@ -28,6 +31,7 @@ type CheckoutScreenRouteProp = RouteProp<{
 const CheckoutScreen: React.FC = () => {
   // Refs
   const webViewRef = useRef<WebView>(null);
+  const dispatch = useDispatch();
   
   // Routes and params
   const route = useRoute<CheckoutScreenRouteProp>();
@@ -61,8 +65,8 @@ const CheckoutScreen: React.FC = () => {
   
   
   const checkoutUrl = React.useMemo(() => {
-    //const baseUrl = 'https://acnonline.in/CheckoutPage';
-    const baseUrl ='https://test-acn-resale-inventories-dde03.web.app/CheckoutPage'
+    const baseUrl = 'https://acnonline.in/CheckoutPage';
+    //const baseUrl ='https://test-acn-resale-inventories-dde03.web.app/CheckoutPage'
     
     const params = new URLSearchParams();
     params.append('planId', planId);
@@ -102,7 +106,7 @@ const CheckoutScreen: React.FC = () => {
     console.log('Setting up payment listener for transaction:', currentTransactionId);
     setPaymentListenerActive(true);
     
-    // Create Firebase listener for payment status
+    // Firebase listener for payment status
     const unsubscribe = onSnapshot(
       doc(db, 'payments', currentTransactionId),
       (docSnapshot) => {
@@ -111,12 +115,14 @@ const CheckoutScreen: React.FC = () => {
           console.log('Payment status update:', paymentData);
           
           if (paymentData.status === 'PAYMENT_SUCCESS') {
-            // Handle successful payment in app
+           
             updateUserSubscription(cpId, planId, paymentData);
             setShowSuccessModal(true);
+            
           } else if (paymentData.status === 'PAYMENT_ERROR' || paymentData.status === 'PAYMENT_FAILED') {
             setLastError(paymentData.failureReason || 'Payment failed');
             setShowFailedModal(true);
+            
           }
         }
       },
@@ -127,7 +133,7 @@ const CheckoutScreen: React.FC = () => {
     );
     
     
-    // Cleanup listener when component unmounts or transaction changes
+    // Cleanup listener s
     return () => {
       console.log('Cleaning up payment listener');
       unsubscribe();
@@ -140,38 +146,57 @@ const CheckoutScreen: React.FC = () => {
     try {
       const agentRef = doc(db, "agents", cpId);
       
+      // Get current document to access existing payment history
+      const agentSnap = await getDoc(agentRef);
+      const agentData = agentSnap.data();
       
       const now = new Date();
       
       let planExpiry = new Date();
       planExpiry.setFullYear(planExpiry.getFullYear() + 1);
       
-      let updateData: any = {};
-
+      const newPaymentEntry = {
+        paymentDate: now,
+        paymentAmount: paymentData.data.amount,
+        paymentId: currentTransactionId,
+        planId: planId,
+      };
+      
+      
+      const existingPaymentHistory = agentData?.paymentHistory || [];
+      
+      
+      let updatedPaymentHistory = [];
+      
+      
+      if (Array.isArray(existingPaymentHistory)) {
+        updatedPaymentHistory = [...existingPaymentHistory, newPaymentEntry];
+      } 
+      else if (existingPaymentHistory && typeof existingPaymentHistory === 'object') {
+        updatedPaymentHistory = [existingPaymentHistory, newPaymentEntry];
+      }
+      else {
+        updatedPaymentHistory = [newPaymentEntry];
+      }
+      
+      let updateData: any = {
+        paymentHistory: updatedPaymentHistory
+      };
+  
       switch (planId) {
         case "premium":
           updateData = {
+            ...updateData,
             userType: "premium",
             planExpiry: planExpiry,
             monthlyCredits: 100,
-            paymentHistory: {
-              lastPaymentDate: now,
-              lastPaymentAmount: paymentData.data.amount,
-              lastPaymentId: currentTransactionId,
-              lastPlanId: planId,
-            },
           };
           break;
         case "booster":
           updateData = {
+            ...updateData,
             boosterCredits: 5,
             monthlyCredits: 5,
-            paymentHistory: {
-              lastPaymentDate: now,
-              lastPaymentAmount: paymentData.data.amount,
-              lastPaymentId: currentTransactionId,
-              lastPlanId: planId,
-            },
           };
           break;
         default:
@@ -179,9 +204,11 @@ const CheckoutScreen: React.FC = () => {
           return false;
       }
       
-      // Update the user document
+     
       await updateDoc(agentRef, updateData);
       console.log("Successfully updated user subscription");
+  
+      dispatch(updateAgentDocData(updateData));
       return true;
     } catch (error) {
       console.error("Error updating user subscription:", error);
@@ -270,7 +297,7 @@ const CheckoutScreen: React.FC = () => {
           break;
           
         case 'PAYMENT_SUCCESS':
-          // This might still come from the web if we're redirected back with success
+         
           setShowSuccessModal(true);
           break;
           
@@ -295,8 +322,6 @@ const CheckoutScreen: React.FC = () => {
   return (
     <SafeAreaView style={styles.container}>
       <StatusBar barStyle="dark-content" backgroundColor="#f5f5f5" />
-      
-      
       {currentTransactionId ? (
         <WebView
           ref={webViewRef}
@@ -341,7 +366,9 @@ const CheckoutScreen: React.FC = () => {
       {/* Success Modal */}
       <PremiumModal
         visible={showSuccessModal}
-        onClose={() => setShowSuccessModal(false)}
+        onClose={() => {setShowSuccessModal(false);
+          router.back();}
+        }
         onBrowsePress={browsePlans}
         planId={planId}
       />
@@ -349,7 +376,10 @@ const CheckoutScreen: React.FC = () => {
       {/* Failed Payment Modal */}
       <PaymentUnsuccessfulModal
         visible={showFailedModal}
-        onClose={() => setShowFailedModal(false)}
+        onClose={() => {setShowFailedModal(false);
+          router.back();}
+        }
+        
         onTryAgain={retryPayment}
         planId={planId}
        

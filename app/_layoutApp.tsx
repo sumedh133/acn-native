@@ -21,6 +21,12 @@ import {
   Montserrat_600SemiBold,
   Montserrat_700Bold,
 } from "@expo-google-fonts/montserrat";
+import { 
+  Lato_400Regular,
+  Lato_700Bold,
+  Lato_300Light,
+  Lato_900Black 
+} from '@expo-google-fonts/lato';
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useDispatch } from "react-redux";
 import NetInfo from "@react-native-community/netinfo";
@@ -36,10 +42,14 @@ import KamManager from "./modals/KamModal";
 import { selectMyKam } from "@/store/slices/agentSlice";
 import { setKamDataState } from "@/store/slices/kamSlice";
 import { AnyAction, ThunkDispatch } from "@reduxjs/toolkit";
-import { TrialStatusNotification, TrialStatusType } from "./components/TrialStatusNotification";
+import {
+  TrialStatusNotification,
+  TrialStatusType,
+} from "./components/TrialStatusNotification";
 import PremiumModal from "./modals/PremiumModal";
 import PaymentUnsuccessfulModal from "./modals/PaymentUnsuccessfulModal";
 import useNotification from "./components/Notification/useNotification";
+import { formatUnixDate} from "./helpers/getUnixDateTime";
 
 // Custom header component to apply the desired styling
 const CustomHeader = ({
@@ -69,7 +79,10 @@ const CustomHeader = ({
           <Text style={styles.headerTitle}>{title}</Text>
         </View>
         {!headerBackVisible && (
-          <TouchableOpacity style={styles.headerRight} onPress={()=>router.push('/(pages)/Credits')}>
+          <TouchableOpacity
+            style={styles.headerRight}
+            onPress={() => router.push("/(pages)/Credits")}
+          >
             <Text style={styles.creditsText}>{monthlyCredits}</Text>
             <CoinIcon width={18} height={18} />
           </TouchableOpacity>
@@ -90,24 +103,64 @@ export default function LayoutApp() {
     Montserrat_500Medium,
     Montserrat_600SemiBold,
     Montserrat_700Bold,
-  });
-  const [trialData, setTrialData] = useState({
-    status: TrialStatusType.ACTIVE,
-    daysLeft: 28,
-    credits: 20,
-    showNotification: true
+    Lato_400Regular,
+    Lato_700Bold,
+    Lato_300Light,
+    Lato_900Black
   });
 
+
+  // Check if onboarding should be shown
+  const { docData: agentData } = useSelector((state: RootState) => state.agent);
+
+  const calculateDaysLeft = (trialStartedAt: string) => {
+    const trialDate = new Date(trialStartedAt); 
+    const currentDate = new Date(); 
+  
+   
+    if (isNaN(trialDate.getTime())) {
+      return 28; 
+    }
+  
+    // Calculate days left
+    const timeDiff = trialDate.getTime() - currentDate.getTime();
+    const daysLeft = Math.floor(timeDiff / (1000 * 3600 * 24)); // Convert milliseconds to days
+  
+    return daysLeft >= 0 ? daysLeft : 0; 
+  };
+  
+  
+  
+  const getTrialStatus = (daysLeft: number, credits: number) => {
+    if (daysLeft <= 0) {
+      return TrialStatusType.EXPIRED;
+    } else if (credits <= 5) {
+      return TrialStatusType.LOW_CREDITS;
+    } else if (daysLeft <= 7) {
+      return TrialStatusType.EXPIRING_SOON;
+    } else {
+      return TrialStatusType.ACTIVE;
+    }
+  };
+  
+  const daysLeft = calculateDaysLeft(agentData?.trialStartedAt);
+  
+  const [trialData, setTrialData] = useState({
+    status: getTrialStatus(daysLeft, agentData?.monthlyCredits),
+    daysLeft: daysLeft,
+    credits: agentData?.monthlyCredits,
+    showNotification: agentData?.userType === "Trial" ? true: false,
+  });
 
   const dispatch = useDispatch<ThunkDispatch<RootState, unknown, AnyAction>>();
   const router = useRouter();
 
   const myKamId = useSelector(selectMyKam);
   useEffect(() => {
-      if (myKamId) {
-        dispatch(setKamDataState(myKamId));
-      }
-    }, [myKamId, dispatch]);
+    if (myKamId) {
+      dispatch(setKamDataState(myKamId));
+    }
+  }, [myKamId, dispatch]);
 
   const onLayoutRootView = useCallback(async () => {
     if (fontsLoaded) {
@@ -129,12 +182,16 @@ export default function LayoutApp() {
     }
   }, [fontsLoaded]);
 
-  // Check if onboarding should be shown
-  const { docData: agentData } = useSelector((state: RootState) => state.agent);
-  
   useEffect(() => {
     // Show onboarding modal if the user has not completed onboarding
-    if (agentData && agentData.onboardingComplete === false) {
+    if (
+      agentData &&
+      (agentData.onboardingComplete === false ||
+        agentData.onboardingComplete === undefined ||
+        agentData.onboardingComplete === null
+      )
+    ) {
+      console.log("hii",agentData);
       setShowOnboarding(true);
     } else if (agentData && agentData.onboardingComplete === true) {
       // Close the modal when onboarding is completed
@@ -155,14 +212,14 @@ export default function LayoutApp() {
   const isAuthenticated =
     useSelector((state: RootState) => state.auth.isAuthenticated) || false;
 
-    const cpId =
-        useSelector((state: RootState) => state?.agent?.docData?.cpId) || null;
+  const cpId =
+    useSelector((state: RootState) => state?.agent?.docData?.cpId) || null;
 
   const notification = useNotification();
 
   useEffect(() => {
     notification.requestPermission();
-  }, [])
+  }, []);
 
   useEffect(() => {
     if (isAuthenticated && cpId != null) {
@@ -173,7 +230,7 @@ export default function LayoutApp() {
           console.error("Error getting token:", error);
         }
       };
-      
+
       getTokenAsync();
     }
   }, [isAuthenticated, cpId]);
@@ -185,9 +242,8 @@ export default function LayoutApp() {
 
   const handleDismiss = () => {
     // You might want to store this preference in AsyncStorage
-    setTrialData(prev => ({ ...prev, showNotification: false }));
+    setTrialData((prev) => ({ ...prev, showNotification: false }));
   };
-
 
   return (
     <View style={{ flex: 1 }} onLayout={onLayoutRootView}>
@@ -202,24 +258,25 @@ export default function LayoutApp() {
             const headerBackVisible = options.headerBackVisible || false;
             return (
               <>
-              <CustomHeader
-                title={title}
-                onMenuPress={onMenuPress}
-                headerBackVisible={headerBackVisible}
-              />
-              <TrialStatusNotification 
-          status={trialData.status}
-          daysLeft={trialData.daysLeft}
-          credits={trialData.credits}
-          onDismiss={handleDismiss}
-        />
+                <CustomHeader
+                  title={title}
+                  onMenuPress={onMenuPress}
+                  headerBackVisible={headerBackVisible}
+                />
+                { trialData.showNotification &&
+                <TrialStatusNotification
+                  status={trialData.status}
+                  daysLeft={trialData.daysLeft}
+                  credits={trialData.credits}
+                  onDismiss={handleDismiss}
+                />
+                }
               </>
             );
           },
           animation: "fade",
         }}
       >
-        
         <Stack.Screen
           name="(tabs)/index"
           options={{ headerShown: false }}
@@ -336,7 +393,7 @@ export default function LayoutApp() {
           }}
           initialParams={{ showFooter: false }}
         />
-         <Stack.Screen
+        <Stack.Screen
           name="(pages)/CheckoutScreen"
           options={{
             title: "Checkout",
@@ -344,24 +401,31 @@ export default function LayoutApp() {
           }}
           initialParams={{ showFooter: false }}
         />
+        <Stack.Screen
+          name="(pages)/PaymentRecords"
+          options={{
+            title: "Payment Records",
+            headerBackVisible: true,
+          }}
+          initialParams={{ showFooter: false }}
+        />
       </Stack>
-      
-       {/* <OnboardingFlow
-        visible={true}
+
+      <OnboardingFlow
+        visible={showOnboarding}
         onComplete={() => {
-         // dispatch(updateAgentDocData({ onboardingComplete: true }));
           setShowOnboarding(false);
         }}
         onClose={() => {
           setShowOnboarding(false);
         }}
-      /> */}
+      />
       <Toast config={toastConfig} />
       <StatusBar style="auto" />
       <KamManager />
       {/* <PremiumModal/> */}
       {/* <PaymentUnsuccessfulModal/> */}
-      
+
       {isAuthenticated && <FooterNavigation />}
     </View>
   );

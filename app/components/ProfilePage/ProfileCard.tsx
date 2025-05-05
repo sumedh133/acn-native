@@ -45,7 +45,7 @@ const styles = StyleSheet.create({
     marginTop: 8,
   },
   text: {
-    fontFamily: "Montserrat_600SemiBold",
+    fontFamily: "Montserrat_700SemiBold",
     fontSize: 12,
     lineHeight: 18,
     color: "#5A5555",
