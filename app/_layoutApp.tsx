@@ -1,8 +1,10 @@
-import { SplashScreen, Stack, useRouter } from "expo-router";
+import { router, SplashScreen, Stack, useRouter } from "expo-router";
 import React, { useCallback, useEffect, useState } from "react";
 import Toast from "react-native-toast-message";
 import { StatusBar } from "expo-status-bar";
 import { toastConfig } from "@/utils/toastUtils";
+import OnboardingFlow, { useOnboardingContext } from "./components/Onboarding";
+import { updateAgentDocData } from "@/store/slices/agentSlice";
 import {
   Keyboard,
   Platform,
@@ -19,6 +21,12 @@ import {
   Montserrat_600SemiBold,
   Montserrat_700Bold,
 } from "@expo-google-fonts/montserrat";
+import { 
+  Lato_400Regular,
+  Lato_700Bold,
+  Lato_300Light,
+  Lato_900Black 
+} from '@expo-google-fonts/lato';
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useDispatch } from "react-redux";
 import NetInfo from "@react-native-community/netinfo";
@@ -34,7 +42,14 @@ import KamManager from "./modals/KamModal";
 import { selectMyKam } from "@/store/slices/agentSlice";
 import { setKamDataState } from "@/store/slices/kamSlice";
 import { AnyAction, ThunkDispatch } from "@reduxjs/toolkit";
+import {
+  TrialStatusNotification,
+  TrialStatusType,
+} from "./components/TrialStatusNotification";
+import PremiumModal from "./modals/PremiumModal";
+import PaymentUnsuccessfulModal from "./modals/PaymentUnsuccessfulModal";
 import useNotification from "./components/Notification/useNotification";
+import { formatUnixDate} from "./helpers/getUnixDateTime";
 
 // Custom header component to apply the desired styling
 const CustomHeader = ({
@@ -64,10 +79,13 @@ const CustomHeader = ({
           <Text style={styles.headerTitle}>{title}</Text>
         </View>
         {!headerBackVisible && (
-          <View style={styles.headerRight}>
+          <TouchableOpacity
+            style={styles.headerRight}
+            onPress={() => router.push("/(pages)/Credits")}
+          >
             <Text style={styles.creditsText}>{monthlyCredits}</Text>
             <CoinIcon width={18} height={18} />
-          </View>
+          </TouchableOpacity>
         )}
       </View>
     </View>
@@ -75,11 +93,63 @@ const CustomHeader = ({
 };
 
 export default function LayoutApp() {
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [profileModalVisible, setProfileModalVisible] = useState(false);
+  const [showOnboarding, setShowOnboarding] = useState(false);
+  const colorScheme = useColorScheme();
+  const [topMargin, setTopMargin] = useState(10);
   const [fontsLoaded] = useFonts({
     Montserrat_400Regular,
     Montserrat_500Medium,
     Montserrat_600SemiBold,
     Montserrat_700Bold,
+    Lato_400Regular,
+    Lato_700Bold,
+    Lato_300Light,
+    Lato_900Black
+  });
+
+
+  // Check if onboarding should be shown
+  const { docData: agentData } = useSelector((state: RootState) => state.agent);
+
+  const calculateDaysLeft = (trialStartedAt: string) => {
+    const trialDate = new Date(trialStartedAt); 
+    const currentDate = new Date(); 
+  
+   
+    if (isNaN(trialDate.getTime())) {
+      return 28; 
+    }
+  
+    // Calculate days left
+    const timeDiff = trialDate.getTime() - currentDate.getTime();
+    const daysLeft = Math.floor(timeDiff / (1000 * 3600 * 24)); // Convert milliseconds to days
+  
+    return daysLeft >= 0 ? daysLeft : 0; 
+  };
+  
+  
+  
+  const getTrialStatus = (daysLeft: number, credits: number) => {
+    if (daysLeft <= 0) {
+      return TrialStatusType.EXPIRED;
+    } else if (credits <= 5) {
+      return TrialStatusType.LOW_CREDITS;
+    } else if (daysLeft <= 7) {
+      return TrialStatusType.EXPIRING_SOON;
+    } else {
+      return TrialStatusType.ACTIVE;
+    }
+  };
+  
+  const daysLeft = calculateDaysLeft(agentData?.trialStartedAt);
+  
+  const [trialData, setTrialData] = useState({
+    status: getTrialStatus(daysLeft, agentData?.monthlyCredits),
+    daysLeft: daysLeft,
+    credits: agentData?.monthlyCredits,
+    showNotification: agentData?.userType === "Trial" ? true: false,
   });
 
   const dispatch = useDispatch<ThunkDispatch<RootState, unknown, AnyAction>>();
@@ -87,10 +157,10 @@ export default function LayoutApp() {
 
   const myKamId = useSelector(selectMyKam);
   useEffect(() => {
-      if (myKamId) {
-        dispatch(setKamDataState(myKamId));
-      }
-    }, [myKamId, dispatch]);
+    if (myKamId) {
+      dispatch(setKamDataState(myKamId));
+    }
+  }, [myKamId, dispatch]);
 
   const onLayoutRootView = useCallback(async () => {
     if (fontsLoaded) {
@@ -113,6 +183,23 @@ export default function LayoutApp() {
   }, [fontsLoaded]);
 
   useEffect(() => {
+    // Show onboarding modal if the user has not completed onboarding
+    if (
+      agentData &&
+      (agentData.onboardingComplete === false ||
+        agentData.onboardingComplete === undefined ||
+        agentData.onboardingComplete === null
+      )
+    ) {
+      console.log("hii",agentData);
+      setShowOnboarding(true);
+    } else if (agentData && agentData.onboardingComplete === true) {
+      // Close the modal when onboarding is completed
+      setShowOnboarding(false);
+    }
+  }, [agentData, agentData?.onboardingComplete]);
+
+  useEffect(() => {
     // Subscribe to network state updates
     const unsubscribe = NetInfo.addEventListener((state) => {
       dispatch(setIsConnectedToInternet(!!state.isInternetReachable));
@@ -125,14 +212,14 @@ export default function LayoutApp() {
   const isAuthenticated =
     useSelector((state: RootState) => state.auth.isAuthenticated) || false;
 
-    const cpId =
-        useSelector((state: RootState) => state?.agent?.docData?.cpId) || null;
+  const cpId =
+    useSelector((state: RootState) => state?.agent?.docData?.cpId) || null;
 
   const notification = useNotification();
 
   useEffect(() => {
     notification.requestPermission();
-  }, [])
+  }, []);
 
   useEffect(() => {
     if (isAuthenticated && cpId != null) {
@@ -143,7 +230,7 @@ export default function LayoutApp() {
           console.error("Error getting token:", error);
         }
       };
-      
+
       getTokenAsync();
     }
   }, [isAuthenticated, cpId]);
@@ -152,6 +239,12 @@ export default function LayoutApp() {
   if (!fontsLoaded) {
     return null;
   }
+
+  const handleDismiss = () => {
+    // You might want to store this preference in AsyncStorage
+    setTrialData((prev) => ({ ...prev, showNotification: false }));
+  };
+
   return (
     <View style={{ flex: 1 }} onLayout={onLayoutRootView}>
       <Stack
@@ -164,11 +257,21 @@ export default function LayoutApp() {
             const title = options.title || route.name;
             const headerBackVisible = options.headerBackVisible || false;
             return (
-              <CustomHeader
-                title={title}
-                onMenuPress={onMenuPress}
-                headerBackVisible={headerBackVisible}
-              />
+              <>
+                <CustomHeader
+                  title={title}
+                  onMenuPress={onMenuPress}
+                  headerBackVisible={headerBackVisible}
+                />
+                { trialData.showNotification &&
+                <TrialStatusNotification
+                  status={trialData.status}
+                  daysLeft={trialData.daysLeft}
+                  credits={trialData.credits}
+                  onDismiss={handleDismiss}
+                />
+                }
+              </>
             );
           },
           animation: "fade",
@@ -211,6 +314,10 @@ export default function LayoutApp() {
         <Stack.Screen
           name="(tabs)/dashboardTab"
           options={{ title: "Dashboard" }}
+        />
+        <Stack.Screen
+          name="(tabs)/NotificationPage"
+          options={{ title: "Notifications" }}
         />
 
         <Stack.Screen
@@ -270,10 +377,56 @@ export default function LayoutApp() {
           }}
           initialParams={{ showFooter: false }}
         />
+        <Stack.Screen
+          name="(pages)/Credits"
+          options={{
+            title: "ACN Credits",
+            headerBackVisible: true,
+          }}
+          initialParams={{ showFooter: false }}
+        />
+        <Stack.Screen
+          name="(pages)/ComparePlans"
+          options={{
+            title: "Plans Page",
+            headerBackVisible: true,
+          }}
+          initialParams={{ showFooter: false }}
+        />
+        <Stack.Screen
+          name="(pages)/CheckoutScreen"
+          options={{
+            title: "Checkout",
+            headerBackVisible: true,
+          }}
+          initialParams={{ showFooter: false }}
+        />
+        <Stack.Screen
+          name="(pages)/PaymentRecords"
+          options={{
+            title: "Payment Records",
+            headerBackVisible: true,
+          }}
+          initialParams={{ showFooter: false }}
+        />
+       
       </Stack>
+      {showOnboarding &&
+      <OnboardingFlow
+        visible={true}
+        onComplete={() => {
+          setShowOnboarding(false);
+        }}
+        onClose={() => {
+          setShowOnboarding(false);
+        }}
+        />
+      }
       <Toast config={toastConfig} />
       <StatusBar style="auto" />
       <KamManager />
+      
+
       {isAuthenticated && <FooterNavigation />}
     </View>
   );

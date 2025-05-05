@@ -80,9 +80,16 @@ import AddRequirementsIcon from "@/assets/icons/svg/Footer/AddRequirementsIcon";
 import AddInventoryIcon from "@/assets/icons/svg/Footer/AddInventoryIcon";
 import { propertyUserStatus } from "@/app/constants/PropertyConstants";
 import { getUnixDateTime } from "@/app/helpers/getUnixDateTime";
+import { RouteProp, useRoute } from '@react-navigation/native';
 
 const StyledView = styled(View);
 const StyledScrollView = styled(ScrollView);
+
+type DashboardRouteProp = RouteProp<{
+  Dashboard: {
+    tab?: string;
+  };
+}>;
 
 type DashboardProps = {
   myEnquiries: EnquiryWithProperty[];
@@ -104,7 +111,11 @@ export default function Dashboard({
   myListing,
   loading,
 }: DashboardProps) {
-  const [activeTab, setActiveTab] = useState("inventories");
+
+  const route = useRoute<DashboardRouteProp>();
+  const tab = route.params?.tab || 'inventories';
+
+  const [activeTab, setActiveTab] = useState(tab || "inventories" );
   const [properties, setProperties] = useState<Property[] | []>([]);
   const [requirements, setRequirements] = useState<Requirement[] | []>([]);
   const [enquiries, setEnquiries] = useState<EnquiryWithProperty[] | []>([]);

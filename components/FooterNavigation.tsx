@@ -40,23 +40,23 @@ const menuItems: MenuItem[] = [
     icon: <RequirementsIcon width={24} height={24} />,
     activeIcon: <ActiveRequirementsIcon width={24} height={24} />,
   },
-  {
-    title: "",
-    path: "/add",
-    icon: <PlusIcon width={24} height={24} />,
-    activeIcon: null,
-  },
-  {
-    title: "Notifications",
-    path: "/notifications",
-    icon: <NotificationIcon width={24} height={24} />,
-    activeIcon: <ActiveNotificationIcon width={24} height={24} />,
-  },
+  // {
+  //   title: "Notifications",
+  //   path: "/NotificationPage",
+  //   icon: <NotificationIcon width={24} height={24} />,
+  //   activeIcon: <ActiveNotificationIcon width={24} height={24} />,
+  // },
   {
     title: "Dashboard",
     path: "/dashboardTab",
     icon: <DashboardIcon width={24} height={24} />,
     activeIcon: <ActiveDashboardIcon width={24} height={24} />,
+  },
+  {
+    title: "",
+    path: "/add",
+    icon: <PlusIcon width={24} height={24} />,
+    activeIcon: null,
   },
 ];
 
