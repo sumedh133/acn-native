@@ -16,6 +16,8 @@ import PremiumModal from '../modals/PremiumModal';
 import PaymentUnsuccessfulModal from '../modals/PaymentUnsuccessfulModal';
 import { router } from 'expo-router';
 import { RootState } from '@/store/store';
+import { doc, onSnapshot, serverTimestamp, updateDoc } from 'firebase/firestore';
+import { db } from '../config/firebase'; 
 
 type CheckoutScreenRouteProp = RouteProp<{
   CheckoutScreen: {
@@ -23,10 +25,6 @@ type CheckoutScreenRouteProp = RouteProp<{
   };
 }>;
 
-/**
- * CheckoutScreen component that uses a WebView to display a web-based checkout experience
- * Fixed to prevent infinite reloading
- */
 const CheckoutScreen: React.FC = () => {
   // Refs
   const webViewRef = useRef<WebView>(null);
@@ -35,7 +33,7 @@ const CheckoutScreen: React.FC = () => {
   const route = useRoute<CheckoutScreenRouteProp>();
   const planId = route.params?.planId || 'premium';
   
-  // Redux state
+
   const userData = useSelector((state: RootState) => state.agent);
   const {
     docData: { businessName = null, gstNo = null, cpId = null } = {},
@@ -48,11 +46,20 @@ const CheckoutScreen: React.FC = () => {
   const [showFailedModal, setShowFailedModal] = useState(false);
   const [lastError, setLastError] = useState<string | null>(null);
   const [webViewCanGoBack, setWebViewCanGoBack] = useState(false);
+  const [currentTransactionId, setCurrentTransactionId] = useState<string | null>(null);
+  const [paymentListenerActive, setPaymentListenerActive] = useState(false);
+
+  useEffect(() => {
+    if (!currentTransactionId && cpId) {
+      const newTransactionId = "TXN" + Date.now();
+      setCurrentTransactionId(newTransactionId);
+      console.log("Generated transaction ID:", newTransactionId);
+    }
+  }, [cpId, currentTransactionId]);
   
-  // Reference to store if we've already processed a result to prevent loops
-  const processedResultRef = useRef<{[key: string]: boolean}>({});
+
   
-  // Build the checkout URL with query parameters - memoized to prevent rebuilding
+  
   const checkoutUrl = React.useMemo(() => {
     //const baseUrl = 'https://acnonline.in/CheckoutPage';
     const baseUrl ='https://test-acn-resale-inventories-dde03.web.app/CheckoutPage'
@@ -65,9 +72,10 @@ const CheckoutScreen: React.FC = () => {
     if (cpId) params.append('cpId', cpId);
     if (businessName) params.append('businessName', businessName);
     if (gstNo) params.append('gstNo', gstNo);
+    if (currentTransactionId) params.append('transactionId', currentTransactionId);
     
     return `${baseUrl}?${params.toString()}`;
-  }, [planId, phoneNumber, cpId, businessName, gstNo]);
+  }, [planId, phoneNumber, cpId, businessName, gstNo, currentTransactionId]);
 
  
   useEffect(() => {
@@ -87,7 +95,101 @@ const CheckoutScreen: React.FC = () => {
     return () => backHandler.remove();
   }, [webViewCanGoBack]);
 
-  // Inject user data into WebView - memoized to prevent recreating on each render
+  useEffect(() => {
+    
+    if (!currentTransactionId || !cpId || paymentListenerActive) return;
+    
+    console.log('Setting up payment listener for transaction:', currentTransactionId);
+    setPaymentListenerActive(true);
+    
+    // Create Firebase listener for payment status
+    const unsubscribe = onSnapshot(
+      doc(db, 'payments', currentTransactionId),
+      (docSnapshot) => {
+        if (docSnapshot.exists()) {
+          const paymentData = docSnapshot.data();
+          console.log('Payment status update:', paymentData);
+          
+          if (paymentData.status === 'PAYMENT_SUCCESS') {
+            // Handle successful payment in app
+            updateUserSubscription(cpId, planId, paymentData);
+            setShowSuccessModal(true);
+          } else if (paymentData.status === 'PAYMENT_ERROR' || paymentData.status === 'PAYMENT_FAILED') {
+            setLastError(paymentData.failureReason || 'Payment failed');
+            setShowFailedModal(true);
+          }
+        }
+      },
+      (error) => {
+        console.error('Error listening to payment updates:', error);
+        setPaymentListenerActive(false);
+      }
+    );
+    
+    
+    // Cleanup listener when component unmounts or transaction changes
+    return () => {
+      console.log('Cleaning up payment listener');
+      unsubscribe();
+      setPaymentListenerActive(false);
+    };
+  }, [currentTransactionId, cpId, planId]);
+
+
+  const updateUserSubscription = async (cpId: string, planId: string, paymentData: any) => {
+    try {
+      const agentRef = doc(db, "agents", cpId);
+      
+      
+      const now = new Date();
+      
+      let planExpiry = new Date();
+      planExpiry.setFullYear(planExpiry.getFullYear() + 1);
+      
+      let updateData: any = {};
+
+      switch (planId) {
+        case "premium":
+          updateData = {
+            userType: "premium",
+            planExpiry: planExpiry,
+            monthlyCredits: 100,
+            paymentHistory: {
+              lastPaymentDate: now,
+              lastPaymentAmount: paymentData.data.amount,
+              lastPaymentId: currentTransactionId,
+              lastPlanId: planId,
+            },
+          };
+          break;
+        case "booster":
+          updateData = {
+            boosterCredits: 5,
+            monthlyCredits: 5,
+            paymentHistory: {
+              lastPaymentDate: now,
+              lastPaymentAmount: paymentData.data.amount,
+              lastPaymentId: currentTransactionId,
+              lastPlanId: planId,
+            },
+          };
+          break;
+        default:
+          console.log("Unknown plan ID:", planId);
+          return false;
+      }
+      
+      // Update the user document
+      await updateDoc(agentRef, updateData);
+      console.log("Successfully updated user subscription");
+      return true;
+    } catch (error) {
+      console.error("Error updating user subscription:", error);
+      return false;
+    }
+  };
+
+ 
   const injectUserData = useCallback((): void => {
     if (!webViewRef.current) return;
     
@@ -96,6 +198,7 @@ const CheckoutScreen: React.FC = () => {
       window.userCpId = ${JSON.stringify(cpId || '')};
       window.userBusinessName = ${JSON.stringify(businessName || '')};
       window.userGstNo = ${JSON.stringify(gstNo || '')};
+      window.userTransactionId = ${JSON.stringify(currentTransactionId || '')};
       
       // Dispatch a custom event that the web page can listen for
       if (!window.userDataInjected) {
@@ -104,7 +207,8 @@ const CheckoutScreen: React.FC = () => {
             phoneNumber: window.userPhoneNumber,
             cpId: window.userCpId,
             businessName: window.userBusinessName,
-            gstNo: window.userGstNo
+            gstNo: window.userGstNo,
+            transactionId: window.userTransactionId
           }
         }));
         
@@ -121,81 +225,13 @@ const CheckoutScreen: React.FC = () => {
     `;
     
     webViewRef.current.injectJavaScript(dataScript);
-  }, [phoneNumber, cpId, businessName, gstNo]);
-  
-  // JavaScript to inject into the WebView for communication - defined outside render
-  const injectedJavaScript = `
-    // Function to safely send messages to React Native
-    window.sendToApp = function(type, payload = {}) {
-      if (window.ReactNativeWebView) {
-        window.ReactNativeWebView.postMessage(JSON.stringify({ 
-          type: type, 
-          payload: payload 
-        }));
-      }
-    };
-    
-    // Flag to prevent duplicate processing
-    window.urlParamsProcessed = false;
-    
-    // Process URL parameters only once
-    function checkAndProcessUrlParams() {
-      if (window.urlParamsProcessed) return;
-      
-      const urlParams = new URLSearchParams(window.location.search);
-      const result = urlParams.get('result');
-      const error = urlParams.get('error');
-      
-      if (result === 'success') {
-        window.sendToApp('PAYMENT_SUCCESS');
-        
-        // Remove the parameters to prevent reprocessing
-        const newUrl = window.location.pathname;
-        window.history.replaceState({}, document.title, newUrl);
-      } else if (result === 'failure') {
-        window.sendToApp('PAYMENT_FAILED', { error: error || 'Payment failed' });
-        
-        // Remove the parameters to prevent reprocessing
-        const newUrl = window.location.pathname;
-        window.history.replaceState({}, document.title, newUrl);
-      }
-      
-      window.urlParamsProcessed = true;
-    }
-    
-    // Listen for page load
-    window.addEventListener('load', function() {
-      checkAndProcessUrlParams();
-    });
-    
-    // Listen for navigation events
-    window.addEventListener('popstate', function(event) {
-      window.sendToApp('NAVIGATION_CHANGED', { 
-        path: window.location.pathname,
-        search: window.location.search,
-        url: window.location.href
-      });
-      
-      // Check URL params again after navigation
-      checkAndProcessUrlParams();
-    });
-    
-    // Create a global error handler
-    window.addEventListener('error', function(e) {
-      window.sendToApp('ERROR', { 
-        message: e.message,
-        filename: e.filename,
-        lineno: e.lineno
-      });
-    });
-    
-    true;
-  `;
-  
+  }, [phoneNumber, cpId, businessName, gstNo, currentTransactionId]);
   
   const retryPayment = (): void => {
     setShowFailedModal(false);
-    processedResultRef.current = {};
+    
+    const newTransactionId = "TXN" + Date.now();
+    setCurrentTransactionId(newTransactionId);
     
     if (webViewRef.current) {
       webViewRef.current.reload();
@@ -209,42 +245,15 @@ const CheckoutScreen: React.FC = () => {
   };
   
   const handleWebViewNavigationStateChange = useCallback((navState: { loading: boolean; url: string; canGoBack: boolean; }): void => {
-    
     setWebViewCanGoBack(navState.canGoBack);
    
-    try {
-      const url = new URL(navState.url);
-      const resultKey = `${url.pathname}${url.search}`;
+    // Handle loading completed
+    if (navState.loading === false) {
+      setIsLoading(false);
       
-      // Only process if we haven't seen this URL before
-      if (!processedResultRef.current[resultKey]) {
-        const result = url.searchParams.get('result');
-        const error = url.searchParams.get('error');
-        
-        if (result) {
-          // Mark as processed to prevent loops
-          processedResultRef.current[resultKey] = true;
-          
-          if (result === 'success') {
-            setShowSuccessModal(true);
-          } else if (result === 'failure') {
-            setLastError(error);
-            setShowFailedModal(true);
-          }
-        }
-      }
-      
-      // Handle loading completed
-      if (navState.loading === false) {
-        setIsLoading(false);
-        
-        
-        setTimeout(() => {
-          injectUserData();
-        }, 300);
-      }
-    } catch (error) {
-      console.error('Error parsing URL:', error);
+      setTimeout(() => {
+        injectUserData();
+      }, 300);
     }
   }, [injectUserData]);
   
@@ -254,13 +263,20 @@ const CheckoutScreen: React.FC = () => {
       const data = JSON.parse(event.nativeEvent.data);
       
       switch (data.type) {
+        case 'PAYMENT_INITIATED':
+          console.log("Payment initiated:", data.payload);
+          setCurrentTransactionId(data.payload.transactionId || currentTransactionId);
+          
+          break;
+          
         case 'PAYMENT_SUCCESS':
+          // This might still come from the web if we're redirected back with success
           setShowSuccessModal(true);
           break;
           
         case 'PAYMENT_FAILED':
-          console.log("payment faild");
-          setLastError(data.payload?.error || null);
+          console.log("Payment failed:", data.payload);
+          setLastError(data.payload?.error || data.payload?.reason || null);
           setShowFailedModal(true);
           break;
           
@@ -281,40 +297,46 @@ const CheckoutScreen: React.FC = () => {
       <StatusBar barStyle="dark-content" backgroundColor="#f5f5f5" />
       
       
-      <WebView
-        ref={webViewRef}
-        source={{ uri: checkoutUrl }}
-        style={styles.webView}
-        onMessage={handleMessage}
-        onNavigationStateChange={handleWebViewNavigationStateChange}
-        //injectedJavaScript={injectedJavaScript}
-        startInLoadingState={true}
-        javaScriptEnabled={true}
-        domStorageEnabled={true}
-        sharedCookiesEnabled={true}
-        cacheEnabled={false}
-        renderLoading={() => (
-          <View style={styles.loadingContainer}>
-            <ActivityIndicator size="large" color="#153E3B" />
-            <Text style={styles.loadingText}>Loading checkout page...</Text>
-          </View>
-        )}
-        onError={(syntheticEvent) => {
-          const { nativeEvent } = syntheticEvent;
-          console.error('WebView error:', nativeEvent);
-          Alert.alert(
-            'Connection Error',
-            'Failed to load the checkout page. Please check your internet connection and try again.',
-            [
-              { 
-                text: 'Retry', 
-                onPress: () => webViewRef.current?.reload() 
-              }
-            ]
-          );
-        }}
-        originWhitelist={['*']}
-      />
+      {currentTransactionId ? (
+        <WebView
+          ref={webViewRef}
+          source={{ uri: checkoutUrl }}
+          style={styles.webView}
+          onMessage={handleMessage}
+          onNavigationStateChange={handleWebViewNavigationStateChange}
+          startInLoadingState={true}
+          javaScriptEnabled={true}
+          domStorageEnabled={true}
+          sharedCookiesEnabled={true}
+          cacheEnabled={false}
+          renderLoading={() => (
+            <View style={styles.loadingContainer}>
+              <ActivityIndicator size="large" color="#153E3B" />
+              <Text style={styles.loadingText}>Loading checkout page...</Text>
+            </View>
+          )}
+          onError={(syntheticEvent) => {
+            const { nativeEvent } = syntheticEvent;
+            console.error('WebView error:', nativeEvent);
+            Alert.alert(
+              'Connection Error',
+              'Failed to load the checkout page. Please check your internet connection and try again.',
+              [
+                { 
+                  text: 'Retry', 
+                  onPress: () => webViewRef.current?.reload() 
+                }
+              ]
+            );
+          }}
+          originWhitelist={['*']}
+        />
+      ) : (
+        <View style={styles.loadingContainer}>
+          <ActivityIndicator size="large" color="#153E3B" />
+          <Text style={styles.loadingText}>Preparing checkout...</Text>
+        </View>
+      )}
 
       {/* Success Modal */}
       <PremiumModal
