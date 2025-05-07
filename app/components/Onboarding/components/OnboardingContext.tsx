@@ -46,7 +46,13 @@ export function OnboardingProvider({ children }: OnboardingProviderProps): JSX.E
     }
   };
   
-  const resetOnboarding = (): void => {
+  const resetOnboarding = async() => {
+    const agentRef = doc(db, "agents", cpId);
+    const updatedData={
+      onboardingComplete: false,
+    }
+    await updateDoc(agentRef, updatedData);
+    dispatch(updateAgentDocData(updatedData));
     setCurrentStep(0);
     setOnboardingCompleted(false);
   };

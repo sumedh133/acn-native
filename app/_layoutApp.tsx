@@ -21,12 +21,12 @@ import {
   Montserrat_600SemiBold,
   Montserrat_700Bold,
 } from "@expo-google-fonts/montserrat";
-import { 
+import {
   Lato_400Regular,
   Lato_700Bold,
   Lato_300Light,
-  Lato_900Black 
-} from '@expo-google-fonts/lato';
+  Lato_900Black,
+} from "@expo-google-fonts/lato";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useDispatch } from "react-redux";
 import NetInfo from "@react-native-community/netinfo";
@@ -48,7 +48,6 @@ import {
 } from "./components/TrialStatusNotification";
 
 import useNotification from "./components/Notification/useNotification";
-
 
 // Custom header component to apply the desired styling
 const CustomHeader = ({
@@ -93,7 +92,7 @@ const CustomHeader = ({
 
 export default function LayoutApp() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-  
+
   const [showOnboarding, setShowOnboarding] = useState(false);
   const colorScheme = useColorScheme();
   const [topMargin, setTopMargin] = useState(10);
@@ -105,81 +104,71 @@ export default function LayoutApp() {
     Lato_400Regular,
     Lato_700Bold,
     Lato_300Light,
-    Lato_900Black
+    Lato_900Black,
   });
-
 
   // Check if onboarding should be shown
   const { docData: agentData } = useSelector((state: RootState) => state.agent);
 
   const calculateDaysLeft = (trialStartedAt: number): number => {
     try {
-      
       const trialStartDate = new Date(trialStartedAt * 1000);
-      
+
       if (isNaN(trialStartDate.getTime())) {
-        return 31; 
+        return 31;
       }
-      
+
       const trialEndDate = new Date(trialStartDate);
       trialEndDate.setDate(trialStartDate.getDate() + 30);
-      
-      const currentDate = new Date() ;
+
+      const currentDate = new Date();
       currentDate.setDate(currentDate.getDate());
-      
+
       const timeDiff = trialEndDate.getTime() - currentDate.getTime();
       const daysLeft = Math.ceil(timeDiff / (1000 * 3600 * 24));
-      
+
       return daysLeft;
     } catch (error) {
-      
-      return 31; 
+      return 31;
     }
   };
-  
+
   const getTrialStatus = (daysLeft: number, credits: number) => {
-    if(daysLeft<-3 ){
-      if(credits == 0){
+    if (daysLeft < -3) {
+      if (credits == 0) {
         return TrialStatusType.OUT_OF_CREDITS;
-      }
-      else{
+      } else {
         return TrialStatusType.LOW_CREDITS_WSUB;
       }
-    }
-    else if (daysLeft <= 0) {
+    } else if (daysLeft <= 0) {
       return TrialStatusType.EXPIRED;
-    } 
-    else if(credits == 0){
+    } else if (credits == 0) {
       return TrialStatusType.OUT_OF_CREDITS;
-    }
-    else if (credits <= 5) {
+    } else if (credits <= 5) {
       return TrialStatusType.LOW_CREDITS;
-    } 
-    else if (daysLeft <= 5) {
+    } else if (daysLeft <= 5) {
       return TrialStatusType.EXPIRING_SOON;
-    } 
-    else if(daysLeft<=30){
+    } else if (daysLeft <= 30) {
       return TrialStatusType.ACTIVE;
-    }
-    else{
+    } else {
       return TrialStatusType.TO_START;
     }
   };
-  
+
   const daysLeft = calculateDaysLeft(agentData?.trialStartedAt);
 
-  const showtrial = agentData?.userType === 'premium' ? false : true;
-  
+  const showtrial = agentData?.userType === "premium" ? false : true;
+
   const [trialData, setTrialData] = useState({
-    status:getTrialStatus(daysLeft, agentData?.monthlyCredits),
+    status: getTrialStatus(daysLeft, agentData?.monthlyCredits),
     daysLeft: daysLeft,
-    credits: agentData?.monthlyCredits ,
-    showNotification:showtrial,
+    credits: agentData?.monthlyCredits,
+    showNotification: showtrial,
   });
 
-  useEffect(()=>{
-    setTrialData((prev) => ({ ...prev, credits: agentData?.monthlyCredits , }));
-  },[agentData?.monthlyCredits])
+  useEffect(() => {
+    setTrialData((prev) => ({ ...prev, credits: agentData?.monthlyCredits }));
+  }, [agentData?.monthlyCredits]);
 
   const dispatch = useDispatch<ThunkDispatch<RootState, unknown, AnyAction>>();
   const router = useRouter();
@@ -213,16 +202,12 @@ export default function LayoutApp() {
 
   useEffect(() => {
     // Show onboarding modal if the user has not completed onboarding
-    if (
-      agentData &&
-      (agentData.onboardingComplete === false ||
-        agentData.onboardingComplete === undefined ||
-        agentData.onboardingComplete === null
-      )
-    ) {
-      
+    if (agentData && !agentData.onboardingComplete) {
       setShowOnboarding(true);
-    } else if (agentData && agentData.onboardingComplete === true) {
+    } else if (
+      agentData && (agentData.onboardingComplete === true ||
+      agentData.onboardingComplete === false
+    )) {
       // Close the modal when onboarding is completed
       setShowOnboarding(false);
     }
@@ -276,17 +261,17 @@ export default function LayoutApp() {
 
   return (
     <View style={{ flex: 1 }} onLayout={onLayoutRootView}>
-       {showOnboarding && isAuthenticated &&
-      <OnboardingFlow
-        visible={showOnboarding}
-        onComplete={() => {
-          setShowOnboarding(false);
-        }}
-        onClose={() => {
-          setShowOnboarding(false);
-        }}
+      {showOnboarding && isAuthenticated && (
+        <OnboardingFlow
+          visible={showOnboarding}
+          onComplete={() => {
+            setShowOnboarding(false);
+          }}
+          onClose={() => {
+            setShowOnboarding(false);
+          }}
         />
-      }
+      )}
       <Stack
         screenOptions={{
           headerStyle: { backgroundColor: "#fff" },
@@ -447,13 +432,11 @@ export default function LayoutApp() {
           }}
           initialParams={{ showFooter: false }}
         />
-       
       </Stack>
-     
+
       <Toast config={toastConfig} />
       <StatusBar style="auto" />
       <KamManager />
-      
 
       {isAuthenticated && <FooterNavigation />}
     </View>
