@@ -6,6 +6,8 @@ import {
   ScrollView,
   TouchableOpacity,
   Dimensions,
+  Platform,
+  Linking,
 } from "react-native";
 import { useRouter } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
@@ -85,10 +87,11 @@ const ComparePlans = () => {
       description: "Unlock ACN's full potential with additional features.",
       primaryButton: {
         text: "Unlock Full Access",
-        action: () => router.push({
-          pathname: '/CheckoutScreen',
-          params: { planId: 'premium' }
-        }),
+        action: () =>
+          router.push({
+            pathname: "/CheckoutScreen",
+            params: { planId: "premium" },
+          }),
       },
       secondaryButton: {
         text: "Start 1 month trial",
@@ -97,11 +100,19 @@ const ComparePlans = () => {
     },
   ];
 
+    const handleSupportClick = () => {
+      const whatsappUrl = `https://wa.me/+919415006092`;
+      Linking.openURL(whatsappUrl);
+    };
+
   return (
     <SafeAreaView className="flex-1 pb-2">
       <ScrollView className="pb-2 bg-[#EEEEEE] gap-6">
         <View className="px-4 pt-6 mt-2">
-          <Text className="text-lg  text-black text-center mb-2" style={{fontFamily: "Montserrat_700Bold"}}>
+          <Text
+            className="text-lg  text-black text-center mb-2"
+            style={{ fontFamily: "Montserrat_700Bold" }}
+          >
             Choose the right plan for you
           </Text>
         </View>
@@ -111,7 +122,7 @@ const ComparePlans = () => {
           showsHorizontalScrollIndicator={false}
           contentContainerStyle={{
             paddingHorizontal: 12,
-            paddingBottom:10,
+            paddingBottom: 10,
             gap: 16,
           }}
         >
@@ -154,7 +165,7 @@ const ComparePlans = () => {
                     {plan.tagline}
                   </Text>
                   <Text
-                    style={{fontFamily: "Montserrat_700Bold"}}
+                    style={{ fontFamily: "Montserrat_700Bold" }}
                     className={`text-[16px] mb-2 leading-[150%] tracking-[0.25px] align-middle ${
                       index === 0 ? "text-[#0A0B0A]" : "text-white"
                     }`}
@@ -172,41 +183,43 @@ const ComparePlans = () => {
                 {plan.description}
               </Text>
 
-              <View className="flex flex-row items-end mb-4 gap-2">
-                <Text
-                style={{fontFamily: "Montserrat_700Bold"}}
-                  className={`text-3xl  ${
-                    index === 0 ? "text-[#111827]" : "text-white"
-                  }`}
-                >
-                  {plan.price}
-                </Text>
-                <View>
+              {Platform.OS !== "ios" && (
+                <View className="flex flex-row items-end mb-4 gap-2">
                   <Text
-                    style={{fontFamily: "Montserrat_500Medium"}}
-                    className={`text-lg  ${
-                      index === 0 ? "text-[#6B7280]" : "text-[#CCCBCB]"
+                    style={{ fontFamily: "Montserrat_700Bold" }}
+                    className={`text-3xl  ${
+                      index === 0 ? "text-[#111827]" : "text-white"
                     }`}
                   >
-                    {plan.period}
+                    {plan.price}
                   </Text>
-                  {plan.monthlyPrice && (
+                  <View>
                     <Text
-                      style={{fontFamily: "Montserrat_500Medium"}}
-                      className={`text-[16px]  ${
+                      style={{ fontFamily: "Montserrat_500Medium" }}
+                      className={`text-lg  ${
                         index === 0 ? "text-[#6B7280]" : "text-[#CCCBCB]"
                       }`}
                     >
-                      {plan.monthlyPrice}
+                      {plan.period}
                     </Text>
-                  )}
+                    {plan.monthlyPrice && (
+                      <Text
+                        style={{ fontFamily: "Montserrat_500Medium" }}
+                        className={`text-[16px]  ${
+                          index === 0 ? "text-[#6B7280]" : "text-[#CCCBCB]"
+                        }`}
+                      >
+                        {plan.monthlyPrice}
+                      </Text>
+                    )}
+                  </View>
                 </View>
-              </View>
+              )}
 
               {/* <View className="h-px bg-gray-200 my-4" /> */}
 
               <Text
-                style={{fontFamily: "Montserrat_700Bold"}}
+                style={{ fontFamily: "Montserrat_700Bold" }}
                 className={`text-base mb-4 ${
                   index === 0 ? "text-[#000000]" : "text-white"
                 }`}
@@ -239,29 +252,52 @@ const ComparePlans = () => {
                 ))}
               </View>
 
-              <View className="gap-2 mt-auto">
-                {index === 1 && (
-                  <>
-                    <TouchableOpacity
-                      className="py-2 h-[40px] rounded-md items-center bg-white"
-                      onPress={plan.secondaryButton?.action}
-                    >
-                      <Text className="text-sm font-medium text-[#153E3B]">
-                        {plan.secondaryButton?.text}
-                      </Text>
-                    </TouchableOpacity>
+           
+{Platform.OS === "ios" ? (
+  <>
+    {index === 1 && (
+      <View className="mt-4">
+        <Text className="text-sm text-white/70">
+          <Text className="font-bold">Note:</Text>{" "}
+          <Text>
+            Credit top-ups aren't available through the app. For
+            assistance, please contact{" "}
+            <Text
+              className="text-[#007AFF] underline"
+              onPress={handleSupportClick}
+            >
+              ACN Support.
+            </Text>
+          </Text>
+        </Text>
+      </View>
+    )}
+  </>
+) : (
+  <View className="gap-2 mt-auto">
+    {index === 1 && (
+      <>
+        <TouchableOpacity
+          className="py-2 h-[40px] rounded-md items-center bg-white"
+          onPress={plan.secondaryButton?.action}
+        >
+          <Text className="text-sm font-medium text-[#153E3B]">
+            {plan.secondaryButton?.text}
+          </Text>
+        </TouchableOpacity>
 
-                    <TouchableOpacity
-                      className="py-2 h-[40px] rounded-md items-center bg-[#1E3A37] border border-white"
-                      onPress={plan.primaryButton.action}
-                    >
-                      <Text className="text-sm font-medium text-white">
-                        {plan.primaryButton.text}
-                      </Text>
-                    </TouchableOpacity>
-                  </>
-                )}
-              </View>
+        <TouchableOpacity
+          className="py-2 h-[40px] rounded-md items-center bg-[#1E3A37] border border-white"
+          onPress={plan.primaryButton.action}
+        >
+          <Text className="text-sm font-medium text-white">
+            {plan.primaryButton.text}
+          </Text>
+        </TouchableOpacity>
+      </>
+    )}
+  </View>
+)}
             </View>
           ))}
         </ScrollView>

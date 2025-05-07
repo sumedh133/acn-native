@@ -272,6 +272,17 @@ export default function LayoutApp() {
 
   return (
     <View style={{ flex: 1 }} onLayout={onLayoutRootView}>
+       {showOnboarding && isAuthenticated &&
+      <OnboardingFlow
+        visible={showOnboarding}
+        onComplete={() => {
+          setShowOnboarding(false);
+        }}
+        onClose={() => {
+          setShowOnboarding(false);
+        }}
+        />
+      }
       <Stack
         screenOptions={{
           headerStyle: { backgroundColor: "#fff" },
@@ -437,17 +448,7 @@ export default function LayoutApp() {
         />
        
       </Stack>
-      {showOnboarding &&
-      <OnboardingFlow
-        visible={true}
-        onComplete={() => {
-          setShowOnboarding(false);
-        }}
-        onClose={() => {
-          setShowOnboarding(false);
-        }}
-        />
-      }
+     
       <Toast config={toastConfig} />
       <StatusBar style="auto" />
       <KamManager />

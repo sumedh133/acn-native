@@ -34,8 +34,10 @@ const OnboardingFlowContent: React.FC<OnboardingFlowProps> = ({ visible, onCompl
   
   const completeOnboarding = async() => {
     nextStep();
+    resetOnboarding();
   };
 
+  console.log(currentStep, "le current step")
   const renderCurrentStep = (): React.ReactNode => {
     switch (currentStep) {
       case 0:
@@ -62,7 +64,8 @@ const OnboardingFlowContent: React.FC<OnboardingFlowProps> = ({ visible, onCompl
       <SafeAreaView
        style={{ flex: 1,
         justifyContent: "flex-end",
-        backgroundColor: "rgba(0, 0, 0, 0.5)",}}
+        backgroundColor: "rgba(0, 0, 0, 0.5)",
+      }}
        >
           {renderCurrentStep()}
       </SafeAreaView>

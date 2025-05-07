@@ -26,48 +26,12 @@ export function OnboardingProvider({ children }: OnboardingProviderProps): JSX.E
   const [onboardingCompleted, setOnboardingCompleted] = useState<boolean>(false);
   const dispatch = useDispatch();
   const cpId = useSelector((state: RootState) => state?.agent?.docData?.cpId);
-  
-  // Initialize state from AsyncStorage on component mount
-  useEffect(() => {
-    const initializeState = async () => {
-      try {
-        // Load onboarding step
-        const savedStep = await AsyncStorage.getItem('onboardingStep');
-        if (savedStep !== null) {
-          setCurrentStep(parseInt(savedStep, 10));
-        }
-        
-        // Load onboarding completion status
-        const completed = await AsyncStorage.getItem('onboardingCompleted');
-        if (completed === 'true') {
-          setOnboardingCompleted(true);
-        }
-      } catch (error) {
-        console.error('Error loading onboarding state:', error);
-      }
-    };
-    
-    initializeState();
-  }, []);
-  
-  const saveOnboardingProgress = async (step: number): Promise<void> => {
-    try {
-      await AsyncStorage.setItem('onboardingStep', step.toString());
-    } catch (error) {
-      console.error('Error saving onboarding progress:', error);
-    }
-  };
-  
+
   const nextStep = async() => {
     const newStep = currentStep + 1;
     setCurrentStep(newStep);
-    saveOnboardingProgress(newStep);
-    
-    // Check if this is the last step and mark onboarding as completed if needed
-    // You may need to adjust the final step number based on your flow
-    
-    if (newStep === 3) { // Assuming 3 is the final step index
-      setOnboardingCompleted(true);
+
+    if (newStep === 3) {
           const agentRef = doc(db, "agents", cpId);
           const updatedData={
             onboardingComplete: true,
@@ -78,22 +42,13 @@ export function OnboardingProvider({ children }: OnboardingProviderProps): JSX.E
           }
           await updateDoc(agentRef, updatedData);
           dispatch(updateAgentDocData(  updatedData));
-      AsyncStorage.setItem('onboardingCompleted', 'true').catch(error =>
-        
-        console.error('Error saving onboarding completion status:', error)
-      );
+          setOnboardingCompleted(true);
     }
   };
   
   const resetOnboarding = (): void => {
     setCurrentStep(0);
     setOnboardingCompleted(false);
-    saveOnboardingProgress(0);
-    
-    // Clear onboarding completed flag
-    AsyncStorage.setItem('onboardingCompleted', 'false').catch(error =>
-      console.error('Error resetting onboarding completion status:', error)
-    );
   };
   
   const value: OnboardingContextType = {

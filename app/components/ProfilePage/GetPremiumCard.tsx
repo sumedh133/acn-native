@@ -4,7 +4,7 @@ import { RootState } from "@/store/store";
 import { Ionicons } from "@expo/vector-icons";
 import { router } from "expo-router";
 import React, { useState } from "react";
-import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { Platform, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import LinearGradient from "react-native-linear-gradient";
 import { useSelector } from "react-redux";
 import OnboardingFlow from "../Onboarding";
@@ -41,7 +41,6 @@ const GetPremiumCard = ({
         colors={["#153E3B", "#05635C"]}
         start={{ x: 0, y: 0 }}
         end={{ x: 1, y: 0 }}
-        
         style={styles.gradientContainer}
       >
         <View className="flex-row justify-between">
@@ -53,7 +52,7 @@ const GetPremiumCard = ({
               ACN Premium
             </Text>
             <Text className="text-white text-xl font-extrabold mt-1">
-              ₹10,000/year!
+              {Platform.OS !== 'ios' && "₹10,000/year!"}
             </Text>
           </View>
           <View className="justify-center">
@@ -67,7 +66,7 @@ const GetPremiumCard = ({
 
         <View className="border-t border-[#FAFAFA] my-4" />
 
-        <View className="mb-4">
+        <View className="mb-6">
           <View className="flex-row items-center mb-2">
             <View className="w-2 h-2 bg-white font-normal rounded-full mr-2" />
             <Text className="text-white text-sm" style={{ fontFamily: "Lato_400Regular" }}>Unlimited enquiries</Text>
@@ -82,29 +81,34 @@ const GetPremiumCard = ({
           </View>
         </View>
 
-        <TouchableOpacity
-          className="bg-white py-3 rounded-md mb-2"
-          onPress={handleStartTrial}
-        >
-          <Text
-            className="text-center text-sm text-[#153E3B]"
-            style={{ fontFamily: "Lato_700Bold" }}
+        {Platform.OS !== 'ios' && !trialUsed ? (
+          <TouchableOpacity
+            className=" py-3 rounded-md mb-2"
+            onPress={handleStartTrial}
           >
-            {!trialUsed ? "1 month free trial" : "Get Premium"}
-          </Text>
-        </TouchableOpacity>
+            <Text
+              className="text-center text-sm text-[#153E3B]"
+              style={{ fontFamily: "Lato_700Bold" }}
+            >
+              {!trialUsed && "1 month free trial"}
+            </Text>
+          </TouchableOpacity>
+        ) : null}
 
         <TouchableOpacity
-          className="flex-row justify-center items-center gap-1"
+          className={`flex-row justify-center items-center gap-1 ${
+            Platform.OS === 'ios' ? "bg-white  py-3 rounded-md mb-2" : "text-white"
+          }`}
           onPress={() => handleClick("compare_plans")}
         >
-          <Text
-            className="text-white text-sm"
-            style={{ fontFamily: "Lato_700Bold" }}
-          >
-            Compare Plans
+          <Text className="text-sm" style={{ fontFamily: "Lato_700Bold" }}>
+            { Platform.OS === 'ios' ? "View Details" : "Compare Plans"}
           </Text>
-          <Ionicons name="arrow-forward" size={18} color="white" />
+          <Ionicons
+            name="arrow-forward"
+            size={18}
+            color={Platform.OS === 'ios' ? "#10302D" : "white"}
+          />
         </TouchableOpacity>
       </LinearGradient>
       {showOnboarding && (
@@ -130,7 +134,7 @@ const styles = StyleSheet.create({
     padding: 20,
     overflow: "hidden",
   },
- 
+
   card: {
     display: "flex",
     flexDirection: "column",
