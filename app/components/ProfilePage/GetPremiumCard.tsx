@@ -4,7 +4,7 @@ import { RootState } from "@/store/store";
 import { Ionicons } from "@expo/vector-icons";
 import { router } from "expo-router";
 import React, { useState } from "react";
-import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { Platform, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import LinearGradient from "react-native-linear-gradient";
 import { useSelector } from "react-redux";
 import OnboardingFlow from "../Onboarding";
@@ -50,7 +50,7 @@ const GetPremiumCard = ({
               ACN Premium
             </Text>
             <Text className="text-white text-xl font-extrabold mt-1">
-              ₹10,000/year!
+              {Platform.OS !== 'ios' && "₹10,000/year!"}
             </Text>
           </View>
           <View className="justify-center">
@@ -79,7 +79,7 @@ const GetPremiumCard = ({
           </View>
         </View>
 
-        {!trialUsed ? (
+        {Platform.OS !== 'ios' && !trialUsed ? (
           <TouchableOpacity
             className=" py-3 rounded-md mb-2"
             onPress={handleStartTrial}
@@ -95,17 +95,17 @@ const GetPremiumCard = ({
 
         <TouchableOpacity
           className={`flex-row justify-center items-center gap-1 ${
-            trialUsed ? "bg-white  py-3 rounded-md mb-2" : "text-white"
+            Platform.OS === 'ios' ? "bg-white  py-3 rounded-md mb-2" : "text-white"
           }`}
           onPress={() => handleClick("compare_plans")}
         >
           <Text className="text-sm" style={{ fontFamily: "Lato_700Bold" }}>
-            {trialUsed ? "View Details" : "Compare Plans"}
+            { Platform.OS === 'ios' ? "View Details" : "Compare Plans"}
           </Text>
           <Ionicons
             name="arrow-forward"
             size={18}
-            color={trialUsed ? "#10302D" : "white"}
+            color={Platform.OS === 'ios' ? "#10302D" : "white"}
           />
         </TouchableOpacity>
       </LinearGradient>
