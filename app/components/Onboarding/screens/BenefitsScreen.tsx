@@ -16,8 +16,8 @@ const BenefitsScreen: React.FC<BenefitsScreenProps> = ({
 }) => {
   const benefits: string[] = [
     "100 Enquiries/Month",
-    "Unlimited inventory listing every month (no empty limits)",
-    "⁠⁠⁠Unlimited requirement listings every month (no enquiry limits)",
+    "Unlimited inventory listings every month (no enquiry limits)",
+    "Unlimited requirement listings every month (no enquiry limits)",
     "Priority KAM Access",
     "Exclusive Access to Realestate Market Data and Marketplace Reports",
   ];
