@@ -99,7 +99,7 @@ const PaymentRecords: React.FC = () => {
       return {
         id: paymentId,
         title: isPremiumPlan ? "ACN Premium Plan" : "Enquiry Booster Pack",
-        amount: `₹${paymentAmount.toFixed(2)}`,
+        amount: `₹${(paymentAmount/100).toFixed(2)}`,
         date: dateString,
       };
     });
