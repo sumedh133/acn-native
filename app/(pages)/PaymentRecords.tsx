@@ -7,6 +7,7 @@ import {
   SafeAreaView,
   StatusBar,
   FlatList,
+  Platform,
 } from "react-native";
 import { useSelector } from "react-redux";
 import { RootState } from "@/store/store";
@@ -99,7 +100,7 @@ const PaymentRecords: React.FC = () => {
       return {
         id: paymentId,
         title: isPremiumPlan ? "ACN Premium Plan" : "Enquiry Booster Pack",
-        amount: `₹${paymentAmount.toFixed(2)}`,
+        amount: `₹${(paymentAmount/100).toFixed(2)}`,
         date: dateString,
       };
     });
@@ -134,6 +135,7 @@ const PaymentRecords: React.FC = () => {
           <Text style={styles.emptyText}>No payment records found</Text>
         </View>
       )}
+      {Platform.OS === "ios" ? (
       <View style={styles.NoteView}>
         <Text
           style={{
@@ -150,6 +152,7 @@ const PaymentRecords: React.FC = () => {
           </Text>
         </Text>
       </View>
+      ) : null}
     </SafeAreaView>
   );
 };
