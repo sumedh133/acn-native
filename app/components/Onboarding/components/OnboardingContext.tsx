@@ -6,7 +6,7 @@ import { RootState } from '@/store/store';
 import { doc, updateDoc } from 'firebase/firestore';
 import { db } from '@/app/config/firebase';
 import { updateAgentDocData } from '@/store/slices/agentSlice';
-import { formatUnixDateTime } from '@/app/helpers/getUnixDateTime';
+import { formatUnixDateTime, formatUnixDateWithMonth } from '@/app/helpers/getUnixDateTime';
 
 interface OnboardingContextType {
   currentStep: number;
@@ -65,14 +65,16 @@ export function OnboardingProvider({ children }: OnboardingProviderProps): JSX.E
     
     // Check if this is the last step and mark onboarding as completed if needed
     // You may need to adjust the final step number based on your flow
+    
     if (newStep === 3) { // Assuming 3 is the final step index
       setOnboardingCompleted(true);
           const agentRef = doc(db, "agents", cpId);
           const updatedData={
             onboardingComplete: true,
-            trialStartedAt: formatUnixDateTime(new Date()),
+            trialStartedAt: Math.floor(Date.now()/1000),
             monthlyCredits: 100,
-            userType: "Trial"
+            userType: "Trial",
+            trialUsed:true,
           }
           await updateDoc(agentRef, updatedData);
           dispatch(updateAgentDocData(  updatedData));

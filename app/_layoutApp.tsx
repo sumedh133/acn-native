@@ -46,10 +46,9 @@ import {
   TrialStatusNotification,
   TrialStatusType,
 } from "./components/TrialStatusNotification";
-import PremiumModal from "./modals/PremiumModal";
-import PaymentUnsuccessfulModal from "./modals/PaymentUnsuccessfulModal";
+
 import useNotification from "./components/Notification/useNotification";
-import { formatUnixDate} from "./helpers/getUnixDateTime";
+
 
 // Custom header component to apply the desired styling
 const CustomHeader = ({
@@ -94,7 +93,7 @@ const CustomHeader = ({
 
 export default function LayoutApp() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const [profileModalVisible, setProfileModalVisible] = useState(false);
+  
   const [showOnboarding, setShowOnboarding] = useState(false);
   const colorScheme = useColorScheme();
   const [topMargin, setTopMargin] = useState(10);
@@ -113,43 +112,69 @@ export default function LayoutApp() {
   // Check if onboarding should be shown
   const { docData: agentData } = useSelector((state: RootState) => state.agent);
 
-  const calculateDaysLeft = (trialStartedAt: string) => {
-    const trialDate = new Date(trialStartedAt); 
-    const currentDate = new Date(); 
-  
-   
-    if (isNaN(trialDate.getTime())) {
-      return 28; 
+  const calculateDaysLeft = (trialStartedAt: number): number => {
+    try {
+      
+      const trialStartDate = new Date(trialStartedAt * 1000);
+      
+      if (isNaN(trialStartDate.getTime())) {
+        return 31; 
+      }
+      
+      const trialEndDate = new Date(trialStartDate);
+      trialEndDate.setDate(trialStartDate.getDate() + 30);
+      
+      const currentDate = new Date() ;
+      currentDate.setDate(currentDate.getDate());
+      
+      const timeDiff = trialEndDate.getTime() - currentDate.getTime();
+      const daysLeft = Math.ceil(timeDiff / (1000 * 3600 * 24));
+      
+      return daysLeft;
+    } catch (error) {
+      
+      return 31; 
     }
-  
-    // Calculate days left
-    const timeDiff = trialDate.getTime() - currentDate.getTime();
-    const daysLeft = Math.floor(timeDiff / (1000 * 3600 * 24)); // Convert milliseconds to days
-  
-    return daysLeft >= 0 ? daysLeft : 0; 
   };
   
-  
-  
   const getTrialStatus = (daysLeft: number, credits: number) => {
-    if (daysLeft <= 0) {
+    if(daysLeft<-3 ){
+      if(credits == 0){
+        return TrialStatusType.OUT_OF_CREDITS;
+      }
+      else{
+        return TrialStatusType.LOW_CREDITS_WSUB;
+      }
+    }
+    else if (daysLeft <= 0) {
       return TrialStatusType.EXPIRED;
-    } else if (credits <= 5) {
+    } 
+    else if(credits == 0){
+      return TrialStatusType.OUT_OF_CREDITS;
+    }
+    else if (credits <= 5) {
       return TrialStatusType.LOW_CREDITS;
-    } else if (daysLeft <= 7) {
+    } 
+    else if (daysLeft <= 5) {
       return TrialStatusType.EXPIRING_SOON;
-    } else {
+    } 
+    else if(daysLeft<=30){
       return TrialStatusType.ACTIVE;
+    }
+    else{
+      return TrialStatusType.TO_START;
     }
   };
   
   const daysLeft = calculateDaysLeft(agentData?.trialStartedAt);
+
+  const showtrial = agentData?.userType === 'premium' ? false : true;
   
   const [trialData, setTrialData] = useState({
-    status: getTrialStatus(daysLeft, agentData?.monthlyCredits),
+    status:getTrialStatus(daysLeft, agentData?.monthlyCredits),
     daysLeft: daysLeft,
-    credits: agentData?.monthlyCredits,
-    showNotification: agentData?.userType === "Trial" ? true: false,
+    credits: agentData?.monthlyCredits ,
+    showNotification:showtrial,
   });
 
   const dispatch = useDispatch<ThunkDispatch<RootState, unknown, AnyAction>>();
@@ -263,14 +288,15 @@ export default function LayoutApp() {
                   onMenuPress={onMenuPress}
                   headerBackVisible={headerBackVisible}
                 />
-                { trialData.showNotification &&
+                
                 <TrialStatusNotification
                   status={trialData.status}
                   daysLeft={trialData.daysLeft}
                   credits={trialData.credits}
+                  showNotification = {trialData.showNotification}
                   onDismiss={handleDismiss}
                 />
-                }
+                
               </>
             );
           },

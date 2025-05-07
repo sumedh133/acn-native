@@ -22,6 +22,7 @@ const GetPremiumCard = ({
     useSelector(
       (state: RootState) => state?.agent?.docData?.trialUsed
     ) || false;
+    
 
   const handleStartTrial = () => {
     if (!trialUsed) {
@@ -69,15 +70,15 @@ const GetPremiumCard = ({
         <View className="mb-4">
           <View className="flex-row items-center mb-2">
             <View className="w-2 h-2 bg-white font-normal rounded-full mr-2" />
-            <Text className="text-white">Unlimited enquiries</Text>
+            <Text className="text-white text-sm" style={{ fontFamily: "Lato_400Regular" }}>Unlimited enquiries</Text>
           </View>
           <View className="flex-row items-center mb-2">
             <View className="w-2 h-2 bg-white rounded-full mr-2" />
-            <Text className="text-white">Priority KAM support</Text>
+            <Text className="text-white text-sm" style={{ fontFamily: "Lato_400Regular" }}>Priority KAM support</Text>
           </View>
           <View className="flex-row items-center">
             <View className="w-2 h-2 bg-white rounded-full mr-2" />
-            <Text className="text-white">Exclusive market features</Text>
+            <Text className="text-white text-sm" style={{ fontFamily: "Lato_400Regular" }}>Exclusive market features</Text>
           </View>
         </View>
 
