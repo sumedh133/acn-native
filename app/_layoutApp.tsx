@@ -95,7 +95,7 @@ const CustomHeader = ({
 export default function LayoutApp() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [profileModalVisible, setProfileModalVisible] = useState(false);
-  const [showOnboarding, setShowOnboarding] = useState(false);
+  const [showOnboarding, setShowOnboarding] = useState(true);
   const colorScheme = useColorScheme();
   const [topMargin, setTopMargin] = useState(10);
   const [fontsLoaded] = useFonts({

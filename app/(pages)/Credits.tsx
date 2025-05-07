@@ -1,5 +1,12 @@
 import React, { useEffect, useState } from "react";
-import { Text, View, ScrollView, TouchableOpacity } from "react-native";
+import {
+  Text,
+  View,
+  ScrollView,
+  TouchableOpacity,
+  Platform,
+  Linking,
+} from "react-native";
 import { useRouter } from "expo-router";
 import { useSelector } from "react-redux";
 import { RootState } from "@/store/store";
@@ -8,21 +15,22 @@ import CoinIcon from "@/assets/icons/svg/Sidebar/CoinIcon";
 import GetPremiumCard from "../components/ProfilePage/GetPremiumCard";
 import LinearGradient from "react-native-linear-gradient";
 
-import CreditCoin from '../../assets/icons/CreditCoin.svg'
+import CreditCoin from "../../assets/icons/CreditCoin.svg";
 
+import { Property, Enquiry, EnquiryWithProperty } from "../types";
 import {
-  Property,
-  Enquiry,
-  EnquiryWithProperty,
-  
-} from "../types";
-import { collection, DocumentData, documentId, getDocs, onSnapshot, query, where } from "firebase/firestore";
+  collection,
+  DocumentData,
+  documentId,
+  getDocs,
+  onSnapshot,
+  query,
+  where,
+} from "firebase/firestore";
 import { db } from "../config/firebase";
 import { formatUnixDate } from "../helpers/getUnixDateTime";
 
-
 interface UseEnquiriesResult {
-
   myEnquiries: EnquiryWithProperty[];
 }
 
@@ -115,9 +123,7 @@ const useEnquiries = (): UseEnquiriesResult => {
     }
   }, [cpId]);
 
-  
-
-  return { myEnquiries};
+  return { myEnquiries };
 };
 
 const Credits = () => {
@@ -128,7 +134,7 @@ const Credits = () => {
   const userType: string | null =
     useSelector((state: RootState) => state?.agent?.docData?.userType) || "";
 
-    const { myEnquiries } = useEnquiries();
+  const { myEnquiries } = useEnquiries();
 
   const handleBackPress = () => {
     router.back();
@@ -136,12 +142,10 @@ const Credits = () => {
 
   const handleAddCredits = () => {
     router.push({
-      pathname: '/CheckoutScreen',
-      params: { planId: 'booster' }
+      pathname: "/CheckoutScreen",
+      params: { planId: "booster" },
     });
   };
-
- 
 
   const handleComparePlans = () => {
     // Navigate to plans comparison
@@ -150,10 +154,14 @@ const Credits = () => {
 
   const handleViewMore = () => {
     router.push({
-      pathname: '/dashboardTab',
-      params: { tab: 'enquiries' }
+      pathname: "/dashboardTab",
+      params: { tab: "enquiries" },
     });
-    
+  };
+
+  const handleSupportClick = () => {
+    const whatsappUrl = `https://wa.me/+919415006092`;
+    Linking.openURL(whatsappUrl);
   };
 
   return (
@@ -162,11 +170,10 @@ const Credits = () => {
         <View className="p-4 flex flex-col space-y-4 ">
           {/* Credits Card */}
           <LinearGradient
-            
-            start={{ x: 0, y: 0 }} 
-            end={{ x: 1, y: 0 }} 
-            colors={["#FFFFFF", "#FFF8D4"]} 
-            locations={[0.4904, 1.0]} 
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 0 }}
+            colors={["#FFFFFF", "#FFF8D4"]}
+            locations={[0.4904, 1.0]}
             style={{
               borderRadius: 12,
               padding: 20,
@@ -176,20 +183,25 @@ const Credits = () => {
               overflow: "hidden",
             }}
           >
-            <Text className="text-sm text-[#595959]" style={{fontFamily:'Lato_700Bold'}}>
+            <Text
+              className="text-sm text-[#595959]"
+              style={{ fontFamily: "Lato_700Bold" }}
+            >
               Available Credits
             </Text>
             <Text
               className=" text-4xl  mt-1 mb-1"
               style={{ fontFamily: "Montserrat_700Bold" }}
             >
-             {monthlyCredits}
+              {monthlyCredits}
             </Text>
-            <Text className=" text-xs text-gray-600 max-w-[80%]" style={{fontFamily:'Lato_400Regular'}}>
+            <Text
+              className=" text-xs text-gray-600 max-w-[80%]"
+              style={{ fontFamily: "Lato_400Regular" }}
+            >
               Did you know? On Avg. agents spend 15 credits/week
             </Text>
             <View className="absolute right-5 top-5">
-              
               <CreditCoin width={70} height={70} />
             </View>
           </LinearGradient>
@@ -200,46 +212,70 @@ const Credits = () => {
               className=" text-lg text-[#433F3E] mb-2"
               style={{ fontFamily: "Montserrat_700Bold" }}
             >
-              Need more enquiries?
+              {Platform.OS === "ios"
+                ? "Enquiry Booster Pack"
+                : "Need more enquiries?"}
             </Text>
             <Text className="font-medium text-sm text-[#433F3E] mb-4">
-              Credits are needed to get agent's contact details on ACN Platform.
+              {Platform.OS === "ios"
+                ? "Unlock agent contacts with 5 non-expiring credits"
+                : "Credits are needed to get agent's contact details on ACN Platform."}
             </Text>
 
-            <View className="flex-row justify-between items-center mb-4">
-              <View>
-                <Text
-                  className="font-heading text-[22px]  text-[#153E3B]"
-                  style={{ fontFamily: "Montserrat_700Bold" }}
-                >
-                  ₹249
-                </Text>
-                <Text className="font-medium text-xs text-[#153E3B]">
-                  Price is all-inclusive**
-                </Text>
-              </View>
+            {Platform.OS === "ios" ? null : (
+              <View className="flex-row justify-between items-center mb-4">
+                <View>
+                  <Text
+                    className="font-heading text-[22px]  text-[#153E3B]"
+                    style={{ fontFamily: "Montserrat_700Bold" }}
+                  >
+                    ₹249
+                  </Text>
+                  <Text className="font-medium text-xs text-[#153E3B]">
+                    Price is all-inclusive**
+                  </Text>
+                </View>
 
-              <TouchableOpacity
-                className="bg-[#153E3B] rounded-lg py-3.5 px-5"
-                onPress={handleAddCredits}
-              >
-                <Text
-                  className="text-white text-sm"
-                  style={{ fontFamily: "Montserrat_600SemiBold" }}
+                <TouchableOpacity
+                  className="bg-[#153E3B] rounded-lg py-3.5 px-5"
+                  onPress={handleAddCredits}
                 >
-                  Add 5 Credits
-                </Text>
-              </TouchableOpacity>
-            </View>
+                  <Text
+                    className="text-white text-sm"
+                    style={{ fontFamily: "Montserrat_600SemiBold" }}
+                  >
+                    Add 5 Credits
+                  </Text>
+                </TouchableOpacity>
+              </View>
+            )}
 
             <View className="bg-[#1B665D1A] rounded-lg p-3 flex-row justify-center items-center">
               <View className="w-5 h-5 rounded-full bg-white border border-gray-300 justify-center items-center mr-2">
                 <Text className="text-xs text-[#757575]">i</Text>
               </View>
-              <Text className="text-sm" style={{fontFamily:"Lato_700Bold"}}>
+              <Text className="text-sm" style={{ fontFamily: "Lato_700Bold" }}>
                 5 credits = 5 fresh leads
               </Text>
             </View>
+
+            {Platform.OS === "ios" ? (
+              <View className="mt-4">
+                <Text className="text-sm">
+                  <Text className="font-bold">Note:</Text>{" "}
+                  <Text className="pl-2">
+                    Credit top-ups aren’t available through the app. For
+                    assistance, please contact{" "}
+                    <Text
+                      className="ml-2 text-[#007AFF] underline"
+                      onPress={handleSupportClick}
+                    >
+                      ACN Support.
+                    </Text>
+                  </Text>
+                </Text>
+              </View>
+            ) : null}
           </View>
 
           {userType !== "premium" && (
@@ -265,29 +301,35 @@ const Credits = () => {
             </Text>
 
             {/* Enquiry Items */}
-            {myEnquiries && myEnquiries.slice(0, 3).map((enquiry, index) => (
-              <View key={index} className="mb-3">
-                <View className="flex-row justify-between items-start">
-                  <View className="flex-1">
-                    <Text className="font-lato text-sm font-medium text-gray-900">
-                      {enquiry.property?.nameOfTheProperty || "Property Name Not Available"}
-                    </Text>
-                    <Text className="font-lato text-xs text-gray-500 mt-1">
-                      {enquiry.added? formatUnixDate(enquiry.added) : "Date not available"}
-                    </Text>
+            {myEnquiries &&
+              myEnquiries.slice(0, 3).map((enquiry, index) => (
+                <View key={index} className="mb-3">
+                  <View className="flex-row justify-between items-start">
+                    <View className="flex-1">
+                      <Text className="font-lato text-sm font-medium text-gray-900">
+                        {enquiry.property?.nameOfTheProperty ||
+                          "Property Name Not Available"}
+                      </Text>
+                      <Text className="font-lato text-xs text-gray-500 mt-1">
+                        {enquiry.added
+                          ? formatUnixDate(enquiry.added)
+                          : "Date not available"}
+                      </Text>
+                    </View>
+
+                    <View className="flex-row items-center">
+                      <Text className="font-montserrat-bold text-base font-bold text-red-600 mr-2">
+                        - 1
+                      </Text>
+                      <CoinIcon width={16} height={16} />
+                    </View>
                   </View>
 
-                  <View className="flex-row items-center">
-                    <Text className="font-montserrat-bold text-base font-bold text-red-600 mr-2">
-                      - 1
-                    </Text>
-                    <CoinIcon width={16} height={16} />
-                  </View>
+                  {index < 2 && myEnquiries.length > 1 && (
+                    <View className="h-px bg-gray-200 my-3" />
+                  )}
                 </View>
-
-                {index < 2 && myEnquiries.length > 1 && <View className="h-px bg-gray-200 my-3" />}
-              </View>
-            ))}
+              ))}
 
             {/* Show message if no enquiries available */}
             {(!myEnquiries || myEnquiries.length === 0) && (
