@@ -41,11 +41,9 @@ const ConfirmModal: React.FC<ConfirmModalProps> = ({
         <Toast config={toastConfig} />
         <View style={styles.modalContainer}>
           {generatingEnquiry ? (
-            <View style={styles.row}>
-              <Text style={styles.title}>
-                Generating Enquiry! Please wait...
-              </Text>
-              <ActivityIndicator size="small" color="#153E3B" />
+            <View style={styles.loadingContainer}>
+              <ActivityIndicator size="large" color="#153E3B" />
+              <Text style={styles.loadingText}>Processing your enquiry...</Text>
             </View>
           ) : (
             <>
@@ -88,10 +86,17 @@ const styles = StyleSheet.create({
     width: "100%",
     maxWidth: 340,
   },
-  row: {
-    flexDirection: "row",
+  loadingContainer: {
     alignItems: "center",
-    gap: 10,
+    justifyContent: "center",
+    padding: 20,
+    gap: 16,
+  },
+  loadingText: {
+    fontSize: 16,
+    fontFamily: "Montserrat_600SemiBold",
+    color: "#153E3B",
+    textAlign: "center",
   },
   title: {
     fontSize: 16,

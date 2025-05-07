@@ -149,6 +149,7 @@ export default function PropertyDetailsScreen() {
   const [isShareModalOpen, setIsShareModalOpen] = useState(false);
   const [isReviewModalOpen, setIsReviewModalOpen] = useState(false);
   const [creditLimitModalVisible, setCreditLimitModalVisible] = useState(false);
+  const [isGeneratingEnquiry, setIsGeneratingEnquiry] = useState(false);
 
   const enquiryConfirmed = useRef<Boolean>(false);
 
@@ -292,21 +293,20 @@ export default function PropertyDetailsScreen() {
     }
 
     if (!(monthlyCredits > 0)) {
-      // showErrorToast(
-      //   "You don't have enough credits. Please contact your account manager."
-      // );
       setCreditLimitModalVisible(true);
       setIsConfirmModelOpen(false);
       return;
     }
 
     try {
+      setIsGeneratingEnquiry(true);
       const nextEnqId = await generateNextEnqId();
       if (!nextEnqId) {
         showErrorToast(
           "Failed to generate the next Enquiry ID. Please try again later."
         );
         setIsConfirmModelOpen(false);
+        setIsGeneratingEnquiry(false);
         return;
       }
 
@@ -319,6 +319,7 @@ export default function PropertyDetailsScreen() {
 
       // ✅ Close the confirmation modal
       setIsConfirmModelOpen(false);
+      setIsGeneratingEnquiry(false);
 
       if (Platform.OS === "ios") {
         enquiryConfirmed.current = true;
@@ -329,6 +330,7 @@ export default function PropertyDetailsScreen() {
       showErrorToast(
         "An error occurred while processing your enquiry. Please try again."
       );
+      setIsGeneratingEnquiry(false);
     }
   };
 
@@ -681,7 +683,7 @@ export default function PropertyDetailsScreen() {
             enquiryConfirmed.current = false;
           }
         }}
-        generatingEnquiry={false}
+        generatingEnquiry={isGeneratingEnquiry}
         visible={isConfirmModelOpen}
       />
 

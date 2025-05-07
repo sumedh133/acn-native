@@ -202,12 +202,14 @@ export default function LayoutApp() {
 
   useEffect(() => {
     // Show onboarding modal if the user has not completed onboarding
-    if (agentData && !agentData.onboardingComplete) {
+    console.log(agentData?.onboardingComplete, "inside useEffect");
+    if (agentData && agentData?.onboardingComplete === undefined) {
       setShowOnboarding(true);
     } else if (
-      agentData && (agentData.onboardingComplete === true ||
-      agentData.onboardingComplete === false
-    )) {
+      agentData &&
+      (agentData?.onboardingComplete === true ||
+        agentData?.onboardingComplete === false)
+    ) {
       // Close the modal when onboarding is completed
       setShowOnboarding(false);
     }
@@ -259,6 +261,10 @@ export default function LayoutApp() {
     setTrialData((prev) => ({ ...prev, showNotification: false }));
   };
 
+  const handleOnBoarding = () => {
+    setShowOnboarding(false);
+  };
+
   return (
     <View style={{ flex: 1 }} onLayout={onLayoutRootView}>
       {showOnboarding && isAuthenticated && (
@@ -288,12 +294,13 @@ export default function LayoutApp() {
                   onMenuPress={onMenuPress}
                   headerBackVisible={headerBackVisible}
                 />
-                
-                {agentData?.userType !=='premium' &&<TrialStatusNotification
-                  showNotification = {trialData.showNotification}
-                  onDismiss={handleDismiss}
-                />}
-                
+
+                {agentData?.userType !== "premium" && (
+                  <TrialStatusNotification
+                    showNotification={trialData.showNotification}
+                    onDismiss={handleDismiss}
+                  />
+                )}
               </>
             );
           },
