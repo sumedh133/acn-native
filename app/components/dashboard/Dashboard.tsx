@@ -80,9 +80,16 @@ import AddRequirementsIcon from "@/assets/icons/svg/Footer/AddRequirementsIcon";
 import AddInventoryIcon from "@/assets/icons/svg/Footer/AddInventoryIcon";
 import { propertyUserStatus } from "@/app/constants/PropertyConstants";
 import { getUnixDateTime } from "@/app/helpers/getUnixDateTime";
+import { RouteProp, useRoute } from '@react-navigation/native';
 
 const StyledView = styled(View);
 const StyledScrollView = styled(ScrollView);
+
+type DashboardRouteProp = RouteProp<{
+  Dashboard: {
+    tab?: string;
+  };
+}>;
 
 type DashboardProps = {
   myEnquiries: EnquiryWithProperty[];
@@ -104,7 +111,11 @@ export default function Dashboard({
   myListing,
   loading,
 }: DashboardProps) {
-  const [activeTab, setActiveTab] = useState("inventories");
+
+  const route = useRoute<DashboardRouteProp>();
+  const tab = route.params?.tab || 'inventories';
+
+  const [activeTab, setActiveTab] = useState(tab || "inventories" );
   const [properties, setProperties] = useState<Property[] | []>([]);
   const [requirements, setRequirements] = useState<Requirement[] | []>([]);
   const [enquiries, setEnquiries] = useState<EnquiryWithProperty[] | []>([]);
@@ -213,24 +224,8 @@ export default function Dashboard({
     if (activeTab === "inventories") {
       return (
         <>
-          {myProperties.length === 0 ? (
-            propertiesTab === "listed" ? (
-              <EmptyTabContent
-                text="No Inventory Added"
-                sub_text="Your dashboard is waiting for your first inventory! Start now and showcase your offerings to potential buyer agents."
-                icon={<AddInventoryIcon width={24} height={24} />}
-                buttonText="Add Inventory"
-                handleOnPress={openAddInventory}
-                loading={loading?.propertiesLoading || bufferring}
-              />
-            ) : (
-              <EmptyTabContent
-                text="No Inventory Added"
-                sub_text="Your dashboard is waiting for your first inventory! Start now and showcase your offerings to potential buyer agents."
-                loading={loading?.listingLoading || bufferring}
-              />
-            )
-          ) : propertiesTab === "listed" ? (
+          {propertiesTab === "listed" ? (
+            // Listed tab logic
             properties.length === 0 || bufferring ? (
               <EmptyTabContent
                 text="No Inventory"
@@ -253,36 +248,39 @@ export default function Dashboard({
                 })}
               </View>
             )
-          ) : listings.filter((listing) => listing.status === propertiesTab)
-              .length === 0 || bufferring ? (
-            <EmptyTabContent
-              text="No Inventory"
-              sub_text={propertyUserStatus?.[propertiesTab]?.emptySubText}
-              loading={loading?.listingLoading || bufferring}
-            />
           ) : (
-            <View className="mx-3 mb-3">
-              {listings
-                .filter((listing) => listing.status === propertiesTab)
-                .slice(0, batchSize)
-                .map((listing, index) => {
-                  return (
-                    <PropertyCard
-                      key={listing.propertyId}
-                      property={listing}
-                      onStatusChange={() => {}}
-                      index={index}
-                      totalCount={Math.min(
-                        batchSize,
-                        listings.filter(
-                          (listing) => listing.status === propertiesTab
-                        ).length
-                      )}
-                      isListing={true}
-                    />
-                  );
-                })}
-            </View>
+            // Other tabs logic - check filtered listings instead of myProperties
+            listings.filter((listing) => listing.status === propertiesTab).length === 0 || 
+            bufferring ? (
+              <EmptyTabContent
+                text="No Inventory"
+                sub_text={propertyUserStatus?.[propertiesTab]?.emptySubText}
+                loading={loading?.listingLoading || bufferring}
+              />
+            ) : (
+              <View className="mx-3 mb-3">
+                {listings
+                  .filter((listing) => listing.status === propertiesTab)
+                  .slice(0, batchSize)
+                  .map((listing, index) => {
+                    return (
+                      <PropertyCard
+                        key={listing.propertyId}
+                        property={listing}
+                        onStatusChange={() => {}}
+                        index={index}
+                        totalCount={Math.min(
+                          batchSize,
+                          listings.filter(
+                            (listing) => listing.status === propertiesTab
+                          ).length
+                        )}
+                        isListing={true}
+                      />
+                    );
+                  })}
+              </View>
+            )
           )}
         </>
       );

@@ -94,8 +94,8 @@ export default function CustomCurrentRefinements({
 
 const styles = StyleSheet.create({
   container: {
-    marginTop: 8,
-    marginBottom: 8,
+    // marginTop: 8,
+    // marginBottom: 8,
   },
   content: {
     flexDirection: "row",

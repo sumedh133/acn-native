@@ -1,8 +1,9 @@
 import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
-import React from "react";
+import React, { useState } from "react";
 import { ListingProperty } from "@/app/types";
 import TrashIcon from "@/assets/icons/svg/Common/TrashIcon";
 import { formatUnixDate, getUnixDateTime } from "@/app/helpers/getUnixDateTime";
+import DeleteDraft from "@/app/modals/DeleteDraft";
 
 const DraftCard = ({
   item,
@@ -13,6 +14,8 @@ const DraftCard = ({
   deleteDraft: (id: string) => void;
   pressCard: (item: ListingProperty) => void;
 }) => {
+  const[deleteModal, setDeleteModal] = useState(false);
+  const [propertyId, setPropertyId] = useState("")
   const cardSubText = React.useMemo(() => {
     const parts = [];
 
@@ -30,7 +33,13 @@ const DraftCard = ({
     // Join parts with a single space
     return parts.join(" ");
   }, [item]);
+
+  const handleDeleteModalClicked = (property: string) => {
+    setPropertyId(property);
+    setDeleteModal(true);
+  }
   return (
+    <View>
     <TouchableOpacity
       style={styles.propertyItem}
       onPress={() => pressCard(item)}
@@ -50,12 +59,18 @@ const DraftCard = ({
       </View>
       <TouchableOpacity
         onPress={() => {
-          item.propertyId && deleteDraft(item.propertyId);
+          item.propertyId && handleDeleteModalClicked(item.propertyId);
         }}
       >
         <TrashIcon />
       </TouchableOpacity>
     </TouchableOpacity>
+    <DeleteDraft
+        visible={deleteModal}
+        onClose={() => setDeleteModal(false)}
+        handleDelete={() => deleteDraft(propertyId)}
+      />
+    </View>
   );
 };
 

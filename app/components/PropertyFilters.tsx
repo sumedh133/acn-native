@@ -133,6 +133,7 @@ const styles = StyleSheet.create({
     padding: 16,
     // marginBottom: 16,
     borderRadius: 16,
+    // gap: 6,
   },
   contentWrapper: {
     flexDirection: "column",
@@ -212,9 +213,9 @@ const styles = StyleSheet.create({
     color: "#374151",
   },
   refinements: {
-    // marginTop: 8,
+    marginTop: 8,
     flexDirection: "row",
-    left: -15,
+    left: -12,
   },
   mobileContent: {
     flexDirection: "row",

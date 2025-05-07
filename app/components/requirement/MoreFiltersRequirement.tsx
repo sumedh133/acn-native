@@ -181,7 +181,7 @@ const MoreFiltersRequirement = ({
         toggleFiltersVisibility();
       }}
     >
-      <View
+      <SafeAreaView
         className="flex-1 bg-white"
         style={{
           zIndex: 1,
@@ -259,7 +259,7 @@ const MoreFiltersRequirement = ({
         >
           <Text className="text-white text-lg font-semibold">Show Results</Text>
         </TouchableOpacity>
-      </View>
+      </SafeAreaView>
     </Modal>
   );
 };

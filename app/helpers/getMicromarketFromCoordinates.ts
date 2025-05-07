@@ -24,9 +24,14 @@ export function getMicromarketFromCoordinates(selectedPlace: Places): [string | 
             feature.geometry.type === 'MultiPolygon'
         ) {
             if (turf.booleanPointInPolygon(point, feature as Feature<Polygon | MultiPolygon>)) {
+                let micromarket: string;
+                if (feature.properties?.Name === feature.properties?.Micromarket) {
+                    micromarket = feature.properties?.Name;
+                } else {
+                    micromarket = `${feature.properties?.Name}, ${feature.properties?.Micromarket}`;
+                }
                 return [
-                    feature.properties?.Ward_Name ||
-                    feature.properties?.name ||
+                    micromarket ||
                     null,
                     feature.properties?.Zone ||
                     null

@@ -230,7 +230,14 @@ export default function PropertyDetailsScreen() {
   };
 
   const submitEnquiry = async (nextEnqId: string) => {
-    const enq: Enquiry = {} as Enquiry;
+    const enq: Enquiry = {
+      enquiryId: nextEnqId,
+      cpId: agentData?.cpId,
+      propertyId: property?.propertyId,
+      status: "pending",
+      added: getUnixDateTime(),
+      lastModified: getUnixDateTime(),
+    } as Enquiry;
 
     try {
       const enquiryDocRef = doc(db, "enquiries", nextEnqId);
@@ -244,6 +251,15 @@ export default function PropertyDetailsScreen() {
       });
       console.error("Error in enquiry submission:", error);
     }
+    await fetch(`https://notification-server-acn.onrender.com/enquiries/${nextEnqId}`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+    })
+      .catch((error) => {
+        console.error("Error:", error);
+      });
   };
 
   const onConfirmEnquiry = async () => {

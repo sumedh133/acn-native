@@ -8,6 +8,7 @@ import {
   View,
   StyleSheet,
   TouchableOpacity,
+  ScrollView,
 } from "react-native";
 import UserDetailsCard from "../components/ProfilePage/UserDetailsCard";
 import { useDispatch } from "react-redux";
@@ -53,10 +54,12 @@ const Profile = () => {
   const userType: string | null =
     useSelector((state: RootState) => state?.agent?.docData?.userType) || "";
 
+    console.log("userType", userType);
+
   const handleCardClick = (slug: string) => {
     switch (slug) {
       case "payment_records":
-        router.push("/billings");
+        router.push("/(pages)/PaymentRecords");
         break;
       case "contact_kam":
         dispatch(setKamModalVisible(true));
@@ -68,7 +71,10 @@ const Profile = () => {
         router.push("/billings");
         break;
       case "credits_card":
-        router.push("/billings");
+        router.push("/(pages)/Credits");
+        break;
+      case "compare_plans":
+        router.push("/(pages)/ComparePlans");
         break;
       default:
         break;
@@ -88,7 +94,7 @@ const Profile = () => {
       });
     }
   };
-
+  
   const isConnectedToInternet = useSelector(
     (state: RootState) => state.app.isConnectedToInternet
   );
@@ -97,7 +103,10 @@ const Profile = () => {
 
   return (
     <>
-      <View style={styles.container}>
+      <ScrollView
+        style={styles.container}
+        contentContainerStyle={styles.contentContainer}
+      >
         <UserDetailsCard userType={userType} />
         <View style={styles.cardsContainer}>
           {profileCards?.map((item, idx) => {
@@ -117,8 +126,10 @@ const Profile = () => {
         <TouchableOpacity style={styles.logoutButton} onPress={handleLogOut}>
           <LogoutIcon width={18} height={18} />
           <Text style={styles.logoutText}>Logout</Text>
-        </TouchableOpacity>
-      </View>
+        </TouchableOpacity> 
+        
+        
+      </ScrollView>
     </>
   );
 };
@@ -127,10 +138,13 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: "#F5F6F7",
+  },
+  contentContainer: {
     padding: 12,
     display: "flex",
     flexDirection: "column",
     gap: 12,
+    paddingBottom: 24, // Extra padding at the bottom for better scrolling experience
   },
   cardsContainer: {
     display: "flex",

@@ -36,8 +36,8 @@ const UserDetailsCard = ({ userType }: { userType: string | null }) => {
         </View>
         <View style={styles.information}>
           <View style={styles.userData}>
-            <Text>{name}</Text>
-            <Text>{"+91-" + phonenumber?.slice(3)}</Text>
+            <Text style={{fontFamily:'Montserrat_700Bold'}}>{name}</Text>
+            <Text style={{fontFamily:'Montserrat_500Medium',color:'#5A5555'}}>{"+91-" + phonenumber?.slice(3)}</Text>
           </View>
           <View style={styles.memberContainer}>
             {userType && (
@@ -112,6 +112,7 @@ const styles = StyleSheet.create({
   userData: {
     display: "flex",
     flexDirection: "column",
+    
     gap: 4,
     alignItems: "flex-start",
   },

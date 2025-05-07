@@ -27,8 +27,8 @@ export const plotComponents = [
     type: "textInput",
     field: "plotSize",
     suffix: "Sqft",
-    placeholder: "A - 03",
-    // keyboardType: "numeric",
+    placeholder: "0000",
+    keyboardType: "numeric",
     colspan: 1,
   },
   {
@@ -86,7 +86,7 @@ export const plotComponents = [
   {
     label: "Ready to move",
     type: "Checkbox",
-    field: "readyToMove",
+    field: "currentStatus",
     colspan: 2,
   },
   // {
