@@ -301,9 +301,6 @@ export default function LayoutApp() {
                 />
                 
                 <TrialStatusNotification
-                  status={trialData.status}
-                  daysLeft={trialData.daysLeft}
-                  credits={trialData.credits}
                   showNotification = {trialData.showNotification}
                   onDismiss={handleDismiss}
                 />

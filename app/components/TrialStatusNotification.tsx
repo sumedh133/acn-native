@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { View, Text, TouchableOpacity, ViewStyle } from "react-native";
 import {
   Feather,
@@ -10,6 +10,8 @@ import ToStartIcon from "../../assets/icons/Notification/toStart.svg";
 import ExpiringSoonIcon from "../../assets/icons/Notification/5_dayEnd.svg";
 import LowCreditsIcon from "../../assets/icons/Notification/lowCredits.svg";
 import TrailEndIcon from "../../assets/icons/Notification/trailEnd.svg";
+import { useSelector } from "react-redux";
+import { RootState } from "@/store/store";
 
 // Define trial status types as enum
 export enum TrialStatusType {
@@ -24,9 +26,6 @@ export enum TrialStatusType {
 
 // Define props interface for the trial status notification component
 interface TrialStatusNotificationProps {
-  status?: TrialStatusType;
-  daysLeft?: number;
-  credits?: number;
   dismissible?: boolean;
   showNotification?: boolean;
   onDismiss?: () => void;
@@ -52,9 +51,6 @@ interface NotificationConfig {
  * for the urgency level of the notification.
  */
 const TrialStatusNotification: React.FC<TrialStatusNotificationProps> = ({
-  status = TrialStatusType.ACTIVE,
-  daysLeft = 28,
-  credits = 20,
   dismissible = true,
   showNotification = false,
   onDismiss = () => {},
@@ -62,6 +58,73 @@ const TrialStatusNotification: React.FC<TrialStatusNotificationProps> = ({
   style,
 }) => {
   const [dismissed, setDismissed] = useState<boolean>(false);
+  const [status, setStatus] = useState<TrialStatusType>(TrialStatusType.ACTIVE);
+  const [daysLeft, setDaysLeft] = useState<number>(28);
+  const [credits, setCredits] = useState<number>(20);
+  const agentData = useSelector((state: RootState) => state?.agent?.docData);
+
+  const calculateDaysLeft = (trialStartedAt: number): number => {
+    try {
+      const trialStartDate = new Date(trialStartedAt * 1000);
+      
+      if (isNaN(trialStartDate.getTime())) {
+        return 31; 
+      }
+      
+      const trialEndDate = new Date(trialStartDate);
+      trialEndDate.setDate(trialStartDate.getDate() + 30);
+      
+      const currentDate = new Date() ;
+      currentDate.setDate(currentDate.getDate());
+      
+      const timeDiff = trialEndDate.getTime() - currentDate.getTime();
+      const days = Math.ceil(timeDiff / (1000 * 3600 * 24));
+      
+      return days;
+    } catch (error) {
+      return 31; 
+    }
+  };
+  
+  const getTrialStatus = (daysLeft: number, credits: number) => {
+    if(daysLeft<-3 ){
+      if(credits == 0){
+        return TrialStatusType.OUT_OF_CREDITS;
+      }
+      else{
+        return TrialStatusType.LOW_CREDITS_WSUB;
+      }
+    }
+    else if (daysLeft <= 0) {
+      return TrialStatusType.EXPIRED;
+    } 
+    else if(credits == 0){
+      return TrialStatusType.OUT_OF_CREDITS;
+    }
+    else if (credits <= 5) {
+      return TrialStatusType.LOW_CREDITS;
+    } 
+    else if (daysLeft <= 5) {
+      return TrialStatusType.EXPIRING_SOON;
+    } 
+    else if(daysLeft<=30){
+      return TrialStatusType.ACTIVE;
+    }
+    else{
+      return TrialStatusType.TO_START;
+    }
+  };
+
+  useEffect(() => {
+    if (agentData) {
+      const calculatedDaysLeft = calculateDaysLeft(agentData?.trialStartedAt);
+      const trialStatus = getTrialStatus(calculatedDaysLeft, agentData?.monthlyCredits);
+
+      setStatus(trialStatus);
+      setDaysLeft(calculatedDaysLeft);
+      setCredits(agentData?.monthlyCredits);
+    }
+  }, [agentData]);
 
   if (dismissed || !showNotification) return null;
 
@@ -205,39 +268,24 @@ const TrialNotificationShowcase: React.FC = () => {
   return (
     <View className="py-6 px-4 gap-6">
       <View className="rounded-lg overflow-hidden shadow-sm">
-        <TrialStatusNotification
-          status={TrialStatusType.ACTIVE}
-          daysLeft={28}
-          credits={20}
-        />
+        <TrialStatusNotification />
+      </View>
+      <View className="rounded-lg overflow-hidden shadow-sm">
+        <TrialStatusNotification />
+      </View>
+      <View className="rounded-lg overflow-hidden shadow-sm">
+        <TrialStatusNotification />
+      </View>
+      <View className="rounded-lg overflow-hidden shadow-sm">
+        <TrialStatusNotification />
       </View>
       <View className="rounded-lg overflow-hidden shadow-sm">
         <TrialStatusNotification
-          status={TrialStatusType.LOW_CREDITS}
-          credits={5}
-        />
-      </View>
-      <View className="rounded-lg overflow-hidden shadow-sm">
-        <TrialStatusNotification
-          status={TrialStatusType.EXPIRING_SOON}
-          daysLeft={3}
-          credits={12}
-        />
-      </View>
-      <View className="rounded-lg overflow-hidden shadow-sm">
-        <TrialStatusNotification status={TrialStatusType.EXPIRED} />
-      </View>
-      <View className="rounded-lg overflow-hidden shadow-sm">
-        <TrialStatusNotification
-          status={TrialStatusType.TO_START}
           customMessage="Enjoy ACN with no-limits."
         />
       </View>
       <View className="rounded-lg overflow-hidden shadow-sm">
         <TrialStatusNotification
-          status={TrialStatusType.ACTIVE}
-          daysLeft={14}
-          credits={10}
           customMessage="Special offer: Upgrade now and get 50% extra credits!"
         />
       </View>
