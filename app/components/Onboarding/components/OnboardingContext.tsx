@@ -41,7 +41,7 @@ export function OnboardingProvider({ children }: OnboardingProviderProps): JSX.E
             trialUsed:true,
           }
           await updateDoc(agentRef, updatedData);
-          dispatch(updateAgentDocData(  updatedData));
+          dispatch(updateAgentDocData(updatedData));
           setOnboardingCompleted(true);
     }
   };

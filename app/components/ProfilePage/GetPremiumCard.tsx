@@ -81,16 +81,16 @@ const GetPremiumCard = ({
           </View>
         </View>
 
-        {Platform.OS !== 'ios' && !trialUsed ? (
+        {Platform.OS !== 'ios' ? (
           <TouchableOpacity
-            className=" py-3 rounded-md mb-2"
+            className=" py-3 rounded-md mb-2 bg-white"
             onPress={handleStartTrial}
           >
             <Text
               className="text-center text-sm text-[#153E3B]"
               style={{ fontFamily: "Lato_700Bold" }}
             >
-              {!trialUsed && "1 month free trial"}
+              {!trialUsed ? "1 month free trial" : 'Get Premium'}
             </Text>
           </TouchableOpacity>
         ) : null}
@@ -101,7 +101,7 @@ const GetPremiumCard = ({
           }`}
           onPress={() => handleClick("compare_plans")}
         >
-          <Text className="text-sm" style={{ fontFamily: "Lato_700Bold" }}>
+          <Text className="text-sm text-white" style={{ fontFamily: "Lato_700Bold" }}>
             { Platform.OS === 'ios' ? "View Details" : "Compare Plans"}
           </Text>
           <Ionicons
