@@ -288,13 +288,12 @@ export default function LayoutApp() {
                   onMenuPress={onMenuPress}
                   headerBackVisible={headerBackVisible}
                 />
-
-                {agentData.userType !== "premium" && (
-                  <TrialStatusNotification
-                    showNotification={trialData.showNotification}
-                    onDismiss={handleDismiss}
-                  />
-                )}
+                
+                {agentData?.userType !=='premium' &&<TrialStatusNotification
+                  showNotification = {trialData.showNotification}
+                  onDismiss={handleDismiss}
+                />}
+                
               </>
             );
           },
