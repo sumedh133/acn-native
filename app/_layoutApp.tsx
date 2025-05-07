@@ -202,11 +202,11 @@ export default function LayoutApp() {
 
   useEffect(() => {
     // Show onboarding modal if the user has not completed onboarding
-    if (agentData && !agentData.onboardingComplete) {
+    if (agentData && !agentData?.onboardingComplete) {
       setShowOnboarding(true);
     } else if (
-      (agentData && agentData.onboardingComplete === true) ||
-      agentData.onboardingComplete === false
+      (agentData && agentData?.onboardingComplete === true) ||
+      agentData?.onboardingComplete === false
     ) {
       // Close the modal when onboarding is completed
       setShowOnboarding(false);
