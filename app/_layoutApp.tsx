@@ -304,7 +304,7 @@ export default function LayoutApp() {
                   headerBackVisible={headerBackVisible}
                 />
                 
-                {agentData.userType !=='premium' &&<TrialStatusNotification
+                {agentData?.userType !=='premium' &&<TrialStatusNotification
                   showNotification = {trialData.showNotification}
                   onDismiss={handleDismiss}
                 />}
