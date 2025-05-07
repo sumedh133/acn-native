@@ -8,7 +8,7 @@ import {
   View,
 } from "react-native";
 import PlacesSearch from "../components/Listing/PlacesSearch";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import {
   DocsToUpload,
   FileObject,
@@ -201,6 +201,7 @@ const AddInventoryForm = () => {
   const [assetProperty, setAssetProperty] = useState<{
     [key: string]: { property: ListingProperty; docs: DocsToUpload };
   }>({});
+  const [grayed, setGrayed] = useState(true);
   const [isNew, setIsNew] = useState(true);
   const [docsToUpload, setDocsToUpload] = useState<DocsToUpload>({
     photo: [],
@@ -208,6 +209,7 @@ const AddInventoryForm = () => {
     document: [],
   });
   const [isRendered, setIsRendered] = useState(false);
+  const [emptyState, setEmptyState] = useState(true);
 
   const isConnectedToInternet = useSelector(
     (state: RootState) => state.app.isConnectedToInternet
@@ -217,20 +219,62 @@ const AddInventoryForm = () => {
 
   const [saveAsDraftModalVisible, setSaveAsDraftModalVisible] = useState(false);
 
+  // New state to track if the form has any data filled
+  const isFormEmpty = useMemo(() => {
+    // Check if property has any non-default values
+    for (const key in property) {
+      if (key === "_geoloc") {
+        if (
+          property._geoloc?.lat !== initialState._geoloc?.lat ||
+          property._geoloc?.lng !== initialState._geoloc?.lng
+        ) {
+          return false;
+        }
+      } else if (
+        key in property &&
+        Array.isArray(property[key as keyof ListingProperty])
+      ) {
+        if ((property[key as keyof ListingProperty] as unknown[]).length > 0) {
+          return false;
+        }
+      } else if (
+        property[key as keyof ListingProperty] !==
+        initialState[key as keyof ListingProperty]
+      ) {
+        return false;
+      }
+    }
+
+    // Check if there are any documents to upload
+    if (
+      docsToUpload.photo.length > 0 ||
+      docsToUpload.video.length > 0 ||
+      docsToUpload.document.length > 0
+    ) {
+      return false;
+    }
+
+    return true;
+  }, [property, docsToUpload]);
+
   const handleSetValue = (field: keyof ListingProperty, value: any) => {
+    setGrayed(false);
     setProperty((prevProperty) => ({
       ...prevProperty,
       [field]: value,
     }));
   };
 
-  const handleSetValueMultiSelect = ( field : keyof ListingProperty, value: string[] ) => {
+  const handleSetValueMultiSelect = (
+    field: keyof ListingProperty,
+    value: string[]
+  ) => {
     setProperty((prevProperty) => ({
       ...prevProperty,
       [field]: value,
     }));
     console.log(value, "This is value from function");
-  }
+  };
 
   const getFormComponents = () => {
     const components =
@@ -265,17 +309,19 @@ const AddInventoryForm = () => {
             }
           />
         );
-        case "multiSelectSlider":
-          return (
-            <MultiSelectSlider
-              value={property[key] as string[] || []}
-              setvalue={(value: string[]) => handleSetValueMultiSelect(component.field, value)}
-              title={component.label}
-              options={component.options}
-              required={component.required}
-              footer=""
-            />
-          );
+      case "multiSelectSlider":
+        return (
+          <MultiSelectSlider
+            value={(property[key] as string[]) || []}
+            setvalue={(value: string[]) =>
+              handleSetValueMultiSelect(component.field, value)
+            }
+            title={component.label}
+            options={component.options}
+            required={component.required}
+            footer=""
+          />
+        );
       case "slider":
         if (component.field === "buildingAge") {
           if (!!property.currentStatus) {
@@ -352,7 +398,7 @@ const AddInventoryForm = () => {
       case "TotalAskPrice":
         return (
           <TotalAskPrice
-            initialPrice={property[key] as string | undefined}
+            initialPrice={property[key] as number | undefined}
             onPriceChange={(field, value) =>
               handleSetValue(field as keyof ListingProperty, value)
             }
@@ -444,6 +490,7 @@ const AddInventoryForm = () => {
       document: [],
     });
     setAssetProperty({});
+    setGrayed(true);
   };
 
   const fieldLabels: { [key in keyof ListingProperty]: string } = {
@@ -470,9 +517,15 @@ const AddInventoryForm = () => {
       case "Apartment":
         for (let elem of compulsoryFields[assetType]) {
           console.log(elem);
-          if (property[elem] === null || property[elem] === "") {
+          if (
+            (property[elem] === null || property[elem] === "") &&
+            (property["totalAskPrice"] === null ||
+              property["totalAskPrice"] === 0) &&
+            (property["askPricePerSqft"] !== null ||
+              property["askPricePerSqft"] !== 0)
+          ) {
             const friendlyName = fieldLabels[elem] || elem;
-            showErrorToast(`missing field: ${friendlyName}`);
+            showErrorToast(`Missing field: ${friendlyName}`);
             return false;
           }
         }
@@ -480,9 +533,15 @@ const AddInventoryForm = () => {
       case "Villa":
         for (let elem of compulsoryFields[assetType]) {
           console.log(elem);
-          if (property[elem] === null || property[elem] === "") {
+          if (
+            (property[elem] === null || property[elem] === "") &&
+            (property["totalAskPrice"] === null ||
+              property["totalAskPrice"] === 0) &&
+            (property["askPricePerSqft"] !== null ||
+              property["askPricePerSqft"] !== 0)
+          ) {
             const friendlyName = fieldLabels[elem] || elem;
-            showErrorToast(`missing field: ${friendlyName}`);
+            showErrorToast(`Missing field: ${friendlyName}`);
             return false;
           }
         }
@@ -490,9 +549,15 @@ const AddInventoryForm = () => {
       case "Plot":
         for (let elem of compulsoryFields[assetType]) {
           console.log(elem);
-          if (property[elem] === null || property[elem] === "") {
+          if (
+            (property[elem] === null || property[elem] === "") &&
+            (property["totalAskPrice"] === null ||
+              property["totalAskPrice"] === 0) &&
+            (property["askPricePerSqft"] !== null ||
+              property["askPricePerSqft"] !== 0)
+          ) {
             const friendlyName = fieldLabels[elem] || elem;
-            showErrorToast(`missing field: ${friendlyName}`);
+            showErrorToast(`Missing field: ${friendlyName}`);
             return false;
           }
         }
@@ -500,9 +565,15 @@ const AddInventoryForm = () => {
       case "Row House":
         for (let elem of compulsoryFields[assetType]) {
           console.log(elem);
-          if (property[elem] === null || property[elem] === "") {
+          if (
+            (property[elem] === null || property[elem] === "") &&
+            (property["totalAskPrice"] === null ||
+              property["totalAskPrice"] === 0) &&
+            (property["askPricePerSqft"] !== null ||
+              property["askPricePerSqft"] !== 0)
+          ) {
             const friendlyName = fieldLabels[elem] || elem;
-            showErrorToast(`missing field: ${friendlyName}`);
+            showErrorToast(`Missing field: ${friendlyName}`);
             return false;
           }
         }
@@ -510,9 +581,15 @@ const AddInventoryForm = () => {
       case "Villament":
         for (let elem of compulsoryFields[assetType]) {
           console.log(elem);
-          if (property[elem] === null || property[elem] === "") {
+          if (
+            (property[elem] === null || property[elem] === "") &&
+            (property["totalAskPrice"] === null ||
+              property["totalAskPrice"] === 0) &&
+            (property["askPricePerSqft"] !== null ||
+              property["askPricePerSqft"] !== 0)
+          ) {
             const friendlyName = fieldLabels[elem] || elem;
-            showErrorToast(`missing field: ${friendlyName}`);
+            showErrorToast(`Missing field: ${friendlyName}`);
             return false;
           }
         }
@@ -521,9 +598,15 @@ const AddInventoryForm = () => {
         // Check if any required field is null or empty
         for (let elem of compulsoryFields[assetType]) {
           console.log(elem);
-          if (property[elem] === null || property[elem] === "") {
+          if (
+            (property[elem] === null || property[elem] === "") &&
+            (property["totalAskPrice"] === null ||
+              property["totalAskPrice"] === 0) &&
+            (property["askPricePerSqft"] !== null ||
+              property["askPricePerSqft"] !== 0)
+          ) {
             const friendlyName = fieldLabels[elem] || elem;
-            showErrorToast(`missing field: ${friendlyName}`);
+            showErrorToast(`Missing field: ${friendlyName}`);
             return false;
           }
         }
@@ -636,7 +719,7 @@ const AddInventoryForm = () => {
 
   const getUnitType = () => {
     let unitType = property.unitType;
-    if (property.extraRoom) {
+    if (property.extraRoom && property.unitType != "studio") {
       let unit = unitType?.split(" ");
       if (unit) {
         unit[0] += ".5";
@@ -728,7 +811,7 @@ const AddInventoryForm = () => {
       const areCompulsoryFieldsValid = checkCompulsoryFields();
       if (!areCompulsoryFieldsValid) {
         console.error("Compulsory fields are missing or invalid");
-        showErrorToast("Compulsory fields are missing or invalid");
+        // showErrorToast("Compulsory fields are missing or invalid");
         setSaving(false);
         return;
       }
@@ -815,7 +898,7 @@ const AddInventoryForm = () => {
       console.log("dataToSave", dataToSave);
       await setDoc(doc(db, "QC_Inventories", propId), dataToSave);
       console.log("Document successfully written with ID:", propId);
-      showSuccessToast("Property added successfully!");
+      showSuccessToast("Property sent for verification!");
       handleSetValue("propertyId", propId);
       router.dismissAll();
       router.replace("/(tabs)/dashboardTab");
@@ -894,7 +977,7 @@ const AddInventoryForm = () => {
       console.log(property);
 
       await setDoc(doc(db, "QC_Inventories", propId), dataToSave);
-      showSuccessToast("Property added successfully!");
+      showSuccessToast("Property saved as draft successfully!");
       handleSetValue("propertyId", propId);
       setSavingDraft(false);
     } catch (error) {
@@ -902,6 +985,7 @@ const AddInventoryForm = () => {
       showErrorToast("An unexpected error occurred during submission");
       setSavingDraft(false);
     }
+    router.back();
   };
 
   const handleChangeAssetType = (value: string) => {
@@ -936,6 +1020,7 @@ const AddInventoryForm = () => {
       }));
       setDocsToUpload({ photo: [], video: [], document: [] });
     }
+    setGrayed(false);
   };
 
   useEffect(() => {
@@ -1016,7 +1101,6 @@ const AddInventoryForm = () => {
   //   return () => backHandler.remove();
   // }, [saveAsDraftModalVisible]);
 
-
   return (
     <View style={styles.mainView}>
       <View style={styles.headerContainer}>
@@ -1029,7 +1113,11 @@ const AddInventoryForm = () => {
           </View>
 
           <TouchableOpacity style={styles.headerRight} onPress={handleClear}>
-            <Text style={styles.clearText}>Clear</Text>
+            {grayed ? (
+              <Text style={styles.clearTextGrayed}>Clear</Text>
+            ) : (
+              <Text style={styles.clearText}>Clear</Text>
+            )}
           </TouchableOpacity>
         </View>
       </View>
@@ -1128,6 +1216,11 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: "#D92D20",
   },
+  clearTextGrayed: {
+    fontFamily: "Montserrat_500Medium",
+    fontSize: 16,
+    color: "#9E9E9E",
+  },
   scrollContent: {
     // backgroundColor: "#F5F6F7",
     paddingVertical: 16,
@@ -1201,11 +1294,30 @@ const styles = StyleSheet.create({
     paddingHorizontal: 32,
     borderColor: "#153E3B",
   },
+  disabledSaveAsDraftButton: {
+    height: 40,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    width: "48%",
+    borderWidth: 1.25,
+    borderRadius: 4,
+    // paddingVertical: 8,
+    paddingHorizontal: 32,
+    borderColor: "#153E3B",
+    backgroundColor: "FAFAFA",
+  },
   secondaryButtonText: {
     fontFamily: "sans-serif",
     fontWeight: "bold",
     fontSize: 14,
     color: "#153E3B",
+  },
+  disabledSaveAsDraft: {
+    fontFamily: "sans-serif",
+    fontWeight: "bold",
+    fontSize: 14,
+    color: "#9E9E9E",
   },
 });
 

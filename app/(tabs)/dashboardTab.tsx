@@ -10,6 +10,7 @@ import {
   DocumentData,
   getCountFromServer,
   documentId,
+  orderBy,
 } from "firebase/firestore";
 import React, { useEffect, useState } from "react";
 import {
@@ -100,7 +101,7 @@ const useEnquiries = (): UseEnquiriesResult => {
           for (let i = 0; i < propertyIds.length; i += 30) {
             const batch = propertyIds.slice(i, i + 30);
             const properties = await getDocs(
-              query(collection(db, "ACN123"), where(documentId(), "in", batch))
+              query(collection(db, "ACN123"), where(documentId(), "in", batch), orderBy("propertyId", "desc"))
             );
             properties.docs.map((item) => {
               propertyDocs.set(item.id, item.data());
@@ -323,7 +324,8 @@ const useListings = (): UseListingResult => {
     try {
       const q = query(
         collection(db, "QC_Inventories"),
-        where("cpCode", "==", cpId)
+        where("cpCode", "==", cpId),
+        orderBy("propertyId", "desc")
       );
 
       // Set up real-time listener

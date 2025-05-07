@@ -50,7 +50,7 @@ export const appartmentComponents = [
     placeholder: "0000",
     keyboardType: "numeric",
     colspan: 1,
-    footer: "Footer",
+    footer: "Note: Exact Floor wont be mentioned",
   },
   {
     label: "Door Facing",
@@ -91,7 +91,7 @@ export const appartmentComponents = [
     label: "No of Bedrooms",
     type: "slider",
     field: "unitType",
-    footer: 'Note: This excludes study rooms and servant rooms.',
+    footer: "Note: This excludes study rooms and servant rooms.",
     options: [
       { label: "Studio", value: "studio" },
       { label: "1 BHK", value: "1 BHK" },
@@ -112,7 +112,7 @@ export const appartmentComponents = [
     type: "multiSelectSlider",
     field: "extraRoom",
     options: [
-      { label: "Servent Room", value: "serventRoom" },
+      { label: "Servant Room", value: "servantRoom" },
       { label: "Study Room", value: "studyRoom" },
     ],
     colspan: 2,

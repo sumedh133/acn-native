@@ -224,24 +224,8 @@ export default function Dashboard({
     if (activeTab === "inventories") {
       return (
         <>
-          {myProperties.length === 0 ? (
-            propertiesTab === "listed" ? (
-              <EmptyTabContent
-                text="No Inventory Added"
-                sub_text="Your dashboard is waiting for your first inventory! Start now and showcase your offerings to potential buyer agents."
-                icon={<AddInventoryIcon width={24} height={24} />}
-                buttonText="Add Inventory"
-                handleOnPress={openAddInventory}
-                loading={loading?.propertiesLoading || bufferring}
-              />
-            ) : (
-              <EmptyTabContent
-                text="No Inventory Added"
-                sub_text="Your dashboard is waiting for your first inventory! Start now and showcase your offerings to potential buyer agents."
-                loading={loading?.listingLoading || bufferring}
-              />
-            )
-          ) : propertiesTab === "listed" ? (
+          {propertiesTab === "listed" ? (
+            // Listed tab logic
             properties.length === 0 || bufferring ? (
               <EmptyTabContent
                 text="No Inventory"
@@ -264,36 +248,39 @@ export default function Dashboard({
                 })}
               </View>
             )
-          ) : listings.filter((listing) => listing.status === propertiesTab)
-              .length === 0 || bufferring ? (
-            <EmptyTabContent
-              text="No Inventory"
-              sub_text={propertyUserStatus?.[propertiesTab]?.emptySubText}
-              loading={loading?.listingLoading || bufferring}
-            />
           ) : (
-            <View className="mx-3 mb-3">
-              {listings
-                .filter((listing) => listing.status === propertiesTab)
-                .slice(0, batchSize)
-                .map((listing, index) => {
-                  return (
-                    <PropertyCard
-                      key={listing.propertyId}
-                      property={listing}
-                      onStatusChange={() => {}}
-                      index={index}
-                      totalCount={Math.min(
-                        batchSize,
-                        listings.filter(
-                          (listing) => listing.status === propertiesTab
-                        ).length
-                      )}
-                      isListing={true}
-                    />
-                  );
-                })}
-            </View>
+            // Other tabs logic - check filtered listings instead of myProperties
+            listings.filter((listing) => listing.status === propertiesTab).length === 0 || 
+            bufferring ? (
+              <EmptyTabContent
+                text="No Inventory"
+                sub_text={propertyUserStatus?.[propertiesTab]?.emptySubText}
+                loading={loading?.listingLoading || bufferring}
+              />
+            ) : (
+              <View className="mx-3 mb-3">
+                {listings
+                  .filter((listing) => listing.status === propertiesTab)
+                  .slice(0, batchSize)
+                  .map((listing, index) => {
+                    return (
+                      <PropertyCard
+                        key={listing.propertyId}
+                        property={listing}
+                        onStatusChange={() => {}}
+                        index={index}
+                        totalCount={Math.min(
+                          batchSize,
+                          listings.filter(
+                            (listing) => listing.status === propertiesTab
+                          ).length
+                        )}
+                        isListing={true}
+                      />
+                    );
+                  })}
+              </View>
+            )
           )}
         </>
       );

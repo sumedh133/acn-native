@@ -99,7 +99,7 @@ export const villamentComponents = [
     label: "No of Bedrooms",
     type: "slider",
     field: "unitType",
-    footer: 'Note: This excludes study rooms and servant rooms.',
+    footer: "Note: This excludes study rooms and servant rooms.",
     options: [
       { label: "1 BHK", value: "1 BHK" },
       { label: "2 BHK", value: "2 BHK" },
@@ -119,7 +119,7 @@ export const villamentComponents = [
     type: "multiSelectSlider",
     field: "extraRoom",
     options: [
-      { label: "Servent Room", value: "serventRoom" },
+      { label: "Servant Room", value: "servantRoom" },
       { label: "Study Room", value: "studyRoom" },
     ],
     colspan: 2,
