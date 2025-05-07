@@ -13,7 +13,11 @@ import { RootState } from "@/store/store";
 
 interface PaymentHistoryItem {
   lastPaymentAmount?: number;
-  lastPaymentDate?: { seconds: number; nanoseconds: number; toDate?: () => Date };
+  lastPaymentDate?: {
+    seconds: number;
+    nanoseconds: number;
+    toDate?: () => Date;
+  };
   lastPaymentId?: string;
   lastPlanId?: string;
   paymentAmount?: number;
@@ -38,28 +42,57 @@ const PaymentRecords: React.FC = () => {
     if (!paymentHistory || !paymentHistory.length) return [];
 
     return paymentHistory.map((item) => {
-      const isPremiumPlan = item.lastPlanId === "premium" || item.planId === "premium";
+      const isPremiumPlan =
+        item.lastPlanId === "premium" || item.planId === "premium";
       const paymentAmount = item.lastPaymentAmount || item.paymentAmount || 0;
       const paymentId = item.lastPaymentId || item.paymentId || "";
-      
-      
+
       let dateString = "";
       const timestamp = item.lastPaymentDate || item.paymentDate;
-      
+
       if (timestamp) {
-        
-        if (timestamp.toDate && typeof timestamp.toDate === 'function') {
+        if (timestamp.toDate && typeof timestamp.toDate === "function") {
           const date = timestamp.toDate();
-          const monthNames = ["January", "February", "March", "April", "May", "June",
-                             "July", "August", "September", "October", "November", "December"];
-          dateString = `${monthNames[date.getMonth()]} ${date.getDate()} • ${date.getHours()}:${String(date.getMinutes()).padStart(2, '0')} ${date.getHours() >= 12 ? 'PM' : 'AM'}`;
-        } 
-       
-        else if (timestamp.seconds) {
+          const monthNames = [
+            "January",
+            "February",
+            "March",
+            "April",
+            "May",
+            "June",
+            "July",
+            "August",
+            "September",
+            "October",
+            "November",
+            "December",
+          ];
+          dateString = `${
+            monthNames[date.getMonth()]
+          } ${date.getDate()} • ${date.getHours()}:${String(
+            date.getMinutes()
+          ).padStart(2, "0")} ${date.getHours() >= 12 ? "PM" : "AM"}`;
+        } else if (timestamp.seconds) {
           const date = new Date(timestamp.seconds * 1000);
-          const monthNames = ["January", "February", "March", "April", "May", "June",
-                             "July", "August", "September", "October", "November", "December"];
-          dateString = `${monthNames[date.getMonth()]} ${date.getDate()} • ${date.getHours()}:${String(date.getMinutes()).padStart(2, '0')} ${date.getHours() >= 12 ? 'PM' : 'AM'}`;
+          const monthNames = [
+            "January",
+            "February",
+            "March",
+            "April",
+            "May",
+            "June",
+            "July",
+            "August",
+            "September",
+            "October",
+            "November",
+            "December",
+          ];
+          dateString = `${
+            monthNames[date.getMonth()]
+          } ${date.getDate()} • ${date.getHours()}:${String(
+            date.getMinutes()
+          ).padStart(2, "0")} ${date.getHours() >= 12 ? "PM" : "AM"}`;
         }
       }
 
@@ -88,7 +121,7 @@ const PaymentRecords: React.FC = () => {
   return (
     <SafeAreaView style={styles.container}>
       <StatusBar barStyle="dark-content" backgroundColor="#EEEEEE" />
-      
+
       {formattedPaymentRecords.length > 0 ? (
         <FlatList
           data={formattedPaymentRecords}
@@ -101,6 +134,22 @@ const PaymentRecords: React.FC = () => {
           <Text style={styles.emptyText}>No payment records found</Text>
         </View>
       )}
+      <View style={styles.NoteView}>
+        <Text
+          style={{
+            color: "#050505",
+            fontFamily: "Lato_400Regular",
+            fontSize: 12,
+            fontWeight:500,
+          }}
+        >
+          Note:{" "}
+          <Text style={styles.NoteText}>
+            Credit top-ups and plan upgrades are not available within the app.
+            We apologize for any inconvenience caused.
+          </Text>
+        </Text>
+      </View>
     </SafeAreaView>
   );
 };
@@ -128,14 +177,14 @@ const styles = StyleSheet.create({
   },
   paymentTitle: {
     fontSize: 14,
-    fontFamily:'Lato_700Bold',
-    
+    fontFamily: "Lato_700Bold",
+
     color: "#433F3E",
     marginBottom: 4,
   },
   paymentDate: {
     fontSize: 14,
-    fontWeight:500,
+    fontWeight: 500,
     color: "#9A9A9A",
   },
   paymentStatusContainer: {
@@ -144,13 +193,13 @@ const styles = StyleSheet.create({
   },
   paymentAmount: {
     fontSize: 14,
-    fontFamily:'Montserrat_700Bold',
+    fontFamily: "Montserrat_700Bold",
     color: "#000000",
     marginRight: 8,
   },
   paymentStatus: {
     fontSize: 12,
-    fontWeight:500,
+    fontWeight: 500,
     color: "#9A9A9A",
     marginRight: 4,
   },
@@ -162,6 +211,17 @@ const styles = StyleSheet.create({
   emptyText: {
     fontSize: 16,
     color: "#888888",
+  },
+  NoteView: {
+    paddingHorizontal: 16,
+    paddingVertical: 16,
+    gap: 10,
+  },
+  NoteText: {
+    color: "#707070",
+    fontFamily: "Lato_400Regular",
+    fontSize: 12,
+    fontWeight:500,
   },
 });
 

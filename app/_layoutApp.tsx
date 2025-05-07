@@ -177,6 +177,10 @@ export default function LayoutApp() {
     showNotification:showtrial,
   });
 
+  useEffect(()=>{
+    setTrialData((prev) => ({ ...prev, credits: agentData?.monthlyCredits , }));
+  },[agentData?.monthlyCredits])
+
   const dispatch = useDispatch<ThunkDispatch<RootState, unknown, AnyAction>>();
   const router = useRouter();
 
@@ -216,7 +220,7 @@ export default function LayoutApp() {
         agentData.onboardingComplete === null
       )
     ) {
-      console.log("hii",agentData);
+      
       setShowOnboarding(true);
     } else if (agentData && agentData.onboardingComplete === true) {
       // Close the modal when onboarding is completed
