@@ -1,14 +1,31 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { View, Text, TouchableOpacity, Modal, ScrollView, TextInput, Pressable, PanResponder, Animated, Platform } from 'react-native';
-import { useCurrentRefinements, useRange, useRefinementList } from 'react-instantsearch';
-import DropdownMoreFilters from './DropdownMoreFilters';
-import { Ionicons } from '@expo/vector-icons';
-import BudgetRangeSlider from './property/BudgetRangeSlider';
-import RangeMoreFilters from './RangeMoreFilters';
-import LandmarkDropdownFilters from './LandmarkDropdownFilters';
-import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
-import CloseIcon from '@/assets/icons/svg/CloseIcon';
-import { Landmark } from '../types';
+import React, { useState, useEffect, useRef } from "react";
+import {
+  View,
+  Text,
+  TouchableOpacity,
+  Modal,
+  ScrollView,
+  TextInput,
+  Pressable,
+  PanResponder,
+  Animated,
+  Platform,
+  StyleSheet,
+} from "react-native";
+import {
+  useCurrentRefinements,
+  useRange,
+  useRefinementList,
+} from "react-instantsearch";
+import DropdownMoreFilters from "./DropdownMoreFilters";
+import { Ionicons } from "@expo/vector-icons";
+import BudgetRangeSlider from "./property/BudgetRangeSlider";
+import RangeMoreFilters from "./RangeMoreFilters";
+import LandmarkDropdownFilters from "./LandmarkDropdownFilters";
+import { SafeAreaProvider, SafeAreaView } from "react-native-safe-area-context";
+import CloseIcon from "@/assets/icons/svg/CloseIcon";
+import { Landmark } from "../types";
+import CustomCurrentRefinements from "./CustomCurrentRefinements";
 
 export interface RangeState {
   start: (number | undefined)[];
@@ -264,12 +281,19 @@ const MoreFilters = ({
             <CloseIcon />
           </TouchableOpacity>
         </View>
+        <View style={styles.refinements}>
+          {/* Applied Filters */}
+          <CustomCurrentRefinements
+            selectedLandmark={selectedLandmark}
+            setSelectedLandmark={setSelectedLandmark}
+          />
+        </View>
 
         <ScrollView className="flex-1 px-4 py-2 mb-2">
           {/* Location Filter - Lower z-index */}
           <View
             className="border border-gray-200 rounded-xl mb-4"
-            style={{ zIndex: 10 }}
+            style={{ zIndex: 40 }}
           >
             {/* Location Tabs */}
             <View className="bg-gray-100 p-1 rounded-t-xl">
@@ -401,7 +425,6 @@ const MoreFilters = ({
             />
           </View>
 
-          
           {/* Plot Size Range - Lower z-index */}
           <View style={{ zIndex: 5 }}>
             <RangeMoreFilters
@@ -505,3 +528,9 @@ const MoreFilters = ({
 };
 
 export default MoreFilters;
+
+const styles = StyleSheet.create({
+  refinements: {
+    flexDirection: "row",
+  },
+});
