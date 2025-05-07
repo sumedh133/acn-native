@@ -189,7 +189,7 @@ const CheckoutScreen: React.FC = () => {
             ...updateData,
             userType: "premium",
             planExpiry: planExpiry,
-            monthlyCredits: (agentData?.monthlyCredits || 0) + 100,
+            monthlyCredits: 100,
           };
           break;
         case "booster":

@@ -205,9 +205,9 @@ export default function LayoutApp() {
     if (agentData && !agentData.onboardingComplete) {
       setShowOnboarding(true);
     } else if (
-      (agentData && agentData.onboardingComplete === true) ||
+      agentData && (agentData.onboardingComplete === true ||
       agentData.onboardingComplete === false
-    ) {
+    )) {
       // Close the modal when onboarding is completed
       setShowOnboarding(false);
     }
