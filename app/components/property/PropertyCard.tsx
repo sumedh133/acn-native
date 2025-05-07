@@ -57,7 +57,8 @@ const PropertyCard: React.FC<PropertyCardProps> = ({ property }) => {
   const [isConfirmModelOpen, setIsConfirmModelOpen] = useState(false);
   const [isEnquiryCPModelOpen, setIsEnquiryCPModelOpen] = useState(false);
   const [isShareModalOpen, setIsShareModalOpen] = useState(false);
-    const [creditLimitModalVisible, setCreditLimitModalVisible] = useState(false);
+  const [creditLimitModalVisible, setCreditLimitModalVisible] = useState(false);
+  const [isGeneratingEnquiry, setIsGeneratingEnquiry] = useState(false);
   const agentData = useSelector((state: RootState) => state.agent.docData);
   const phoneNumber = useSelector(
     (state: RootState) => state?.agent?.docData?.phonenumber
@@ -205,9 +206,11 @@ const PropertyCard: React.FC<PropertyCardProps> = ({ property }) => {
     }
 
     try {
+      setIsGeneratingEnquiry(true);
       const nextEnqId = await generateNextEnqId();
       if (!nextEnqId) {
         setIsConfirmModelOpen(false);
+        setIsGeneratingEnquiry(false);
         return;
       }
 
@@ -220,6 +223,7 @@ const PropertyCard: React.FC<PropertyCardProps> = ({ property }) => {
 
       // ✅ Close the confirmation modal
       setIsConfirmModelOpen(false);
+      setIsGeneratingEnquiry(false);
 
       if (Platform.OS === "ios") {
         enquiryConfirmed.current = true;
@@ -231,6 +235,7 @@ const PropertyCard: React.FC<PropertyCardProps> = ({ property }) => {
       showErrorToast(
         "An error occurred while processing your enquiry. Please try again."
       );
+      setIsGeneratingEnquiry(false);
     }
   };
 
@@ -415,7 +420,7 @@ const PropertyCard: React.FC<PropertyCardProps> = ({ property }) => {
             enquiryConfirmed.current = false;
           }
         }}
-        generatingEnquiry={false}
+        generatingEnquiry={isGeneratingEnquiry}
         visible={isConfirmModelOpen}
       />
 
