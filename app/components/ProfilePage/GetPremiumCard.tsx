@@ -101,7 +101,7 @@ const GetPremiumCard = ({
           }`}
           onPress={() => handleClick("compare_plans")}
         >
-          <Text className="text-sm text-white" style={{ fontFamily: "Lato_700Bold" }}>
+          <Text className={`text-sm ${Platform.OS === 'ios' ? "text-[#10302D]" : "text-white"}`} style={{ fontFamily: "Lato_700Bold" }}>
             { Platform.OS === 'ios' ? "View Details" : "Compare Plans"}
           </Text>
           <Ionicons
