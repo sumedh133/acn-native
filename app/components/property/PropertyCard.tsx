@@ -161,15 +161,6 @@ const PropertyCard: React.FC<PropertyCardProps> = ({ property }) => {
     //     'Content-Type': 'application/json'
     //   }
     // })
-    await fetch(`https://notification-server-acn.onrender.com/enquiries/${nextEnqId}`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-    })
-      .catch((error) => {
-        console.error("Error:", error);
-      });
   };
 
   const onConfirmEnquiry = async () => {
@@ -209,6 +200,15 @@ const PropertyCard: React.FC<PropertyCardProps> = ({ property }) => {
       } else {
         setIsEnquiryCPModelOpen(true);
       }
+      await fetch(`https://notification-server-acn-zdgg.onrender.com/enquiries/${nextEnqId}`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+      })
+        .catch((error) => {
+          console.error("Error:", error);
+        });
     } catch (error) {
       console.error("Error during enquiry process:", error);
       showErrorToast(

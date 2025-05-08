@@ -132,7 +132,15 @@ export default function LayoutApp() {
   
   
   const getTrialStatus = (daysLeft: number, credits: number) => {
-    if (daysLeft <= 0) {
+    if (daysLeft < -3) {
+      if (credits == 0) {
+        return TrialStatusType.OUT_OF_CREDITS;
+      } else {
+        return TrialStatusType.LOW_CREDITS_WSUB;
+      }
+    } else if (daysLeft == 31) {
+        return TrialStatusType.TO_START;
+    } else if (daysLeft <= 0) {
       return TrialStatusType.EXPIRED;
     } else if (credits <= 5) {
       return TrialStatusType.LOW_CREDITS;
@@ -140,9 +148,9 @@ export default function LayoutApp() {
       return TrialStatusType.EXPIRING_SOON;
     } else {
       return TrialStatusType.ACTIVE;
-    }
-  };
-  
+    } 
+    };
+
   const daysLeft = calculateDaysLeft(agentData?.trialStartedAt);
   
   const [trialData, setTrialData] = useState({
@@ -184,7 +192,9 @@ export default function LayoutApp() {
 
   useEffect(() => {
     // Show onboarding modal if the user has not completed onboarding
-    if (
+    if (agentData && agentData?.onboardingComplete === undefined) {
+      setShowOnboarding(true);
+    } else if (
       agentData &&
       (agentData.onboardingComplete === false ||
         agentData.onboardingComplete === undefined ||

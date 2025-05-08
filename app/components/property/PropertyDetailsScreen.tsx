@@ -251,15 +251,7 @@ export default function PropertyDetailsScreen() {
       });
       console.error("Error in enquiry submission:", error);
     }
-    await fetch(`https://notification-server-acn.onrender.com/enquiries/${nextEnqId}`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-    })
-      .catch((error) => {
-        console.error("Error:", error);
-      });
+    
   };
 
   const onConfirmEnquiry = async () => {
@@ -302,6 +294,17 @@ export default function PropertyDetailsScreen() {
       } else {
         setIsEnquiryCPModelOpen(true);
       }
+      await fetch(
+        `https://notification-server-acn-zdgg.onrender.com/enquiries/${nextEnqId}`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+        }
+      ).catch((error) => {
+        console.error("Error:", error);
+      });
     } catch (error) {
       showErrorToast(
         "An error occurred while processing your enquiry. Please try again."
