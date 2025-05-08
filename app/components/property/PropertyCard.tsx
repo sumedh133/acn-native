@@ -39,6 +39,7 @@ import { router } from "expo-router";
 import { setPropertyDataThunk } from "@/store/slices/propertySlice";
 import { getUnixDateTime } from "@/app/helpers/getUnixDateTime";
 import axios from "axios";
+import CreditLimitModal from "@/app/modals/CreditLimitModal";
 
 interface PropertyCardProps {
   property: Property;
@@ -56,6 +57,8 @@ const PropertyCard: React.FC<PropertyCardProps> = ({ property }) => {
   const [isConfirmModelOpen, setIsConfirmModelOpen] = useState(false);
   const [isEnquiryCPModelOpen, setIsEnquiryCPModelOpen] = useState(false);
   const [isShareModalOpen, setIsShareModalOpen] = useState(false);
+  const [creditLimitModalVisible, setCreditLimitModalVisible] = useState(false);
+  const [isGeneratingEnquiry, setIsGeneratingEnquiry] = useState(false);
   const agentData = useSelector((state: RootState) => state.agent.docData);
   const phoneNumber = useSelector(
     (state: RootState) => state?.agent?.docData?.phonenumber
@@ -125,14 +128,29 @@ const PropertyCard: React.FC<PropertyCardProps> = ({ property }) => {
       setIsConfirmModelOpen(true);
       return;
     }
-    showErrorToast(
-      "You don't have enough credits Please contact your account manager."
-    );
+    else{
+      setCreditLimitModalVisible(true);
+    }
   };
 
   const handleCancel = () => {
     setIsConfirmModelOpen(false);
   };
+  const handleGoPremium = () => {
+      setCreditLimitModalVisible(false);
+      router.push({
+        pathname: "/CheckoutScreen",
+        params: { planId: "premium" },
+      });
+    };
+  
+    const handleBuyCredits = () => {
+      setCreditLimitModalVisible(false);
+      router.push({
+        pathname: "/CheckoutScreen",
+        params: { planId: "booster" },
+      });
+    };
 
   const submitEnquiry = async (nextEnqId: string) => {
     const enq: Enquiry = {
@@ -179,9 +197,11 @@ const PropertyCard: React.FC<PropertyCardProps> = ({ property }) => {
     }
 
     try {
+      setIsGeneratingEnquiry(true);
       const nextEnqId = await generateNextEnqId();
       if (!nextEnqId) {
         setIsConfirmModelOpen(false);
+        setIsGeneratingEnquiry(false);
         return;
       }
 
@@ -194,6 +214,7 @@ const PropertyCard: React.FC<PropertyCardProps> = ({ property }) => {
 
       // ✅ Close the confirmation modal
       setIsConfirmModelOpen(false);
+      setIsGeneratingEnquiry(false);
 
       if (Platform.OS === "ios") {
         enquiryConfirmed.current = true;
@@ -214,6 +235,7 @@ const PropertyCard: React.FC<PropertyCardProps> = ({ property }) => {
       showErrorToast(
         "An error occurred while processing your enquiry. Please try again."
       );
+      setIsGeneratingEnquiry(false);
     }
   };
 
@@ -398,7 +420,7 @@ const PropertyCard: React.FC<PropertyCardProps> = ({ property }) => {
             enquiryConfirmed.current = false;
           }
         }}
-        generatingEnquiry={false}
+        generatingEnquiry={isGeneratingEnquiry}
         visible={isConfirmModelOpen}
       />
 
@@ -407,6 +429,12 @@ const PropertyCard: React.FC<PropertyCardProps> = ({ property }) => {
         agentData={agentData}
         setProfileModalOpen={setIsShareModalOpen}
         visible={isShareModalOpen}
+      />
+      <CreditLimitModal
+        isVisible={creditLimitModalVisible}
+        onClose={() => setCreditLimitModalVisible(false)}
+        onGoPremium={handleGoPremium}
+        onBuyCredits={handleBuyCredits}
       />
     </SafeAreaView>
   );

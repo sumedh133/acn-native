@@ -195,8 +195,8 @@ const CheckoutScreen: React.FC = () => {
         case "booster":
           updateData = {
             ...updateData,
-            boosterCredits: 5,
-            monthlyCredits: 5,
+            boosterCredits:(agentData?.boosterCredits || 0) +  5,
+            monthlyCredits: (agentData?.monthlyCredits || 0) + 5,
           };
           break;
         default:
