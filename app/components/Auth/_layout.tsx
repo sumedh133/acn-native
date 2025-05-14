@@ -10,6 +10,8 @@ import { StatusBar } from "expo-status-bar";
 import { useEffect } from "react";
 import "react-native-reanimated";
 import "../../../global.css";
+import { analytics } from "@/app/config/firebase";
+import { logEvent } from "@react-native-firebase/analytics";
 
 import { useColorScheme } from "@/hooks/useColorScheme";
 import { useSelector } from "react-redux";
@@ -21,6 +23,7 @@ SplashScreen.preventAutoHideAsync();
 
 export default function RootLayout() {
   const colorScheme = useColorScheme();
+  const userType = useSelector((state: RootState) => state?.agent?.docData?.userType) || "free";
 
   const isConnectedToInternet = useSelector(
     (state: RootState) => state.app.isConnectedToInternet
@@ -39,6 +42,34 @@ export default function RootLayout() {
   // if (!loaded) {
   //   return null;
   // }
+
+  // Track theme changes
+  useEffect(() => {
+    try {
+      logEvent(analytics, 'theme_change', {
+        event_category: 'app_settings',
+        event_label: 'theme',
+        theme: colorScheme,
+        user_type: userType
+      });
+    } catch (error) {
+      console.error('Error logging theme change:', error);
+    }
+  }, [colorScheme, userType]);
+
+  // Track offline state
+  useEffect(() => {
+    try {
+      logEvent(analytics, 'connectivity_change', {
+        event_category: 'app_status',
+        event_label: 'connectivity',
+        is_online: isConnectedToInternet,
+        user_type: userType
+      });
+    } catch (error) {
+      console.error('Error logging connectivity change:', error);
+    }
+  }, [isConnectedToInternet, userType]);
 
   if (!isConnectedToInternet) return <Offline />;
 

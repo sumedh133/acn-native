@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect } from "react";
 import {
   View,
   Text,
@@ -11,12 +11,16 @@ import {
 import { useRouter } from "expo-router";
 import { AntDesign, Feather, MaterialIcons } from "@expo/vector-icons";
 import { logOut } from "@/store/slices/authSlice";
-import { useDispatch } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import { AnyAction, ThunkDispatch } from "@reduxjs/toolkit";
 import { RootState } from "@/store/store";
+import { analytics } from "@/app/config/firebase";
+import { logEvent } from "@react-native-firebase/analytics";
 
 export default function BlacklistedPage() {
   const router = useRouter();
+  const userType = useSelector((state: RootState) => state?.agent?.docData?.userType) || "free";
+  const phonenumber = useSelector((state: RootState) => state?.agent?.phonenumber);
 
   const { width } = useWindowDimensions();
 
@@ -24,12 +28,47 @@ export default function BlacklistedPage() {
 
   const dispatch = useDispatch<ThunkDispatch<RootState, unknown, AnyAction>>();
 
+  useEffect(() => {
+    try {
+      logEvent(analytics, 'view_blacklisted_page', {
+        event_category: 'auth',
+        event_label: 'blacklisted_view',
+        user_type: userType,
+        phone_number: phonenumber
+      });
+    } catch (error) {
+      console.error('Error logging blacklisted page view:', error);
+    }
+  }, [userType, phonenumber]);
+
   const handleBack = () => {
+    try {
+      logEvent(analytics, 'blacklisted_back_click', {
+        event_category: 'auth',
+        event_label: 'blacklisted_interaction',
+        action: 'back',
+        user_type: userType,
+        phone_number: phonenumber
+      });
+    } catch (error) {
+      console.error('Error logging back click:', error);
+    }
     dispatch(logOut());
     router.back();
   };
 
   const handleSupportClick = () => {
+    try {
+      logEvent(analytics, 'blacklisted_support_click', {
+        event_category: 'auth',
+        event_label: 'blacklisted_interaction',
+        action: 'support_call',
+        user_type: userType,
+        phone_number: phonenumber
+      });
+    } catch (error) {
+      console.error('Error logging support click:', error);
+    }
     const url = `tel:${9415006092}`;
     Linking.openURL(url);
   };

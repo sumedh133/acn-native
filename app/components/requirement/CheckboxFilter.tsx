@@ -3,11 +3,14 @@ import { View, Text, TouchableOpacity, StyleSheet } from "react-native";
 import { useRefinementList } from "react-instantsearch";
 import { useSelector } from "react-redux";
 import { RefinementItem } from "../DropdownMoreFilters";
+import { analytics } from "@/app/config/firebase";
+import { logEvent } from "@react-native-firebase/analytics";
 
 interface RootState {
   agent: {
     docData: {
       cpId: string;
+      userType: string;
     };
   };
 }
@@ -22,6 +25,7 @@ const CheckboxFilter = ({
   refine: any;
 }) => {
   const cpId = useSelector((state: RootState) => state.agent?.docData?.cpId);
+  const userType = useSelector((state: RootState) => state.agent?.docData?.userType) || "free";
   // const cpId = "CPA537"
   // const { items, refine } = useRefinementList({ attribute });
   const [isToggled, setIsToggled] = useState(
@@ -32,6 +36,18 @@ const CheckboxFilter = ({
     const shouldRefine = !isToggled;
     setIsToggled(shouldRefine);
     refine(cpId);
+
+    try {
+      logEvent(analytics, 'requirement_filter_toggle', {
+        event_category: 'filters',
+        event_label: 'interaction',
+        filter_type: 'my_requirements',
+        filter_value: shouldRefine ? 'on' : 'off',
+        user_type: userType
+      });
+    } catch (error) {
+      console.error('Error logging filter toggle:', error);
+    }
   };
 
   return (

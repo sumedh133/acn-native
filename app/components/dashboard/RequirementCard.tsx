@@ -6,11 +6,13 @@ import { Ionicons } from "@expo/vector-icons";
 import { AnyAction, ThunkDispatch } from "@reduxjs/toolkit";
 import { router } from "expo-router";
 import { styled } from "nativewind";
-import React from "react";
+import React, { useEffect } from "react";
 import { TouchableOpacity, View } from "react-native";
 import { Text } from "react-native";
-import { useDispatch } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import DashboardDropdown from "./DashboardDropdown";
+import { analytics } from "@/app/config/firebase";
+import { logEvent } from "@react-native-firebase/analytics";
 
 const StyledView = styled(View);
 const StyledText = styled(Text);
@@ -28,9 +30,42 @@ const RequirementCard = ({
   totalCount: number;
 }) => {
   const dispatch = useDispatch<ThunkDispatch<RootState, unknown, AnyAction>>();
+  const userType = useSelector((state: RootState) => state?.agent?.docData?.userType) || "free";
+
+  useEffect(() => {
+    try {
+      logEvent(analytics, 'requirement_card_view', {
+        event_category: 'dashboard',
+        event_label: 'impression',
+        requirement_id: requirement.requirementId,
+        requirement_type: requirement.assetType,
+        requirement_status: requirement.status,
+        position_index: index,
+        user_type: userType
+      });
+    } catch (error) {
+      console.error('Error logging requirement card view:', error);
+    }
+  }, []);
 
   // Handler for card press - navigate to requirement details
   const handleNavigateToRequirementDetails = () => {
+    try {
+      logEvent(analytics, 'requirement_details_view', {
+        event_category: 'dashboard',
+        event_label: 'navigation',
+        requirement_id: requirement.requirementId,
+        requirement_type: requirement.assetType,
+        requirement_status: requirement.status,
+        budget_range: requirement.marketValue === "Market Value" 
+          ? "market_price" 
+          : `${requirement.budget?.from}-${requirement.budget?.to}`,
+        user_type: userType
+      });
+    } catch (error) {
+      console.error('Error logging requirement details view:', error);
+    }
+
     // Set requirement data in Redux
     dispatch(setRequirementDataThunk(requirement));
 

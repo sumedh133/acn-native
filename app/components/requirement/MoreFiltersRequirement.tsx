@@ -15,6 +15,10 @@ import CheckboxFilter from "./CheckboxFilter";
 import DropdownMoreFilters, { RefinementItem } from "../DropdownMoreFilters";
 import RangeMoreFilters from "../RangeMoreFilters";
 import { RangeState } from "../MoreFilters";
+import { analytics } from "@/app/config/firebase";
+import { logEvent } from "@react-native-firebase/analytics";
+import { useSelector } from "react-redux";
+import { RootState } from "@/store/store";
 
 interface BudgetMarketValueFiltersProps {
   isMarketValueActive: Boolean;
@@ -30,9 +34,47 @@ const BudgetMarketValueFilters = ({
   marketValueItem,
   refineMarketValue,
 }: BudgetMarketValueFiltersProps) => {
+  const userType = useSelector((state: RootState) => state.agent?.docData?.userType) || "free";
   const [minBudget, setMinBudget] = useState("");
   const [maxBudget, setMaxBudget] = useState("");
   const { items, refine } = useRefinementList({ attribute: "marketValue" });
+
+  const handleBudgetChange = (val: string, type: 'min' | 'max') => {
+    if (type === 'min') {
+      setMinBudget(val);
+    } else {
+      setMaxBudget(val);
+    }
+    handleRangeFilterChange("budget.to");
+
+    try {
+      logEvent(analytics, 'requirement_budget_filter', {
+        event_category: 'filters',
+        event_label: 'budget',
+        filter_type: type,
+        filter_value: val,
+        user_type: userType
+      });
+    } catch (error) {
+      console.error('Error logging budget filter:', error);
+    }
+  };
+
+  const handleMarketValueSelect = (value: string) => {
+    refineMarketValue(value);
+    handleRangeFilterChange("marketValue");
+
+    try {
+      logEvent(analytics, 'requirement_market_value_filter', {
+        event_category: 'filters',
+        event_label: 'market_value',
+        filter_value: value,
+        user_type: userType
+      });
+    } catch (error) {
+      console.error('Error logging market value filter:', error);
+    }
+  };
 
   return (
     <View className="border border-[#ECECEC] rounded-xl p-4 bg-white mb-5">
@@ -48,8 +90,7 @@ const BudgetMarketValueFilters = ({
             value={minBudget}
             keyboardType="numeric"
             onChangeText={(val) => {
-              setMinBudget(val);
-              handleRangeFilterChange("budget.to");
+              handleBudgetChange(val, 'min');
             }}
           />
           <TextInput
@@ -58,8 +99,7 @@ const BudgetMarketValueFilters = ({
             value={maxBudget}
             keyboardType="numeric"
             onChangeText={(val) => {
-              setMaxBudget(val);
-              handleRangeFilterChange("budget.to");
+              handleBudgetChange(val, 'max');
             }}
           />
         </View>
@@ -84,8 +124,7 @@ const BudgetMarketValueFilters = ({
                 return (
                   <TouchableOpacity
                     onPress={() => {
-                      refineMarketValue(item.value);
-                      handleRangeFilterChange("marketValue");
+                      handleMarketValueSelect(item.value);
                     }}
                     className={`flex-1 m-1 p-3 rounded-lg border ${
                       isRefined
@@ -133,6 +172,7 @@ const MoreFiltersRequirement = ({
   const [showFilters, setShowFilters] = useState(true);
   const [isMarketValueActive, setIsMarketValueActive] = useState(false);
   const [isBudgetActive, setIsBudgetActive] = useState(false);
+  const userType = useSelector((state: RootState) => state.agent?.docData?.userType) || "free";
 
   const handleRangeFilterChange = (attribute: string) => {
     if (attribute === "marketValue") {
@@ -171,6 +211,26 @@ const MoreFiltersRequirement = ({
     useRefinementList({ attribute: "marketValue" });
 
   const [forceRender, setForceRender] = useState(false);
+
+  const handleShowResults = () => {
+    try {
+      logEvent(analytics, 'apply_requirement_filters', {
+        event_category: 'filters',
+        event_label: 'apply',
+        filters_active: {
+          asset_type: assetTypeItems.some(item => item.isRefined),
+          configuration: unitTypeItems.some(item => item.isRefined),
+          sbua: sbuaRangeState.start !== undefined,
+          budget: budgetToRangeState.start !== undefined
+        },
+        user_type: userType
+      });
+    } catch (error) {
+      console.error('Error logging filter application:', error);
+    }
+    toggleFiltersVisibility();
+  };
+
   return (
     <Modal
       visible={showFilters}
@@ -253,9 +313,7 @@ const MoreFiltersRequirement = ({
 
         <TouchableOpacity
           className="bg-[#103D35] p-3 mx-4 mb-8 rounded-lg items-center"
-          onPress={() => {
-            toggleFiltersVisibility();
-          }}
+          onPress={handleShowResults}
         >
           <Text className="text-white text-lg font-semibold">Show Results</Text>
         </TouchableOpacity>

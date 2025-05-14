@@ -4,6 +4,10 @@ import { useInstantSearch, usePagination } from 'react-instantsearch';
 import { ScrollView } from 'react-native-gesture-handler';
 import { Ionicons } from '@expo/vector-icons'; // Assuming you're using Expo or have this library installed
 import Animated from 'react-native-reanimated';
+import { analytics } from "@/app/config/firebase";
+import { logEvent } from "@react-native-firebase/analytics";
+import { useSelector } from "react-redux";
+import { RootState } from "@/store/store";
 
 interface CustomPaginationProps {
   isSticky?: boolean;
@@ -21,6 +25,7 @@ export default function CustomPagination({
   const [loading, setLoading] = useState(false);
   const { width } = Dimensions.get('window');
   const isMobile = width < 768; // This is just for consistency with the web version
+  const userType = useSelector((state: RootState) => state.agent?.docData?.userType) || "free";
 
   const {
     currentRefinement,
@@ -81,11 +86,42 @@ export default function CustomPagination({
   const handlePageClick = (page: number) => {
     Keyboard.dismiss();
     setLoading(true);
+    
+    try {
+      logEvent(analytics, analyticsEvent, {
+        event_category: 'pagination',
+        event_label: 'click',
+        current_page: currentRefinement + 1,
+        target_page: page,
+        total_pages: nbPages,
+        user_type: userType
+      });
+    } catch (error) {
+      console.error('Error logging pagination:', error);
+    }
+
     setTimeout(() => {
       refine(page - 1);
-      // If you have analytics, you could implement it here
-      // logEvent(analytics, analyticsEvent);
     }, 0);
+  };
+
+  const handleNavigation = (direction: 'previous' | 'next') => {
+    const targetPage = direction === 'previous' ? currentRefinement : currentRefinement + 2;
+    
+    try {
+      logEvent(analytics, 'pagination_navigation', {
+        event_category: 'pagination',
+        event_label: direction,
+        current_page: currentRefinement + 1,
+        target_page: targetPage,
+        total_pages: nbPages,
+        user_type: userType
+      });
+    } catch (error) {
+      console.error('Error logging pagination navigation:', error);
+    }
+
+    handlePageClick(targetPage);
   };
 
   return (
@@ -95,7 +131,7 @@ export default function CustomPagination({
         <TouchableOpacity
           onPress={() => {
             if (currentRefinement > 0 && !loading) {
-              handlePageClick(currentRefinement);
+              handleNavigation('previous');
             }
           }}
           disabled={currentRefinement === 0 || loading}
@@ -143,7 +179,7 @@ export default function CustomPagination({
         <TouchableOpacity
           onPress={() => {
             if (currentRefinement < nbPages - 1 && !loading) {
-              handlePageClick(currentRefinement + 2);
+              handleNavigation('next');
             }
           }}
           disabled={currentRefinement === nbPages - 1 || loading}

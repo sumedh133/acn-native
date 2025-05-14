@@ -15,6 +15,7 @@ import {
   Keyboard,
   RefreshControl,
   FlatList,
+  ViewabilityConfig,
 } from "react-native";
 import algoliasearch from "algoliasearch";
 import {
@@ -36,6 +37,8 @@ import Offline from "../components/Offline";
 import { useSelector } from "react-redux";
 import { RootState } from "@/store/store";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { analytics } from "../config/firebase";
+import { logEvent } from "@react-native-firebase/analytics";
 
 // Initialize Algolia search client
 const searchClient = algoliasearch(
@@ -65,10 +68,19 @@ function SearchRefresher({
 
 // MobileHits Component
 const MobileHits = () => {
-  // const { hits } = useHits<Property>();
   const { items, isLastPage, showMore } = useInfiniteHits<Property>();
   const { status } = useInstantSearch();
   const { query } = useSearchBox();
+  const agentData = useSelector((state: RootState) => state?.agent?.docData);
+  const userType = agentData?.userType || "free";
+  const [maxScrollDepth, setMaxScrollDepth] = useState(0);
+  const viewedProperties = useRef(new Set<string>());
+  const [totalPropertiesViewed, setTotalPropertiesViewed] = useState(0);
+
+  const viewabilityConfig = useRef<ViewabilityConfig>({
+    itemVisiblePercentThreshold: 50, // Item is considered viewed when 50% visible
+    minimumViewTime: 500 // Must be visible for at least 500ms
+  });
 
   const { refresh } = useInstantSearch();
   const [refreshing, setRefreshing] = useState(false);
@@ -76,37 +88,140 @@ const MobileHits = () => {
   const [isLoadingMore, setIsLoadingMore] = useState(false);
   const [isRendered, setIsRendered] = useState(false);
 
+  // Track search results
+  useEffect(() => {
+    if (items && status === 'idle') {
+      try {
+        logEvent(analytics, 'property_search_results', {
+          event_category: 'search',
+          event_label: 'results',
+          results_count: items.length,
+          search_query: query || 'empty',
+          user_type: userType
+        });
+      } catch (error) {
+        console.error('Error logging search results:', error);
+      }
+    }
+  }, [items, status, query, userType]);
+
   const onRefresh = useCallback(() => {
     setRefreshing(true);
-
-    // Call the Algolia refresh method if available
+    try {
+      logEvent(analytics, 'property_list_refresh', {
+        event_category: 'interaction',
+        event_label: 'refresh',
+        user_type: userType
+      });
+    } catch (error) {
+      console.error('Error logging refresh:', error);
+    }
     refresh();
-
-    // Set a timeout to stop the refreshing indicator after some time
     setTimeout(() => {
       setRefreshing(false);
     }, 1000);
-  }, [refresh]);
+  }, [refresh, userType]);
 
   const handleEndReached = useCallback(() => {
     if (!isLastPage && !isLoadingMore) {
+      try {
+        logEvent(analytics, 'property_list_pagination', {
+          event_category: 'interaction',
+          event_label: 'load_more',
+          current_items: items.length,
+          user_type: userType
+        });
+      } catch (error) {
+        console.error('Error logging pagination:', error);
+      }
       setIsLoadingMore(true);
       requestAnimationFrame(() => {
         showMore();
         setIsLoadingMore(false);
       });
     }
-  }, [isLastPage, isLoadingMore, showMore]);
+  }, [isLastPage, isLoadingMore, showMore, items.length, userType]);
 
-  const keyExtractor = useCallback(
-    (item: Property) => item.objectID || String(item.propertyId),
-    []
-  );
+  const keyExtractor = useCallback((item: Property) => item.propertyId || String(item.propertyId), []);
 
-  const renderItem = useCallback(({ item }: { item: Property }) => {
+  const handleViewableItemsChanged = useCallback(({ viewableItems }: any) => {
+    const newPropertiesViewed = viewableItems.filter((item: any) => {
+      const propertyId = item.item.propertyId;
+      return !viewedProperties.current.has(propertyId);
+    });
+
+    if (newPropertiesViewed.length > 0) {
+      newPropertiesViewed.forEach((item: any) => {
+        const propertyId = item.item.propertyId;
+        viewedProperties.current.add(propertyId);
+      });
+
+      setTotalPropertiesViewed(viewedProperties.current.size);
+
+      try {
+        logEvent(analytics, 'property_cards_viewed', {
+          event_category: 'engagement',
+          event_label: 'impression',
+          total_viewed: viewedProperties.current.size,
+          new_properties_count: newPropertiesViewed.length,
+          total_available: items.length,
+          view_percentage: Math.round((viewedProperties.current.size / items.length) * 100),
+          user_type: userType
+        });
+      } catch (error) {
+        console.error('Error logging property views:', error);
+      }
+    }
+  }, [items.length, userType]);
+
+  const handleScroll = useCallback((event: any) => {
+    const { contentOffset, contentSize, layoutMeasurement } = event.nativeEvent;
+    const scrollDepthPercentage = Math.floor(
+      ((contentOffset.y + layoutMeasurement.height) / contentSize.height) * 100
+    );
+    
+    if (scrollDepthPercentage > maxScrollDepth) {
+      setMaxScrollDepth(scrollDepthPercentage);
+      try {
+        logEvent(analytics, 'property_scroll_depth', {
+          event_category: 'engagement',
+          event_label: 'scroll',
+          depth_percentage: scrollDepthPercentage,
+          total_items: items.length,
+          properties_viewed: viewedProperties.current.size,
+          user_type: userType
+        });
+      } catch (error) {
+        console.error('Error logging scroll depth:', error);
+      }
+    }
+  }, [maxScrollDepth, items.length, userType]);
+
+  const renderItem = useCallback(({ item, index }: { item: Property; index: number }) => {
     const transformedProperty: Property = item;
-    return <PropertyCard key={item.objectID} property={transformedProperty} />;
-  }, []);
+    const handlePropertyView = () => {
+      try {
+        logEvent(analytics, 'property_card_view', {
+          event_category: 'interaction',
+          event_label: 'property_view',
+          property_id: item.propertyId,
+          list_position: index + 1,
+          user_type: userType
+        });
+      } catch (error) {
+        console.error('Error logging property view:', error);
+      }
+    };
+
+    return (
+      <View onStartShouldSetResponder={() => {
+        handlePropertyView();
+        return false;
+      }}>
+        <PropertyCard key={item.propertyId} property={transformedProperty} />
+      </View>
+    );
+  }, [userType]);
 
   const renderFooter = useCallback(() => {
     if (loading) {
@@ -159,6 +274,16 @@ const MobileHits = () => {
     );
 
   if (items?.length === 0 && query?.length !== 0) {
+    try {
+      logEvent(analytics, 'property_search_no_results', {
+        event_category: 'search',
+        event_label: 'no_results',
+        search_query: query,
+        user_type: userType
+      });
+    } catch (error) {
+      console.error('Error logging no results:', error);
+    }
     return (
       <View className="flex items-center justify-center h-64">
         <Text style={{ ...styles.text, fontFamily: "Montserrat_400Regular" }}>
@@ -175,6 +300,10 @@ const MobileHits = () => {
         data={items}
         renderItem={renderItem}
         keyExtractor={keyExtractor}
+        onScroll={handleScroll}
+        scrollEventThrottle={16}
+        onViewableItemsChanged={handleViewableItemsChanged}
+        viewabilityConfig={viewabilityConfig.current}
         refreshControl={
           <RefreshControl
             refreshing={refreshing}
@@ -208,19 +337,72 @@ export default function PropertiesScreen() {
   const [selectedLandmark, setSelectedLandmark] = useState<Landmark | null>(
     null
   );
+  const agentData = useSelector((state: RootState) => state?.agent?.docData);
+  const userType = agentData?.userType || "free";
 
   const isConnectedToInternet = useSelector(
     (state: RootState) => state.app.isConnectedToInternet
   );
 
+  // Track page view
+  useEffect(() => {
+    try {
+      logEvent(analytics, 'properties_page_view', {
+        event_category: 'page_view',
+        event_label: 'properties',
+        user_type: userType
+      });
+    } catch (error) {
+      console.error('Error logging page view:', error);
+    }
+  }, [userType]);
+
   const handleToggleMoreFilters = () => {
+    try {
+      logEvent(analytics, 'property_filters_toggle', {
+        event_category: 'interaction',
+        event_label: 'filters',
+        filter_state: !isMoreFiltersModalOpen ? 'open' : 'close',
+        user_type: userType
+      });
+    } catch (error) {
+      console.error('Error logging filter toggle:', error);
+    }
     setIsMoreFiltersModalOpen((prev) => !prev);
-    Keyboard.dismiss(); // Dismiss the keyboard when toggling filters
+    Keyboard.dismiss();
   };
+
+  // Track landmark selection
+  useEffect(() => {
+    if (selectedLandmark) {
+      try {
+        logEvent(analytics, 'property_landmark_selected', {
+          event_category: 'search',
+          event_label: 'landmark',
+          landmark_name: selectedLandmark.name,
+          landmark_radius: selectedLandmark.radius,
+          user_type: userType
+        });
+      } catch (error) {
+        console.error('Error logging landmark selection:', error);
+      }
+    }
+  }, [selectedLandmark, userType]);
 
   useDoubleBackPressExit();
 
-  if (!isConnectedToInternet) return <Offline />;
+  if (!isConnectedToInternet) {
+    try {
+      logEvent(analytics, 'properties_offline_view', {
+        event_category: 'error',
+        event_label: 'offline',
+        user_type: userType
+      });
+    } catch (error) {
+      console.error('Error logging offline state:', error);
+    }
+    return <Offline />;
+  }
 
   return (
     <View className="flex-1 bg-[#F5F6F7]">

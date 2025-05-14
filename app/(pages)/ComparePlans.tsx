@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   SafeAreaView,
   Text,
@@ -15,6 +15,8 @@ import { useSelector } from "react-redux";
 import { RootState } from "@/store/store";
 import Offline from "../components/Offline";
 import OnboardingFlow from "../components/Onboarding";
+import { logEvent } from "@react-native-firebase/analytics";
+import { analytics } from "../config/firebase";
 
 const ComparePlans = () => {
   const router = useRouter();
@@ -23,10 +25,76 @@ const ComparePlans = () => {
   );
 
   const { docData: agentData } = useSelector((state: RootState) => state.agent);
+  const userType = agentData?.userType || "free";
 
   const [showOnboarding, setShowOnboarding] = useState(false);
 
+  // Add page view tracking
+  useEffect(() => {
+    try {
+      logEvent(analytics, "compare_plans_page_view", {
+        event_category: "plans",
+        event_label: "page_view",
+        platform: Platform.OS,
+        user_type: userType,
+        trial_used: agentData?.trialUsed || false
+      });
+    } catch (error) {
+      console.error("Error logging page view:", error);
+    }
+  }, [agentData, userType]);
+
   if (!isConnectedToInternet) return <Offline />;
+
+  const handlePremiumPlanClick = () => {
+    try {
+      logEvent(analytics, "premium_plan_click", {
+        event_category: "plans",
+        event_label: "premium_subscription",
+        platform: Platform.OS,
+        price: "10000",
+        currency: "INR",
+        billing_period: "yearly",
+        user_type: userType
+      });
+    } catch (error) {
+      console.error("Error logging premium plan click:", error);
+    }
+    router.push({
+      pathname: "/CheckoutScreen",
+      params: { planId: "premium" },
+    });
+  };
+
+  const handleTrialStart = () => {
+    try {
+      logEvent(analytics, "trial_start_click", {
+        event_category: "plans",
+        event_label: "free_trial",
+        platform: Platform.OS,
+        user_type: userType
+      });
+    } catch (error) {
+      console.error("Error logging trial start:", error);
+    }
+    setShowOnboarding(true);
+  };
+
+  const handleSupportClick = () => {
+    try {
+      logEvent(analytics, "support_click", {
+        event_category: "plans",
+        event_label: "support",
+        platform: Platform.OS,
+        source: "compare_plans",
+        user_type: userType
+      });
+    } catch (error) {
+      console.error("Error logging support click:", error);
+    }
+    const whatsappUrl = `https://wa.me/+919415006092`;
+    Linking.openURL(whatsappUrl);
+  };
 
   const plans = [
     {
@@ -92,23 +160,14 @@ const ComparePlans = () => {
       description: "Unlock ACN's full potential with additional features.",
       primaryButton: {
         text: "Unlock Full Access",
-        action: () =>
-          router.push({
-            pathname: "/CheckoutScreen",
-            params: { planId: "premium" },
-          }),
+        action: handlePremiumPlanClick,
       },
       secondaryButton: {
         text: "Start 1 month trial",
-        action: () => setShowOnboarding(true),
+        action: handleTrialStart,
       },
     },
   ];
-
-  const handleSupportClick = () => {
-    const whatsappUrl = `https://wa.me/+919415006092`;
-    Linking.openURL(whatsappUrl);
-  };
 
   return (
     <>
@@ -312,9 +371,29 @@ const ComparePlans = () => {
         <OnboardingFlow
           visible={showOnboarding}
           onComplete={() => {
+            try {
+              logEvent(analytics, "trial_onboarding_complete", {
+                event_category: "plans",
+                event_label: "onboarding",
+                platform: Platform.OS,
+                user_type: userType
+              });
+            } catch (error) {
+              console.error("Error logging onboarding completion:", error);
+            }
             setShowOnboarding(false);
           }}
           onClose={() => {
+            try {
+              logEvent(analytics, "trial_onboarding_closed", {
+                event_category: "plans",
+                event_label: "onboarding",
+                platform: Platform.OS,
+                user_type: userType
+              });
+            } catch (error) {
+              console.error("Error logging onboarding closure:", error);
+            }
             setShowOnboarding(false);
           }}
         />

@@ -1,6 +1,10 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { View, Text, StyleSheet, Image, Dimensions, StatusBar } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { useSelector } from "react-redux";
+import { RootState } from "@/store/store";
+import { analytics } from "../config/firebase";
+import { logEvent } from "@react-native-firebase/analytics";
 
 const { width } = Dimensions.get('window');
 
@@ -9,18 +13,44 @@ interface NotificationPageProps {
 }
 
 const NotificationPage: React.FC<NotificationPageProps> = () => {
+  const agentData = useSelector((state: RootState) => state?.agent?.docData);
+  const userType = agentData?.userType || "free";
+
+  // Track page view
+  useEffect(() => {
+    try {
+      logEvent(analytics, 'notification_page_view', {
+        event_category: 'notifications',
+        event_label: 'coming_soon',
+        page_status: 'under_development',
+        user_type: userType
+      });
+    } catch (error) {
+      console.error('Error logging notification page view:', error);
+    }
+  }, [userType]);
+
   return (
     <SafeAreaView style={styles.container}>
       <StatusBar barStyle="dark-content" backgroundColor="#FFFFFF" />
-      
-      
       
       <View style={styles.contentContainer}>
         {/* <Image 
           source={require('../assets/notification-icon.png')} 
           style={styles.image}
           // Fallback if image doesn't exist
-          onError={(e) => console.log('Image could not be loaded')}
+          onError={(e) => {
+            console.log('Image could not be loaded');
+            try {
+              logEvent(analytics, 'notification_image_error', {
+                event_category: 'errors',
+                event_label: 'image_load_failed',
+                user_type: userType
+              });
+            } catch (error) {
+              console.error('Error logging image error:', error);
+            }
+          }}
         /> */}
         
         <Text style={styles.title}>Coming Soon</Text>

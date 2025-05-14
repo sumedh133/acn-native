@@ -7,6 +7,8 @@ import {
   View,
   GestureResponderEvent,
 } from "react-native";
+import { analytics } from "@/app/config/firebase";
+import { logEvent } from "@react-native-firebase/analytics";
 
 interface ARPrimaryButtonProps {
   children: React.ReactNode;
@@ -15,6 +17,9 @@ interface ARPrimaryButtonProps {
   IconSecond?: any;
   disabled?: boolean;
   style?: object;
+  analyticsLabel?: string;
+  analyticsContext?: string;
+  analyticsData?: Record<string, any>;
 }
 
 const ARPrimaryButton: React.FC<ARPrimaryButtonProps> = ({
@@ -24,10 +29,31 @@ const ARPrimaryButton: React.FC<ARPrimaryButtonProps> = ({
   IconSecond,
   disabled = false,
   style = {},
+  analyticsLabel,
+  analyticsContext = "general",
+  analyticsData = {},
 }) => {
+  const handlePress = (event: GestureResponderEvent) => {
+    try {
+      logEvent(analytics, 'primary_button_click', {
+        event_category: analyticsContext,
+        event_label: analyticsLabel || (typeof children === 'string' ? children : 'unknown'),
+        button_text: typeof children === 'string' ? children : 'unknown',
+        has_icon_first: !!IconFirst,
+        has_icon_second: !!IconSecond,
+        is_disabled: disabled,
+        ...analyticsData
+      });
+    } catch (error) {
+      console.error('Error logging button click:', error);
+    }
+
+    onPress?.(event);
+  };
+
   return (
     <TouchableOpacity
-      onPress={onPress}
+      onPress={handlePress}
       disabled={disabled}
       style={[styles.button, disabled ? styles.disabled : {}, style]}
       activeOpacity={0.8}

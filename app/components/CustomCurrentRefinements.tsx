@@ -11,6 +11,10 @@ import {
   useCurrentRefinements,
 } from "react-instantsearch";
 import { Button } from "react-native-elements";
+import { analytics } from "@/app/config/firebase";
+import { logEvent } from "@react-native-firebase/analytics";
+import { useSelector } from "react-redux";
+import { RootState } from "@/store/store";
 
 interface CustomCurrentRefinementsProps {
   selectedLandmark?: any;
@@ -23,6 +27,7 @@ export default function CustomCurrentRefinements({
 }: CustomCurrentRefinementsProps) {
   const { items, refine } = useCurrentRefinements();
   const { refine: clearRefinements } = useClearRefinements();
+  const userType = useSelector((state: RootState) => state.agent?.docData?.userType) || "free";
 
   if (items.length === 0 && !selectedLandmark) {
     return null;
@@ -36,6 +41,38 @@ export default function CustomCurrentRefinements({
     })),
   );
 
+  const handleRefinementRemove = (refinement: any, attribute: string) => {
+    try {
+      logEvent(analytics, 'remove_refinement', {
+        event_category: 'filters',
+        event_label: 'remove',
+        filter_type: attribute,
+        filter_value: refinement.label || refinement.value,
+        user_type: userType
+      });
+    } catch (error) {
+      console.error('Error logging refinement removal:', error);
+    }
+    refine(refinement);
+  };
+
+  const handleClearAll = () => {
+    try {
+      logEvent(analytics, 'clear_all_refinements', {
+        event_category: 'filters',
+        event_label: 'clear_all',
+        active_filters: items.map(item => item.attribute),
+        user_type: userType
+      });
+    } catch (error) {
+      console.error('Error logging clear all:', error);
+    }
+    clearRefinements();
+    if (setSelectedLandmark) {
+      setSelectedLandmark(null);
+    }
+  };
+
   return (
     <ScrollView
       horizontal
@@ -46,6 +83,17 @@ export default function CustomCurrentRefinements({
         {selectedLandmark && (
           <TouchableOpacity
             onPress={() => {
+              try {
+                logEvent(analytics, 'remove_landmark_filter', {
+                  event_category: 'filters',
+                  event_label: 'remove',
+                  landmark_name: selectedLandmark.name,
+                  radius: selectedLandmark.radius,
+                  user_type: userType
+                });
+              } catch (error) {
+                console.error('Error logging landmark removal:', error);
+              }
               setSelectedLandmark && setSelectedLandmark(null);
             }}
             style={styles.chip}
@@ -60,7 +108,7 @@ export default function CustomCurrentRefinements({
         {allRefinements.map((item, index) => (
           <TouchableOpacity
             key={`${item.attribute}-${item.refinement.value || index}`}
-            onPress={() => refine(item.refinement)}
+            onPress={() => handleRefinementRemove(item.refinement, item.attribute)}
             style={styles.chip}
           >
             <Text style={styles.chipText}>
@@ -74,12 +122,7 @@ export default function CustomCurrentRefinements({
 
         {(items.length > 0 || selectedLandmark) && (
           <TouchableOpacity
-            onPress={() => {
-              clearRefinements();
-              {
-                setSelectedLandmark && setSelectedLandmark(null);
-              }
-            }}
+            onPress={handleClearAll}
             style={styles.clearButton}
           >
             <View style={styles.clearButtonContent}>

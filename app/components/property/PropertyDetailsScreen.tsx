@@ -51,6 +51,8 @@ import ArrowLeftIcon from "@/assets/icons/svg/Common/ArrowLeftIcon";
 import { propertyUserStatus } from "@/app/constants/PropertyConstants";
 import { setKamModalVisible } from "@/store/slices/kamSlice";
 import CreditLimitModal from "@/app/modals/CreditLimitModal";
+import { analytics } from "@/app/config/firebase";
+import { logEvent } from "@react-native-firebase/analytics";
 
 const { width } = Dimensions.get("window");
 
@@ -133,6 +135,7 @@ export default function PropertyDetailsScreen() {
   const monthlyCredits = useSelector(
     (state: RootState) => state?.agent?.docData?.monthlyCredits
   );
+  const userType = useSelector((state: RootState) => state?.agent?.docData?.userType) || "free";
   const isConnectedToInternet = useSelector(
     (state: RootState) => state.app.isConnectedToInternet
   );
@@ -155,6 +158,18 @@ export default function PropertyDetailsScreen() {
 
   const handlePropertyStatusChange = useCallback(
     async (id: string, status: string) => {
+      try {
+        logEvent(analytics, 'property_status_change', {
+          event_category: 'property',
+          event_label: 'update',
+          property_id: id,
+          new_status: status,
+          user_type: userType
+        });
+      } catch (error) {
+        console.error('Error logging status change:', error);
+      }
+
       const newStatus = status;
       try {
         await updateDoc(doc(db, "ACN123", id), {
@@ -162,7 +177,7 @@ export default function PropertyDetailsScreen() {
           ageOfStatus: 0,
           dateOfStatusLastChecked: getUnixDateTime(),
         });
-        showSuccessToast("Inventory status updated Succesfully!");
+        showSuccessToast("Inventory status updated Successfully!");
       } catch (error) {
         showErrorToast("Error updating Inventory status!");
         console.error("Error updating status in Firestore:", error);
@@ -194,11 +209,33 @@ export default function PropertyDetailsScreen() {
 
   // Return to previous screen
   const handleGoBack = () => {
+    try {
+      logEvent(analytics, 'property_details_close', {
+        event_category: 'property',
+        event_label: 'navigation',
+        property_id: property.propertyId,
+        user_type: userType
+      });
+    } catch (error) {
+      console.error('Error logging details close:', error);
+    }
     router.back();
   };
 
   // Dummy handler functions
   const handleOpenGoogleMap = () => {
+    try {
+      logEvent(analytics, 'property_map_click', {
+        event_category: 'property',
+        event_label: 'interaction',
+        property_id: property.propertyId,
+        has_map_location: !!property.mapLocation,
+        user_type: userType
+      });
+    } catch (error) {
+      console.error('Error logging map click:', error);
+    }
+
     if (!property.mapLocation) {
       showErrorToast("Map location not available.");
       return;
@@ -207,16 +244,39 @@ export default function PropertyDetailsScreen() {
   };
 
   const handleOpenDriveDetails = () => {
+    try {
+      logEvent(analytics, 'property_details_drive_click', {
+        event_category: 'property',
+        event_label: 'interaction',
+        property_id: property.propertyId,
+        has_drive_link: !!property.driveLink,
+        user_type: userType
+      });
+    } catch (error) {
+      console.error('Error logging drive click:', error);
+    }
+
     if (!property.driveLink) {
       showErrorToast("Drive link not available.");
       return;
     }
-    // Implementation would open drive link
     Linking.openURL(property.driveLink);
     showSuccessToast("Opening drive details...");
   };
 
   const handleEnquireNowBtn = (e: any) => {
+    try {
+      logEvent(analytics, 'property_details_enquire_click', {
+        event_category: 'property',
+        event_label: 'interaction',
+        property_id: property.propertyId,
+        credits_available: monthlyCredits,
+        user_type: userType
+      });
+    } catch (error) {
+      console.error('Error logging enquire click:', error);
+    }
+
     setSelectedCPID(property.cpCode || "");
     if (monthlyCredits > 0) {
       setIsConfirmModelOpen(true);
@@ -225,10 +285,6 @@ export default function PropertyDetailsScreen() {
     else{
       setCreditLimitModalVisible(true);
     }
-    // showErrorToast(
-    //   "You don't have enough credits. Please contact your account manager."
-    // );
-
   };
 
   const handleCancel = () => {
@@ -335,6 +391,16 @@ export default function PropertyDetailsScreen() {
   };
 
   const handleShareButtonPress = () => {
+    try {
+      logEvent(analytics, 'property_details_share_click', {
+        event_category: 'property',
+        event_label: 'interaction',
+        property_id: property.propertyId,
+        user_type: userType
+      });
+    } catch (error) {
+      console.error('Error logging share click:', error);
+    }
     setIsShareModalOpen(true);
   };
 
@@ -453,6 +519,41 @@ export default function PropertyDetailsScreen() {
 
     initializeContent();
   }, [property.photo, property.video]);
+
+  // Track initial view of property details
+  useEffect(() => {
+    try {
+      logEvent(analytics, 'property_details_screen_view', {
+        event_category: 'property',
+        event_label: 'view',
+        property_id: property.propertyId,
+        property_type: property.assetType,
+        micromarket: property.micromarket,
+        parent_screen: parent,
+        user_type: userType
+      });
+    } catch (error) {
+      console.error('Error logging screen view:', error);
+    }
+  }, [property.propertyId, property.assetType, property.micromarket, parent, userType]);
+
+  // Track image viewer interactions
+  useEffect(() => {
+    if (isImageViewerVisible) {
+      try {
+        logEvent(analytics, 'property_image_viewer_open', {
+          event_category: 'property',
+          event_label: 'interaction',
+          property_id: property.propertyId,
+          total_images: localImages.length,
+          current_image: currentImageIndex + 1,
+          user_type: userType
+        });
+      } catch (error) {
+        console.error('Error logging image viewer:', error);
+      }
+    }
+  }, [isImageViewerVisible, property.propertyId, localImages.length, currentImageIndex, userType]);
 
   if (!isConnectedToInternet) return <Offline />;
 

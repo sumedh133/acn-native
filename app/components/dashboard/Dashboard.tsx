@@ -81,6 +81,8 @@ import AddInventoryIcon from "@/assets/icons/svg/Footer/AddInventoryIcon";
 import { propertyUserStatus } from "@/app/constants/PropertyConstants";
 import { getUnixDateTime } from "@/app/helpers/getUnixDateTime";
 import { RouteProp, useRoute } from '@react-navigation/native';
+import { analytics } from "@/app/config/firebase";
+import { logEvent } from "@react-native-firebase/analytics";
 
 const StyledView = styled(View);
 const StyledScrollView = styled(ScrollView);
@@ -136,6 +138,7 @@ export default function Dashboard({
   const initalLoad = useRef(true);
 
   const kam_number = useSelector(selectKamNumber);
+  const userType = useSelector((state: RootState) => state?.agent?.docData?.userType) || "free";
 
   const renderMore = () => {
     if (isBatchSizePendingLock.current) return;
@@ -169,7 +172,62 @@ export default function Dashboard({
     }
   };
 
-  // Use useCallback to prevent recreation of handler functions on each render
+  // Track initial dashboard view and tab parameter
+  useEffect(() => {
+    try {
+      logEvent(analytics, 'view_dashboard', {
+        event_category: 'dashboard',
+        event_label: 'page_view',
+        initial_tab: tab,
+        user_type: userType,
+        inventory_count: myProperties.length + myListing.length,
+        requirements_count: myRequirements.length,
+        enquiries_count: myEnquiries.length
+      });
+    } catch (error) {
+      console.error('Error logging dashboard view:', error);
+    }
+  }, []);
+
+  // Track month filter changes
+  useEffect(() => {
+    if (!initalLoad.current && monthFilter) {
+      try {
+        logEvent(analytics, 'dashboard_filter_change', {
+          event_category: 'dashboard',
+          event_label: 'filter',
+          filter_value: monthFilter,
+          active_tab: activeTab,
+          user_type: userType
+        });
+      } catch (error) {
+        console.error('Error logging filter change:', error);
+      }
+    }
+  }, [monthFilter]);
+
+  // Track tab changes
+  useEffect(() => {
+    if (!initalLoad.current) {
+      try {
+        logEvent(analytics, 'dashboard_tab_change', {
+          event_category: 'dashboard',
+          event_label: 'navigation',
+          tab: activeTab,
+          user_type: userType,
+          filtered_items_count: activeTab === 'inventories' 
+            ? properties.length + listings.length 
+            : activeTab === 'requirements' 
+              ? requirements.length 
+              : enquiries.length
+        });
+      } catch (error) {
+        console.error('Error logging tab change:', error);
+      }
+    }
+  }, [activeTab]);
+
+  // Enhanced property status change handler with analytics
   const handlePropertyStatusChange = useCallback(
     async (id: string, status: string) => {
       const newStatus = status;
@@ -179,15 +237,36 @@ export default function Dashboard({
           ageOfStatus: 0,
           dateOfStatusLastChecked: getUnixDateTime(),
         });
-        showSuccessToast("Inventory status updated Succesfully!");
+        
+        // Track successful status change
+        logEvent(analytics, 'inventory_status_update', {
+          event_category: 'dashboard',
+          event_label: 'status_change',
+          property_id: id,
+          new_status: newStatus,
+          user_type: userType
+        });
+        
+        showSuccessToast("Inventory status updated Successfully!");
       } catch (error) {
+        // Track failed status change
+        logEvent(analytics, 'inventory_status_update_error', {
+          event_category: 'dashboard',
+          event_label: 'error',
+          property_id: id,
+          attempted_status: newStatus,
+          error_message: error instanceof Error ? error.message : 'Unknown error',
+          user_type: userType
+        });
+        
         showErrorToast("Error updating Inventory status!");
         console.error("Error updating status in Firestore:", error);
       }
     },
-    []
+    [userType]
   );
 
+  // Enhanced requirement status change handler with analytics
   const handleRequirementStatusChange = useCallback(
     async (id: string, status: string) => {
       const newStatus = status;
@@ -200,20 +279,69 @@ export default function Dashboard({
         if (!querySnapshot.empty) {
           const docRef = querySnapshot.docs[0].ref;
           await updateDoc(docRef, { status: newStatus });
+          
+          // Track successful status change
+          logEvent(analytics, 'requirement_status_update', {
+            event_category: 'dashboard',
+            event_label: 'status_change',
+            requirement_id: id,
+            new_status: newStatus,
+            user_type: userType
+          });
         }
-        showSuccessToast("Requirement status updated Succesfully!");
+        showSuccessToast("Requirement status updated Successfully!");
       } catch (error) {
+        // Track failed status change
+        logEvent(analytics, 'requirement_status_update_error', {
+          event_category: 'dashboard',
+          event_label: 'error',
+          requirement_id: id,
+          attempted_status: newStatus,
+          error_message: error instanceof Error ? error.message : 'Unknown error',
+          user_type: userType
+        });
+        
         showErrorToast("Error updating Requirement status!");
-        //console.error("Error updating status in Firestore:", error);
       }
     },
-    []
+    [userType]
   );
 
+  // Track property tab changes
   const handlePropertyTabChange = (slug: string): void => {
     if (slug === propertiesTab) return;
+    try {
+      logEvent(analytics, 'inventory_tab_change', {
+        event_category: 'dashboard',
+        event_label: 'navigation',
+        previous_tab: propertiesTab,
+        new_tab: slug,
+        items_count: propertyCounts[slug] || 0,
+        user_type: userType
+      });
+    } catch (error) {
+      console.error('Error logging property tab change:', error);
+    }
     setPropertiesTab(slug);
   };
+
+  // Track infinite scroll
+  useEffect(() => {
+    if (renderingNewBatch) {
+      try {
+        logEvent(analytics, 'dashboard_load_more', {
+          event_category: 'dashboard',
+          event_label: 'pagination',
+          active_tab: activeTab,
+          properties_tab: propertiesTab,
+          batch_size: batchSize,
+          user_type: userType
+        });
+      } catch (error) {
+        console.error('Error logging load more:', error);
+      }
+    }
+  }, [renderingNewBatch]);
 
   const openAddInventory = (): void => {
     router.push("/(pages)/Drafts");

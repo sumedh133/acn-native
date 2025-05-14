@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useCallback } from "react";
 import {
   View,
   Text,
@@ -27,6 +27,8 @@ import { useDispatch } from "react-redux";
 import { AnyAction, ThunkDispatch } from "@reduxjs/toolkit";
 import { collection, deleteDoc, doc, getDoc, getDocs, query, serverTimestamp, setDoc, updateDoc, where } from "firebase/firestore";
 import { db } from "../config/firebase";
+import { logEvent } from "@react-native-firebase/analytics";
+import { analytics } from "../config/firebase";
 
 interface HelpMobileProps {}
 
@@ -36,6 +38,21 @@ const HelpMobile: React.FC<HelpMobileProps> = () => {
   const isConnectedToInternet = useSelector(
     (state: RootState) => state.app.isConnectedToInternet
   );
+  const agentData = useSelector((state: RootState) => state?.agent?.docData);
+  const userType = agentData?.userType || "free";
+
+  // Track page view
+  useEffect(() => {
+    try {
+      logEvent(analytics, "help_page_view", {
+        event_category: "help",
+        event_label: "page_view",
+        user_type: userType
+      });
+    } catch (error) {
+      console.error("Error logging page view:", error);
+    }
+  }, [userType]);
 
   useEffect(() => {
     const handleDimensionsChange = ({
@@ -64,25 +81,43 @@ const HelpMobile: React.FC<HelpMobileProps> = () => {
     return () => subscription.remove();
   }, [navigation]);
 
-  const openLink = (url: string) => {
+  const openLink = useCallback((url: string) => {
+    try {
+      // Extract policy type from URL
+      const policyType = url.split('/').pop() || '';
+      
+      logEvent(analytics, "help_policy_click", {
+        event_category: "help",
+        event_label: "policy",
+        policy_type: policyType,
+        user_type: userType
+      });
+    } catch (error) {
+      console.error("Error logging policy click:", error);
+    }
+    
     Linking.openURL(url);
-  };
-  const agentData = useSelector((state: RootState) => state?.agent?.docData);
+  }, [userType]);
 
   const handleDelete = async () => {
     try {
+      // Track deletion attempt
+      logEvent(analytics, "account_deletion_attempt", {
+        event_category: "help",
+        event_label: "account",
+        user_type: userType
+      });
       
       const agentRef = doc(db, "agents", agentData.cpId);
-
-     
       const agentSnapshot = await getDoc(agentRef);
+      
       if (!agentSnapshot.exists()) {
         throw new Error("Agent not found");
       }
 
       const agentToArchive = agentSnapshot.data();
 
-      // 2. Add to archive_agents collection
+      // Archive agent
       await setDoc(doc(db, "archive_agents", agentData.cpId), {
         ...agentToArchive,
         archivedAt: serverTimestamp(),
@@ -111,13 +146,28 @@ const HelpMobile: React.FC<HelpMobileProps> = () => {
       // 4. Delete the original agent document
       await deleteDoc(agentRef);
 
-      // 5. Log out and redirect
+      // Track successful deletion
+      logEvent(analytics, "account_deletion_success", {
+        event_category: "help",
+        event_label: "account",
+        user_type: userType,
+        enquiries_archived: enquiriesSnapshot.docs.length
+      });
+
       await dispatch(logOut());
       setTimeout(() => {
         router.dismissAll();
         router.replace("/");
       }, 300);
     } catch (error) {
+      // Track deletion error
+      logEvent(analytics, "account_deletion_error", {
+        event_category: "help",
+        event_label: "error",
+        error_message: error instanceof Error ? error.message : "Unknown error",
+        user_type: userType
+      });
+
       console.error("Error during Delete:", error);
       showErrorToast("Some error occurred. Please try again.", {
         isInModal: true,
@@ -180,7 +230,6 @@ const styles = StyleSheet.create({
   },
   linksContainer: {
     gap: 24,
-    
   },
   linkItem: {
     flexDirection: "row",

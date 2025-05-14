@@ -19,6 +19,10 @@ import {
 import { StyleSheet, View, Dimensions } from "react-native";
 import AddPopup from "./AddPopup";
 import { useFocusEffect } from "@react-navigation/native";
+import { analytics } from "@/app/config/firebase";
+import { logEvent } from "@react-native-firebase/analytics";
+import { useSelector } from "react-redux";
+import { RootState } from "@/store/store";
 
 interface MenuItem {
   title: string;
@@ -65,6 +69,7 @@ const FooterNavigation = () => {
   const router = useRouter();
   const navigation = useNavigation();
   const { height } = Dimensions.get("window");
+  const userType = useSelector((state: RootState) => state?.agent?.docData?.userType) || "free";
 
   const [popupAnimationFlag, setPopupAnimationFlag] = useState<boolean>(false);
   const [showPopup, setShowPopup] = useState<boolean>(false);
@@ -86,6 +91,19 @@ const FooterNavigation = () => {
       return;
     }
     if (path === pathname) return;
+    
+    try {
+      logEvent(analytics, 'footer_navigation', {
+        event_category: 'navigation',
+        event_label: 'footer',
+        from_path: pathname,
+        to_path: path,
+        user_type: userType
+      });
+    } catch (error) {
+      console.error('Error logging navigation:', error);
+    }
+
     setTimeout(() => {
       router.replace(path as any);
     }, 0);
@@ -94,11 +112,38 @@ const FooterNavigation = () => {
   const handlePopupCardClick = (path: string) => {
     setPopupAnimationFlag(false);
     if (path === pathname) return;
+    
+    try {
+      logEvent(analytics, 'popup_card_click', {
+        event_category: 'navigation',
+        event_label: 'popup',
+        selected_path: path,
+        from_path: pathname,
+        user_type: userType
+      });
+    } catch (error) {
+      console.error('Error logging popup card click:', error);
+    }
+
     navigateAtEndOfAnimation.current = path;
   };
 
   const handlePopupClick = () => {
-    setPopupAnimationFlag((prev) => !prev);
+    const newState = !popupAnimationFlag;
+    
+    try {
+      logEvent(analytics, newState ? 'open_add_popup' : 'close_add_popup', {
+        event_category: 'interaction',
+        event_label: 'popup',
+        action: newState ? 'open' : 'close',
+        current_path: pathname,
+        user_type: userType
+      });
+    } catch (error) {
+      console.error('Error logging popup interaction:', error);
+    }
+
+    setPopupAnimationFlag(newState);
   };
 
   const params = navigation?.getState()?.routes?.at(-1)?.params as {

@@ -17,6 +17,8 @@ import KamModalIcon from "@/assets/icons/svg/KamModalIcon";
 import { showToast } from "@/utils/toastUtils";
 import { useDispatch } from "react-redux";
 import { setKamModalVisible } from "@/store/slices/kamSlice";
+import { analytics } from "@/app/config/firebase";
+import { logEvent } from "@react-native-firebase/analytics";
 
 export const KamModalButton = () => {
   const dispatch = useDispatch();
@@ -24,10 +26,54 @@ export const KamModalButton = () => {
     (state: RootState) => state.auth.isAuthenticated
   );
   const pathName = usePathname();
+  const userType = useSelector((state: RootState) => state?.agent?.docData?.userType) || "free";
 
   const isConnectedToInternet = useSelector(
     (state: RootState) => state.app.isConnectedToInternet
   );
+
+  const handleKamButtonPress = () => {
+    try {
+      logEvent(analytics, 'kam_button_click', {
+        event_category: 'interaction',
+        event_label: 'kam_modal',
+        current_path: pathName,
+        is_online: isConnectedToInternet,
+        user_type: userType
+      });
+    } catch (error) {
+      console.error('Error logging KAM button click:', error);
+    }
+
+    if (!isConnectedToInternet) {
+      try {
+        logEvent(analytics, 'kam_offline_attempt', {
+          event_category: 'error',
+          event_label: 'offline',
+          current_path: pathName,
+          user_type: userType
+        });
+      } catch (error) {
+        console.error('Error logging offline attempt:', error);
+      }
+      showToast(
+        "error",
+        "You're offline! Please check your connection."
+      );
+    } else {
+      try {
+        logEvent(analytics, 'kam_modal_open', {
+          event_category: 'modal',
+          event_label: 'open',
+          current_path: pathName,
+          user_type: userType
+        });
+      } catch (error) {
+        console.error('Error logging modal open:', error);
+      }
+      dispatch(setKamModalVisible(true));
+    }
+  };
 
   return (
     <>
@@ -40,16 +86,7 @@ export const KamModalButton = () => {
           <>
             <View style={styles.button}>
               <Button
-                onPress={() => {
-                  if (!isConnectedToInternet)
-                    showToast(
-                      "error",
-                      "You're offline! Please check your connection."
-                    );
-                  else {
-                    dispatch(setKamModalVisible(true));
-                  }
-                }}
+                onPress={handleKamButtonPress}
                 containerStyle={{ marginVertical: 10 }}
                 buttonStyle={{
                   backgroundColor: "#153E3B",

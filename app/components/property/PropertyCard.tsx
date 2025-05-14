@@ -40,6 +40,8 @@ import { setPropertyDataThunk } from "@/store/slices/propertySlice";
 import { getUnixDateTime } from "@/app/helpers/getUnixDateTime";
 import axios from "axios";
 import CreditLimitModal from "@/app/modals/CreditLimitModal";
+import { analytics } from "@/app/config/firebase";
+import { logEvent } from "@react-native-firebase/analytics";
 
 interface PropertyCardProps {
   property: Property;
@@ -66,6 +68,7 @@ const PropertyCard: React.FC<PropertyCardProps> = ({ property }) => {
   const monthlyCredits = useSelector(
     (state: RootState) => state?.agent?.docData?.monthlyCredits
   );
+  const userType = useSelector((state: RootState) => state?.agent?.docData?.userType) || "free";
 
   const enquiryConfirmed = useRef<Boolean>(false);
   // Format price display
@@ -112,6 +115,18 @@ const PropertyCard: React.FC<PropertyCardProps> = ({ property }) => {
   // Handle opening drive details
   const handleOpenDriveDetails = (e: any) => {
     e.stopPropagation();
+    try {
+      logEvent(analytics, 'property_drive_click', {
+        event_category: 'property',
+        event_label: 'interaction',
+        property_id: property.propertyId,
+        has_drive_link: !!property.driveLink,
+        user_type: userType
+      });
+    } catch (error) {
+      console.error('Error logging drive click:', error);
+    }
+
     if (!property.driveLink) {
       showErrorToast("Drive link not available for this property.");
       return;
@@ -122,7 +137,19 @@ const PropertyCard: React.FC<PropertyCardProps> = ({ property }) => {
 
   // Handle enquire button click
   const handleEnquireNowBtn = (e: any) => {
-    e.stopPropagation(); // Prevent card click
+    e.stopPropagation();
+    try {
+      logEvent(analytics, 'property_enquire_click', {
+        event_category: 'property',
+        event_label: 'interaction',
+        property_id: property.propertyId,
+        credits_available: monthlyCredits,
+        user_type: userType
+      });
+    } catch (error) {
+      console.error('Error logging enquire click:', error);
+    }
+
     setSelectedCPID(property.cpCode || "");
     if (monthlyCredits > 0) {
       setIsConfirmModelOpen(true);
@@ -209,10 +236,21 @@ const PropertyCard: React.FC<PropertyCardProps> = ({ property }) => {
       setIsGeneratingEnquiry(true);
       const nextEnqId = await generateNextEnqId();
       if (!nextEnqId) {
+        showErrorToast(
+          "Failed to generate Enquiry ID. Please try again later."
+        );
         setIsConfirmModelOpen(false);
         setIsGeneratingEnquiry(false);
         return;
       }
+
+      logEvent(analytics, 'property_enquiry_submit', {
+        event_category: 'property',
+        event_label: 'conversion',
+        credits_used: 1,
+        credits_remaining: monthlyCredits - 1,
+        user_type: userType
+      });
 
       // ✅ Deduct credits first
       await deductMonthlyCredit(phoneNumber, monthlyCredits, dispatch);
@@ -231,6 +269,13 @@ const PropertyCard: React.FC<PropertyCardProps> = ({ property }) => {
         setIsEnquiryCPModelOpen(true);
       }
     } catch (error) {
+      logEvent(analytics, 'property_enquiry_error', {
+        event_category: 'property',
+        event_label: 'error',
+        property_id: property.propertyId,
+        error_message: error instanceof Error ? error.message : 'Unknown error',
+        user_type: userType
+      });
       console.error("Error during enquiry process:", error);
       showErrorToast(
         "An error occurred while processing your enquiry. Please try again."
@@ -240,17 +285,37 @@ const PropertyCard: React.FC<PropertyCardProps> = ({ property }) => {
   };
 
   const handleShareButton = (e: any) => {
-    e.stopPropagation(); // Prevent card click
+    e.stopPropagation();
+    try {
+      logEvent(analytics, 'property_share_click', {
+        event_category: 'property',
+        event_label: 'interaction',
+        property_id: property.propertyId,
+        user_type: userType
+      });
+    } catch (error) {
+      console.error('Error logging share click:', error);
+    }
     setIsShareModalOpen(true);
   };
 
   // Function to open property details screen with routing
   const openPropertyDetails = () => {
-    // First dispatch the property data to the Redux store
+    try {
+      logEvent(analytics, 'property_details_view', {
+        event_category: 'property',
+        event_label: 'navigation',
+        property_id: property.propertyId,
+        property_type: property.assetType,
+        micromarket: property.micromarket,
+        user_type: userType
+      });
+    } catch (error) {
+      console.error('Error logging property details view:', error);
+    }
+
     if (property) {
       dispatch(setPropertyDataThunk(property));
-
-      // Then navigate to the property details screen
       router.push({
         pathname: "/components/property/PropertyDetailsScreen",
         params: {

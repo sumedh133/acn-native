@@ -11,9 +11,11 @@ import ArrowDownIcon from "../../assets/icons/arrow-down.svg";
 import { Ionicons } from "@expo/vector-icons";
 import { styled } from "nativewind";
 import { setPropertyStatus } from "@/store/slices/propertySlice";
-import { useDispatch } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import { AnyAction, ThunkDispatch } from "@reduxjs/toolkit";
 import { RootState } from "@/store/store";
+import { analytics } from "@/app/config/firebase";
+import { logEvent } from "@react-native-firebase/analytics";
 
 const StyledView = styled(View);
 const StyledText = styled(Text);
@@ -47,6 +49,7 @@ const DashboardDropdown: React.FC<DashboardDropdownProps> = ({
   const [selectedLabel, setSelectedLabel] = useState<string | null>("");
   const [dropdownTop, setDrodownTop] = useState<DimensionValue>(0);
   const dispatch = useDispatch<ThunkDispatch<RootState, unknown, AnyAction>>();
+  const userType = useSelector((state: RootState) => state?.agent?.docData?.userType) || "free";
 
   useEffect(() => {
     const selected: string | null =
@@ -57,12 +60,39 @@ const DashboardDropdown: React.FC<DashboardDropdownProps> = ({
   }, [value, options]);
 
   const toggleDropdown = () => {
-    if (value === "De-Listed") return; // Prevent opening if disabled
+    if (value === "De-Listed") return;
+    try {
+      logEvent(analytics, 'dashboard_dropdown_toggle', {
+        event_category: 'dashboard',
+        event_label: 'interaction',
+        dropdown_type: type || 'general',
+        current_value: value,
+        is_opening: !isOpen,
+        parent_component: parent,
+        user_type: userType
+      });
+    } catch (error) {
+      console.error('Error logging dropdown toggle:', error);
+    }
     setIsOpen(!isOpen);
   };
 
   const handleOptionClick = (option: string) => {
     if (value !== option) {
+      try {
+        logEvent(analytics, 'dashboard_status_change', {
+          event_category: 'dashboard',
+          event_label: 'status_change',
+          dropdown_type: type || 'general',
+          previous_value: value,
+          new_value: option,
+          parent_component: parent,
+          user_type: userType
+        });
+      } catch (error) {
+        console.error('Error logging status change:', error);
+      }
+
       setValue(option);
       if (updatePropertySlice) {
         dispatch(setPropertyStatus(option));

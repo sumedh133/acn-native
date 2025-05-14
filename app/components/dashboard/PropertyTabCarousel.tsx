@@ -1,6 +1,10 @@
 import React, { memo, useCallback } from "react";
 import { FlatList, StyleSheet, Text, TouchableOpacity } from "react-native";
 import { View } from "react-native";
+import { analytics } from "@/app/config/firebase";
+import { logEvent } from "@react-native-firebase/analytics";
+import { useSelector } from "react-redux";
+import { RootState } from "@/store/store";
 
 interface PropertyTabs {
   text: string;
@@ -37,23 +41,44 @@ const TabItem = memo(
     count,
     onPress,
     loading,
+    userType,
   }: {
     item: PropertyTabs;
     isActive: boolean;
     count: number;
     onPress: () => void;
     loading: boolean;
-  }) => (
-    <TouchableOpacity
-      style={[styles.tab, isActive ? { backgroundColor: "#153E3B" } : {}]}
-      onPress={onPress}
-    >
-      <Text style={[styles.tabText, isActive ? { color: "#E3E3E3" } : {}]}>
-        <Text>{item.text}</Text>
-        {!loading && <Text>{` (${count || 0})`}</Text>}
-      </Text>
-    </TouchableOpacity>
-  )
+    userType: string;
+  }) => {
+    const handlePress = () => {
+      try {
+        logEvent(analytics, 'property_tab_click', {
+          event_category: 'dashboard',
+          event_label: 'navigation',
+          tab_name: item.text,
+          tab_slug: item.slug,
+          is_active: isActive,
+          items_count: count,
+          user_type: userType
+        });
+      } catch (error) {
+        console.error('Error logging property tab click:', error);
+      }
+      onPress();
+    };
+
+    return (
+      <TouchableOpacity
+        style={[styles.tab, isActive ? { backgroundColor: "#153E3B" } : {}]}
+        onPress={handlePress}
+      >
+        <Text style={[styles.tabText, isActive ? { color: "#E3E3E3" } : {}]}>
+          <Text>{item.text}</Text>
+          {!loading && <Text>{` (${count || 0})`}</Text>}
+        </Text>
+      </TouchableOpacity>
+    );
+  }
 );
 
 const PropertyTabCarousel = ({
@@ -67,6 +92,8 @@ const PropertyTabCarousel = ({
   counts: { [slug: string]: number };
   loading: boolean;
 }) => {
+  const userType = useSelector((state: RootState) => state?.agent?.docData?.userType) || "free";
+
   const keyExtractor = useCallback((item: PropertyTabs) => item.slug, []);
 
   const getItemPressHandler = useCallback(
@@ -86,10 +113,11 @@ const PropertyTabCarousel = ({
           count={counts?.[item?.slug]}
           onPress={getItemPressHandler(item?.slug)}
           loading={loading}
+          userType={userType}
         />
       );
     },
-    [activeSlug, counts, getItemPressHandler, loading]
+    [activeSlug, counts, getItemPressHandler, loading, userType]
   );
 
   return (

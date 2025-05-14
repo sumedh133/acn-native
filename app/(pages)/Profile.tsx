@@ -28,6 +28,8 @@ import GetPremiumCard from "../components/ProfilePage/GetPremiumCard";
 import LogoutIcon from "@/assets/icons/svg/Common/LogoutIcon";
 import CreditsCard from "../components/ProfilePage/CreditsCard";
 import { setKamModalVisible } from "@/store/slices/kamSlice";
+import { logEvent } from "@react-native-firebase/analytics";
+import { analytics } from "../config/firebase";
 
 const profileCards: ProfileCardInterface[] = [
   {
@@ -51,30 +53,58 @@ const Profile = () => {
   const dispatch = useDispatch<ThunkDispatch<RootState, unknown, AnyAction>>();
   const router = useRouter();
 
-  const userType: string | null =
-    useSelector((state: RootState) => state?.agent?.docData?.userType) || "";
-
-    console.log("userType", userType);
+  const userType = useSelector((state: RootState) => state?.agent?.docData?.userType) || "free";
 
   const handleCardClick = (slug: string) => {
     switch (slug) {
       case "payment_records":
+        try {
+          logEvent(analytics, "payment_records_click", { "event_category" : "profile", "event_label" : "payment_record", "user_type": userType })
+          console.log("Sent")
+        } catch (error) {
+          console.error("Error: ", error)
+        }
         router.push("/(pages)/PaymentRecords");
         break;
       case "contact_kam":
-        dispatch(setKamModalVisible(true));
+        try {
+          logEvent(analytics, "contact_kam_click", { "event_category": "profile", "event_label": "contact_kam", "user_type": userType });
+          dispatch(setKamModalVisible(true));
+        } catch (error) {
+          console.error("Error: ", error);
+        }
         break;
       case "help_support":
-        router.push("/help");
+        try {
+          logEvent(analytics, "help_support_click", { "event_category": "profile", "event_label": "help_support", "user_type": userType });
+          router.push("/help");
+        } catch (error) {
+          console.error("Error: ", error);
+        }
         break;
       case "get_premium":
-        router.push("/billings");
+        try {
+          logEvent(analytics, "get_premium_click", { "event_category": "profile", "event_label": "get_premium", "user_type": userType });
+          router.push("/billings");
+        } catch (error) {
+          console.error("Error: ", error);
+        }
         break;
       case "credits_card":
+        try {
+          logEvent(analytics, "credits_card_click", { "event_category": "profile", "event_label": "credits", "user_type": userType });
+        } catch (error) {
+          console.error("Error: ", error);
+        }
         router.push("/(pages)/Credits");
         break;
       case "compare_plans":
-        router.push("/(pages)/ComparePlans");
+        try {
+          logEvent(analytics, "compare_plans_click", { "event_category": "profile", "event_label": "compare_plans", "user_type": userType });
+          router.push("/(pages)/ComparePlans");
+        } catch (error) {
+          console.error("Error: ", error);
+        }
         break;
       default:
         break;
@@ -87,6 +117,7 @@ const Profile = () => {
         router.dismissAll();
         router.replace("/");
       }, 300);
+      logEvent(analytics, "logout_click", { "event_category": "profile", "event_label": "logout", "user_type": userType });
     } catch (error) {
       console.error("Error during logout:", error);
       showErrorToast("Some error occured. Please try again.", {

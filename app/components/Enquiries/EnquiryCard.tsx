@@ -1,13 +1,15 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { View, Text, Pressable } from "react-native";
 import { FontAwesome, FontAwesome5, MaterialIcons } from "@expo/vector-icons";
 import ReviewModal from "./ReviewModal";
 import { EnquiryWithProperty } from "@/app/types";
 import { setPropertyDataThunk } from "@/store/slices/propertySlice";
-import { useDispatch } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import { AnyAction, ThunkDispatch } from "@reduxjs/toolkit";
 import { RootState } from "@/store/store";
 import { router } from "expo-router";
+import { analytics } from "@/app/config/firebase";
+import { logEvent } from "@react-native-firebase/analytics";
 
 interface CardProps {
   index: number;
@@ -17,19 +19,49 @@ interface CardProps {
 const EnquiryCard: React.FC<CardProps> = ({ index, enquiry }) => {
   const dispatch = useDispatch<ThunkDispatch<RootState, unknown, AnyAction>>();
   const [isReviewModalOpen, setIsReviewModalOpen] = useState(false);
+  const userType = useSelector((state: RootState) => state?.agent?.docData?.userType) || "free";
+
+  useEffect(() => {
+    try {
+      logEvent(analytics, 'enquiry_card_view', {
+        event_category: 'enquiries',
+        event_label: 'impression',
+        position_index: index,
+        user_type: userType
+      });
+    } catch (error) {
+      console.error('Error logging enquiry card view:', error);
+    }
+  }, []);
 
   const giveReviewClick = (e: any, enqId: string) => {
     e.preventDefault();
     e.stopPropagation();
+    try {
+      logEvent(analytics, 'review_modal_open', {
+        event_category: 'enquiries',
+        event_label: 'interaction',
+        user_type: userType
+      });
+    } catch (error) {
+      console.error('Error logging review modal open:', error);
+    }
     setIsReviewModalOpen(true);
   };
 
   const handleOpenPropertyDetails = () => {
-    if (enquiry?.property) {
-      // Set the property data in Redux store
-      dispatch(setPropertyDataThunk(enquiry.property));
+    try {
+      logEvent(analytics, 'enquiry_property_details_view', {
+        event_category: 'enquiries',
+        event_label: 'navigation',
+        user_type: userType
+      });
+    } catch (error) {
+      console.error('Error logging property details view:', error);
+    }
 
-      // Navigate to PropertyDetailsScreen with params
+    if (enquiry?.property) {
+      dispatch(setPropertyDataThunk(enquiry.property));
       router.push({
         pathname: "/components/property/PropertyDetailsScreen",
         params: {

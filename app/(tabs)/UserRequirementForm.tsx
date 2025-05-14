@@ -23,10 +23,27 @@ import {
   showSuccessToast,
 } from "@/utils/toastUtils";
 import Offline from "../components/Offline";
+import { analytics } from "../config/firebase";
+import { logEvent } from "@react-native-firebase/analytics";
 
 const UserRequirementForm = () => {
   const cpId =
     useSelector((state: RootState) => state?.agent?.docData?.cpId) || null;
+  const agentData = useSelector((state: RootState) => state?.agent?.docData);
+  const userType = agentData?.userType || "free";
+
+  // Track page view
+  useEffect(() => {
+    try {
+      logEvent(analytics, 'requirement_form_view', {
+        event_category: 'form',
+        event_label: 'page_view',
+        user_type: userType
+      });
+    } catch (error) {
+      console.error('Error logging form view:', error);
+    }
+  }, [userType]);
 
   const [focusedFields, setFocusedFields] = useState<{
     [key: string]: boolean;
@@ -116,6 +133,16 @@ const UserRequirementForm = () => {
   const isConfigurationDisabled = assetType === "plot";
 
   const handleMarketValueCheckbox = () => {
+    try {
+      logEvent(analytics, 'requirement_form_market_value', {
+        event_category: 'form',
+        event_label: 'market_value_toggle',
+        new_state: !marketValue,
+        user_type: userType
+      });
+    } catch (error) {
+      console.error('Error logging market value toggle:', error);
+    }
     setMarketValue(!marketValue);
     if (!marketValue) {
       // If enabling market value, clear budget fields
@@ -125,6 +152,16 @@ const UserRequirementForm = () => {
   };
 
   const clearForm = () => {
+    try {
+      logEvent(analytics, 'requirement_form_clear', {
+        event_category: 'form',
+        event_label: 'clear',
+        user_type: userType
+      });
+    } catch (error) {
+      console.error('Error logging form clear:', error);
+    }
+    
     // Reset form fields
     setPropertyName("");
     setRequirementDetails("");
@@ -182,7 +219,18 @@ const UserRequirementForm = () => {
 
     setError(newErrors);
 
+    // Track validation errors if any
     if (Object.keys(newErrors).length !== 0) {
+      try {
+        logEvent(analytics, 'requirement_form_validation_error', {
+          event_category: 'form',
+          event_label: 'validation_error',
+          error_fields: Object.keys(newErrors),
+          user_type: userType
+        });
+      } catch (error) {
+        console.error('Error logging validation errors:', error);
+      }
       return;
     }
 
@@ -202,16 +250,71 @@ const UserRequirementForm = () => {
         marketValue: marketValue === true ? "Market Value" : "",
       };
 
+      // Track form submission attempt
+      try {
+        logEvent(analytics, 'requirement_form_submit', {
+          event_category: 'form',
+          event_label: 'submit',
+          asset_type: assetType,
+          has_configuration: !!configuration,
+          has_area: !!area,
+          budget_type: marketValue ? 'market_value' : 'specified',
+          has_details: !!requirementDetails,
+          user_type: userType
+        });
+      } catch (error) {
+        console.error('Error logging form submission:', error);
+      }
+
       await submitRequirement(userRequirement, cpId);
+      
+      // Track successful submission
+      try {
+        logEvent(analytics, 'requirement_form_submit_success', {
+          event_category: 'form',
+          event_label: 'submit_success',
+          user_type: userType
+        });
+      } catch (error) {
+        console.error('Error logging submission success:', error);
+      }
+
       clearForm();
       showSuccessToast("Requirement submitted successfully!");
     } catch (error) {
+      // Track submission error
+      try {
+        logEvent(analytics, 'requirement_form_submit_error', {
+          event_category: 'form',
+          event_label: 'submit_error',
+          error_message: error instanceof Error ? error.message : 'Unknown error',
+          user_type: userType
+        });
+      } catch (analyticsError) {
+        console.error('Error logging submission error:', analyticsError);
+      }
+
       showErrorToast(
         "An error occurred while submitting the requirement. Please try again."
       );
       console.error("An error occurred:", error);
     } finally {
       setSaving(false);
+    }
+  };
+
+  // Track field changes
+  const handleFieldChange = (fieldName: string, value: string) => {
+    try {
+      logEvent(analytics, 'requirement_form_field_change', {
+        event_category: 'form',
+        event_label: 'field_change',
+        field_name: fieldName,
+        has_value: !!value,
+        user_type: userType
+      });
+    } catch (error) {
+      console.error('Error logging field change:', error);
     }
   };
 
@@ -223,7 +326,18 @@ const UserRequirementForm = () => {
     return () => cancelAnimationFrame(timer);
   }, []);
 
-  if (!isConnectedToInternet) return <Offline />;
+  if (!isConnectedToInternet) {
+    try {
+      logEvent(analytics, 'requirement_form_offline', {
+        event_category: 'error',
+        event_label: 'offline',
+        user_type: userType
+      });
+    } catch (error) {
+      console.error('Error logging offline state:', error);
+    }
+    return <Offline />;
+  }
 
   if (!isRendered)
     return (
@@ -251,6 +365,7 @@ const UserRequirementForm = () => {
               value={propertyName}
               onChangeText={(text) => {
                 setPropertyName(text);
+                handleFieldChange('propertyName', text);
                 setError((prev) => ({
                   ...prev,
                   propertyName: undefined,
@@ -359,6 +474,7 @@ const UserRequirementForm = () => {
                     } else {
                       setArea(numericValue);
                     }
+                    handleFieldChange('area', text);
                   }}
                   onFocus={() => handleFocus("area")}
                   onBlur={() => handleBlur("area")}
@@ -399,6 +515,7 @@ const UserRequirementForm = () => {
                     } else {
                       setBudgetFrom(numericValue);
                     }
+                    handleFieldChange('budgetFrom', text);
                     setError((prev) => ({
                       ...prev,
                       budget: "",
@@ -436,6 +553,7 @@ const UserRequirementForm = () => {
                     } else {
                       setBudgetTo(numericValue);
                     }
+                    handleFieldChange('budgetTo', text);
                     setError((prev) => ({
                       ...prev,
                       budget: "",

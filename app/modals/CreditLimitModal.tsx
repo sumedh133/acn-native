@@ -3,6 +3,8 @@ import { Modal, View, Text, TouchableOpacity, StyleSheet } from "react-native";
 import { Ionicons } from "@expo/vector-icons"; // Using Expo icons
 import { useSelector } from "react-redux";
 import { RootState } from "@/store/store";
+import { analytics } from "@/app/config/firebase";
+import { logEvent } from "@react-native-firebase/analytics";
 
 interface CreditLimitModalProps {
   isVisible: boolean;
@@ -20,16 +22,74 @@ const CreditLimitModal: React.FC<CreditLimitModalProps> = ({
   const userType = useSelector(
     (state: RootState) => state?.agent?.docData?.userType
   );
+
+  // Track modal visibility
+  React.useEffect(() => {
+    if (isVisible) {
+      try {
+        logEvent(analytics, 'credit_limit_modal_show', {
+          event_category: 'modal',
+          event_label: 'credit_limit',
+          user_type: userType
+        });
+      } catch (error) {
+        console.error('Error logging modal show:', error);
+      }
+    }
+  }, [isVisible]);
+
+  const handleClose = () => {
+    try {
+      logEvent(analytics, 'credit_limit_modal_close', {
+        event_category: 'modal',
+        event_label: 'credit_limit',
+        action: 'close',
+        user_type: userType
+      });
+    } catch (error) {
+      console.error('Error logging modal close:', error);
+    }
+    onClose();
+  };
+
+  const handleGoPremium = () => {
+    try {
+      logEvent(analytics, 'credit_limit_action', {
+        event_category: 'modal',
+        event_label: 'credit_limit',
+        action: 'go_premium',
+        user_type: userType
+      });
+    } catch (error) {
+      console.error('Error logging go premium action:', error);
+    }
+    onGoPremium();
+  };
+
+  const handleBuyCredits = () => {
+    try {
+      logEvent(analytics, 'credit_limit_action', {
+        event_category: 'modal',
+        event_label: 'credit_limit',
+        action: 'buy_credits',
+        user_type: userType
+      });
+    } catch (error) {
+      console.error('Error logging buy credits action:', error);
+    }
+    onBuyCredits();
+  };
+
   return (
     <Modal
       visible={isVisible}
       transparent={true}
       animationType="fade"
-      onRequestClose={onClose}
+      onRequestClose={handleClose}
     >
       <View style={styles.modalBackground}>
         <View style={styles.modalContainer}>
-          <TouchableOpacity style={styles.closeButton} onPress={onClose}>
+          <TouchableOpacity style={styles.closeButton} onPress={handleClose}>
             <Ionicons name="close" size={24} color="#666" />
           </TouchableOpacity>
 
@@ -54,7 +114,7 @@ const CreditLimitModal: React.FC<CreditLimitModalProps> = ({
             {userType!== "premium"  && (
               <TouchableOpacity
                 style={styles.premiumButton}
-                onPress={onGoPremium}
+                onPress={handleGoPremium}
               >
                 <Text style={styles.premiumButtonText}>Go Premium</Text>
               </TouchableOpacity>
@@ -62,7 +122,7 @@ const CreditLimitModal: React.FC<CreditLimitModalProps> = ({
 
             <TouchableOpacity
               style={styles.creditsButton}
-              onPress={onBuyCredits}
+              onPress={handleBuyCredits}
             >
               <Text style={styles.creditsButtonText}>Buy Credits</Text>
             </TouchableOpacity>

@@ -2,6 +2,10 @@ import React, { useEffect, useState } from "react";
 import { View, Text, TouchableOpacity, FlatList } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { styled } from "nativewind";
+import { analytics } from "@/app/config/firebase";
+import { logEvent } from "@react-native-firebase/analytics";
+import { useSelector } from "react-redux";
+import { RootState } from "@/store/store";
 
 const StyledView = styled(View);
 const StyledText = styled(Text);
@@ -30,6 +34,7 @@ const MonthFilterDropdown = ({
   const allOptions = [{ label: "All", value: "" }, ...options];
   const [isOpen, setIsOpen] = useState(false);
   const [selectedLabel, setSelectedLabel] = useState("");
+  const userType = useSelector((state: RootState) => state.agent?.docData?.userType) || "free";
 
   useEffect(() => {
     if (!value || value === "") {
@@ -45,11 +50,35 @@ const MonthFilterDropdown = ({
   }, [value, allOptions]);
 
   const toggleDropdown = () => {
+    try {
+      logEvent(analytics, isOpen ? 'close_month_filter' : 'open_month_filter', {
+        event_category: 'filters',
+        event_label: isOpen ? 'close' : 'open',
+        current_value: value,
+        user_type: userType
+      });
+    } catch (error) {
+      console.error('Error logging month filter toggle:', error);
+    }
     setIsOpen(!isOpen);
   };
 
   const handleOptionClick = (optionValue: string) => {
     if (value !== optionValue) {
+      try {
+        const selectedOption = allOptions.find(opt => opt.value === optionValue);
+        logEvent(analytics, 'select_month_filter', {
+          event_category: 'filters',
+          event_label: 'select',
+          previous_value: value,
+          new_value: optionValue,
+          new_label: selectedOption?.label,
+          user_type: userType
+        });
+      } catch (error) {
+        console.error('Error logging month selection:', error);
+      }
+
       setBuffering(true);
       setBatchSize(10);
       setTimeout(() => {
@@ -57,7 +86,6 @@ const MonthFilterDropdown = ({
       }, 0);
     }
     setIsOpen(false);
-    // Add analytics here if needed
   };
 
   return (

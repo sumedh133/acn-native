@@ -1,5 +1,5 @@
 import { styled } from "nativewind";
-import React from "react";
+import React, { useEffect } from "react";
 import {
   View,
   Text,
@@ -10,6 +10,10 @@ import {
   Dimensions,
 } from "react-native";
 import LinearGradient from "react-native-linear-gradient";
+import { analytics } from "@/app/config/firebase";
+import { logEvent } from "@react-native-firebase/analytics";
+import { useSelector } from "react-redux";
+import { RootState } from "@/store/store";
 
 type EmptyTabContentProps = {
   text?: string;
@@ -29,6 +33,39 @@ const EmptyTabContent: React.FC<EmptyTabContentProps> = ({
   buttonText,
   loading,
 }) => {
+  const userType = useSelector((state: RootState) => state?.agent?.docData?.userType) || "free";
+
+  useEffect(() => {
+    if (!loading) {
+      try {
+        logEvent(analytics, 'view_empty_state', {
+          event_category: 'dashboard',
+          event_label: 'empty_state',
+          empty_state_text: text,
+          has_action_button: !!buttonText,
+          user_type: userType
+        });
+      } catch (error) {
+        console.error('Error logging empty state view:', error);
+      }
+    }
+  }, [loading, text, buttonText]);
+
+  const handleActionButtonPress = () => {
+    try {
+      logEvent(analytics, 'empty_state_action_click', {
+        event_category: 'dashboard',
+        event_label: 'interaction',
+        button_text: buttonText,
+        empty_state_text: text,
+        user_type: userType
+      });
+    } catch (error) {
+      console.error('Error logging empty state action:', error);
+    }
+    handleOnPress?.();
+  };
+
   if (loading) return <ActivityIndicator className="mt-8" color="#153E3B" />;
   return (
     <View style={styles.bgContainer}>
@@ -46,7 +83,7 @@ const EmptyTabContent: React.FC<EmptyTabContentProps> = ({
           <Text style={styles.subText}>{sub_text}</Text>
         </View>
         {icon && buttonText && (
-          <TouchableOpacity onPress={handleOnPress} style={styles.button}>
+          <TouchableOpacity onPress={handleActionButtonPress} style={styles.button}>
             {icon}
             <Text style={styles.buttonText}>{buttonText}</Text>
           </TouchableOpacity>
