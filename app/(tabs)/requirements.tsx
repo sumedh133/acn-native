@@ -104,7 +104,6 @@ const MobileHits = React.memo(() => {
           total_available: items.length,
           view_percentage: Math.round((viewedRequirements.current.size / items.length) * 100),
           user_type: userType,
-          asset_types: newRequirementsViewed.map((item: { item: Requirement }) => item.item.assetType).filter(Boolean)
         });
       } catch (error) {
         console.error('Error logging requirement views:', error);

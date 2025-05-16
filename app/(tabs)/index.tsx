@@ -10,7 +10,8 @@ import { RootState } from "@/store/store";
 import Offline from "../components/Offline";
 import messaging from '@react-native-firebase/messaging'
 import { analytics } from "../config/firebase";
-import { logEvent } from "@react-native-firebase/analytics";
+import { logEvent, setUserId, setUserProperties } from "@react-native-firebase/analytics";
+import SessionTracker from "../services/SessionTracker";
 
 // Keep splash screen visible until explicitly hidden
 SplashScreen.preventAutoHideAsync();
@@ -22,6 +23,18 @@ export default function TabOneScreen() {
 
   const agentData = useSelector((state: RootState) => state?.agent?.docData);
   const userType = agentData?.userType || "free";
+  const userName = agentData?.name || '';
+
+  const userPhoneNumber = useSelector((state: RootState) => state.agent.phonenumber);
+  // Initialize session tracking
+  useEffect(() => {
+    const sessionTracker = SessionTracker.getInstance();
+    sessionTracker.setUserInfo(userType, userPhoneNumber || '', userName);
+
+    return () => {
+      sessionTracker.cleanup();
+    };
+  }, [userType, userPhoneNumber, userName]);
 
   // Track initial app launch
   useEffect(() => {
@@ -35,6 +48,23 @@ export default function TabOneScreen() {
       console.error('Error logging app launch:', error);
     }
   }, [userType]);
+
+  useEffect(() => {
+    if (userPhoneNumber) {
+      setUserId(analytics, userPhoneNumber);
+    }
+  }, [userPhoneNumber]);
+
+  // user name as a custom param and can add more details to log for the user.
+  try {
+    const userName = useSelector((state: RootState) => state.agent.docData.name);
+    const customParams = { user_name: userName };
+    useEffect(() => {
+      if (userName) {
+        setUserProperties(analytics, customParams);
+      }
+    }, [customParams]);
+  } catch {}  
 
   // useEffect(() => {
   //   // Function to request permission and get the token
