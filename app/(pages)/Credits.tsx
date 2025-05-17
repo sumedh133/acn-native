@@ -14,6 +14,8 @@ import ARPrimaryButton from "../components/Button/ARPrimaryButton";
 import CoinIcon from "@/assets/icons/svg/Sidebar/CoinIcon";
 import GetPremiumCard from "../components/ProfilePage/GetPremiumCard";
 import LinearGradient from "react-native-linear-gradient";
+import { logEvent } from "@react-native-firebase/analytics";
+import { analytics } from "../config/firebase";
 
 import CreditCoin from "../../assets/icons/CreditCoin.svg";
 
@@ -136,11 +138,35 @@ const Credits = () => {
 
   const { myEnquiries } = useEnquiries();
 
+  // Add page view tracking
+  useEffect(() => {
+    try {
+      logEvent(analytics, "credits_page_view", {
+        event_category: "profile",
+        event_label: "page_view",
+        monthly_credits: monthlyCredits,
+        user_type: userType || "free"
+      });
+    } catch (error) {
+      console.error("Error logging page view:", error);
+    }
+  }, [monthlyCredits, userType]);
+
   const handleBackPress = () => {
     router.back();
   };
 
   const handleAddCredits = () => {
+    try {
+      logEvent(analytics, "add_credits_click", {
+        credit_amount: 5,
+        event_category: "profile",
+        event_label: "add_credits",
+        user_type: userType || "free"
+      });
+    } catch (error) {
+      console.error("Error logging analytics:", error);
+    }
     router.push({
       pathname: "/CheckoutScreen",
       params: { planId: "booster" },
@@ -148,11 +174,31 @@ const Credits = () => {
   };
 
   const handleComparePlans = () => {
-    // Navigate to plans comparison
+    try {
+      logEvent(analytics, "compare_plans_click", {
+        event_category: "profile",
+        event_label: "compare_plans",
+        source: "credits_page",
+        user_type: userType || "free"
+      });
+    } catch (error) {
+      console.error("Error logging analytics:", error);
+    }
     router.push("/ComparePlans");
   };
 
   const handleViewMore = () => {
+    try {
+      logEvent(analytics, "view_more_enquiries_click", {
+        event_category: "profile",
+        event_label: "view_more",
+        source: "credits_page",
+        enquiries_count: myEnquiries?.length || 0,
+        user_type: userType || "free"
+      });
+    } catch (error) {
+      console.error("Error logging analytics:", error);
+    }
     router.push({
       pathname: "/dashboardTab",
       params: { tab: "enquiries" },
@@ -160,6 +206,17 @@ const Credits = () => {
   };
 
   const handleSupportClick = () => {
+    try {
+      logEvent(analytics, "support_click", {
+        event_category: "profile",
+        event_label: "support",
+        platform: Platform.OS,
+        source: "credits_page",
+        user_type: userType || "free"
+      });
+    } catch (error) {
+      console.error("Error logging analytics:", error);
+    }
     const whatsappUrl = `https://wa.me/+919415006092`;
     Linking.openURL(whatsappUrl);
   };
@@ -264,7 +321,7 @@ const Credits = () => {
                 <Text className="text-sm">
                   <Text className="font-bold">Note:</Text>{" "}
                   <Text className="pl-2">
-                    Credit top-ups aren’t available through the app. For
+                    Credit top-ups aren't available through the app. For
                     assistance, please contact{" "}
                     <Text
                       className="ml-2 text-[#007AFF] underline"
@@ -304,7 +361,23 @@ const Credits = () => {
             {myEnquiries &&
               myEnquiries.slice(0, 3).map((enquiry, index) => (
                 <View key={index} className="mb-3">
-                  <View className="flex-row justify-between items-start">
+                  <TouchableOpacity 
+                    onPress={() => {
+                      try {
+                        logEvent(analytics, "enquiry_item_click", {
+                          event_category: "profile",
+                          event_label: "enquiry_details",
+                          source: "credits_page",
+                          property_name: enquiry.property?.nameOfTheProperty || "N/A",
+                          enquiry_date: enquiry.added ? formatUnixDate(enquiry.added) : "N/A",
+                          user_type: userType || "free"
+                        });
+                      } catch (error) {
+                        console.error("Error logging analytics:", error);
+                      }
+                    }}
+                    className="flex-row justify-between items-start"
+                  >
                     <View className="flex-1">
                       <Text className="font-lato text-sm font-medium text-gray-900">
                         {enquiry.property?.nameOfTheProperty ||
@@ -323,7 +396,7 @@ const Credits = () => {
                       </Text>
                       <CoinIcon width={16} height={16} />
                     </View>
-                  </View>
+                  </TouchableOpacity>
 
                   {index < 2 && myEnquiries.length > 1 && (
                     <View className="h-px bg-gray-200 my-3" />

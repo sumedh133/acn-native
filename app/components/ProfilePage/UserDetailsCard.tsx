@@ -1,10 +1,12 @@
 import { RootState } from "@/store/store";
 import { getInitials, getRandomColor } from "@/utils/userUtils";
-import React from "react";
+import React, { useEffect } from "react";
 import { Text } from "react-native";
 import { StyleSheet, View } from "react-native";
 import LinearGradient from "react-native-linear-gradient";
 import { useSelector } from "react-redux";
+import { analytics } from "@/app/config/firebase";
+import { logEvent } from "@react-native-firebase/analytics";
 
 const UserDetailsCard = ({ userType }: { userType: string | null }) => {
   const name: string | null =
@@ -13,6 +15,21 @@ const UserDetailsCard = ({ userType }: { userType: string | null }) => {
     useSelector((state: RootState) => state?.agent?.docData?.phonenumber) || "";
   const initials = getInitials(name);
   const avatarColor = getRandomColor(initials);
+
+  useEffect(() => {
+    try {
+      logEvent(analytics, 'user_details_view', {
+        event_category: 'profile',
+        event_label: 'view',
+        has_name: !!name,
+        has_phone: !!phonenumber,
+        user_type: userType || 'free'
+      });
+    } catch (error) {
+      console.error('Error logging user details view:', error);
+    }
+  }, [name, phonenumber, userType]);
+
   return (
     <View style={styles.card}>
       {userType === "premium" && (

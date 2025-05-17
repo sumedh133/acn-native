@@ -7,6 +7,10 @@ import {
   StyleSheet,
 } from "react-native";
 import { MaterialIcons } from "@expo/vector-icons";
+import { analytics } from "@/app/config/firebase";
+import { logEvent } from "@react-native-firebase/analytics";
+import { useSelector } from "react-redux";
+import { RootState } from "@/store/store";
 
 interface AnimatedTooltipProps {
   message: string;
@@ -16,9 +20,21 @@ const AnimatedTooltip = ({ message }: AnimatedTooltipProps) => {
   const [visible, setVisible] = useState(false);
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const scaleAnim = useRef(new Animated.Value(0.9)).current;
+  const userType = useSelector((state: RootState) => state?.agent?.docData?.userType) || "free";
 
   useEffect(() => {
     if (visible) {
+      try {
+        logEvent(analytics, 'tooltip_show', {
+          event_category: 'interaction',
+          event_label: 'tooltip',
+          message: message,
+          user_type: userType
+        });
+      } catch (error) {
+        console.error('Error logging tooltip show:', error);
+      }
+
       // Animate in
       Animated.parallel([
         Animated.timing(fadeAnim, {
@@ -43,6 +59,18 @@ const AnimatedTooltip = ({ message }: AnimatedTooltipProps) => {
   }, [visible]);
 
   const hideTooltip = () => {
+    try {
+      logEvent(analytics, 'tooltip_hide', {
+        event_category: 'interaction',
+        event_label: 'tooltip',
+        message: message,
+        hide_type: 'auto',
+        user_type: userType
+      });
+    } catch (error) {
+      console.error('Error logging tooltip hide:', error);
+    }
+
     Animated.parallel([
       Animated.timing(fadeAnim, {
         toValue: 0,
@@ -58,7 +86,20 @@ const AnimatedTooltip = ({ message }: AnimatedTooltipProps) => {
   };
 
   const toggleTooltip = () => {
-    setVisible(!visible);
+    const newState = !visible;
+    try {
+      logEvent(analytics, newState ? 'tooltip_toggle' : 'tooltip_hide', {
+        event_category: 'interaction',
+        event_label: 'tooltip',
+        action: newState ? 'show' : 'hide',
+        message: message,
+        hide_type: newState ? null : 'manual',
+        user_type: userType
+      });
+    } catch (error) {
+      console.error('Error logging tooltip toggle:', error);
+    }
+    setVisible(newState);
   };
 
   return (

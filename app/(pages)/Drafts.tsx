@@ -24,29 +24,70 @@ import {
 import { db } from "../config/firebase";
 import { useSelector } from "react-redux";
 import { RootState } from "@/store/store";
+import { logEvent } from "@react-native-firebase/analytics";
+import { analytics } from "../config/firebase";
 
 const DraftsScreen: React.FC = () => {
   const [drafts, setDrafts] = useState<ListingProperty[]>();
   const [rendering, setRendering] = useState<boolean>(true);
+  const [loadStartTime] = useState<number>(Date.now());
 
   const cpId: string | undefined = useSelector(
     (state: RootState) => state.agent?.docData?.cpId
   );
 
+  const userType = useSelector((state: RootState) => state?.agent?.docData?.userType) || "free";
+
   const deleteDraft = useCallback(async (id: string) => {
-    await deleteDoc(doc(db, "QC_Inventories", id));
-    setDrafts((prev) => prev?.filter((draft) => draft.propertyId !== id));
-  }, []);
+    try {
+      await deleteDoc(doc(db, "QC_Inventories", id));
+      setDrafts((prev) => prev?.filter((draft) => draft.propertyId !== id));
+      logEvent(analytics, "draft_delete", {
+        event_category: "drafts",
+        event_label: "delete",
+        property_id: id,
+        user_type: userType
+      });
+    } catch (error) {
+      logEvent(analytics, "drafts_error", {
+        event_category: "drafts",
+        event_label: "error",
+        error_type: error instanceof Error ? error.name : "unknown",
+        operation: "delete_draft",
+        user_type: userType
+      });
+      console.error("Error deleting draft:", error);
+    }
+  }, [userType]);
 
   const pressDraftCard = useCallback((item: ListingProperty) => {
-    router.push({
-      pathname: "/(tabs)/AddInventoryForm",
-      params: { item: JSON.stringify(item) },
-    });
-  }, []);
+    try {
+      logEvent(analytics, "draft_card_click", {
+        event_category: "drafts",
+        event_label: "draft_click",
+        property_id: item.propertyId,
+        user_type: userType
+      });
+      router.push({
+        pathname: "/(tabs)/AddInventoryForm",
+        params: { item: JSON.stringify(item) },
+      });
+    } catch (error) {
+      console.error("Error logging draft click:", error);
+    }
+  }, [userType]);
 
   const addNewProperty = () => {
-    router.push("/(tabs)/AddInventoryForm");
+    try {
+      logEvent(analytics, "add_new_property_click", {
+        event_category: "drafts",
+        event_label: "add_new",
+        user_type: userType
+      });
+      router.push("/(tabs)/AddInventoryForm");
+    } catch (error) {
+      console.error("Error logging add new property:", error);
+    }
   };
 
   const renderPropertyItem = useCallback(
@@ -84,6 +125,27 @@ const DraftsScreen: React.FC = () => {
     });
     setDrafts(stateDrafts);
     setRendering(false);
+
+    // Log page view with drafts count
+    try {
+      logEvent(analytics, "drafts_page_view", {
+        event_category: "drafts",
+        event_label: "page_view",
+        drafts_count: stateDrafts.length,
+        user_type: userType
+      });
+    } catch (error) {
+      logEvent(analytics, "drafts_error", {
+        event_category: "drafts",
+        event_label: "error",
+        error_type: error instanceof Error ? error.name : "unknown",
+        operation: "fetch_drafts",
+        user_type: userType
+      });
+      console.error("Error fetching drafts:", error);
+    } finally {
+      setRendering(false);
+    }
   };
 
   useFocusEffect(

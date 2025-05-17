@@ -1,5 +1,9 @@
 import { MaterialIcons } from "@expo/vector-icons";
 import React, { useState, useCallback, useMemo, useRef } from "react";
+import { analytics } from "@/app/config/firebase";
+import { logEvent } from "@react-native-firebase/analytics";
+import { useSelector } from "react-redux";
+import { RootState } from "@/store/store";
 import {
   View,
   Text,
@@ -42,9 +46,21 @@ const CustomSelectDropdown: React.FC<CustomSelectDropdownProps> = ({
     left: 0,
   });
   const triggerRef = useRef<View>(null);
+  const userType = useSelector((state: RootState) => state.agent?.docData?.userType) || "free";
 
   const handleToggle = useCallback(() => {
     if (disabled) return;
+
+    try {
+      logEvent(analytics, isOpen ? 'close_dropdown' : 'open_dropdown', {
+        event_category: 'dropdown',
+        event_label: isOpen ? 'close' : 'open',
+        placeholder: placeholder,
+        user_type: userType
+      });
+    } catch (error) {
+      console.error('Error logging dropdown toggle:', error);
+    }
 
     // Measure the trigger component
     if (triggerRef.current) {
@@ -58,14 +74,28 @@ const CustomSelectDropdown: React.FC<CustomSelectDropdownProps> = ({
         setIsOpen((prev) => !prev);
       });
     }
-  }, [disabled]);
+  }, [disabled, isOpen, placeholder, userType]);
 
   const handleSelectItem = useCallback(
     (value: string) => {
+      const selectedOption = options.find(opt => opt.value === value);
+      try {
+        logEvent(analytics, 'select_dropdown_option', {
+          event_category: 'dropdown',
+          event_label: 'select',
+          option_value: value,
+          option_label: selectedOption?.label,
+          dropdown_type: placeholder,
+          user_type: userType
+        });
+      } catch (error) {
+        console.error('Error logging option selection:', error);
+      }
+
       onValueChange(value);
       setIsOpen(false);
     },
-    [onValueChange],
+    [onValueChange, options, placeholder, userType],
   );
 
   const renderItems = useMemo(() => {

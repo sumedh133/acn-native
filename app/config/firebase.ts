@@ -1,5 +1,6 @@
 import { initializeApp } from "firebase/app";
 import { getFirestore } from "firebase/firestore";
+import { getAnalytics } from "@react-native-firebase/analytics"
 // import { FIREBASE_API_KEY, FIREBASE_AUTH_DOMAIN, FIREBASE_DATABASE_URL, FIREBASE_PROJECT_ID, FIREBASE_STORAGE_BUCKET, FIREBASE_MESSAGING_SENDER_ID, FIREBASE_APP_ID, FIREBASE_MEASUREMENT_ID } from '@env';
 
 // const firebaseConfig = {
@@ -29,5 +30,7 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 // export const auth = getAuth(app);
 const db = getFirestore(app);
+// import analytics
+const analytics = getAnalytics();
 
-export { db, app };
+export { db, app, analytics };

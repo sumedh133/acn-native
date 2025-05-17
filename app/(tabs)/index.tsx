@@ -9,6 +9,9 @@ import * as Notifications from "expo-notifications";
 import { RootState } from "@/store/store";
 import Offline from "../components/Offline";
 import messaging from '@react-native-firebase/messaging'
+import { analytics } from "../config/firebase";
+import { logEvent, setUserId, setUserProperties } from "@react-native-firebase/analytics";
+import SessionTracker from "../services/SessionTracker";
 
 // Keep splash screen visible until explicitly hidden
 SplashScreen.preventAutoHideAsync();
@@ -17,6 +20,51 @@ export default function TabOneScreen() {
   const router = useRouter();
   // Add state to track if Redux store is ready
   const [isStoreReady, setIsStoreReady] = useState(false);
+
+  const agentData = useSelector((state: RootState) => state?.agent?.docData);
+  const userType = agentData?.userType || "free";
+  const userName = agentData?.name || '';
+
+  const userPhoneNumber = useSelector((state: RootState) => state.agent.phonenumber);
+  // Initialize session tracking
+  useEffect(() => {
+    const sessionTracker = SessionTracker.getInstance();
+    sessionTracker.setUserInfo(userType, userPhoneNumber || '', userName);
+
+    return () => {
+      sessionTracker.cleanup();
+    };
+  }, [userType, userPhoneNumber, userName]);
+
+  // Track initial app launch
+  useEffect(() => {
+    try {
+      logEvent(analytics, 'app_launch', {
+        event_category: 'app',
+        event_label: 'launch',
+        user_type: userType
+      });
+    } catch (error) {
+      console.error('Error logging app launch:', error);
+    }
+  }, [userType]);
+
+  useEffect(() => {
+    if (userPhoneNumber) {
+      setUserId(analytics, userPhoneNumber);
+    }
+  }, [userPhoneNumber]);
+
+  // user name as a custom param and can add more details to log for the user.
+  try {
+    const userName = useSelector((state: RootState) => state.agent.docData.name);
+    const customParams = { user_name: userName };
+    useEffect(() => {
+      if (userName) {
+        setUserProperties(analytics, customParams);
+      }
+    }, [customParams]);
+  } catch {}  
 
   // useEffect(() => {
   //   // Function to request permission and get the token
@@ -50,12 +98,43 @@ export default function TabOneScreen() {
       // Hide splash screen
       SplashScreen.hideAsync();
 
-      // Navigate based on auth status
-      if (isAuthenticated) {
-        router.replace("/(tabs)/properties");
+      // Track navigation based on auth status
+      try {
+        if (isAuthenticated) {
+          logEvent(analytics, 'auth_redirect', {
+            event_category: 'authentication',
+            event_label: 'authenticated',
+            destination: 'properties',
+            user_type: userType
+          });
+          router.replace("/(tabs)/properties");
+        } else {
+          logEvent(analytics, 'landing_page_view', {
+            event_category: 'authentication',
+            event_label: 'unauthenticated',
+            user_type: 'guest'
+          });
+        }
+      } catch (error) {
+        console.error('Error logging auth state:', error);
       }
     }
-  }, [isStoreReady, isAuthenticated, router]);
+  }, [isStoreReady, isAuthenticated, router, userType]);
+
+  // Track offline state
+  useEffect(() => {
+    if (!isConnectedToInternet) {
+      try {
+        logEvent(analytics, 'offline_state', {
+          event_category: 'connectivity',
+          event_label: 'offline',
+          user_type: userType
+        });
+      } catch (error) {
+        console.error('Error logging offline state:', error);
+      }
+    }
+  }, [isConnectedToInternet, userType]);
 
   // Set store ready after first render
   useEffect(() => {
@@ -68,6 +147,16 @@ export default function TabOneScreen() {
   }
 
   messaging().setBackgroundMessageHandler(async remoteMessage => {
+    try {
+      logEvent(analytics, 'background_notification', {
+        event_category: 'notifications',
+        event_label: 'background',
+        notification_type: remoteMessage?.data?.type || 'unknown',
+        user_type: userType
+      });
+    } catch (error) {
+      console.error('Error logging background notification:', error);
+    }
     console.log('', remoteMessage)
   })
 

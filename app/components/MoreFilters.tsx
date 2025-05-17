@@ -17,6 +17,10 @@ import {
   useRange,
   useRefinementList,
 } from "react-instantsearch";
+import { analytics } from "@/app/config/firebase";
+import { logEvent } from "@react-native-firebase/analytics";
+import { useSelector } from "react-redux";
+import { RootState } from "@/store/store";
 import DropdownMoreFilters from "./DropdownMoreFilters";
 import { Ionicons } from "@expo/vector-icons";
 import BudgetRangeSlider from "./property/BudgetRangeSlider";
@@ -55,9 +59,28 @@ const MoreFilters = ({
   setSelectedLandmark,
 }: MoreFiltersProps) => {
   const { items, refine } = useCurrentRefinements();
+  const userType = useSelector((state: RootState) => state?.agent?.docData?.userType) || "free";
   const [selectedLocationFilter, setSelectedLocationFilter] =
     useState("micromarket");
   const [landmarkSearch, setLandmarkSearch] = useState("");
+
+  // Track modal view
+  useEffect(() => {
+    if (isOpen) {
+      try {
+        logEvent(analytics, 'more_filters_view', {
+          event_category: 'filters',
+          event_label: 'modal_view',
+          current_refinements: items.length,
+          location_filter: selectedLocationFilter,
+          has_landmark: !!selectedLandmark,
+          user_type: userType
+        });
+      } catch (error) {
+        console.error('Error logging more filters view:', error);
+      }
+    }
+  }, [isOpen]);
 
   // Micromarket refinement list
   const { items: micromarketItems, refine: refineMicromarket } =
@@ -210,6 +233,42 @@ const MoreFilters = ({
       item.label.toLowerCase().includes(searchQuery.toLowerCase())
     );
 
+    const handleSearch = (query: string) => {
+      try {
+        logEvent(analytics, 'filter_search', {
+          event_category: 'filters',
+          event_label: 'search',
+          filter_type: attribute,
+          search_query: query,
+          results_count: items.filter(item => 
+            item.label.toLowerCase().includes(query.toLowerCase())
+          ).length,
+          user_type: userType
+        });
+      } catch (error) {
+        console.error('Error logging filter search:', error);
+      }
+      setSearchQuery(query);
+    };
+
+    const handleRefine = (value: string) => {
+      try {
+        const item = items.find(i => i.value === value);
+        logEvent(analytics, 'filter_refinement', {
+          event_category: 'filters',
+          event_label: 'refinement',
+          filter_type: attribute,
+          value: value,
+          label: item?.label,
+          action: item?.isRefined ? 'remove' : 'add',
+          user_type: userType
+        });
+      } catch (error) {
+        console.error('Error logging refinement:', error);
+      }
+      refine(value);
+    };
+
     return (
       <View className="w-full">
         {attribute === "micromarket" && (
@@ -218,7 +277,7 @@ const MoreFilters = ({
               className="w-full p-2 border border-gray-300 rounded-md bg-white text-sm"
               placeholder="Search categories..."
               value={searchQuery}
-              onChangeText={setSearchQuery}
+              onChangeText={handleSearch}
             />
           </View>
         )}
@@ -232,7 +291,7 @@ const MoreFilters = ({
                 className={`py-2 px-3 border border-gray-300 rounded-md bg-white ${
                   item.isRefined ? "bg-[#DFF4F3] border-[#153E3B]" : ""
                 }`}
-                onPress={() => refine(item.value)}
+                onPress={() => handleRefine(item.value)}
               >
                 <View className="flex-row justify-between items-center">
                   <Text
@@ -257,19 +316,70 @@ const MoreFilters = ({
 
   const [forceRender, setForceRender] = useState(false);
 
+  const handleLocationFilterChange = (filterType: string) => {
+    try {
+      logEvent(analytics, 'location_filter_change', {
+        event_category: 'filters',
+        event_label: 'location',
+        previous_filter: selectedLocationFilter,
+        new_filter: filterType,
+        user_type: userType
+      });
+    } catch (error) {
+      console.error('Error logging location filter change:', error);
+    }
+
+    if (filterType === 'landmark') {
+      setSelectedLocationFilter('landmark');
+      clearAttributeFilter('micromarket');
+    } else {
+      setSelectedLocationFilter('micromarket');
+      setSelectedLandmark?.(null);
+    }
+  };
+
+  const handleShowResults = () => {
+    try {
+      logEvent(analytics, 'apply_more_filters', {
+        event_category: 'filters',
+        event_label: 'apply',
+        total_filters: items.length,
+        filter_types: items.map(item => item.attribute),
+        location_filter: selectedLocationFilter,
+        has_landmark: !!selectedLandmark,
+        user_type: userType
+      });
+    } catch (error) {
+      console.error('Error logging filter application:', error);
+    }
+    handleToggle();
+  };
+
   return (
     <Modal
       visible={isOpen}
       onShow={() => setForceRender((prev) => !prev)}
       animationType="slide"
       transparent={true}
-      onRequestClose={handleToggle}
+      onRequestClose={() => {
+        try {
+          logEvent(analytics, 'more_filters_close', {
+            event_category: 'filters',
+            event_label: 'modal_close',
+            close_method: 'back_button',
+            applied_filters: items.length,
+            user_type: userType
+          });
+        } catch (error) {
+          console.error('Error logging modal close:', error);
+        }
+        handleToggle();
+      }}
     >
       <View
         className="flex-1 bg-white"
         style={{
           zIndex: 1,
-          //CHECK FOR IOS
           paddingTop: Platform.OS === "ios" ? 40 : 0,
         }}
       >
@@ -302,10 +412,7 @@ const MoreFilters = ({
                   className={`flex-1 py-3 px-4 rounded-md ${
                     selectedLocationFilter === "landmark" ? "bg-white" : ""
                   }`}
-                  onPress={() => {
-                    setSelectedLocationFilter("landmark");
-                    clearAttributeFilter("micromarket");
-                  }}
+                  onPress={() => handleLocationFilterChange("landmark")}
                 >
                   <Text
                     className={`text-center font-medium ${
@@ -322,10 +429,7 @@ const MoreFilters = ({
                   className={`flex-1 py-3 px-4 rounded-md ${
                     selectedLocationFilter === "micromarket" ? "bg-white" : ""
                   }`}
-                  onPress={() => {
-                    setSelectedLocationFilter("micromarket");
-                    setSelectedLandmark?.(null);
-                  }}
+                  onPress={() => handleLocationFilterChange("micromarket")}
                 >
                   <Text
                     className={`text-center font-medium ${
@@ -351,9 +455,6 @@ const MoreFilters = ({
                 </View>
               )}
 
-              {/* {selectedLocationFilter === 'micromarket' && (
-                renderRefinementList(micromarketItems, refineMicromarket)
-              )} */}
               {selectedLocationFilter === "micromarket" && (
                 <SearchableRefinementList
                   items={micromarketItems}
@@ -515,7 +616,7 @@ const MoreFilters = ({
         <View className="p-4 border-t border-gray-200">
           <TouchableOpacity
             className="bg-[#153E3B] py-3 mx-4 rounded-md items-center"
-            onPress={handleToggle}
+            onPress={handleShowResults}
           >
             <Text className="text-white font-medium text-md ml-1">
               Show Results
@@ -527,10 +628,10 @@ const MoreFilters = ({
   );
 };
 
-export default MoreFilters;
-
 const styles = StyleSheet.create({
   refinements: {
     flexDirection: "row",
   },
 });
+
+export default MoreFilters;

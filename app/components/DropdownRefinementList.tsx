@@ -3,6 +3,10 @@ import { View, Text, TouchableOpacity, Modal, ScrollView } from "react-native";
 import { useRefinementList } from "react-instantsearch";
 import { StyleSheet } from "react-native";
 import CloseIcon from "@/assets/icons/svg/CloseIcon";
+import { analytics } from "@/app/config/firebase";
+import { logEvent } from "@react-native-firebase/analytics";
+import { useSelector } from "react-redux";
+import { RootState } from "@/store/store";
 
 interface DropdownRefinementListProps {
   attribute: string;
@@ -26,10 +30,43 @@ export default function DropdownRefinementList({
     attribute,
     transformItems,
   });
+  const userType = useSelector((state: RootState) => state.agent?.docData?.userType) || "free";
+
+  const handleToggle = () => {
+    try {
+      logEvent(analytics, isOpen ? 'close_refinement_list' : 'open_refinement_list', {
+        event_category: 'refinements',
+        event_label: isOpen ? 'close' : 'open',
+        refinement_type: attribute,
+        refinement_label: label,
+        user_type: userType
+      });
+    } catch (error) {
+      console.error('Error logging refinement list toggle:', error);
+    }
+    setIsOpen(!isOpen);
+  };
+
+  const handleRefine = (value: string) => {
+    try {
+      logEvent(analytics, analyticsEvent || 'apply_refinement', {
+        event_category: 'refinements',
+        event_label: 'apply',
+        refinement_type: attribute,
+        refinement_value: value,
+        refinement_label: label,
+        user_type: userType
+      });
+    } catch (error) {
+      console.error('Error logging refinement application:', error);
+    }
+    refine(value);
+    setIsOpen(false);
+  };
 
   return (
     <View style={styles.container}>
-      <TouchableOpacity onPress={() => setIsOpen(true)} style={styles.button}>
+      <TouchableOpacity onPress={handleToggle} style={styles.button}>
         <Text style={styles.buttonText}>{label}</Text>
       </TouchableOpacity>
 
@@ -52,10 +89,7 @@ export default function DropdownRefinementList({
               {items.map((item) => (
                 <TouchableOpacity
                   key={item.value}
-                  onPress={() => {
-                    refine(item.value);
-                    setIsOpen(false);
-                  }}
+                  onPress={() => handleRefine(item.value)}
                   style={styles.item}
                 >
                   <Text

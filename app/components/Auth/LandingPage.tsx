@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect } from "react";
 import {
   View,
   Text,
@@ -12,6 +12,8 @@ import { useSelector } from "react-redux";
 import { RootState } from "@/store/store";
 import Svg, { G, Path, Polyline } from "react-native-svg";
 import { useDoubleBackPressExit } from "@/hooks/useDoubleBackPressExit";
+import { analytics } from "@/app/config/firebase";
+import { logEvent } from "@react-native-firebase/analytics";
 
 const { width, height } = Dimensions.get("window");
 
@@ -109,8 +111,34 @@ export default function LandingPage() {
   const isAuthenticated = useSelector(
     (state: RootState) => state.auth.isAuthenticated,
   );
+  const userType = useSelector((state: RootState) => state?.agent?.docData?.userType) || "free";
+
+  useEffect(() => {
+    try {
+      logEvent(analytics, 'view_landing_page', {
+        event_category: 'auth',
+        event_label: 'landing_view',
+        is_authenticated: isAuthenticated,
+        user_type: userType
+      });
+    } catch (error) {
+      console.error('Error logging landing page view:', error);
+    }
+  }, [isAuthenticated, userType]);
 
   const handleNavigate = () => {
+    try {
+      logEvent(analytics, 'landing_page_navigation', {
+        event_category: 'auth',
+        event_label: 'landing_interaction',
+        action: isAuthenticated ? 'continue' : 'login_signup',
+        destination: isAuthenticated ? '/(tabs)/properties' : '/components/Auth/Signin',
+        user_type: userType
+      });
+    } catch (error) {
+      console.error('Error logging navigation:', error);
+    }
+
     if (!isAuthenticated) {
       router.replace("/components/Auth/Signin");
     } else {

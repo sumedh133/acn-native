@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   Modal,
   Pressable,
@@ -25,6 +25,10 @@ import {
   showInfoToast,
   showSuccessToast,
 } from "@/utils/toastUtils";
+import { analytics } from "@/app/config/firebase";
+import { logEvent } from "@react-native-firebase/analytics";
+import { useSelector } from "react-redux";
+import { RootState } from "@/store/store";
 
 type Props = {
   isOpen: boolean;
@@ -37,6 +41,41 @@ const ReviewModal: React.FC<Props> = ({ isOpen, onClose, enqId }) => {
   const [review, setReview] = useState("");
   const [loader, setLoader] = useState(false);
   const [errors, setErrors] = useState({ rating: false, review: false });
+  const userType = useSelector((state: RootState) => state?.agent?.docData?.userType) || "free";
+
+  useEffect(() => {
+    if (isOpen) {
+      try {
+        logEvent(analytics, 'review_modal_shown', {
+          event_category: 'enquiries',
+          event_label: 'impression',
+          enquiry_id: enqId,
+          user_type: userType
+        });
+      } catch (error) {
+        console.error('Error logging review modal shown:', error);
+      }
+    }
+  }, [isOpen]);
+
+  const handleRatingChange = (newRating: number) => {
+    try {
+      logEvent(analytics, 'review_rating_selected', {
+        event_category: 'enquiries',
+        event_label: 'interaction',
+        enquiry_id: enqId,
+        rating: newRating,
+        user_type: userType
+      });
+    } catch (error) {
+      console.error('Error logging rating selection:', error);
+    }
+    setRating(newRating);
+    setErrors((prev) => ({
+      ...prev,
+      rating: false,
+    }));
+  };
 
   const handleSubmit = async () => {
     if (loader) return;
@@ -55,10 +94,32 @@ const ReviewModal: React.FC<Props> = ({ isOpen, onClose, enqId }) => {
 
     setErrors(newErrors);
 
-    if (hasError) return;
+    if (hasError) {
+      try {
+        logEvent(analytics, 'review_submission_error', {
+          event_category: 'enquiries',
+          event_label: 'error',
+          enquiry_id: enqId,
+          error_type: rating === 0 ? 'missing_rating' : 'missing_review',
+          user_type: userType
+        });
+      } catch (error) {
+        console.error('Error logging submission error:', error);
+      }
+      return;
+    }
 
     try {
       setLoader(true);
+      logEvent(analytics, 'review_submission_started', {
+        event_category: 'enquiries',
+        event_label: 'interaction',
+        enquiry_id: enqId,
+        rating: rating,
+        review_length: review.length,
+        user_type: userType
+      });
+
       const q = query(
         collection(db, "enquiries"),
         where("enquiryId", "==", enqId)
@@ -82,16 +143,33 @@ const ReviewModal: React.FC<Props> = ({ isOpen, onClose, enqId }) => {
       await updateDoc(docRef, {
         reviews: arrayUnion(newReview),
       });
+
+      logEvent(analytics, 'review_submission_success', {
+        event_category: 'enquiries',
+        event_label: 'success',
+        enquiry_id: enqId,
+        rating: rating,
+        review_length: review.length,
+        user_type: userType
+      });
+
       showSuccessToast("Review added successfully!");
     } catch (error) {
       console.error("Error adding review:", error);
+      logEvent(analytics, 'review_submission_failure', {
+        event_category: 'enquiries',
+        event_label: 'error',
+        enquiry_id: enqId,
+        error_message: error instanceof Error ? error.message : 'Unknown error',
+        user_type: userType
+      });
       showErrorToast("Failed to add review. Please try again.");
     } finally {
       setLoader(false);
       onClose();
       setRating(0);
       setReview("");
-      setErrors({ rating: false, review: false }); // Reset errors on success
+      setErrors({ rating: false, review: false });
     }
   };
 
@@ -100,7 +178,22 @@ const ReviewModal: React.FC<Props> = ({ isOpen, onClose, enqId }) => {
       visible={isOpen}
       transparent
       animationType="fade"
-      onRequestClose={onClose}
+      onRequestClose={() => {
+        try {
+          logEvent(analytics, 'review_modal_closed', {
+            event_category: 'enquiries',
+            event_label: 'interaction',
+            enquiry_id: enqId,
+            close_type: 'back_button',
+            had_rating: rating > 0,
+            had_review: review.trim().length > 0,
+            user_type: userType
+          });
+        } catch (error) {
+          console.error('Error logging modal close:', error);
+        }
+        onClose();
+      }}
     >
       <Pressable
         className="flex-1 bg-black/40 justify-center items-center p-5"
@@ -116,11 +209,7 @@ const ReviewModal: React.FC<Props> = ({ isOpen, onClose, enqId }) => {
               <TouchableOpacity
                 key={star}
                 onPress={() => {
-                  setRating(star);
-                  setErrors((prev) => ({
-                    ...prev,
-                    rating: false,
-                  }));
+                  handleRatingChange(star);
                 }}
               >
                 <FontAwesome

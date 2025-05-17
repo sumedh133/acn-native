@@ -7,6 +7,8 @@ import {
   View,
   GestureResponderEvent,
 } from "react-native";
+import { analytics } from "@/app/config/firebase";
+import { logEvent } from "@react-native-firebase/analytics";
 
 interface ARSecondaryButtonProps {
   children: React.ReactNode;
@@ -15,6 +17,9 @@ interface ARSecondaryButtonProps {
   IconSecond?: any;
   disabled?: boolean;
   style?: object;
+  analyticsLabel?: string;
+  analyticsContext?: string;
+  analyticsData?: Record<string, any>;
 }
 
 const SecondaryButton: React.FC<ARSecondaryButtonProps> = ({
@@ -24,10 +29,31 @@ const SecondaryButton: React.FC<ARSecondaryButtonProps> = ({
   IconSecond,
   disabled = false,
   style = {},
+  analyticsLabel,
+  analyticsContext = "general",
+  analyticsData = {},
 }) => {
+  const handlePress = (event: GestureResponderEvent) => {
+    try {
+      logEvent(analytics, 'secondary_button_click', {
+        event_category: analyticsContext,
+        event_label: analyticsLabel || (typeof children === 'string' ? children : 'unknown'),
+        button_text: typeof children === 'string' ? children : 'unknown',
+        has_icon_first: !!IconFirst,
+        has_icon_second: !!IconSecond,
+        is_disabled: disabled,
+        ...analyticsData
+      });
+    } catch (error) {
+      console.error('Error logging button click:', error);
+    }
+
+    onPress?.(event);
+  };
+
   return (
     <TouchableOpacity
-      onPress={onPress}
+      onPress={handlePress}
       disabled={disabled}
       style={[
         styles.buttonWrapper,

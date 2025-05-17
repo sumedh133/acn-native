@@ -49,6 +49,8 @@ import storage from "@react-native-firebase/storage";
 import SaveAsDraft from "../modals/SaveAsDraft";
 import { useBackToSaveDraft } from "@/hooks/useBackToSaveDraft";
 import MultiSelectSlider from "../components/Listing/MuliSelectSliderButton";
+import { logEvent } from "@react-native-firebase/analytics";
+import { analytics } from "../config/firebase";
 
 const API_URL = "https://uploadtodrive-ouurm6pska-uc.a.run.app";
 
@@ -219,6 +221,9 @@ const AddInventoryForm = () => {
 
   const [saveAsDraftModalVisible, setSaveAsDraftModalVisible] = useState(false);
 
+  // Add userType selector
+  const userType = useSelector((state: RootState) => state.agent.docData?.userType || "free");
+
   // New state to track if the form has any data filled
   const isFormEmpty = useMemo(() => {
     // Check if property has any non-default values
@@ -257,7 +262,33 @@ const AddInventoryForm = () => {
     return true;
   }, [property, docsToUpload]);
 
+  // Track page view
+  useEffect(() => {
+    try {
+      logEvent(analytics, "add_inventory_page_view", {
+        event_category: "inventory",
+        event_label: "page_view",
+        is_edit_mode: !!parsedItem,
+        user_type: userType
+      });
+    } catch (error) {
+      console.error("Error logging page view:", error);
+    }
+  }, [parsedItem, userType]);
+
   const handleSetValue = (field: keyof ListingProperty, value: any) => {
+    try {
+      logEvent(analytics, "inventory_field_update", {
+        event_category: "inventory",
+        event_label: "field_update",
+        field_name: field,
+        asset_type: property.assetType || "not_selected",
+        user_type: userType
+      });
+    } catch (error) {
+      console.error("Error logging field update:", error);
+    }
+
     setGrayed(false);
     setProperty((prevProperty) => ({
       ...prevProperty,
@@ -482,6 +513,18 @@ const AddInventoryForm = () => {
   };
 
   const handleClear = () => {
+    try {
+      logEvent(analytics, "inventory_form_clear", {
+        event_category: "inventory",
+        event_label: "clear",
+        asset_type: property.assetType || "not_selected",
+        had_property_id: !!property.propertyId,
+        user_type: userType
+      });
+    } catch (error) {
+      console.error("Error logging form clear:", error);
+    }
+
     setProperty({ ...initialState, propertyId: property.propertyId });
     setSelectedPlace(null);
     setDocsToUpload({
@@ -808,10 +851,27 @@ const AddInventoryForm = () => {
     try {
       setSaving(true);
 
+      // Track submission attempt
+      logEvent(analytics, "inventory_submit_attempt", {
+        event_category: "inventory",
+        event_label: "submit",
+        asset_type: property.assetType || "not_selected",
+        is_edit_mode: !!parsedItem,
+        has_photos: docsToUpload.photo.length > 0,
+        has_videos: docsToUpload.video.length > 0,
+        has_documents: docsToUpload.document.length > 0,
+        user_type: userType
+      });
+
       const areCompulsoryFieldsValid = checkCompulsoryFields();
       if (!areCompulsoryFieldsValid) {
-        console.error("Compulsory fields are missing or invalid");
-        // showErrorToast("Compulsory fields are missing or invalid");
+        logEvent(analytics, "inventory_submit_error", {
+          event_category: "inventory",
+          event_label: "error",
+          error_type: "missing_fields",
+          asset_type: property.assetType || "not_selected",
+          user_type: userType
+        });
         setSaving(false);
         return;
       }
@@ -903,7 +963,26 @@ const AddInventoryForm = () => {
       router.dismissAll();
       router.replace("/(tabs)/dashboardTab");
       setSaving(false);
+
+      // Track successful submission
+      logEvent(analytics, "inventory_submit_success", {
+        event_category: "inventory",
+        event_label: "success",
+        asset_type: property.assetType,
+        property_id: propId,
+        total_files: docsToUpload.photo.length + docsToUpload.video.length + docsToUpload.document.length,
+        user_type: userType
+      });
     } catch (error) {
+      // Track submission failure
+      logEvent(analytics, "inventory_submit_error", {
+        event_category: "inventory",
+        event_label: "error",
+        error_type: "submission_failed",
+        error_message: error instanceof Error ? error.message : "Unknown error",
+        asset_type: property.assetType || "not_selected",
+        user_type: userType
+      });
       console.log(error);
       setSaving(false);
       showErrorToast("Please fill all mandatory fields before submiting.");
@@ -914,7 +993,24 @@ const AddInventoryForm = () => {
     try {
       setSavingDraft(true);
 
+      // Track draft save attempt
+      logEvent(analytics, "inventory_draft_save_attempt", {
+        event_category: "inventory",
+        event_label: "draft",
+        asset_type: property.assetType || "not_selected",
+        has_photos: docsToUpload.photo.length > 0,
+        has_videos: docsToUpload.video.length > 0,
+        has_documents: docsToUpload.document.length > 0,
+        user_type: userType
+      });
+
       if (!property.assetType || !property.nameOfTheProperty) {
+        logEvent(analytics, "inventory_draft_error", {
+          event_category: "inventory",
+          event_label: "error",
+          error_type: "missing_required_fields",
+          user_type: userType
+        });
         showErrorToast("Asset Type and Name are necessary for draft.");
         setSavingDraft(false);
         return;
@@ -980,7 +1076,26 @@ const AddInventoryForm = () => {
       showSuccessToast("Property saved as draft successfully!");
       handleSetValue("propertyId", propId);
       setSavingDraft(false);
+
+      // Track successful draft save
+      logEvent(analytics, "inventory_draft_success", {
+        event_category: "inventory",
+        event_label: "success",
+        asset_type: property.assetType,
+        property_id: propId,
+        total_files: docsToUpload.photo.length + docsToUpload.video.length + docsToUpload.document.length,
+        user_type: userType
+      });
     } catch (error) {
+      // Track draft save failure
+      logEvent(analytics, "inventory_draft_error", {
+        event_category: "inventory",
+        event_label: "error",
+        error_type: "save_failed",
+        error_message: error instanceof Error ? error.message : "Unknown error",
+        asset_type: property.assetType || "not_selected",
+        user_type: userType
+      });
       console.error("An unexpected error occurred during submission:", error);
       showErrorToast("An unexpected error occurred during submission");
       setSavingDraft(false);
@@ -989,6 +1104,18 @@ const AddInventoryForm = () => {
   };
 
   const handleChangeAssetType = (value: string) => {
+    try {
+      logEvent(analytics, "asset_type_change", {
+        event_category: "inventory",
+        event_label: "asset_type",
+        previous_type: property.assetType || "none",
+        new_type: value,
+        user_type: userType
+      });
+    } catch (error) {
+      console.error("Error logging asset type change:", error);
+    }
+
     setAssetProperty((prev) => {
       if (property.assetType)
         return {

@@ -13,6 +13,10 @@ import Slider from "@react-native-community/slider";
 import { Ionicons } from "@expo/vector-icons";
 import { Landmark } from "../types";
 import { locationRestriction } from "../constants/PropertyConstants";
+import { analytics } from "@/app/config/firebase";
+import { logEvent } from "@react-native-firebase/analytics";
+import { useSelector } from "react-redux";
+import { RootState } from "@/store/store";
 // import { PLACES_API_KEY } from '@env';
 
 // Define types for API responses
@@ -55,6 +59,7 @@ const LandmarkDropdownFilters = ({
     selectedLandmark?.radius || 5000
   );
   const [userInitiatedSearch, setUserInitiatedSearch] = useState(false);
+  const userType = useSelector((state: RootState) => state.agent?.docData?.userType) || "free";
 
   const searchTimeout = useRef<NodeJS.Timeout | null>(null);
   // Track if component has mounted
@@ -77,12 +82,23 @@ const LandmarkDropdownFilters = ({
       const data = await response.json();
 
       if (data.status === "OK") {
-        setSearchResults(
-          data.predictions.map((prediction: any) => ({
-            place_id: prediction.place_id,
-            description: prediction.description,
-          }))
-        );
+        const predictions = data.predictions.map((prediction: any) => ({
+          place_id: prediction.place_id,
+          description: prediction.description,
+        }));
+        setSearchResults(predictions);
+
+        try {
+          logEvent(analytics, 'landmark_search', {
+            event_category: 'location',
+            event_label: 'search',
+            search_term: query,
+            results_count: predictions.length,
+            user_type: userType
+          });
+        } catch (error) {
+          console.error('Error logging landmark search:', error);
+        }
       } else {
         console.error("Places API error:", data.status);
         setSearchResults([]);
@@ -93,7 +109,7 @@ const LandmarkDropdownFilters = ({
     } finally {
       setIsLoading(false);
     }
-  }, []);
+  }, [userType]);
 
   // Get place details by ID
   const getPlaceDetails = useCallback(
@@ -205,7 +221,19 @@ const LandmarkDropdownFilters = ({
             lng: details.geometry.location.lng,
             radius: sliderValue,
           };
-          // This will set searchQuery via useEffect, so reset userInitiatedSearch
+
+          try {
+            logEvent(analytics, 'select_landmark', {
+              event_category: 'location',
+              event_label: 'select',
+              landmark_name: location.name,
+              landmark_radius: location.radius,
+              user_type: userType
+            });
+          } catch (error) {
+            console.error('Error logging landmark selection:', error);
+          }
+
           setUserInitiatedSearch(false);
           setSelectedLandmark(location);
           setShowResults(false);
@@ -217,7 +245,7 @@ const LandmarkDropdownFilters = ({
         setIsLoading(false);
       }
     },
-    [getPlaceDetails, sliderValue, setSelectedLandmark]
+    [getPlaceDetails, sliderValue, setSelectedLandmark, userType]
   );
 
   // Handle slider change - track temp value during sliding
@@ -230,17 +258,42 @@ const LandmarkDropdownFilters = ({
     (value: number) => {
       setSliderValue(value);
       if (selectedLandmark) {
-        setSelectedLandmark({
+        const updatedLandmark = {
           ...selectedLandmark,
           radius: value,
-        });
+        };
+        setSelectedLandmark(updatedLandmark);
+
+        try {
+          logEvent(analytics, 'update_landmark_radius', {
+            event_category: 'location',
+            event_label: 'radius',
+            landmark_name: selectedLandmark.name,
+            previous_radius: selectedLandmark.radius,
+            new_radius: value,
+            user_type: userType
+          });
+        } catch (error) {
+          console.error('Error logging radius update:', error);
+        }
       }
     },
-    [selectedLandmark, setSelectedLandmark]
+    [selectedLandmark, setSelectedLandmark, userType]
   );
 
   // Clear search
   const handleClearSearch = useCallback(() => {
+    try {
+      logEvent(analytics, 'clear_landmark_search', {
+        event_category: 'location',
+        event_label: 'clear',
+        had_selection: !!selectedLandmark,
+        user_type: userType
+      });
+    } catch (error) {
+      console.error('Error logging search clear:', error);
+    }
+
     setSearchQuery("");
     setSelectedLandmark(null);
     setSearchResults([]);
@@ -248,7 +301,7 @@ const LandmarkDropdownFilters = ({
     setSliderValue(5000);
     setSliderTempValue(5000);
     setUserInitiatedSearch(false);
-  }, [setSelectedLandmark]);
+  }, [setSelectedLandmark, selectedLandmark, userType]);
 
   // Format radius display properly
   const formatRadius = (meters: number) => {

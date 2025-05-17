@@ -8,6 +8,10 @@ import {
 } from "react-native";
 import React from "react";
 import { router } from "expo-router";
+import { analytics } from "@/app/config/firebase";
+import { logEvent } from "@react-native-firebase/analytics";
+import { useSelector } from "react-redux";
+import { RootState } from "@/store/store";
 
 interface DeleteDraftProps {
   visible: boolean;
@@ -20,11 +24,48 @@ const DeleteDraft: React.FC<DeleteDraftProps> = ({
   onClose,
   handleDelete,
 }) => {
+  const userType = useSelector((state: RootState) => state?.agent?.docData?.userType) || "free";
+
+  // Track modal visibility
+  React.useEffect(() => {
+    if (visible) {
+      try {
+        logEvent(analytics, 'delete_draft_modal_show', {
+          event_category: 'modal',
+          event_label: 'delete_draft',
+          user_type: userType
+        });
+      } catch (error) {
+        console.error('Error logging modal show:', error);
+      }
+    }
+  }, [visible]);
+
   const handleDiscard = () => {
+    try {
+      logEvent(analytics, 'delete_draft_action', {
+        event_category: 'modal',
+        event_label: 'delete_draft',
+        action: 'cancel',
+        user_type: userType
+      });
+    } catch (error) {
+      console.error('Error logging discard action:', error);
+    }
     onClose();
   };
 
   const handleSave = async () => {
+    try {
+      logEvent(analytics, 'delete_draft_action', {
+        event_category: 'modal',
+        event_label: 'delete_draft',
+        action: 'confirm_delete',
+        user_type: userType
+      });
+    } catch (error) {
+      console.error('Error logging delete action:', error);
+    }
     handleDelete();
   };
 
@@ -33,7 +74,19 @@ const DeleteDraft: React.FC<DeleteDraftProps> = ({
       animationType="fade"
       transparent={true}
       visible={visible}
-      onRequestClose={onClose}
+      onRequestClose={() => {
+        try {
+          logEvent(analytics, 'delete_draft_modal_close', {
+            event_category: 'modal',
+            event_label: 'delete_draft',
+            action: 'system_close',
+            user_type: userType
+          });
+        } catch (error) {
+          console.error('Error logging modal close:', error);
+        }
+        onClose();
+      }}
     >
       <View style={styles.centeredView}>
         <View style={styles.modalView}>

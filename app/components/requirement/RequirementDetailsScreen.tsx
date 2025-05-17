@@ -12,6 +12,8 @@ import {
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { router, useLocalSearchParams } from "expo-router";
+import { analytics } from "@/app/config/firebase";
+import { logEvent } from "@react-native-firebase/analytics";
 
 // Import components and utilities
 import PrimaryButton from "../../../components/ui/PrimaryButton";
@@ -42,6 +44,8 @@ export default function RequirementDetailsScreen() {
   const isConnectedToInternet = useSelector(
     (state: RootState) => state.app.isConnectedToInternet,
   );
+
+  const userType = useSelector((state: RootState) => state.agent?.docData?.userType) || "free";
 
   // If no requirement is provided, don't render anything
   if (!requirement) return null;
@@ -89,6 +93,19 @@ export default function RequirementDetailsScreen() {
       return;
     }
 
+    try {
+      logEvent(analytics, 'share_requirement_whatsapp', {
+        event_category: 'requirement',
+        event_label: 'share',
+        requirement_id: reqId,
+        requirement_type: requirement.assetType,
+        share_method: 'whatsapp',
+        user_type: userType
+      });
+    } catch (error) {
+      console.error('Error logging WhatsApp share:', error);
+    }
+
     const message = encodeURIComponent(
       `Hello, \nI want to submit a matching inventory for a requirement.\n\n*Requirement ID*: ${reqId}\n\nThe inventory details are as follows:\n`,
     );
@@ -101,14 +118,26 @@ export default function RequirementDetailsScreen() {
 
   const handleSubmitMatchingInventory = async () => {
     try {
-      setIsSubmitting(true); // Indicate that the process has started
+      setIsSubmitting(true);
+
+      try {
+        logEvent(analytics, 'submit_matching_inventory', {
+          event_category: 'requirement',
+          event_label: 'submit',
+          requirement_id: requirement.requirementId,
+          requirement_type: requirement.assetType,
+          submission_method: 'whatsapp',
+          user_type: userType
+        });
+      } catch (error) {
+        console.error('Error logging inventory submission:', error);
+      }
 
       // Call WhatsApp functionality
       openWhatsapp();
     } catch (error) {
       console.error("Error submitting matching inventory:", error);
     } finally {
-      // Always reset the state, even if there is an error
       setIsSubmitting(false);
     }
   };

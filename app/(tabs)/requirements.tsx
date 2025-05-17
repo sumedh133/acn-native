@@ -14,6 +14,7 @@ import {
   Text,
   RefreshControl,
   FlatList,
+  ViewabilityConfig,
 } from "react-native";
 import RequirementFilters from "../components/requirement/RequirementFilters";
 import RequirementCard from "../components/requirement/RequirementCard";
@@ -34,6 +35,8 @@ import Animated from "react-native-reanimated";
 import { useSelector } from "react-redux";
 import { RootState } from "@/store/store";
 import Offline from "../components/Offline";
+import { analytics } from "../config/firebase";
+import { logEvent } from "@react-native-firebase/analytics";
 
 const searchClient = algoliasearch(
   "J150UQXDLH",
@@ -44,41 +47,111 @@ const MobileHits = React.memo(() => {
   const { items, isLastPage, showMore } = useInfiniteHits<Requirement>();
   const { status } = useInstantSearch();
   const { query } = useSearchBox();
+  const agentData = useSelector((state: RootState) => state?.agent?.docData);
+  const userType = agentData?.userType || "free";
 
   // Add state for tracking loading states
   const [refreshing, setRefreshing] = useState(false);
   const [loading, setLoading] = useState(false);
   const [isLoadingMore, setIsLoadingMore] = useState(false);
   const [isRendered, setIsRendered] = useState(false);
+  const [maxScrollDepth, setMaxScrollDepth] = useState(0);
+  const viewedRequirements = useRef(new Set<string>());
+  const [totalRequirementsViewed, setTotalRequirementsViewed] = useState(0);
 
-  // Add refresh functionality
+  // Track search results
+  useEffect(() => {
+    if (items && status === 'idle') {
+      try {
+        logEvent(analytics, 'requirement_search_results', {
+          event_category: 'search',
+          event_label: 'results',
+          results_count: items.length,
+          search_query: query || 'empty',
+          user_type: userType
+        });
+      } catch (error) {
+        console.error('Error logging search results:', error);
+      }
+    }
+  }, [items, status, query, userType]);
+
+  const viewabilityConfig = useRef<ViewabilityConfig>({
+    itemVisiblePercentThreshold: 50,
+    minimumViewTime: 500
+  });
+
+  const handleViewableItemsChanged = useCallback(({ viewableItems }: any) => {
+    const newRequirementsViewed = viewableItems.filter((item: any) => {
+      const requirementId = item.item.requirementId || item.item.id;
+      return !viewedRequirements.current.has(requirementId);
+    });
+
+    if (newRequirementsViewed.length > 0) {
+      newRequirementsViewed.forEach((item: any) => {
+        const requirementId = item.item.requirementId || item.item.id;
+        viewedRequirements.current.add(requirementId);
+      });
+
+      setTotalRequirementsViewed(viewedRequirements.current.size);
+
+      try {
+        logEvent(analytics, 'requirement_cards_viewed', {
+          event_category: 'engagement',
+          event_label: 'impression',
+          total_viewed: viewedRequirements.current.size,
+          new_requirements_count: newRequirementsViewed.length,
+          total_available: items.length,
+          view_percentage: Math.round((viewedRequirements.current.size / items.length) * 100),
+          user_type: userType,
+        });
+      } catch (error) {
+        console.error('Error logging requirement views:', error);
+      }
+    }
+  }, [items.length, userType]);
+
+  const handleScroll = useCallback((event: any) => {
+    const { contentOffset, contentSize, layoutMeasurement } = event.nativeEvent;
+    const scrollDepthPercentage = Math.floor(
+      ((contentOffset.y + layoutMeasurement.height) / contentSize.height) * 100
+    );
+    
+    if (scrollDepthPercentage > maxScrollDepth) {
+      setMaxScrollDepth(scrollDepthPercentage);
+      try {
+        logEvent(analytics, 'requirement_scroll_depth', {
+          event_category: 'engagement',
+          event_label: 'scroll',
+          depth_percentage: scrollDepthPercentage,
+          total_items: items.length,
+          requirements_viewed: viewedRequirements.current.size,
+          user_type: userType
+        });
+      } catch (error) {
+        console.error('Error logging scroll depth:', error);
+      }
+    }
+  }, [maxScrollDepth, items.length, userType]);
+
+  // Add refresh functionality with tracking
   const { refresh } = useInstantSearch();
   const onRefresh = useCallback(() => {
     setRefreshing(true);
+    try {
+      logEvent(analytics, 'requirement_list_refresh', {
+        event_category: 'interaction',
+        event_label: 'refresh',
+        user_type: userType
+      });
+    } catch (error) {
+      console.error('Error logging refresh:', error);
+    }
     refresh();
     setTimeout(() => {
       setRefreshing(false);
     }, 1000);
-  }, [refresh]);
-
-  // Improve end reached handler with loading state
-  const handleEndReached = useCallback(() => {
-    if (!isLastPage && !isLoadingMore) {
-      setIsLoadingMore(true);
-      requestAnimationFrame(() => {
-        showMore();
-        setIsLoadingMore(false);
-      });
-    }
-  }, [isLastPage, isLoadingMore, showMore]);
-
-  // Optimize item rendering with useCallback
-  const keyExtractor = useCallback((item: Requirement) => item.objectID, []);
-
-  const renderItem = useCallback(
-    ({ item }: { item: Requirement }) => <RequirementCard requirement={item} />,
-    []
-  );
+  }, [refresh, userType]);
 
   // Improved footer component
   const renderFooter = useCallback(() => {
@@ -91,6 +164,54 @@ const MobileHits = React.memo(() => {
     }
     return null;
   }, [loading]);
+
+  // Track pagination with analytics
+  const handleEndReached = useCallback(() => {
+    if (!isLastPage && !isLoadingMore) {
+      try {
+        logEvent(analytics, 'requirement_list_pagination', {
+          event_category: 'interaction',
+          event_label: 'load_more',
+          current_items: items.length,
+          user_type: userType
+        });
+      } catch (error) {
+        console.error('Error logging pagination:', error);
+      }
+      setIsLoadingMore(true);
+      requestAnimationFrame(() => {
+        showMore();
+        setIsLoadingMore(false);
+      });
+    }
+  }, [isLastPage, isLoadingMore, showMore, items.length, userType]);
+
+  const keyExtractor = useCallback((item: Requirement) => item.requirementId || item.id || '', []);
+
+  const renderItem = useCallback(({ item, index }: { item: Requirement; index: number }) => {
+    const handleRequirementView = () => {
+      try {
+        logEvent(analytics, 'requirement_card_interaction', {
+          event_category: 'interaction',
+          event_label: 'requirement_view',
+          requirement_id: item.requirementId || item.id,
+          list_position: index + 1,
+          user_type: userType
+        });
+      } catch (error) {
+        console.error('Error logging requirement view:', error);
+      }
+    };
+
+    return (
+      <View onStartShouldSetResponder={() => {
+        handleRequirementView();
+        return false;
+      }}>
+        <RequirementCard requirement={item} />
+      </View>
+    );
+  }, [userType]);
 
   // Update loading state based on search status
   useEffect(() => {
@@ -122,6 +243,16 @@ const MobileHits = React.memo(() => {
 
   // Empty states handling
   if (items?.length === 0 && query?.length !== 0) {
+    try {
+      logEvent(analytics, 'requirement_search_no_results', {
+        event_category: 'search',
+        event_label: 'no_results',
+        search_query: query,
+        user_type: userType
+      });
+    } catch (error) {
+      console.error('Error logging no results:', error);
+    }
     return (
       <View className="flex items-center justify-center h-64">
         <Text>No results found for "{query}"</Text>
@@ -134,6 +265,10 @@ const MobileHits = React.memo(() => {
       data={items}
       keyExtractor={keyExtractor}
       renderItem={renderItem}
+      onScroll={handleScroll}
+      scrollEventThrottle={16}
+      onViewableItemsChanged={handleViewableItemsChanged}
+      viewabilityConfig={viewabilityConfig.current}
       refreshControl={
         <RefreshControl
           refreshing={refreshing}
@@ -171,17 +306,53 @@ const RequirementsList = React.memo(() => {
 
 const RequirementsPage = () => {
   const [isMoreFiltersModalOpen, setIsMoreFiltersModalOpen] = useState(false);
+  const agentData = useSelector((state: RootState) => state?.agent?.docData);
+  const userType = agentData?.userType || "free";
 
   const isConnectedToInternet = useSelector(
     (state: RootState) => state.app.isConnectedToInternet
   );
 
+  // Track page view
+  useEffect(() => {
+    try {
+      logEvent(analytics, 'requirements_page_view', {
+        event_category: 'page_view',
+        event_label: 'requirements',
+        user_type: userType
+      });
+    } catch (error) {
+      console.error('Error logging page view:', error);
+    }
+  }, [userType]);
+
   const handleToggleMoreFilters = () => {
+    try {
+      logEvent(analytics, 'requirement_filters_toggle', {
+        event_category: 'interaction',
+        event_label: 'filters',
+        filter_state: !isMoreFiltersModalOpen ? 'open' : 'close',
+        user_type: userType
+      });
+    } catch (error) {
+      console.error('Error logging filter toggle:', error);
+    }
     setIsMoreFiltersModalOpen((prev) => !prev);
     Keyboard.dismiss();
   };
 
-  if (!isConnectedToInternet) return <Offline />;
+  if (!isConnectedToInternet) {
+    try {
+      logEvent(analytics, 'requirements_offline_view', {
+        event_category: 'error',
+        event_label: 'offline',
+        user_type: userType
+      });
+    } catch (error) {
+      console.error('Error logging offline state:', error);
+    }
+    return <Offline />;
+  }
 
   return (
     <View style={styles.container}>

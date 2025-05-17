@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect } from "react";
 import {
   Modal,
   View,
@@ -10,6 +10,10 @@ import {
 } from "react-native";
 import { Svg, Path, Rect, Circle } from "react-native-svg";
 import LinearGradient from "react-native-linear-gradient";
+import { analytics } from "@/app/config/firebase";
+import { logEvent } from "@react-native-firebase/analytics";
+import { useSelector } from "react-redux";
+import { RootState } from "@/store/store";
 
 interface PaymentUnsuccessfulModalProps {
   visible: boolean;
@@ -42,13 +46,58 @@ const PaymentUnsuccessfulModal: React.FC<PaymentUnsuccessfulModalProps> = ({
   onTryAgain,
   planId,
 }) => {
+  const userType = useSelector((state: RootState) => state?.agent?.docData?.userType) || "free";
+
+  useEffect(() => {
+    if (visible) {
+      try {
+        logEvent(analytics, 'payment_unsuccessful_modal_show', {
+          event_category: 'modal',
+          event_label: 'payment_unsuccessful',
+          plan_id: planId,
+          user_type: userType
+        });
+      } catch (error) {
+        console.error('Error logging modal show:', error);
+      }
+    }
+  }, [visible]);
+
+  const handleClose = () => {
+    try {
+      logEvent(analytics, 'payment_unsuccessful_modal_close', {
+        event_category: 'modal',
+        event_label: 'payment_unsuccessful',
+        plan_id: planId,
+        user_type: userType
+      });
+    } catch (error) {
+      console.error('Error logging modal close:', error);
+    }
+    onClose();
+  };
+
+  const handleTryAgain = () => {
+    try {
+      logEvent(analytics, 'payment_unsuccessful_action', {
+        event_category: 'modal',
+        event_label: 'payment_unsuccessful',
+        action: 'try_again',
+        plan_id: planId,
+        user_type: userType
+      });
+    } catch (error) {
+      console.error('Error logging try again action:', error);
+    }
+    onTryAgain();
+  };
  
   return (
     <Modal
       animationType="fade"
       transparent={true}
       visible={visible}
-      onRequestClose={onClose}
+      onRequestClose={handleClose}
     >
       <SafeAreaView style={styles.container}>
         <LinearGradient
@@ -60,7 +109,7 @@ const PaymentUnsuccessfulModal: React.FC<PaymentUnsuccessfulModalProps> = ({
           style={{ borderTopRightRadius: 12, borderTopLeftRadius: 12 }}
         >
           <View style={styles.modalContent}>
-            <TouchableOpacity style={styles.closeButton} onPress={onClose}>
+            <TouchableOpacity style={styles.closeButton} onPress={handleClose}>
               <Text style={styles.closeButtonText}>✕</Text>
             </TouchableOpacity>
 
@@ -115,7 +164,7 @@ const PaymentUnsuccessfulModal: React.FC<PaymentUnsuccessfulModalProps> = ({
             {/* Try again button */}
             <TouchableOpacity
               style={styles.tryAgainButton}
-              onPress={onTryAgain}
+              onPress={handleTryAgain}
             >
               <Text style={styles.tryAgainButtonText}>Try again!</Text>
             </TouchableOpacity>

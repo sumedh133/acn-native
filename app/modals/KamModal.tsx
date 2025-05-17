@@ -25,6 +25,8 @@ import { RootState } from "@/store/store";
 import { toCapitalizedWords } from "../helpers/common";
 import CloseIcon from "@/assets/icons/svg/CloseIcon";
 import { getInitials, getRandomColor } from "@/utils/userUtils";
+import { analytics } from "@/app/config/firebase";
+import { logEvent } from "@react-native-firebase/analytics";
 
 const KamManager = () => {
   const dispatch = useDispatch<ThunkDispatch<RootState, unknown, AnyAction>>();
@@ -33,6 +35,7 @@ const KamManager = () => {
   const kamName = useSelector(selectKamName);
   const kamNumber = useSelector(selectKamNumber);
   const visible = useSelector(selectKamModalVisible);
+  const userType = useSelector((state: RootState) => state?.agent?.docData?.userType) || "free";
   const initials = getInitials(kamName);
   const color = getRandomColor(initials);
 
@@ -42,16 +45,63 @@ const KamManager = () => {
     }
   }, [myKamId, dispatch]);
 
+  useEffect(() => {
+    if (visible) {
+      try {
+        logEvent(analytics, 'kam_modal_show', {
+          event_category: 'modal',
+          event_label: 'kam',
+          kam_name: kamName,
+          user_type: userType
+        });
+      } catch (error) {
+        console.error('Error logging modal show:', error);
+      }
+    }
+  }, [visible]);
+
   const closeModal = () => {
+    try {
+      logEvent(analytics, 'kam_modal_close', {
+        event_category: 'modal',
+        event_label: 'kam',
+        kam_name: kamName,
+        user_type: userType
+      });
+    } catch (error) {
+      console.error('Error logging modal close:', error);
+    }
     dispatch(setKamModalVisible(false));
   };
 
   const handleCallPress = () => {
+    try {
+      logEvent(analytics, 'kam_action', {
+        event_category: 'modal',
+        event_label: 'kam',
+        action: 'call',
+        kam_name: kamName,
+        user_type: userType
+      });
+    } catch (error) {
+      console.error('Error logging call action:', error);
+    }
     const url = `tel:${kamNumber}`;
     Linking.openURL(url);
   };
 
   const handleWhatsAppPress = () => {
+    try {
+      logEvent(analytics, 'kam_action', {
+        event_category: 'modal',
+        event_label: 'kam',
+        action: 'whatsapp',
+        kam_name: kamName,
+        user_type: userType
+      });
+    } catch (error) {
+      console.error('Error logging WhatsApp action:', error);
+    }
     const url = `https://wa.me/${kamNumber}`;
     Linking.openURL(url);
   };
