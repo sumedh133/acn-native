@@ -19,7 +19,8 @@
       "bundleIdentifier": "com.acnonline.in",
       "infoPlist": {
         "ITSAppUsesNonExemptEncryption": false,
-        "UIBackgroundModes": ["fetch", "remote-notification"]
+        "UIBackgroundModes": ["fetch", "remote-notification"],
+        "LSApplicationQueriesSchemes": ["itms-apps"]
       },
       "entitlements": {
         "aps-environment": "production"

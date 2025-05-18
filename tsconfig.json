@@ -3,7 +3,8 @@
   "compilerOptions": {
     "strict": true,
     "paths": {
-      "@/*": ["./*"]
+      "@/*": ["./*"],
+      "react-native-device-info": ["./react-native-device-info.js"]
     }
   },
   "include": [
