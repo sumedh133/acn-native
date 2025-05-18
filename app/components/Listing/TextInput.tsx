@@ -75,54 +75,52 @@ const TextInputField = ({
 
   // Calculate the total in words (for display below the input)
   /**
- * Converts a price value to a formatted string representation in words
- * @param value - The price value to convert (can be string, number, or null)
- * @returns A formatted string representation of the price
- */
-const getPriceInWords = (): string => {
-  if (!value) 
-    return "Eg. 7.5 K | 7500 Rupees only";
-  
-  // Convert string values to number
-  const numericPrice = typeof value === 'string' 
-    ? parseFloat(value.replace(/,/g, ""))
-    : value;
-  
-  if (isNaN(numericPrice)) return "";
+   * Converts a price value to a formatted string representation in words
+   * @param value - The price value to convert (can be string, number, or null)
+   * @returns A formatted string representation of the price
+   */
+  const getPriceInWords = (): string => {
+    if (!value) return "Eg. 7.5 K | 7500 Rupees only";
 
-  if (numericPrice >= 10000000) {
-    return `${(numericPrice / 10000000).toFixed(2)} Cr | ${numberToWords(
-      numericPrice
-    )}`;
-  } else if (numericPrice >= 100000) {
-    return `${(numericPrice / 100000).toFixed(2)} Lakh | ${numberToWords(
-      numericPrice
-    )}`;
-  } else if (numericPrice >= 1000) {
-    return `${(numericPrice / 1000).toFixed(2)} K | ${numberToWords(
-      numericPrice
-    )}`;
-  }
-  return numberToWords(numericPrice);
-};
+    // Convert string values to number
+    const numericPrice =
+      typeof value === "string" ? parseFloat(value.replace(/,/g, "")) : value;
 
-/**
- * Converts a numeric price to its word representation in Indian currency format
- * @param num - The numeric price to convert
- * @returns The price in words (Indian currency format)
- */
-const numberToWords = (num: number): string => {
-  // This is a simplified implementation
-  if (num >= 10000000) {
-    const crores = Math.floor(num / 10000000);
-    const lakhs = Math.floor((num % 10000000) / 100000);
-    return `${crores} Crore ${lakhs} Lakh Rupees only`;
-  } else if (num >= 100000) {
-    const lakhs = Math.floor(num / 100000);
-    return `${lakhs} Lakh Rupees only`;
-  }
-  return `${num} Rupees only`;
-};
+    if (isNaN(numericPrice)) return "";
+
+    if (numericPrice >= 10000000) {
+      return `${(numericPrice / 10000000).toFixed(2)} Cr | ${numberToWords(
+        numericPrice
+      )}`;
+    } else if (numericPrice >= 100000) {
+      return `${(numericPrice / 100000).toFixed(2)} Lakh | ${numberToWords(
+        numericPrice
+      )}`;
+    } else if (numericPrice >= 1000) {
+      return `${(numericPrice / 1000).toFixed(2)} K | ${numberToWords(
+        numericPrice
+      )}`;
+    }
+    return numberToWords(numericPrice);
+  };
+
+  /**
+   * Converts a numeric price to its word representation in Indian currency format
+   * @param num - The numeric price to convert
+   * @returns The price in words (Indian currency format)
+   */
+  const numberToWords = (num: number): string => {
+    // This is a simplified implementation
+    if (num >= 10000000) {
+      const crores = Math.floor(num / 10000000);
+      const lakhs = Math.floor((num % 10000000) / 100000);
+      return `${crores} Crore ${lakhs} Lakh Rupees only`;
+    } else if (num >= 100000) {
+      const lakhs = Math.floor(num / 100000);
+      return `${lakhs} Lakh Rupees only`;
+    }
+    return `${num} Rupees only`;
+  };
 
   return (
     <View style={styles.section}>
@@ -151,8 +149,16 @@ const numberToWords = (num: number): string => {
         />
         {suffix && <Text style={styles.suffixText}>{suffix}</Text>}
       </View>
-      {numberToStringFooter ? <Text style={styles.priceInWords}>{getPriceInWords()}</Text> : <></>}
-      {footer === "" ? <></> :  <Text style={styles.priceInWords}>{footer}</Text>}
+      {numberToStringFooter ? (
+        <Text style={styles.priceInWords}>{getPriceInWords()}</Text>
+      ) : (
+        <></>
+      )}
+      {footer === "" ? (
+        <></>
+      ) : (
+        <Text style={styles.priceInWords}>{footer}</Text>
+      )}
     </View>
   );
 };

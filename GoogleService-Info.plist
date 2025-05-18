@@ -34,5 +34,9 @@
 	<string>1:727649873733:ios:a2a73ebb5cae4ed1f3982c</string>
 	<key>DATABASE_URL</key>
 	<string>https://acn-resale-inventories-dde03-default-rtdb.firebaseio.com</string>
+	<key>LSApplicationQueriesSchemes</key>
+	<array>
+		<string>itms-apps</string>
+	</array>
 </dict>
 </plist>
