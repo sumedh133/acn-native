@@ -40,27 +40,26 @@ const DropdownSelect = ({
   const [modalVisible, setModalVisible] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const [hoveredItem, setHoveredItem] = useState<string | null>(null);
-
   const [dropdownPosition, setDropdownPosition] = useState({
     x: 0,
     y: 0,
     width: 0,
-    height: 0
+    height: 0,
   });
 
   // Add this function to your component
-const measureDropdownPosition = () => {
-  if (dropdownRef.current) {
-    dropdownRef.current.measure((x, y, width, height, pageX, pageY) => {
-      setDropdownPosition({
-        x: pageX,
-        y: pageY,
-        width: width,
-        height: height
+  const measureDropdownPosition = () => {
+    if (dropdownRef.current) {
+      dropdownRef.current.measure((x, y, width, height, pageX, pageY) => {
+        setDropdownPosition({
+          x: pageX,
+          y: pageY,
+          width: width,
+          height: height,
+        });
       });
-    });
-  }
-};
+    }
+  };
 
   const handleSelect = (option: DropdownOption) => {
     if (value === option.value && !required) {
@@ -94,81 +93,86 @@ const measureDropdownPosition = () => {
     ? options.find((option) => option.value === value)?.label || value
     : placeholder;
 
-    return (
-      <View style={styles.section}>
-        <View style={styles.headingContainer}>
-          <Text style={styles.sectionHeading}>{title}</Text>
-          {required && <Text style={styles.compulsoryStar}>*</Text>}
-        </View>
-  
-        <TouchableOpacity
-          style={styles.dropdownButton}
-          onPress={toggleModal}
-          activeOpacity={0.7}
-          // Add this ref to get the position of the dropdown button
-          ref={dropdownRef}
+  return (
+    <View style={styles.section}>
+      <View style={styles.headingContainer}>
+        <Text style={styles.sectionHeading}>{title}</Text>
+        {required && <Text style={styles.compulsoryStar}>*</Text>}
+      </View>
+
+      <TouchableOpacity
+        style={styles.dropdownButton}
+        onPress={toggleModal}
+        activeOpacity={0.7}
+        // Add this ref to get the position of the dropdown button
+        ref={dropdownRef}
+      >
+        <Text style={[styles.selectedText, !value && styles.placeholderText]}>
+          {selectedLabel}
+        </Text>
+        <Ionicons name="chevron-down" size={16} color="#555" />
+      </TouchableOpacity>
+
+      {modalVisible && (
+        <Modal
+          transparent
+          animationType="none"
+          visible={modalVisible}
+          onRequestClose={toggleModal}
         >
-          <Text style={[styles.selectedText, !value && styles.placeholderText]}>
-            {selectedLabel}
-          </Text>
-          <Ionicons name="chevron-down" size={16} color="#555" />
-        </TouchableOpacity>
-  
-        {modalVisible && (
-          <Modal
-            transparent
-            animationType="none"
-            visible={modalVisible}
-            onRequestClose={toggleModal}
-          >
-            {/* invisible full-screen backdrop */}
-            <Pressable style={StyleSheet.absoluteFillObject} onPress={toggleModal} />
-            {/* Position the dropdown list directly below the button */}
-            <View style={[
+          {/* invisible full-screen backdrop */}
+          <Pressable
+            style={StyleSheet.absoluteFillObject}
+            onPress={toggleModal}
+          />
+          {/* Position the dropdown list directly below the button */}
+          <View
+            style={[
               styles.optionsContainer,
               {
-                position: 'absolute',
-              top: dropdownPosition.y + dropdownPosition.height - 35, // Reducing the gap
-              left: dropdownPosition.x,
-              width: dropdownPosition.width,
-              }
-            ]}>
-              {searchable && (
-                <TextInput
-                  style={styles.searchInput}
-                  value={searchTerm}
-                  onChangeText={handleSearchChange}
-                  placeholder="Search..."
-                  placeholderTextColor="#6B7280"
-                />
-              )}
-              <FlatList
-                data={filteredOptions}
-                keyExtractor={(item, index) => `${item.value}-${index}`}
-                renderItem={({ item }) => (
-                  <Pressable
-                    style={[
-                      styles.optionItem,
-                      hoveredItem === item.value && styles.hoveredOptionItem,
-                      value === item.value && styles.selectedOptionItem,
-                    ]}
-                    onPress={() => handleSelect(item)}
-                    onPressIn={() => setHoveredItem(item.value)}
-                    onPressOut={() => setHoveredItem(null)}
-                  >
-                    <Text style={styles.optionText}>{item.label}</Text>
-                  </Pressable>
-                )}
-                keyboardShouldPersistTaps="handled"
-                scrollEnabled={true}
-                nestedScrollEnabled={true}
-                style={styles.resultsList}
+                position: "absolute",
+                top: dropdownPosition.y + dropdownPosition.height - 35, // Reducing the gap
+                left: dropdownPosition.x,
+                width: dropdownPosition.width,
+              },
+            ]}
+          >
+            {searchable && (
+              <TextInput
+                style={styles.searchInput}
+                value={searchTerm}
+                onChangeText={handleSearchChange}
+                placeholder="Search..."
+                placeholderTextColor="#6B7280"
               />
-            </View>
-          </Modal>
-        )}
-      </View>
-    );
+            )}
+            <FlatList
+              data={filteredOptions}
+              keyExtractor={(item, index) => `${item.value}-${index}`}
+              renderItem={({ item }) => (
+                <Pressable
+                  style={[
+                    styles.optionItem,
+                    hoveredItem === item.value && styles.hoveredOptionItem,
+                    value === item.value && styles.selectedOptionItem,
+                  ]}
+                  onPress={() => handleSelect(item)}
+                  onPressIn={() => setHoveredItem(item.value)}
+                  onPressOut={() => setHoveredItem(null)}
+                >
+                  <Text style={styles.optionText}>{item.label}</Text>
+                </Pressable>
+              )}
+              keyboardShouldPersistTaps="handled"
+              scrollEnabled={true}
+              nestedScrollEnabled={true}
+              style={styles.resultsList}
+            />
+          </View>
+        </Modal>
+      )}
+    </View>
+  );
 };
 
 const styles = StyleSheet.create({

@@ -50,6 +50,7 @@ const PlacesSearch = ({
   const [showResults, setShowResults] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [userInitiatedSearch, setUserInitiatedSearch] = useState(false);
+  const [blurredAndNotSelected, setBlurredAndNotSelected] = useState(false);
 
   const searchTimeout = useRef<NodeJS.Timeout | null>(null);
   const isInitialMount = useRef(true);
@@ -138,8 +139,6 @@ const PlacesSearch = ({
       setSearchQuery(selectedPlace.name!);
       // Don't show results when place is programmatically selected
       setShowResults(false);
-    } else {
-      setSearchQuery("");
     }
   }, [selectedPlace]);
 
@@ -174,8 +173,11 @@ const PlacesSearch = ({
   const handleSearchInputChange = (text: string) => {
     setSearchQuery(text);
     setUserInitiatedSearch(true);
+    setSelectedPlace(null);
+    setBlurredAndNotSelected(false);
     // If user clears the input, reset everything
     if (!text.trim()) {
+      setBlurredAndNotSelected(false);
       setSelectedPlace(null);
       setSearchResults([]);
       setShowResults(false);
@@ -200,6 +202,7 @@ const PlacesSearch = ({
           setUserInitiatedSearch(false);
           setSelectedPlace(location);
           setShowResults(false);
+          setBlurredAndNotSelected(false);
           Keyboard.dismiss();
         }
       } catch (error) {
@@ -218,6 +221,7 @@ const PlacesSearch = ({
     setSearchResults([]);
     setShowResults(false);
     setUserInitiatedSearch(false);
+    setBlurredAndNotSelected(false);
   }, [setSelectedPlace]);
 
   // Handle focus on the search input
@@ -225,6 +229,13 @@ const PlacesSearch = ({
     // Only show results if user has typed something
     if (searchQuery.trim() && userInitiatedSearch) {
       setShowResults(true);
+    }
+  };
+
+  const handleSearchBlur = () => {
+    if (!selectedPlace) {
+      setBlurredAndNotSelected(true);
+      // setShowResults(false);
     }
   };
 
@@ -238,7 +249,12 @@ const PlacesSearch = ({
       </View>
       <View style={styles.container}>
         {/* Search Input */}
-        <View style={styles.inputContainer}>
+        <View
+          style={[
+            styles.inputContainer,
+            blurredAndNotSelected ? styles.notSelectedState : {},
+          ]}
+        >
           <Ionicons name="search-outline" size={20} color="#726C6C" />
           <TextInput
             style={styles.textInput}
@@ -251,6 +267,7 @@ const PlacesSearch = ({
             value={searchQuery}
             onChangeText={handleSearchInputChange}
             onFocus={handleSearchFocus}
+            onBlur={handleSearchBlur}
           />
 
           {isLoading ? (
@@ -342,6 +359,7 @@ const styles = StyleSheet.create({
     fontWeight: "400",
     color: "#333333",
   },
+  notSelectedState: { borderColor: "#D92D20" },
   rightIcon: {
     width: 20,
     height: 20,
@@ -372,7 +390,6 @@ const styles = StyleSheet.create({
   },
   resultsList: {
     width: "100%",
-    
   },
   resultItem: {
     padding: 12,

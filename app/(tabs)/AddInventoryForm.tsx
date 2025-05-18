@@ -222,7 +222,9 @@ const AddInventoryForm = () => {
   const [saveAsDraftModalVisible, setSaveAsDraftModalVisible] = useState(false);
 
   // Add userType selector
-  const userType = useSelector((state: RootState) => state.agent.docData?.userType || "free");
+  const userType = useSelector(
+    (state: RootState) => state.agent.docData?.userType || "free"
+  );
 
   // New state to track if the form has any data filled
   const isFormEmpty = useMemo(() => {
@@ -269,7 +271,7 @@ const AddInventoryForm = () => {
         event_category: "inventory",
         event_label: "page_view",
         is_edit_mode: !!parsedItem,
-        user_type: userType
+        user_type: userType,
       });
     } catch (error) {
       console.error("Error logging page view:", error);
@@ -283,7 +285,7 @@ const AddInventoryForm = () => {
         event_label: "field_update",
         field_name: field,
         asset_type: property.assetType || "not_selected",
-        user_type: userType
+        user_type: userType,
       });
     } catch (error) {
       console.error("Error logging field update:", error);
@@ -519,7 +521,7 @@ const AddInventoryForm = () => {
         event_label: "clear",
         asset_type: property.assetType || "not_selected",
         had_property_id: !!property.propertyId,
-        user_type: userType
+        user_type: userType,
       });
     } catch (error) {
       console.error("Error logging form clear:", error);
@@ -537,6 +539,10 @@ const AddInventoryForm = () => {
   };
 
   const fieldLabels: { [key in keyof ListingProperty]: string } = {
+    nameOfTheProperty:
+      property.communityType === "Independent"
+        ? "Nearby LandMark"
+        : "Project Name",
     communityType: "Community Type",
     subType: "Apartment Type",
     sbua: "SBUA",
@@ -553,6 +559,7 @@ const AddInventoryForm = () => {
 
     // If assetType is not valid, return false
     if (!assetType || !(assetType in compulsoryFields)) {
+      showErrorToast(`Missing field: Asset Type`);
       return false;
     }
 
@@ -860,7 +867,7 @@ const AddInventoryForm = () => {
         has_photos: docsToUpload.photo.length > 0,
         has_videos: docsToUpload.video.length > 0,
         has_documents: docsToUpload.document.length > 0,
-        user_type: userType
+        user_type: userType,
       });
 
       const areCompulsoryFieldsValid = checkCompulsoryFields();
@@ -870,7 +877,7 @@ const AddInventoryForm = () => {
           event_label: "error",
           error_type: "missing_fields",
           asset_type: property.assetType || "not_selected",
-          user_type: userType
+          user_type: userType,
         });
         setSaving(false);
         return;
@@ -970,8 +977,11 @@ const AddInventoryForm = () => {
         event_label: "success",
         asset_type: property.assetType,
         property_id: propId,
-        total_files: docsToUpload.photo.length + docsToUpload.video.length + docsToUpload.document.length,
-        user_type: userType
+        total_files:
+          docsToUpload.photo.length +
+          docsToUpload.video.length +
+          docsToUpload.document.length,
+        user_type: userType,
       });
     } catch (error) {
       // Track submission failure
@@ -981,7 +991,7 @@ const AddInventoryForm = () => {
         error_type: "submission_failed",
         error_message: error instanceof Error ? error.message : "Unknown error",
         asset_type: property.assetType || "not_selected",
-        user_type: userType
+        user_type: userType,
       });
       console.log(error);
       setSaving(false);
@@ -1001,7 +1011,7 @@ const AddInventoryForm = () => {
         has_photos: docsToUpload.photo.length > 0,
         has_videos: docsToUpload.video.length > 0,
         has_documents: docsToUpload.document.length > 0,
-        user_type: userType
+        user_type: userType,
       });
 
       if (!property.assetType || !property.nameOfTheProperty) {
@@ -1009,7 +1019,7 @@ const AddInventoryForm = () => {
           event_category: "inventory",
           event_label: "error",
           error_type: "missing_required_fields",
-          user_type: userType
+          user_type: userType,
         });
         showErrorToast("Asset Type and Name are necessary for draft.");
         setSavingDraft(false);
@@ -1083,8 +1093,11 @@ const AddInventoryForm = () => {
         event_label: "success",
         asset_type: property.assetType,
         property_id: propId,
-        total_files: docsToUpload.photo.length + docsToUpload.video.length + docsToUpload.document.length,
-        user_type: userType
+        total_files:
+          docsToUpload.photo.length +
+          docsToUpload.video.length +
+          docsToUpload.document.length,
+        user_type: userType,
       });
     } catch (error) {
       // Track draft save failure
@@ -1094,7 +1107,7 @@ const AddInventoryForm = () => {
         error_type: "save_failed",
         error_message: error instanceof Error ? error.message : "Unknown error",
         asset_type: property.assetType || "not_selected",
-        user_type: userType
+        user_type: userType,
       });
       console.error("An unexpected error occurred during submission:", error);
       showErrorToast("An unexpected error occurred during submission");
@@ -1110,7 +1123,7 @@ const AddInventoryForm = () => {
         event_label: "asset_type",
         previous_type: property.assetType || "none",
         new_type: value,
-        user_type: userType
+        user_type: userType,
       });
     } catch (error) {
       console.error("Error logging asset type change:", error);
