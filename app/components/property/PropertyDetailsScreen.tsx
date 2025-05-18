@@ -99,6 +99,25 @@ export const formatNumber = (value: number | string | undefined): string => {
   return stringValue.replace(numericPart, formattedNumber);
 };
 
+export const timeAgo = (seconds: number): string => {
+  if (seconds < 0) {
+    throw new Error("Input must be a non-negative number of seconds");
+  }
+
+  // Define time units in seconds
+  const minute = 60;
+  const hour = minute * 60;
+  const day = hour * 24;
+
+  // Determine the appropriate unit
+  if (seconds < day) {
+    return `Today`;
+  } else {
+    const days = Math.floor(seconds / day);
+    return days === 1 ? "1 day ago" : `${days} days ago`;
+  }
+};
+
 // InfoRow component for property details
 const InfoRow = ({
   label,
@@ -135,7 +154,9 @@ export default function PropertyDetailsScreen() {
   const monthlyCredits = useSelector(
     (state: RootState) => state?.agent?.docData?.monthlyCredits
   );
-  const userType = useSelector((state: RootState) => state?.agent?.docData?.userType) || "free";
+  const userType =
+    useSelector((state: RootState) => state?.agent?.docData?.userType) ||
+    "free";
   const isConnectedToInternet = useSelector(
     (state: RootState) => state.app.isConnectedToInternet
   );
@@ -159,15 +180,15 @@ export default function PropertyDetailsScreen() {
   const handlePropertyStatusChange = useCallback(
     async (id: string, status: string) => {
       try {
-        logEvent(analytics, 'property_status_change', {
-          event_category: 'property',
-          event_label: 'update',
+        logEvent(analytics, "property_status_change", {
+          event_category: "property",
+          event_label: "update",
           property_id: id,
           new_status: status,
-          user_type: userType
+          user_type: userType,
         });
       } catch (error) {
-        console.error('Error logging status change:', error);
+        console.error("Error logging status change:", error);
       }
 
       const newStatus = status;
@@ -210,14 +231,14 @@ export default function PropertyDetailsScreen() {
   // Return to previous screen
   const handleGoBack = () => {
     try {
-      logEvent(analytics, 'property_details_close', {
-        event_category: 'property',
-        event_label: 'navigation',
+      logEvent(analytics, "property_details_close", {
+        event_category: "property",
+        event_label: "navigation",
         property_id: property.propertyId,
-        user_type: userType
+        user_type: userType,
       });
     } catch (error) {
-      console.error('Error logging details close:', error);
+      console.error("Error logging details close:", error);
     }
     router.back();
   };
@@ -225,15 +246,15 @@ export default function PropertyDetailsScreen() {
   // Dummy handler functions
   const handleOpenGoogleMap = () => {
     try {
-      logEvent(analytics, 'property_map_click', {
-        event_category: 'property',
-        event_label: 'interaction',
+      logEvent(analytics, "property_map_click", {
+        event_category: "property",
+        event_label: "interaction",
         property_id: property.propertyId,
         has_map_location: !!property.mapLocation,
-        user_type: userType
+        user_type: userType,
       });
     } catch (error) {
-      console.error('Error logging map click:', error);
+      console.error("Error logging map click:", error);
     }
 
     if (!property.mapLocation) {
@@ -245,15 +266,15 @@ export default function PropertyDetailsScreen() {
 
   const handleOpenDriveDetails = () => {
     try {
-      logEvent(analytics, 'property_details_drive_click', {
-        event_category: 'property',
-        event_label: 'interaction',
+      logEvent(analytics, "property_details_drive_click", {
+        event_category: "property",
+        event_label: "interaction",
         property_id: property.propertyId,
         has_drive_link: !!property.driveLink,
-        user_type: userType
+        user_type: userType,
       });
     } catch (error) {
-      console.error('Error logging drive click:', error);
+      console.error("Error logging drive click:", error);
     }
 
     if (!property.driveLink) {
@@ -266,23 +287,22 @@ export default function PropertyDetailsScreen() {
 
   const handleEnquireNowBtn = (e: any) => {
     try {
-      logEvent(analytics, 'property_details_enquire_click', {
-        event_category: 'property',
-        event_label: 'interaction',
+      logEvent(analytics, "property_details_enquire_click", {
+        event_category: "property",
+        event_label: "interaction",
         property_id: property.propertyId,
         credits_available: monthlyCredits,
-        user_type: userType
+        user_type: userType,
       });
     } catch (error) {
-      console.error('Error logging enquire click:', error);
+      console.error("Error logging enquire click:", error);
     }
 
     setSelectedCPID(property.cpCode || "");
     if (monthlyCredits > 0) {
       setIsConfirmModelOpen(true);
       return;
-    }
-    else{
+    } else {
       setCreditLimitModalVisible(true);
     }
   };
@@ -324,7 +344,6 @@ export default function PropertyDetailsScreen() {
     ).catch((error) => {
       console.error("Error:", error);
     });
-    
   };
   const handleGoPremium = () => {
     setCreditLimitModalVisible(false);
@@ -404,14 +423,14 @@ export default function PropertyDetailsScreen() {
 
   const handleShareButtonPress = () => {
     try {
-      logEvent(analytics, 'property_details_share_click', {
-        event_category: 'property',
-        event_label: 'interaction',
+      logEvent(analytics, "property_details_share_click", {
+        event_category: "property",
+        event_label: "interaction",
         property_id: property.propertyId,
-        user_type: userType
+        user_type: userType,
       });
     } catch (error) {
-      console.error('Error logging share click:', error);
+      console.error("Error logging share click:", error);
     }
     setIsShareModalOpen(true);
   };
@@ -535,37 +554,49 @@ export default function PropertyDetailsScreen() {
   // Track initial view of property details
   useEffect(() => {
     try {
-      logEvent(analytics, 'property_details_screen_view', {
-        event_category: 'property',
-        event_label: 'view',
+      logEvent(analytics, "property_details_screen_view", {
+        event_category: "property",
+        event_label: "view",
         property_id: property.propertyId,
         property_type: property.assetType,
         micromarket: property.micromarket,
         parent_screen: parent,
-        user_type: userType
+        user_type: userType,
       });
     } catch (error) {
-      console.error('Error logging screen view:', error);
+      console.error("Error logging screen view:", error);
     }
-  }, [property.propertyId, property.assetType, property.micromarket, parent, userType]);
+  }, [
+    property.propertyId,
+    property.assetType,
+    property.micromarket,
+    parent,
+    userType,
+  ]);
 
   // Track image viewer interactions
   useEffect(() => {
     if (isImageViewerVisible) {
       try {
-        logEvent(analytics, 'property_image_viewer_open', {
-          event_category: 'property',
-          event_label: 'interaction',
+        logEvent(analytics, "property_image_viewer_open", {
+          event_category: "property",
+          event_label: "interaction",
           property_id: property.propertyId,
           total_images: localImages.length,
           current_image: currentImageIndex + 1,
-          user_type: userType
+          user_type: userType,
         });
       } catch (error) {
-        console.error('Error logging image viewer:', error);
+        console.error("Error logging image viewer:", error);
       }
     }
-  }, [isImageViewerVisible, property.propertyId, localImages.length, currentImageIndex, userType]);
+  }, [
+    isImageViewerVisible,
+    property.propertyId,
+    localImages.length,
+    currentImageIndex,
+    userType,
+  ]);
 
   if (!isConnectedToInternet) return <Offline />;
 
@@ -772,7 +803,9 @@ export default function PropertyDetailsScreen() {
             />
             <InfoRow
               label="Last Status Check"
-              value={formatDate(property.dateOfStatusLastChecked)}
+              value={timeAgo(
+                Date.now() / 1000 - property.dateOfStatusLastChecked
+              )}
             />
           </View>
         </View>

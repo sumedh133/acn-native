@@ -1213,6 +1213,27 @@ const AddInventoryForm = () => {
     return () => cancelAnimationFrame(timer);
   }, []);
 
+  useEffect(() => {
+    // Back button handler
+    const backHandler = BackHandler.addEventListener(
+      "hardwareBackPress",
+      () => {
+        // Only handle back press when the form is visible
+        if (
+          !saveAsDraftModalVisible &&
+          property.assetType &&
+          property.nameOfTheProperty
+        ) {
+          setSaveAsDraftModalVisible(true);
+          return true; // Prevent default back behavior
+        }
+        return false; // Allow default back behavior when modal is showing
+      }
+    );
+
+    return () => backHandler.remove();
+  }, [saveAsDraftModalVisible, property]);
+
   if (!isConnectedToInternet) return <Offline />;
 
   if (!isRendered)
@@ -1224,29 +1245,18 @@ const AddInventoryForm = () => {
       />
     );
 
-  // useEffect(() => {
-  //   // Back button handler
-  //   const backHandler = BackHandler.addEventListener(
-  //     "hardwareBackPress",
-  //     () => {
-  //       // Only handle back press when the form is visible
-  //       if (!saveAsDraftModalVisible) {
-  //         setSaveAsDraftModalVisible(true);
-  //         return true; // Prevent default back behavior
-  //       }
-  //       return false; // Allow default back behavior when modal is showing
-  //     }
-  //   );
-
-  //   return () => backHandler.remove();
-  // }, [saveAsDraftModalVisible]);
-
   return (
     <View style={styles.mainView}>
       <View style={styles.headerContainer}>
         <View style={styles.headerContent}>
           <View style={styles.headerLeft}>
-            <TouchableOpacity onPress={() => setSaveAsDraftModalVisible(true)}>
+            <TouchableOpacity
+              onPress={() => {
+                if (property.assetType && property.nameOfTheProperty)
+                  setSaveAsDraftModalVisible(true);
+                else router.back();
+              }}
+            >
               <ArrowLeftIcon />
             </TouchableOpacity>
             <Text style={styles.headerTitle}>Add Inventory</Text>

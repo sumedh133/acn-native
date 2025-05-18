@@ -1,4 +1,10 @@
-import { router, SplashScreen, Stack, useRouter } from "expo-router";
+import {
+  router,
+  SplashScreen,
+  Stack,
+  useNavigation,
+  useRouter,
+} from "expo-router";
 import React, { useCallback, useEffect, useState } from "react";
 import Toast from "react-native-toast-message";
 import { StatusBar } from "expo-status-bar";
@@ -106,6 +112,7 @@ export default function LayoutApp() {
     Lato_300Light,
     Lato_900Black,
   });
+  const navigation = useNavigation();
 
   // Check if onboarding should be shown
   const { docData: agentData } = useSelector((state: RootState) => state.agent);
@@ -141,7 +148,7 @@ export default function LayoutApp() {
         return TrialStatusType.LOW_CREDITS_WSUB;
       }
     } else if (daysLeft == 31) {
-        return TrialStatusType.TO_START;
+      return TrialStatusType.TO_START;
     } else if (daysLeft <= 0) {
       return TrialStatusType.EXPIRED;
     } else if (credits == 0) {
@@ -152,8 +159,8 @@ export default function LayoutApp() {
       return TrialStatusType.EXPIRING_SOON;
     } else if (daysLeft <= 30) {
       return TrialStatusType.ACTIVE;
-    } 
-    };
+    }
+  };
 
   const daysLeft = calculateDaysLeft(agentData?.trialStartedAt);
 
@@ -286,6 +293,9 @@ export default function LayoutApp() {
           header: ({ route, options }) => {
             const title = options.title || route.name;
             const headerBackVisible = options.headerBackVisible || false;
+            const params = navigation?.getState()?.routes?.at(-1)?.params as {
+              showNotificationBanner?: boolean;
+            };
             return (
               <>
                 <CustomHeader
@@ -294,12 +304,13 @@ export default function LayoutApp() {
                   headerBackVisible={headerBackVisible}
                 />
 
-                {agentData?.userType !== "premium" && (
-                  <TrialStatusNotification
-                    showNotification={trialData.showNotification}
-                    onDismiss={handleDismiss}
-                  />
-                )}
+                {params.showNotificationBanner &&
+                  agentData?.userType !== "premium" && (
+                    <TrialStatusNotification
+                      showNotification={trialData.showNotification}
+                      onDismiss={handleDismiss}
+                    />
+                  )}
               </>
             );
           },
@@ -314,10 +325,12 @@ export default function LayoutApp() {
         <Stack.Screen
           name="(tabs)/properties"
           options={{ title: "Resale Inventories" }}
+          initialParams={{ showNotificationBanner: true }}
         />
         <Stack.Screen
           name="(tabs)/requirements"
           options={{ title: "Requirements" }}
+          initialParams={{ showNotificationBanner: true }}
         />
         <Stack.Screen
           name="(tabs)/AddInventoryForm"
@@ -343,6 +356,7 @@ export default function LayoutApp() {
         <Stack.Screen
           name="(tabs)/dashboardTab"
           options={{ title: "Dashboard" }}
+          initialParams={{ showNotificationBanner: true }}
         />
         <Stack.Screen
           name="(tabs)/NotificationPage"

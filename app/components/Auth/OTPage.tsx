@@ -39,7 +39,9 @@ export default function OTPage() {
 
   const { verificationId } = useLocalSearchParams();
 
-  const userType = useSelector((state: RootState) => state?.agent?.docData?.userType) || "free";
+  const userType =
+    useSelector((state: RootState) => state?.agent?.docData?.userType) ||
+    "free";
 
   // Firebase auth state listener effect
   useEffect(() => {
@@ -70,14 +72,14 @@ export default function OTPage() {
 
   useEffect(() => {
     try {
-      logEvent(analytics, 'view_otp_page', {
-        event_category: 'auth',
-        event_label: 'otp_view',
+      logEvent(analytics, "view_otp_page", {
+        event_category: "auth",
+        event_label: "otp_view",
         phone_number: phonenumber,
-        user_type: userType
+        user_type: userType,
       });
     } catch (error) {
-      console.error('Error logging OTP page view:', error);
+      console.error("Error logging OTP page view:", error);
     }
   }, [phonenumber, userType]);
 
@@ -89,40 +91,40 @@ export default function OTPage() {
       setErrorMessage("Please enter a valid 6-digit OTP");
       setIsVerifying(false);
       try {
-        logEvent(analytics, 'otp_verification_error', {
-          event_category: 'auth',
-          event_label: 'otp_error',
-          error_type: 'invalid_length',
+        logEvent(analytics, "otp_verification_error", {
+          event_category: "auth",
+          event_label: "otp_error",
+          error_type: "invalid_length",
           phone_number: phonenumber,
-          user_type: userType
+          user_type: userType,
         });
       } catch (error) {
-        console.error('Error logging OTP error:', error);
+        console.error("Error logging OTP error:", error);
       }
       return;
     }
 
     try {
-      logEvent(analytics, 'otp_verification_attempt', {
-        event_category: 'auth',
-        event_label: 'otp_verification',
+      logEvent(analytics, "otp_verification_attempt", {
+        event_category: "auth",
+        event_label: "otp_verification",
         phone_number: phonenumber,
-        user_type: userType
+        user_type: userType,
       });
 
       const credential = auth.PhoneAuthProvider.credential(
         verificationId as string,
-        otp.toString(),
+        otp.toString()
       );
 
       const userCredential = await auth().signInWithCredential(credential);
 
       if (userCredential?.user?.phoneNumber) {
-        logEvent(analytics, 'otp_verification_success', {
-          event_category: 'auth',
-          event_label: 'otp_success',
+        logEvent(analytics, "otp_verification_success", {
+          event_category: "auth",
+          event_label: "otp_success",
           phone_number: phonenumber,
-          user_type: userType
+          user_type: userType,
         });
         dispatch(signIn());
         router.dismissAll();
@@ -131,24 +133,24 @@ export default function OTPage() {
       } else {
         setErrorMessage("Failed to sign in. Please try again.");
         setIsVerifying(false);
-        logEvent(analytics, 'otp_verification_error', {
-          event_category: 'auth',
-          event_label: 'otp_error',
-          error_type: 'sign_in_failed',
+        logEvent(analytics, "otp_verification_error", {
+          event_category: "auth",
+          event_label: "otp_error",
+          error_type: "sign_in_failed",
           phone_number: phonenumber,
-          user_type: userType
+          user_type: userType,
         });
       }
     } catch (error: any) {
       setErrorMessage("Invalid OTP code.");
       setIsVerifying(false);
-      logEvent(analytics, 'otp_verification_error', {
-        event_category: 'auth',
-        event_label: 'otp_error',
-        error_type: 'invalid_otp',
+      logEvent(analytics, "otp_verification_error", {
+        event_category: "auth",
+        event_label: "otp_error",
+        error_type: "invalid_otp",
         error_message: error.message,
         phone_number: phonenumber,
-        user_type: userType
+        user_type: userType,
       });
     }
   };
@@ -157,53 +159,55 @@ export default function OTPage() {
     if (!canResend) return;
 
     try {
-      logEvent(analytics, 'otp_resend_attempt', {
-        event_category: 'auth',
-        event_label: 'otp_resend',
+      logEvent(analytics, "otp_resend_attempt", {
+        event_category: "auth",
+        event_label: "otp_resend",
         phone_number: phonenumber,
-        user_type: userType
+        user_type: userType,
       });
+
+      setResendTimer(30);
+      setCanResend(false);
 
       const confirmation = await auth().signInWithPhoneNumber(
         phonenumber || "",
-        true,
+        true
       );
-      setResendTimer(30);
-      setCanResend(false);
       showInfoToast("OTP resent successfully!");
-      
-      logEvent(analytics, 'otp_resend_success', {
-        event_category: 'auth',
-        event_label: 'otp_resend',
+
+      logEvent(analytics, "otp_resend_success", {
+        event_category: "auth",
+        event_label: "otp_resend",
         phone_number: phonenumber,
-        user_type: userType
+        user_type: userType,
       });
     } catch (error: any) {
+      setCanResend(true);
       console.error("Failed to resend OTP:", error);
       showErrorToast("Failed to resend OTP. Please try again.");
-      
-      logEvent(analytics, 'otp_resend_error', {
-        event_category: 'auth',
-        event_label: 'otp_error',
-        error_type: 'resend_failed',
+
+      logEvent(analytics, "otp_resend_error", {
+        event_category: "auth",
+        event_label: "otp_error",
+        error_type: "resend_failed",
         error_message: error.message,
         phone_number: phonenumber,
-        user_type: userType
+        user_type: userType,
       });
     }
   };
 
   const handleBack = () => {
     try {
-      logEvent(analytics, 'otp_page_back', {
-        event_category: 'auth',
-        event_label: 'otp_navigation',
-        action: 'back',
+      logEvent(analytics, "otp_page_back", {
+        event_category: "auth",
+        event_label: "otp_navigation",
+        action: "back",
         phone_number: phonenumber,
-        user_type: userType
+        user_type: userType,
       });
     } catch (error) {
-      console.error('Error logging back action:', error);
+      console.error("Error logging back action:", error);
     }
     dispatch(logOut());
     router.back();
