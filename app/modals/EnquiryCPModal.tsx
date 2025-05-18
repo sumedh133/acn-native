@@ -11,7 +11,7 @@ import {
   Dimensions,
 } from "react-native";
 import { doc, getDoc } from "firebase/firestore";
-import { db } from "../config/firebase";
+import { db, analytics } from "../config/firebase";
 import * as Linking from "expo-linking";
 import { Ionicons } from "@expo/vector-icons";
 import {
@@ -22,6 +22,9 @@ import {
 import CloseIcon from "@/assets/icons/svg/CloseIcon";
 import Toast from "react-native-toast-message";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { logEvent } from "@react-native-firebase/analytics";
+import { useSelector } from "react-redux";
+import { RootState } from "@/store/store";
 
 // Define the AgentData interface separately
 interface AgentData {
@@ -44,6 +47,21 @@ const EnquiryCPModal: React.FC<EnquiryCPModalProps> = ({
   selectedCPID,
 }) => {
   const [agentData, setAgentData] = useState<AgentData | null>(null);
+  const userType = useSelector((state: RootState) => state?.agent?.docData?.userType) || "free";
+
+  useEffect(() => {
+    if (visible) {
+      try {
+        logEvent(analytics, 'enquiry_cp_modal_show', {
+          event_category: 'modal',
+          event_label: 'enquiry_cp',
+          user_type: userType
+        });
+      } catch (error) {
+        console.error('Error logging modal show:', error);
+      }
+    }
+  }, [visible]);
 
   useEffect(() => {
     const fetchAgentData = async () => {
@@ -71,6 +89,18 @@ const EnquiryCPModal: React.FC<EnquiryCPModalProps> = ({
   const handleWhatsAppEnquiry = (): void => {
     if (!agentData?.phonenumber) return;
 
+    try {
+      logEvent(analytics, 'enquiry_cp_action', {
+        event_category: 'modal',
+        event_label: 'enquiry_cp',
+        action: 'whatsapp',
+        agent_id: selectedCPID,
+        user_type: userType
+      });
+    } catch (error) {
+      console.error('Error logging WhatsApp action:', error);
+    }
+
     if (agentData != null) {
       Linking.openURL(`whatsapp://send?phone=${agentData.phonenumber}`);
     }
@@ -81,22 +111,52 @@ const EnquiryCPModal: React.FC<EnquiryCPModalProps> = ({
 
     try {
       await Clipboard.setStringAsync(agentData.phonenumber);
-      // Alert.alert('Success', 'Phone number copied!');
       showSuccessToast("Phone number copied to clipboard!", {
         isInModal: true,
       });
+
+      logEvent(analytics, 'enquiry_cp_action', {
+        event_category: 'modal',
+        event_label: 'enquiry_cp',
+        action: 'copy_phone',
+        agent_id: selectedCPID,
+        user_type: userType
+      });
     } catch (err) {
       showErrorToast("Failed to copy phone number.", { isInModal: true });
-      //console.error("Failed to copy phone number:", err);
+      console.error("Failed to copy phone number:", err);
     }
   };
 
   const handleCall = (): void => {
     if (!agentData?.phonenumber) return;
+
+    try {
+      logEvent(analytics, 'enquiry_cp_action', {
+        event_category: 'modal',
+        event_label: 'enquiry_cp',
+        action: 'call',
+        agent_id: selectedCPID,
+        user_type: userType
+      });
+    } catch (error) {
+      console.error('Error logging call action:', error);
+    }
+
     Linking.openURL(`tel:${agentData.phonenumber}`);
   };
 
   const onClose = () => {
+    try {
+      logEvent(analytics, 'enquiry_cp_modal_close', {
+        event_category: 'modal',
+        event_label: 'enquiry_cp',
+        agent_id: selectedCPID,
+        user_type: userType
+      });
+    } catch (error) {
+      console.error('Error logging modal close:', error);
+    }
     setIsEnquiryCPModelOpen(false);
   };
 

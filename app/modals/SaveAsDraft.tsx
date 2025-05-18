@@ -6,8 +6,12 @@ import {
   View,
   ActivityIndicator,
 } from "react-native";
-import React from "react";
+import React, { useEffect } from "react";
 import { router } from "expo-router";
+import { analytics } from "@/app/config/firebase";
+import { logEvent } from "@react-native-firebase/analytics";
+import { useSelector } from "react-redux";
+import { RootState } from "@/store/store";
 
 interface SaveAsDraftProps {
   visible: boolean;
@@ -22,18 +26,70 @@ const SaveAsDraft: React.FC<SaveAsDraftProps> = ({
   handleSaveDraft,
   isSaving,
 }) => {
+  const userType = useSelector((state: RootState) => state?.agent?.docData?.userType) || "free";
+
+  useEffect(() => {
+    if (visible) {
+      try {
+        logEvent(analytics, 'save_draft_modal_show', {
+          event_category: 'modal',
+          event_label: 'save_draft',
+          user_type: userType
+        });
+      } catch (error) {
+        console.error('Error logging modal show:', error);
+      }
+    }
+  }, [visible]);
+
+  const handleClose = () => {
+    try {
+      logEvent(analytics, 'save_draft_modal_close', {
+        event_category: 'modal',
+        event_label: 'save_draft',
+        user_type: userType
+      });
+    } catch (error) {
+      console.error('Error logging modal close:', error);
+    }
+    onClose();
+  };
+
   const handleDiscard = () => {
+    try {
+      logEvent(analytics, 'save_draft_action', {
+        event_category: 'modal',
+        event_label: 'save_draft',
+        action: 'discard',
+        user_type: userType
+      });
+    } catch (error) {
+      console.error('Error logging discard action:', error);
+    }
     onClose();
     router.back();
   };
 
   const handleSave = async () => {
     try {
+      logEvent(analytics, 'save_draft_action', {
+        event_category: 'modal',
+        event_label: 'save_draft',
+        action: 'save',
+        user_type: userType
+      });
+
       await handleSaveDraft();
       onClose();
       router.back();
     } catch (error) {
       console.error("Error in handleSave:", error);
+      logEvent(analytics, 'save_draft_error', {
+        event_category: 'modal',
+        event_label: 'save_draft',
+        error: 'save_failed',
+        user_type: userType
+      });
     }
   };
 
@@ -42,13 +98,13 @@ const SaveAsDraft: React.FC<SaveAsDraftProps> = ({
       animationType="fade"
       transparent={true}
       visible={visible}
-      onRequestClose={onClose}
+      onRequestClose={handleClose}
     >
       <View style={styles.centeredView}>
         <View style={styles.modalView}>
           <View style={styles.modalHeader}>
             <Text style={styles.modalTitle}>Save as Draft?</Text>
-            <TouchableOpacity onPress={onClose} disabled={isSaving}>
+            <TouchableOpacity onPress={handleClose} disabled={isSaving}>
               <Text style={styles.closeButton}>✕</Text>
             </TouchableOpacity>
           </View>

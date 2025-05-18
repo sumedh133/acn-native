@@ -10,6 +10,10 @@ import {
 } from "react-native";
 import AddRequirementsIcon from "../assets/icons/svg/Footer/AddRequirementsIcon";
 import LinearGradient from "react-native-linear-gradient";
+import { analytics } from "@/app/config/firebase";
+import { logEvent } from "@react-native-firebase/analytics";
+import { useSelector } from "react-redux";
+import { RootState } from "@/store/store";
 
 interface popupItems {
   slug: string;
@@ -50,6 +54,7 @@ const AddPopup = ({
   onDragDown: () => void;
 }) => {
   const DRAG_THRESHOLD = 10;
+  const userType = useSelector((state: RootState) => state?.agent?.docData?.userType) || "free";
 
   const panResponder = useRef(
     PanResponder.create({
@@ -58,11 +63,37 @@ const AddPopup = ({
 
       onPanResponderRelease: (evt, gestureState) => {
         if (gestureState.dy > DRAG_THRESHOLD) {
+          try {
+            logEvent(analytics, 'popup_drag_dismiss', {
+              event_category: 'interaction',
+              event_label: 'gesture',
+              action: 'drag_down',
+              drag_distance: gestureState.dy,
+              user_type: userType
+            });
+          } catch (error) {
+            console.error('Error logging drag dismiss:', error);
+          }
           onDragDown && onDragDown();
         }
       },
     })
   ).current;
+
+  const handleCardPress = (item: popupItems) => {
+    try {
+      logEvent(analytics, 'add_popup_selection', {
+        event_category: 'interaction',
+        event_label: 'selection',
+        selected_option: item.slug,
+        destination: item.deeplink,
+        user_type: userType
+      });
+    } catch (error) {
+      console.error('Error logging popup selection:', error);
+    }
+    handlePopupCardPress(item.deeplink);
+  };
 
   return (
     <TouchableOpacity
@@ -82,7 +113,7 @@ const AddPopup = ({
           return (
             <TouchableOpacity
               key={idx}
-              onPress={() => handlePopupCardPress(item?.deeplink)}
+              onPress={() => handleCardPress(item)}
             >
               <LinearGradient
                 colors={item?.colors}

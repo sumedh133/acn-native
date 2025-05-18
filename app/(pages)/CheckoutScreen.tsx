@@ -20,6 +20,8 @@ import { doc, getDoc, onSnapshot, serverTimestamp, updateDoc } from 'firebase/fi
 import { db } from '../config/firebase'; 
 import { useDispatch, useSelector } from 'react-redux';
 import { updateAgentDocData } from '@/store/slices/agentSlice';
+import { logEvent } from "@react-native-firebase/analytics";
+import { analytics } from "../config/firebase";
 
 
 type CheckoutScreenRouteProp = RouteProp<{
@@ -40,7 +42,7 @@ const CheckoutScreen: React.FC = () => {
 
   const userData = useSelector((state: RootState) => state.agent);
   const {
-    docData: { businessName = null, gstNo = null, cpId = null } = {},
+    docData: { businessName = null, gstNo = null, cpId = null, userType = "free" } = {},
     phonenumber: phoneNumber = null
   } = userData || {};
   
@@ -141,9 +143,36 @@ const CheckoutScreen: React.FC = () => {
     };
   }, [currentTransactionId, cpId, planId]);
 
+  // Track page view
+  useEffect(() => {
+    try {
+      logEvent(analytics, "checkout_page_view", {
+        event_category: "checkout",
+        event_label: "page_view",
+        plan_id: planId,
+        transaction_id: currentTransactionId,
+        business_name: businessName || "not_provided",
+        has_gst: !!gstNo,
+        user_type: userType
+      });
+    } catch (error) {
+      console.error("Error logging page view:", error);
+    }
+  }, [planId, currentTransactionId, businessName, gstNo, userType]);
 
   const updateUserSubscription = async (cpId: string, planId: string, paymentData: any) => {
     try {
+      // Track payment success before updating subscription
+      logEvent(analytics, "payment_success", {
+        event_category: "checkout",
+        event_label: "payment",
+        plan_id: planId,
+        transaction_id: currentTransactionId,
+        amount: paymentData.data.amount,
+        currency: "INR",
+        user_type: userType
+      });
+
       const agentRef = doc(db, "agents", cpId);
       
       // Get current document to access existing payment history
@@ -209,8 +238,26 @@ const CheckoutScreen: React.FC = () => {
       console.log("Successfully updated user subscription");
   
       dispatch(updateAgentDocData(updateData));
+
+      // Track subscription update success
+      logEvent(analytics, "subscription_updated", {
+        event_category: "checkout",
+        event_label: "subscription",
+        plan_id: planId,
+        user_type: userType,
+        credits_added: planId === "premium" ? 100 : 5
+      });
+
       return true;
     } catch (error) {
+      // Track error in subscription update
+      logEvent(analytics, "subscription_update_error", {
+        event_category: "checkout",
+        event_label: "error",
+        plan_id: planId,
+        error_message: error instanceof Error ? error.message : "Unknown error",
+        user_type: userType
+      });
       console.error("Error updating user subscription:", error);
       return false;
     }
@@ -255,8 +302,20 @@ const CheckoutScreen: React.FC = () => {
   }, [phoneNumber, cpId, businessName, gstNo, currentTransactionId]);
   
   const retryPayment = (): void => {
+    try {
+      logEvent(analytics, "payment_retry", {
+        event_category: "checkout",
+        event_label: "retry",
+        plan_id: planId,
+        previous_transaction_id: currentTransactionId,
+        error: lastError || "Unknown error",
+        user_type: userType
+      });
+    } catch (error) {
+      console.error("Error logging payment retry:", error);
+    }
+
     setShowFailedModal(false);
-    
     const newTransactionId = "TXN" + Date.now();
     setCurrentTransactionId(newTransactionId);
     
@@ -267,6 +326,18 @@ const CheckoutScreen: React.FC = () => {
   
  
   const browsePlans = (): void => {
+    try {
+      logEvent(analytics, "post_payment_navigation", {
+        event_category: "checkout",
+        event_label: "navigation",
+        destination: "properties",
+        plan_id: planId,
+        user_type: userType
+      });
+    } catch (error) {
+      console.error("Error logging navigation:", error);
+    }
+
     setShowSuccessModal(false);
     router.push('/(tabs)/properties');
   };
@@ -292,23 +363,50 @@ const CheckoutScreen: React.FC = () => {
       switch (data.type) {
         case 'PAYMENT_INITIATED':
           console.log("Payment initiated:", data.payload);
+          logEvent(analytics, "payment_initiated", {
+            event_category: "checkout",
+            event_label: "payment",
+            plan_id: planId,
+            transaction_id: data.payload.transactionId || currentTransactionId,
+            user_type: userType
+          });
           setCurrentTransactionId(data.payload.transactionId || currentTransactionId);
-          
           break;
           
         case 'PAYMENT_SUCCESS':
-         
+          logEvent(analytics, "payment_callback_success", {
+            event_category: "checkout",
+            event_label: "payment",
+            plan_id: planId,
+            transaction_id: currentTransactionId,
+            user_type: userType
+          });
           setShowSuccessModal(true);
           break;
           
         case 'PAYMENT_FAILED':
           console.log("Payment failed:", data.payload);
+          logEvent(analytics, "payment_callback_failed", {
+            event_category: "checkout",
+            event_label: "payment",
+            plan_id: planId,
+            transaction_id: currentTransactionId,
+            error: data.payload?.error || data.payload?.reason || "Unknown error",
+            user_type: userType
+          });
           setLastError(data.payload?.error || data.payload?.reason || null);
           setShowFailedModal(true);
           break;
           
         case 'ERROR':
           console.error('Web error:', data.payload);
+          logEvent(analytics, "checkout_web_error", {
+            event_category: "checkout",
+            event_label: "error",
+            plan_id: planId,
+            error_message: JSON.stringify(data.payload),
+            user_type: userType
+          });
           break;
           
         default:
@@ -316,8 +414,15 @@ const CheckoutScreen: React.FC = () => {
       }
     } catch (error) {
       console.error('Error handling WebView message:', error);
+      logEvent(analytics, "checkout_message_error", {
+        event_category: "checkout",
+        event_label: "error",
+        plan_id: planId,
+        error_message: error instanceof Error ? error.message : "Unknown error",
+        user_type: userType
+      });
     }
-  }, []);
+  }, [planId, currentTransactionId, userType]);
   
   return (
     <SafeAreaView style={styles.container}>

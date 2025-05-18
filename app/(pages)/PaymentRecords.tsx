@@ -1,4 +1,4 @@
-import React, { useMemo } from "react";
+import React, { useMemo, useEffect } from "react";
 import {
   StyleSheet,
   View,
@@ -11,6 +11,8 @@ import {
 } from "react-native";
 import { useSelector } from "react-redux";
 import { RootState } from "@/store/store";
+import { logEvent } from "@react-native-firebase/analytics";
+import { analytics } from "../config/firebase";
 
 interface PaymentHistoryItem {
   lastPaymentAmount?: number;
@@ -38,6 +40,22 @@ const PaymentRecords: React.FC = () => {
   const paymentHistory: Array<PaymentHistoryItem> | null =
     useSelector((state: RootState) => state?.agent?.docData?.paymentHistory) ||
     null;
+
+  const userType = useSelector((state: RootState) => state?.agent?.docData?.userType) || "free";
+
+  // Add page view tracking
+  useEffect(() => {
+    try {
+      logEvent(analytics, "payment_records_page_view", {
+        event_category: "payment_records",
+        event_label: "page_view",
+        records_count: paymentHistory?.length || 0,
+        user_type: userType
+      });
+    } catch (error) {
+      console.error("Error logging page view:", error);
+    }
+  }, [paymentHistory?.length, userType]);
 
   const formattedPaymentRecords = useMemo(() => {
     if (!paymentHistory || !paymentHistory.length) return [];
@@ -106,8 +124,26 @@ const PaymentRecords: React.FC = () => {
     });
   }, [paymentHistory]);
 
+  const handlePaymentItemClick = (item: FormattedPaymentRecord) => {
+    try {
+      logEvent(analytics, "payment_record_item_click", {
+        event_category: "payment_records",
+        event_label: "item_click",
+        payment_id: item.id,
+        plan_type: item.title.toLowerCase().includes("premium") ? "premium" : "booster",
+        amount: parseFloat(item.amount.replace("₹", "")),
+        user_type: userType
+      });
+    } catch (error) {
+      console.error("Error logging payment item click:", error);
+    }
+  };
+
   const renderPaymentItem = ({ item }: { item: FormattedPaymentRecord }) => (
-    <TouchableOpacity style={styles.paymentCard}>
+    <TouchableOpacity 
+      style={styles.paymentCard}
+      onPress={() => handlePaymentItemClick(item)}
+    >
       <View style={styles.paymentInfo}>
         <Text style={styles.paymentTitle}>{item.title}</Text>
         <Text style={styles.paymentDate}>{item.date}</Text>

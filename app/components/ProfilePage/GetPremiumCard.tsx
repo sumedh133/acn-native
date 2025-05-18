@@ -8,6 +8,8 @@ import { Platform, StyleSheet, Text, TouchableOpacity, View } from "react-native
 import LinearGradient from "react-native-linear-gradient";
 import { useSelector } from "react-redux";
 import OnboardingFlow from "../Onboarding";
+import { analytics } from "@/app/config/firebase";
+import { logEvent } from "@react-native-firebase/analytics";
 
 const GetPremiumCard = ({
   handleClick,
@@ -22,9 +24,22 @@ const GetPremiumCard = ({
     useSelector(
       (state: RootState) => state?.agent?.docData?.trialUsed
     ) || false;
+  const userType = useSelector((state: RootState) => state?.agent?.docData?.userType) || "free";
     
 
   const handleStartTrial = () => {
+    try {
+      logEvent(analytics, 'premium_trial_click', {
+        event_category: 'profile',
+        event_label: 'interaction',
+        trial_used: trialUsed,
+        platform: Platform.OS,
+        user_type: userType
+      });
+    } catch (error) {
+      console.error('Error logging trial start:', error);
+    }
+
     if (!trialUsed) {
       setShowOnboarding(true);
     } else {
@@ -33,6 +48,21 @@ const GetPremiumCard = ({
         params: { planId: "premium" },
       });
     }
+  };
+
+  const handleComparePlans = () => {
+    try {
+      logEvent(analytics, 'compare_plans_click', {
+        event_category: 'profile',
+        event_label: 'navigation',
+        source: 'premium_card',
+        platform: Platform.OS,
+        user_type: userType
+      });
+    } catch (error) {
+      console.error('Error logging compare plans:', error);
+    }
+    handleClick(slug);
   };
 
   return (
@@ -99,7 +129,7 @@ const GetPremiumCard = ({
           className={`flex-row justify-center items-center gap-1 ${
             Platform.OS === 'ios' ? "bg-white  py-3 rounded-md mb-2" : "text-white"
           }`}
-          onPress={() => handleClick("compare_plans")}
+          onPress={handleComparePlans}
         >
           <Text className={`text-sm ${Platform.OS === 'ios' ? "text-[#10302D]" : "text-white"}`} style={{ fontFamily: "Lato_700Bold" }}>
             { Platform.OS === 'ios' ? "View Details" : "Compare Plans"}

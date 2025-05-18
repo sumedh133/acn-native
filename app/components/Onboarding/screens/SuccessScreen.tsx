@@ -4,6 +4,10 @@ import PropTypes from "prop-types";
 import OnboardingCard from "../components/OnboardingCard";
 import PrimaryButton from "../components/PrimaryButton";
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
+import { analytics } from "@/app/config/firebase";
+import { logEvent } from "@react-native-firebase/analytics";
+import { useSelector } from "react-redux";
+import { RootState } from "@/store/store";
 
 interface SuccessScreenProps {
   onComplete: () => void;
@@ -14,11 +18,40 @@ const SuccessScreen: React.FC<SuccessScreenProps> = ({
   onComplete,
   onSkip,
 }) => {
+  const userType = useSelector((state: RootState) => state?.agent?.docData?.userType) || "free";
+
+  const handleComplete = () => {
+    try {
+      logEvent(analytics, 'onboarding_complete_click', {
+        event_category: 'onboarding',
+        event_label: 'completion',
+        destination: 'properties',
+        user_type: userType
+      });
+    } catch (error) {
+      console.error('Error logging completion:', error);
+    }
+    onComplete();
+  };
+
+  const handleSkip = () => {
+    try {
+      logEvent(analytics, 'success_screen_skip', {
+        event_category: 'onboarding',
+        event_label: 'interaction',
+        user_type: userType
+      });
+    } catch (error) {
+      console.error('Error logging skip:', error);
+    }
+    onSkip();
+  };
+
   return (
     <View>
       <OnboardingCard>
         <View className="px-3 py-5">
-          <TouchableOpacity className="self-end" onPress={onSkip}>
+          <TouchableOpacity className="self-end" onPress={handleSkip}>
             <Text className="text-[#9F9C9C] text-2xl">✕</Text>
           </TouchableOpacity>
 
@@ -40,7 +73,7 @@ const SuccessScreen: React.FC<SuccessScreenProps> = ({
           <View className="px-3">
           <PrimaryButton
             title="Go to Properties"
-            onPress={onComplete || (() => {})}
+            onPress={handleComplete}
           />
           </View>
         </View>

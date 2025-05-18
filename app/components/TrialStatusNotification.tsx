@@ -14,6 +14,8 @@ import { useSelector } from "react-redux";
 import { RootState } from "@/store/store";
 import { router, Router } from "expo-router";
 import OnboardingFlow from "./Onboarding";
+import { analytics } from "@/app/config/firebase";
+import { logEvent } from "@react-native-firebase/analytics";
 
 // Define trial status types as enum
 export enum TrialStatusType {
@@ -65,6 +67,7 @@ const TrialStatusNotification: React.FC<TrialStatusNotificationProps> = ({
   const [credits, setCredits] = useState<number>(20);
   const agentData = useSelector((state: RootState) => state?.agent?.docData);
   const [showOnboarding, setShowOnboarding] = useState(false);
+  const userType = useSelector((state: RootState) => state?.agent?.docData?.userType) || "free";
 
   const calculateDaysLeft = (trialStartedAt: number): number => {
     try {
@@ -122,14 +125,89 @@ const TrialStatusNotification: React.FC<TrialStatusNotificationProps> = ({
       setStatus(trialStatus);
       setDaysLeft(calculatedDaysLeft);
       setCredits(agentData?.monthlyCredits);
+
+      // Track trial status view
+      try {
+        logEvent(analytics, 'trial_status_view', {
+          event_category: 'trial',
+          event_label: 'status',
+          trial_status: trialStatus,
+          days_left: calculatedDaysLeft,
+          credits_remaining: agentData?.monthlyCredits,
+          user_type: userType
+        });
+      } catch (error) {
+        console.error('Error logging trial status view:', error);
+      }
     }
   }, [agentData]);
 
   if (dismissed || !showNotification) return null;
 
   const handleDismiss = (): void => {
+    try {
+      logEvent(analytics, 'dismiss_trial_notification', {
+        event_category: 'trial',
+        event_label: 'dismiss',
+        trial_status: status,
+        days_left: daysLeft,
+        credits_remaining: credits,
+        user_type: userType
+      });
+    } catch (error) {
+      console.error('Error logging notification dismiss:', error);
+    }
     setDismissed(true);
-    // onDismiss();
+  };
+
+  const handleNotificationClick = () => {
+    try {
+      logEvent(analytics, 'trial_notification_click', {
+        event_category: 'trial',
+        event_label: 'click',
+        trial_status: status,
+        destination: status === TrialStatusType.TO_START ? 'onboarding' : 'compare_plans',
+        days_left: daysLeft,
+        credits_remaining: credits,
+        user_type: userType
+      });
+    } catch (error) {
+      console.error('Error logging notification click:', error);
+    }
+
+    if (status === TrialStatusType.TO_START) {
+      setShowOnboarding(true);
+    } else {
+      router.push("/(pages)/ComparePlans");
+    }
+  };
+
+  const handleOnboardingComplete = () => {
+    try {
+      logEvent(analytics, 'onboarding_complete_from_trial', {
+        event_category: 'trial',
+        event_label: 'onboarding',
+        trial_status: status,
+        user_type: userType
+      });
+    } catch (error) {
+      console.error('Error logging onboarding completion:', error);
+    }
+    setShowOnboarding(false);
+  };
+
+  const handleOnboardingClose = () => {
+    try {
+      logEvent(analytics, 'onboarding_close_from_trial', {
+        event_category: 'trial',
+        event_label: 'onboarding',
+        trial_status: status,
+        user_type: userType
+      });
+    } catch (error) {
+      console.error('Error logging onboarding close:', error);
+    }
+    setShowOnboarding(false);
   };
 
   // Configure notification based on trial status
@@ -161,7 +239,7 @@ const TrialStatusNotification: React.FC<TrialStatusNotificationProps> = ({
           iconBgColor: "#FFF8D4", // orange-400
           icon: <ExpiringSoonIcon height={37} width={37} />, // orange-800
           title: `Trial Ending Soon: ${daysLeft} days left`,
-          message: customMessage || `Don’t lose access to verified contacts.`,
+          message: customMessage || `Don't lose access to verified contacts.`,
         };
       case TrialStatusType.OUT_OF_CREDITS:
         return {
@@ -226,17 +304,12 @@ const TrialStatusNotification: React.FC<TrialStatusNotificationProps> = ({
             backgroundColor: config.bgColor,
             borderColor: config.borderColor,
           },
-
           style,
         ]}
       >
         <TouchableOpacity
           className="flex-row items-center"
-          onPress={
-            status === TrialStatusType.TO_START
-              ? () => setShowOnboarding(true)
-              : () => router.push("/(pages)/ComparePlans")
-          }
+          onPress={handleNotificationClick}
         >
           <View
             className="rounded-full p-2 mr-3"
@@ -272,12 +345,8 @@ const TrialStatusNotification: React.FC<TrialStatusNotificationProps> = ({
       {showOnboarding && (
         <OnboardingFlow
           visible={showOnboarding}
-          onComplete={() => {
-            setShowOnboarding(false);
-          }}
-          onClose={() => {
-            setShowOnboarding(false);
-          }}
+          onComplete={handleOnboardingComplete}
+          onClose={handleOnboardingClose}
         />
       )}
     </>

@@ -4,6 +4,8 @@ import { RootState } from "@/store/store";
 import React from "react";
 import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { useSelector } from "react-redux";
+import { analytics } from "@/app/config/firebase";
+import { logEvent } from "@react-native-firebase/analytics";
 
 const CreditsCard = ({
   handleCardClick,
@@ -15,13 +17,41 @@ const CreditsCard = ({
   const monthlyCredits = useSelector(
     (state: RootState) => state?.agent?.docData?.monthlyCredits
   );
+  const userType = useSelector((state: RootState) => state?.agent?.docData?.userType) || "free";
+
+  const handleClick = () => {
+    try {
+      logEvent(analytics, 'credits_card_click', {
+        event_category: 'profile',
+        event_label: 'navigation',
+        credits_available: monthlyCredits,
+        destination: slug,
+        user_type: userType
+      });
+    } catch (error) {
+      console.error('Error logging credits card click:', error);
+    }
+    handleCardClick(slug);
+  };
+
+  const handleAddCredits = () => {
+    try {
+      logEvent(analytics, 'add_credits_click', {
+        event_category: 'profile',
+        event_label: 'interaction',
+        current_credits: monthlyCredits,
+        user_type: userType
+      });
+    } catch (error) {
+      console.error('Error logging add credits click:', error);
+    }
+    // Add credits functionality will be handled elsewhere
+  };
 
   return (
     <TouchableOpacity
       style={styles.card}
-      onPress={() => {
-        handleCardClick(slug);
-      }}
+      onPress={handleClick}
       activeOpacity={1}
     >
       <View style={styles.container}>
@@ -37,9 +67,9 @@ const CreditsCard = ({
           <Text style={styles.creditsLabel}>Available Credits :</Text>
           <Text style={styles.creditsText}>{monthlyCredits}</Text>
         </View>
-        <View style={styles.button}>
+        <TouchableOpacity style={styles.button} onPress={handleAddCredits}>
           <Text style={styles.buttonText}>Add Credits</Text>
-        </View>
+        </TouchableOpacity>
       </View>
     </TouchableOpacity>
   );

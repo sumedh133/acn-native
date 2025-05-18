@@ -10,6 +10,10 @@ import {
   ActivityIndicator,
 } from "react-native";
 import { useInstantSearch, useSearchBox } from "react-instantsearch";
+import { analytics } from "@/app/config/firebase";
+import { logEvent } from "@react-native-firebase/analytics";
+import { useSelector } from "react-redux";
+import { RootState } from "@/store/store";
 import DropdownRefinementList from "./DropdownRefinementList";
 import CustomCurrentRefinements from "./CustomCurrentRefinements";
 import { Property } from "../types";
@@ -33,6 +37,7 @@ export default function PropertyFilters({
   const { status } = useInstantSearch();
   const [searchText, setSearchText] = useState(query);
   const [loading, setLoading] = useState(false);
+  const userType = useSelector((state: RootState) => state?.agent?.docData?.userType) || "free";
 
   // Handle text input change
   const handleSearchChange = (text: string) => {
@@ -43,6 +48,18 @@ export default function PropertyFilters({
   const handleSearchPress = () => {
     Keyboard.dismiss(); // Dismiss the keyboard when searching
     if (searchText.trim() != query) {
+      try {
+        logEvent(analytics, 'property_search', {
+          event_category: 'search',
+          event_label: 'property',
+          search_query: searchText.trim(),
+          previous_query: query,
+          user_type: userType
+        });
+      } catch (error) {
+        console.error('Error logging property search:', error);
+      }
+      
       setLoading(true);
       setTimeout(() => {
         refine(searchText.trim()); // Trigger the refine action with the updated search text
@@ -51,6 +68,17 @@ export default function PropertyFilters({
   };
 
   const handleClear = () => {
+    try {
+      logEvent(analytics, 'clear_property_search', {
+        event_category: 'search',
+        event_label: 'clear',
+        cleared_query: query,
+        user_type: userType
+      });
+    } catch (error) {
+      console.error('Error logging search clear:', error);
+    }
+
     Keyboard.dismiss(); // Dismiss the keyboard when clearing the search
     setSearchText("".trim());
     if ("" !== query) {
@@ -61,8 +89,35 @@ export default function PropertyFilters({
     }
   };
 
-  // Update loading state based on Algolia search status
+  const handleMoreFilters = () => {
+    try {
+      logEvent(analytics, 'open_property_filters', {
+        event_category: 'filters',
+        event_label: 'open',
+        current_query: query,
+        has_landmark: !!selectedLandmark,
+        user_type: userType
+      });
+    } catch (error) {
+      console.error('Error logging filter open:', error);
+    }
+    handleToggleMoreFilters();
+  };
+
+  // Track search status changes
   useEffect(() => {
+    if (status === 'loading') {
+      try {
+        logEvent(analytics, 'property_search_loading', {
+          event_category: 'search',
+          event_label: 'status',
+          query: query,
+          user_type: userType
+        });
+      } catch (error) {
+        console.error('Error logging search loading:', error);
+      }
+    }
     setLoading(status === "loading");
   }, [status]);
 
@@ -104,8 +159,7 @@ export default function PropertyFilters({
         {/* More Filters Button */}
         <View style={styles.filters}>
           <TouchableOpacity
-            onPress={handleToggleMoreFilters}
-            // style={styles.moreFiltersButton}
+            onPress={handleMoreFilters}
           >
             <FilterIcon />
           </TouchableOpacity>

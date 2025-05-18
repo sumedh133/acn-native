@@ -12,14 +12,15 @@ import {
 } from "react-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { logOut, signIn } from "@/store/slices/authSlice";
-import { useDispatch } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import { AnyAction, ThunkDispatch } from "@reduxjs/toolkit";
 import { RootState } from "@/store/store";
-import { useSelector } from "react-redux";
 import auth from "@react-native-firebase/auth";
 import { OtpInput } from "react-native-otp-entry";
 import { AntDesign } from "@expo/vector-icons";
 import { showErrorToast, showInfoToast } from "@/utils/toastUtils";
+import { analytics } from "@/app/config/firebase";
+import { logEvent } from "@react-native-firebase/analytics";
 const { width, height } = Dimensions.get("window");
 
 export default function OTPage() {
@@ -37,6 +38,8 @@ export default function OTPage() {
   const [isVerifying, setIsVerifying] = useState(false);
 
   const { verificationId } = useLocalSearchParams();
+
+  const userType = useSelector((state: RootState) => state?.agent?.docData?.userType) || "free";
 
   // Firebase auth state listener effect
   useEffect(() => {
@@ -65,6 +68,19 @@ export default function OTPage() {
     return () => clearInterval(timer);
   }, [resendTimer, canResend]);
 
+  useEffect(() => {
+    try {
+      logEvent(analytics, 'view_otp_page', {
+        event_category: 'auth',
+        event_label: 'otp_view',
+        phone_number: phonenumber,
+        user_type: userType
+      });
+    } catch (error) {
+      console.error('Error logging OTP page view:', error);
+    }
+  }, [phonenumber, userType]);
+
   const handleVerify = async () => {
     setErrorMessage("");
     setIsVerifying(true);
@@ -72,10 +88,28 @@ export default function OTPage() {
     if (!otp || otp.length < 6) {
       setErrorMessage("Please enter a valid 6-digit OTP");
       setIsVerifying(false);
+      try {
+        logEvent(analytics, 'otp_verification_error', {
+          event_category: 'auth',
+          event_label: 'otp_error',
+          error_type: 'invalid_length',
+          phone_number: phonenumber,
+          user_type: userType
+        });
+      } catch (error) {
+        console.error('Error logging OTP error:', error);
+      }
       return;
     }
 
     try {
+      logEvent(analytics, 'otp_verification_attempt', {
+        event_category: 'auth',
+        event_label: 'otp_verification',
+        phone_number: phonenumber,
+        user_type: userType
+      });
+
       const credential = auth.PhoneAuthProvider.credential(
         verificationId as string,
         otp.toString(),
@@ -84,6 +118,12 @@ export default function OTPage() {
       const userCredential = await auth().signInWithCredential(credential);
 
       if (userCredential?.user?.phoneNumber) {
+        logEvent(analytics, 'otp_verification_success', {
+          event_category: 'auth',
+          event_label: 'otp_success',
+          phone_number: phonenumber,
+          user_type: userType
+        });
         dispatch(signIn());
         router.dismissAll();
         router.replace("/(tabs)/properties");
@@ -91,10 +131,25 @@ export default function OTPage() {
       } else {
         setErrorMessage("Failed to sign in. Please try again.");
         setIsVerifying(false);
+        logEvent(analytics, 'otp_verification_error', {
+          event_category: 'auth',
+          event_label: 'otp_error',
+          error_type: 'sign_in_failed',
+          phone_number: phonenumber,
+          user_type: userType
+        });
       }
     } catch (error: any) {
       setErrorMessage("Invalid OTP code.");
       setIsVerifying(false);
+      logEvent(analytics, 'otp_verification_error', {
+        event_category: 'auth',
+        event_label: 'otp_error',
+        error_type: 'invalid_otp',
+        error_message: error.message,
+        phone_number: phonenumber,
+        user_type: userType
+      });
     }
   };
 
@@ -102,22 +157,54 @@ export default function OTPage() {
     if (!canResend) return;
 
     try {
+      logEvent(analytics, 'otp_resend_attempt', {
+        event_category: 'auth',
+        event_label: 'otp_resend',
+        phone_number: phonenumber,
+        user_type: userType
+      });
+
       const confirmation = await auth().signInWithPhoneNumber(
         phonenumber || "",
         true,
       );
       setResendTimer(30);
       setCanResend(false);
-      //Alert.alert('Success', `OTP resent to ${phonenumber}`);
       showInfoToast("OTP resent successfully!");
+      
+      logEvent(analytics, 'otp_resend_success', {
+        event_category: 'auth',
+        event_label: 'otp_resend',
+        phone_number: phonenumber,
+        user_type: userType
+      });
     } catch (error: any) {
       console.error("Failed to resend OTP:", error);
-      //Alert.alert('Error', 'Failed to resend OTP. Please try again.');
       showErrorToast("Failed to resend OTP. Please try again.");
+      
+      logEvent(analytics, 'otp_resend_error', {
+        event_category: 'auth',
+        event_label: 'otp_error',
+        error_type: 'resend_failed',
+        error_message: error.message,
+        phone_number: phonenumber,
+        user_type: userType
+      });
     }
   };
 
   const handleBack = () => {
+    try {
+      logEvent(analytics, 'otp_page_back', {
+        event_category: 'auth',
+        event_label: 'otp_navigation',
+        action: 'back',
+        phone_number: phonenumber,
+        user_type: userType
+      });
+    } catch (error) {
+      console.error('Error logging back action:', error);
+    }
     dispatch(logOut());
     router.back();
   };

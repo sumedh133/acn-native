@@ -2,6 +2,10 @@ import React, { useState, useEffect, useCallback } from "react";
 import { View, Text, TouchableOpacity } from "react-native";
 import MultiSlider from "@ptomasroos/react-native-multi-slider";
 import { useRange } from "react-instantsearch";
+import { analytics } from "@/app/config/firebase";
+import { logEvent } from "@react-native-firebase/analytics";
+import { useSelector } from "react-redux";
+import { RootState } from "@/store/store";
 
 // Local formatCurrency function with crore formatting
 const formatCurrency = (value: number, currency: string = "INR"): string => {
@@ -43,6 +47,7 @@ const BudgetRangeSlider: React.FC<BudgetRangeSliderProps> = ({
   const MAX_VALUE = 500000000; // 50 crore
   const [values, setValues] = useState([0, MAX_VALUE]); // 0 to 50 crore
   const [hasUserInteracted, setHasUserInteracted] = useState(false);
+  const userType = useSelector((state: RootState) => state?.agent?.docData?.userType) || "free";
 
   // Initialize with valid values
   useEffect(() => {
@@ -58,14 +63,40 @@ const BudgetRangeSlider: React.FC<BudgetRangeSliderProps> = ({
       isFinite(newValues[0]) &&
       isFinite(newValues[1])
     ) {
+      try {
+        logEvent(analytics, 'budget_range_change', {
+          event_category: 'filters',
+          event_label: 'interaction',
+          min_value: newValues[0],
+          max_value: newValues[1],
+          range_size: newValues[1] - newValues[0],
+          user_type: userType
+        });
+      } catch (error) {
+        console.error('Error logging budget change:', error);
+      }
+
       setValues(newValues);
       setHasUserInteracted(true);
     }
-  }, []);
+  }, [userType]);
 
   const handleApply = useCallback(() => {
     // Only apply refinement if user has interacted with the slider
     if (hasUserInteracted) {
+      try {
+        logEvent(analytics, 'budget_range_apply', {
+          event_category: 'filters',
+          event_label: 'apply',
+          min_value: values[0],
+          max_value: values[1],
+          range_size: values[1] - values[0],
+          user_type: userType
+        });
+      } catch (error) {
+        console.error('Error logging budget apply:', error);
+      }
+
       // Ensure values are valid before refining
       const validMin = isFinite(values[0]) ? values[0] : 0;
       const validMax = isFinite(values[1]) ? values[1] : MAX_VALUE;
@@ -73,7 +104,7 @@ const BudgetRangeSlider: React.FC<BudgetRangeSliderProps> = ({
       refine([validMin, validMax]);
     }
     onApply();
-  }, [values, refine, onApply, hasUserInteracted]);
+  }, [values, refine, onApply, hasUserInteracted, userType]);
 
   // Custom marker component
   const CustomMarker = () => (

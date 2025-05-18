@@ -10,6 +10,10 @@ import {
 } from "react-native";
 import MaterialCommunityIcons from "react-native-vector-icons/MaterialCommunityIcons";
 import { styled } from "nativewind";
+import { analytics } from "@/app/config/firebase";
+import { logEvent } from "@react-native-firebase/analytics";
+import { useSelector } from "react-redux";
+import { RootState } from "@/store/store";
 
 const StyledFlatList = styled(FlatList<TabItem>); // Explicit typing for TabItem
 const StyledTouchableOpacity = styled(TouchableOpacity);
@@ -41,6 +45,7 @@ const TabCarousel: React.FC<TabCarouselProps> = ({
 }) => {
   const isChangingTab = useRef(false);
   const timeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const userType = useSelector((state: RootState) => state?.agent?.docData?.userType) || "free";
 
   // Clean up timeouts when component unmounts
   useEffect(() => {
@@ -54,6 +59,19 @@ const TabCarousel: React.FC<TabCarouselProps> = ({
   const handleTabChange = (tab: string) => {
     // Prevent rapid/multiple tab changes
     if (isChangingTab.current || tab === activeTab) return;
+
+    try {
+      logEvent(analytics, 'main_tab_change', {
+        event_category: 'dashboard',
+        event_label: 'navigation',
+        previous_tab: activeTab,
+        new_tab: tab,
+        items_count: tabData.find(item => item.key === tab)?.count || 0,
+        user_type: userType
+      });
+    } catch (error) {
+      console.error('Error logging tab change:', error);
+    }
 
     isChangingTab.current = true;
     initialLoad.current = true;

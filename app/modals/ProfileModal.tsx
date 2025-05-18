@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect } from "react";
 import {
   Modal,
   View,
@@ -24,6 +24,8 @@ import { showErrorToast, toastConfig } from "@/utils/toastUtils";
 import CloseIcon from "@/assets/icons/svg/CloseIcon";
 import Toast from "react-native-toast-message";
 import { getInitials, getRandomColor } from "@/utils/userUtils";
+import { analytics } from "@/app/config/firebase";
+import { logEvent } from "@react-native-firebase/analytics";
 
 // ✅ Props typing
 type ProfileModalProps = {
@@ -39,11 +41,46 @@ const ProfileModal: React.FC<ProfileModalProps> = ({ visible, setVisible }) => {
     useSelector((state: RootState) => state?.agent?.docData?.name) || "";
   const phonenumber: string | null =
     useSelector((state: RootState) => state?.agent?.docData?.phonenumber) || "";
+  const userType = useSelector((state: RootState) => state?.agent?.docData?.userType) || "free";
   const initials = getInitials(name);
   const avatarColor = getRandomColor(initials);
 
+  useEffect(() => {
+    if (visible) {
+      try {
+        logEvent(analytics, 'profile_modal_show', {
+          event_category: 'modal',
+          event_label: 'profile',
+          user_type: userType
+        });
+      } catch (error) {
+        console.error('Error logging modal show:', error);
+      }
+    }
+  }, [visible]);
+
+  const handleClose = () => {
+    try {
+      logEvent(analytics, 'profile_modal_close', {
+        event_category: 'modal',
+        event_label: 'profile',
+        user_type: userType
+      });
+    } catch (error) {
+      console.error('Error logging modal close:', error);
+    }
+    setVisible(false);
+  };
+
   const handleLogOut = async () => {
     try {
+      logEvent(analytics, 'profile_action', {
+        event_category: 'modal',
+        event_label: 'profile',
+        action: 'logout',
+        user_type: userType
+      });
+
       await dispatch(logOut());
 
       setTimeout(() => {
@@ -62,7 +99,7 @@ const ProfileModal: React.FC<ProfileModalProps> = ({ visible, setVisible }) => {
 
   return (
     <Modal visible={visible} transparent animationType="fade">
-      <TouchableWithoutFeedback onPress={() => setVisible(false)}>
+      <TouchableWithoutFeedback onPress={handleClose}>
         <View style={styles.overlay}>
           <Toast config={toastConfig} />
 
@@ -71,7 +108,7 @@ const ProfileModal: React.FC<ProfileModalProps> = ({ visible, setVisible }) => {
               {/* ❌ Close Button */}
               <TouchableOpacity
                 style={styles.closeIcon}
-                onPress={() => setVisible(false)}
+                onPress={handleClose}
               >
                 <CloseIcon />
               </TouchableOpacity>

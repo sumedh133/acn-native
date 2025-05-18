@@ -7,6 +7,8 @@ import { doc, updateDoc } from 'firebase/firestore';
 import { db } from '@/app/config/firebase';
 import { updateAgentDocData } from '@/store/slices/agentSlice';
 import { formatUnixDateTime, formatUnixDateWithMonth } from '@/app/helpers/getUnixDateTime';
+import { analytics } from "@/app/config/firebase";
+import { logEvent } from "@react-native-firebase/analytics";
 
 interface OnboardingContextType {
   currentStep: number;
@@ -26,35 +28,78 @@ export function OnboardingProvider({ children }: OnboardingProviderProps): JSX.E
   const [onboardingCompleted, setOnboardingCompleted] = useState<boolean>(false);
   const dispatch = useDispatch();
   const cpId = useSelector((state: RootState) => state?.agent?.docData?.cpId);
+  const userType = useSelector((state: RootState) => state?.agent?.docData?.userType) || "free";
 
   const nextStep = async() => {
     const newStep = currentStep + 1;
     setCurrentStep(newStep);
 
-    if (newStep === 3) {
-          const agentRef = doc(db, "agents", cpId);
-          const updatedData={
-            onboardingComplete: true,
-            trialStartedAt: Math.floor(Date.now()/1000),
-            monthlyCredits: 100,
-            userType: "Trial",
-            trialUsed:true,
-          }
-          await updateDoc(agentRef, updatedData);
-          dispatch(updateAgentDocData(updatedData));
-          setOnboardingCompleted(true);
+    try {
+      logEvent(analytics, 'onboarding_step_complete', {
+        event_category: 'onboarding',
+        event_label: 'progress',
+        previous_step: currentStep,
+        new_step: newStep,
+        user_type: userType
+      });
+
+      if (newStep === 3) {
+        const agentRef = doc(db, "agents", cpId);
+        const updatedData={
+          onboardingComplete: true,
+          trialStartedAt: Math.floor(Date.now()/1000),
+          monthlyCredits: 100,
+          userType: "Trial",
+          trialUsed:true,
+        }
+        await updateDoc(agentRef, updatedData);
+        dispatch(updateAgentDocData(updatedData));
+        setOnboardingCompleted(true);
+
+        logEvent(analytics, 'onboarding_complete', {
+          event_category: 'onboarding',
+          event_label: 'success',
+          trial_activated: true,
+          monthly_credits: 100,
+          user_type: 'Trial'
+        });
+      }
+    } catch (error) {
+      logEvent(analytics, 'onboarding_error', {
+        event_category: 'onboarding',
+        event_label: 'error',
+        step: newStep,
+        error_message: error instanceof Error ? error.message : 'Unknown error',
+        user_type: userType
+      });
     }
   };
   
   const resetOnboarding = async() => {
-    const agentRef = doc(db, "agents", cpId);
-    const updatedData={
-      onboardingComplete: false,
+    try {
+      const agentRef = doc(db, "agents", cpId);
+      const updatedData={
+        onboardingComplete: false,
+      }
+      await updateDoc(agentRef, updatedData);
+      dispatch(updateAgentDocData(updatedData));
+      setCurrentStep(0);
+      setOnboardingCompleted(false);
+
+      logEvent(analytics, 'onboarding_reset', {
+        event_category: 'onboarding',
+        event_label: 'interaction',
+        previous_step: currentStep,
+        user_type: userType
+      });
+    } catch (error) {
+      logEvent(analytics, 'onboarding_reset_error', {
+        event_category: 'onboarding',
+        event_label: 'error',
+        error_message: error instanceof Error ? error.message : 'Unknown error',
+        user_type: userType
+      });
     }
-    await updateDoc(agentRef, updatedData);
-    dispatch(updateAgentDocData(updatedData));
-    setCurrentStep(0);
-    setOnboardingCompleted(false);
   };
   
   const value: OnboardingContextType = {

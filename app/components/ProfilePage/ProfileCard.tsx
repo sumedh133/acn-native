@@ -1,6 +1,10 @@
 import React, { ReactNode } from "react";
 import { Text, TouchableOpacity } from "react-native";
 import { StyleSheet, View } from "react-native";
+import { analytics } from "@/app/config/firebase";
+import { logEvent } from "@react-native-firebase/analytics";
+import { useSelector } from "react-redux";
+import { RootState } from "@/store/store";
 
 export interface ProfileCardInterface {
   title: string;
@@ -15,9 +19,26 @@ const ProfileCard = ({
   item: ProfileCardInterface;
   handleCardClick: (slug: string) => void;
 }) => {
+  const userType = useSelector((state: RootState) => state?.agent?.docData?.userType) || "free";
+
+  const handleClick = () => {
+    try {
+      logEvent(analytics, 'profile_card_click', {
+        event_category: 'profile',
+        event_label: 'navigation',
+        card_title: item?.title,
+        destination: item?.slug,
+        user_type: userType
+      });
+    } catch (error) {
+      console.error('Error logging profile card click:', error);
+    }
+    handleCardClick(item?.slug);
+  };
+
   return (
     <TouchableOpacity
-      onPress={() => handleCardClick(item?.slug)}
+      onPress={handleClick}
       style={styles.card}
     >
       <View style={styles.icon}>{item?.icon}</View>

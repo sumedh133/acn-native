@@ -4,10 +4,12 @@ import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import { Budget, Requirement } from "@/app/types";
 import { formatCost2 } from "@/app/helpers/common";
-import { useDispatch } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import { AnyAction, ThunkDispatch } from "@reduxjs/toolkit";
 import { RootState } from "@/store/store";
 import { setRequirementDataThunk } from "@/store/slices/requirementSlice";
+import { analytics } from "@/app/config/firebase";
+import { logEvent } from "@react-native-firebase/analytics";
 
 interface RequirementCardProps {
   requirement: Requirement;
@@ -17,6 +19,7 @@ interface RequirementCardProps {
 const RequirementCard = React.memo(({ requirement }: RequirementCardProps) => {
   const router = useRouter();
   const dispatch = useDispatch<ThunkDispatch<RootState, unknown, AnyAction>>();
+  const userType = useSelector((state: RootState) => state.agent?.docData?.userType) || "free";
 
   // Format budget display
   const formatBudget = (budget: Budget) => {
@@ -65,6 +68,19 @@ const RequirementCard = React.memo(({ requirement }: RequirementCardProps) => {
   const handleCardPress = () => {
     // Set requirement data in Redux
     dispatch(setRequirementDataThunk(requirement));
+
+    try {
+      logEvent(analytics, 'view_requirement_details', {
+        event_category: 'requirement',
+        event_label: 'view',
+        requirement_id: requirement.requirementId,
+        requirement_type: requirement.assetType,
+        requirement_location: requirement.location,
+        user_type: userType
+      });
+    } catch (error) {
+      console.error('Error logging requirement view:', error);
+    }
 
     // Navigate to requirement details screen
     router.push({

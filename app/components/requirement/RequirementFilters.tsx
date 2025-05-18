@@ -13,6 +13,10 @@ import CustomCurrentRefinements from "../CustomCurrentRefinements";
 import CloseIcon from "@/assets/icons/svg/CloseIcon";
 import SearchIcon from "@/assets/icons/svg/PropertiesPage/SearchIcon";
 import FilterIcon from "@/assets/icons/svg/PropertiesPage/FilterIcon";
+import { analytics } from "@/app/config/firebase";
+import { logEvent } from "@react-native-firebase/analytics";
+import { useSelector } from "react-redux";
+import { RootState } from "@/store/store";
 
 interface RequirementFiltersProps {
   handleToggleMoreFilters: () => void;
@@ -62,24 +66,60 @@ const RequirementFilters = ({
 }: RequirementFiltersProps) => {
   const { query, refine } = useSearchBox();
   const [searchText, setSearchText] = useState(query);
+  const userType = useSelector((state: RootState) => state.agent?.docData?.userType) || "free";
 
   // Handle text input change
   const handleSearchChange = (text: string) => {
-    setSearchText(text); // Update the local state with the new search text
+    setSearchText(text);
   };
 
   // Handle search button press (refine action)
   const handleSearchPress = () => {
     if (searchText.trim() != query) {
-      refine(searchText); // Trigger the refine action with the updated search text
+      refine(searchText);
+
+      try {
+        logEvent(analytics, 'requirement_search', {
+          event_category: 'search',
+          event_label: 'interaction',
+          search_term: searchText.trim(),
+          user_type: userType
+        });
+      } catch (error) {
+        console.error('Error logging search:', error);
+      }
     }
-    Keyboard.dismiss(); // Dismiss the keyboard when searching
+    Keyboard.dismiss();
   };
 
   const handleClear = () => {
     setSearchText("");
     refine("");
+
+    try {
+      logEvent(analytics, 'clear_requirement_search', {
+        event_category: 'search',
+        event_label: 'clear',
+        user_type: userType
+      });
+    } catch (error) {
+      console.error('Error logging search clear:', error);
+    }
   };
+
+  const handleFiltersPress = () => {
+    try {
+      logEvent(analytics, 'open_requirement_filters', {
+        event_category: 'filters',
+        event_label: 'open',
+        user_type: userType
+      });
+    } catch (error) {
+      console.error('Error logging filter open:', error);
+    }
+    handleToggleMoreFilters();
+  };
+
   return (
     <View style={styles.container} className="">
       <View style={styles.searchAndFiltersRow}>
@@ -110,10 +150,8 @@ const RequirementFilters = ({
         )}
         <View style={styles.filters}>
           <TouchableOpacity
-            onPress={handleToggleMoreFilters}
-            // style={styles.moreFiltersButton}
+            onPress={handleFiltersPress}
           >
-            {/* <Feather name="filter" size={24} color="black" /> */}
             <FilterIcon />
           </TouchableOpacity>
         </View>

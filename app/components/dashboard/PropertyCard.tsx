@@ -17,10 +17,11 @@ import {
 import { styled } from "nativewind";
 import React, { useEffect, useState } from "react";
 import { Text, TouchableOpacity, View } from "react-native";
-import { useSelector } from "react-redux";
-import { useDispatch } from "react-redux";
+import { useSelector, useDispatch } from "react-redux";
 import DashboardDropdown from "./DashboardDropdown";
 import { StyleSheet } from "react-native";
+import { analytics } from "@/app/config/firebase";
+import { logEvent } from "@react-native-firebase/analytics";
 
 const StyledView = styled(View);
 const StyledText = styled(Text);
@@ -43,10 +44,23 @@ const PropertyCard = ({
   const [isShareModalOpen, setIsShareModalOpen] = useState(false);
   const [matchingEnquiriesCount, setMatchingEnquiriesCount] = useState("-");
   const dispatch = useDispatch<ThunkDispatch<RootState, unknown, AnyAction>>();
+  const userType = useSelector((state: RootState) => state?.agent?.docData?.userType) || "free";
 
   // Handle share button press
   const handleSharePress = (e: any) => {
     e.stopPropagation(); // Prevent opening property details
+    try {
+      logEvent(analytics, 'property_share_modal_open', {
+        event_category: 'dashboard',
+        event_label: 'interaction',
+        property_id: property.propertyId,
+        property_type: property.assetType,
+        is_listing: isListing,
+        user_type: userType
+      });
+    } catch (error) {
+      console.error('Error logging share modal open:', error);
+    }
     setIsShareModalOpen(true);
   };
 
@@ -64,6 +78,21 @@ const PropertyCard = ({
 
   // Handler for navigating to property details
   const handleNavigateToPropertyDetails = () => {
+    try {
+      logEvent(analytics, 'property_details_view', {
+        event_category: 'dashboard',
+        event_label: 'navigation',
+        property_id: property.propertyId,
+        property_type: property.assetType,
+        property_status: property.status,
+        is_listing: isListing,
+        enquiries_count: matchingEnquiriesCount,
+        user_type: userType
+      });
+    } catch (error) {
+      console.error('Error logging property details view:', error);
+    }
+
     // Set the property data in Redux
     dispatch(setPropertyDataThunk(property));
 
@@ -88,6 +117,23 @@ const PropertyCard = ({
 
   useEffect(() => {
     fetchMatchingEnquiryCount();
+  }, []);
+
+  useEffect(() => {
+    try {
+      logEvent(analytics, 'property_card_view', {
+        event_category: 'dashboard',
+        event_label: 'impression',
+        property_id: property.propertyId,
+        property_type: property.assetType,
+        property_status: property.status,
+        is_listing: isListing,
+        position_index: index,
+        user_type: userType
+      });
+    } catch (error) {
+      console.error('Error logging property card view:', error);
+    }
   }, []);
 
   return (

@@ -18,10 +18,9 @@ import {
   setAgentDataState,
   setPhonenumber,
 } from "@/store/slices/agentSlice";
-import { useDispatch } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import { AnyAction, ThunkDispatch } from "@reduxjs/toolkit";
 import { RootState } from "@/store/store";
-import { useSelector } from "react-redux";
 import { addDoc, collection } from "firebase/firestore";
 import { db } from "@/app/config/firebase";
 import { getUnixDateTime } from "@/app/helpers/getUnixDateTime";
@@ -29,6 +28,8 @@ import auth from "@react-native-firebase/auth";
 import { FontAwesome5, FontAwesome6 } from "@expo/vector-icons";
 import { useDoubleBackPressExit } from "@/hooks/useDoubleBackPressExit";
 import { showErrorToast } from "@/utils/toastUtils";
+import { analytics } from "@/app/config/firebase";
+import { logEvent } from "@react-native-firebase/analytics";
 
 const { width, height } = Dimensions.get("window");
 
@@ -48,6 +49,20 @@ export default function SignUp() {
     (state: RootState) => state.agent
   );
 
+  const userType = useSelector((state: RootState) => state?.agent?.docData?.userType) || "free";
+
+  useEffect(() => {
+    try {
+      logEvent(analytics, 'view_signin_page', {
+        event_category: 'auth',
+        event_label: 'signin_view',
+        user_type: userType
+      });
+    } catch (error) {
+      console.error('Error logging signin page view:', error);
+    }
+  }, [userType]);
+
   const handlePhoneInputChange = (value: string) => {
     const fullPhoneNumber = "+91" + value;
     const regex = /^[0-9\b]+$/;
@@ -60,8 +75,31 @@ export default function SignUp() {
 
         if (number && number.isValid()) {
           setIsPhoneValid(true);
+          try {
+            logEvent(analytics, 'phone_validation_success', {
+              event_category: 'auth',
+              event_label: 'phone_validation',
+              phone_number: fullPhoneNumber,
+              user_type: userType
+            });
+          } catch (error) {
+            console.error('Error logging phone validation:', error);
+          }
         } else {
           setIsPhoneValid(false);
+          if (value.length === 10) {
+            try {
+              logEvent(analytics, 'phone_validation_error', {
+                event_category: 'auth',
+                event_label: 'phone_validation',
+                error_type: 'invalid_format',
+                phone_number: fullPhoneNumber,
+                user_type: userType
+              });
+            } catch (error) {
+              console.error('Error logging phone validation error:', error);
+            }
+          }
         }
       } else {
         setIsPhoneValid(false);
@@ -70,6 +108,16 @@ export default function SignUp() {
   };
 
   const handleSupportClick = () => {
+    try {
+      logEvent(analytics, 'signin_support_click', {
+        event_category: 'auth',
+        event_label: 'signin_support',
+        action: 'whatsapp_support',
+        user_type: userType
+      });
+    } catch (error) {
+      console.error('Error logging support click:', error);
+    }
     const whatsappUrl = `https://wa.me/+919415006092`;
     Linking.openURL(whatsappUrl);
   };
@@ -77,22 +125,54 @@ export default function SignUp() {
   const handleCheckUser = async () => {
     if (!isPhoneValid) {
       setErrorMessage("Please enter a valid phone number and country code.");
+      try {
+        logEvent(analytics, 'signin_validation_error', {
+          event_category: 'auth',
+          event_label: 'signin_error',
+          error_type: 'invalid_phone',
+          phone_number: phoneNumber,
+          user_type: userType
+        });
+      } catch (error) {
+        console.error('Error logging validation error:', error);
+      }
       return;
     }
 
     try {
+      logEvent(analytics, 'signin_attempt', {
+        event_category: 'auth',
+        event_label: 'signin_flow',
+        phone_number: phoneNumber,
+        user_type: userType
+      });
+
       const result = await dispatch(setAgentDataState(phoneNumber)).unwrap();
 
       dispatch(listenToAgentChanges(result.docId));
       const agentData = result.docData;
 
       if (agentData?.blacklisted) {
+        logEvent(analytics, 'signin_blacklisted', {
+          event_category: 'auth',
+          event_label: 'signin_error',
+          error_type: 'blacklisted',
+          phone_number: phoneNumber,
+          user_type: userType
+        });
         showErrorToast("Your account is blacklisted. Please contact support.");
         router.push("/components/Auth/BlacklistedPage");
         return;
       }
 
       if (!agentData?.verified) {
+        logEvent(analytics, 'signin_unverified', {
+          event_category: 'auth',
+          event_label: 'signin_error',
+          error_type: 'unverified',
+          phone_number: phoneNumber,
+          user_type: userType
+        });
         showErrorToast("Your account is not verified!");
         router.push("/components/Auth/VerificationPage");
         return;
@@ -111,6 +191,13 @@ export default function SignUp() {
     if (phonenumber && isPhoneValid && !isAgentInDb && !addingNewAgent) {
       setAddingNewAgent(true);
       try {
+        logEvent(analytics, 'new_agent_registration', {
+          event_category: 'auth',
+          event_label: 'registration',
+          phone_number: phonenumber,
+          user_type: 'new'
+        });
+
         // Prepare the new agent data
         const newAgent = {
           phonenumber: phonenumber,
@@ -127,11 +214,18 @@ export default function SignUp() {
         router.push("/components/Auth/VerificationPage");
       } catch (error) {
         console.error("Error adding new user:", error);
-        // You might want to provide user feedback
         setErrorMessage(
           "There was an error adding the agent. Please try again."
         );
         setAddingNewAgent(false);
+        
+        logEvent(analytics, 'new_agent_error', {
+          event_category: 'auth',
+          event_label: 'registration_error',
+          error_type: 'db_error',
+          phone_number: phonenumber,
+          user_type: 'new'
+        });
       } finally {
         router.push("/components/Auth/VerificationPage");
         setAddingNewAgent(false);

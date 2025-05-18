@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect } from "react";
 import {
   Modal,
   View,
@@ -10,6 +10,10 @@ import {
 } from "react-native";
 import { Svg, Path, Circle } from "react-native-svg";
 import LinearGradient from "react-native-linear-gradient";
+import { analytics } from "@/app/config/firebase";
+import { logEvent } from "@react-native-firebase/analytics";
+import { useSelector } from "react-redux";
+import { RootState } from "@/store/store";
 
 interface Plan {
   description: string;
@@ -31,7 +35,7 @@ const Desc: Desc = {
     description: `Your account is now on ACN Premium. Unlimited-ish enquiries, zero friction—go check out the latest listings.`,
   },
   booster: {
-    description: `We’ve added 5 credits to your account. Start enquiring.`,
+    description: `We've added 5 credits to your account. Start enquiring.`,
   },
 };
 const PremiumModal: React.FC<PremiumModalProps> = ({
@@ -40,14 +44,58 @@ const PremiumModal: React.FC<PremiumModalProps> = ({
   onBrowsePress,
   planId,
 }) => {
-  
+  const userType = useSelector((state: RootState) => state?.agent?.docData?.userType) || "free";
+
+  useEffect(() => {
+    if (visible) {
+      try {
+        logEvent(analytics, 'premium_modal_show', {
+          event_category: 'modal',
+          event_label: 'premium',
+          plan_id: planId,
+          user_type: userType
+        });
+      } catch (error) {
+        console.error('Error logging modal show:', error);
+      }
+    }
+  }, [visible]);
+
+  const handleClose = () => {
+    try {
+      logEvent(analytics, 'premium_modal_close', {
+        event_category: 'modal',
+        event_label: 'premium',
+        plan_id: planId,
+        user_type: userType
+      });
+    } catch (error) {
+      console.error('Error logging modal close:', error);
+    }
+    onClose();
+  };
+
+  const handleBrowsePress = () => {
+    try {
+      logEvent(analytics, 'premium_modal_action', {
+        event_category: 'modal',
+        event_label: 'premium',
+        action: 'browse',
+        plan_id: planId,
+        user_type: userType
+      });
+    } catch (error) {
+      console.error('Error logging browse action:', error);
+    }
+    onBrowsePress();
+  };
   
   return (
     <Modal
       animationType="fade"
       transparent={true}
       visible={visible}
-      onRequestClose={onClose}
+      onRequestClose={handleClose}
     >
       <SafeAreaView style={styles.container}>
         <LinearGradient
@@ -60,7 +108,7 @@ const PremiumModal: React.FC<PremiumModalProps> = ({
         >
           <View style={styles.modalContent}>
             
-            <TouchableOpacity style={styles.closeButton} onPress={onClose}>
+            <TouchableOpacity style={styles.closeButton} onPress={handleClose}>
               <Text style={styles.closeButtonText}>✕</Text>
             </TouchableOpacity>
 
@@ -119,7 +167,7 @@ const PremiumModal: React.FC<PremiumModalProps> = ({
             <View style={styles.button}>
               <TouchableOpacity
                 style={styles.browseButton}
-                onPress={onBrowsePress}
+                onPress={handleBrowsePress}
               >
                 <Text style={styles.browseButtonText}>Browse Properties</Text>
               </TouchableOpacity>

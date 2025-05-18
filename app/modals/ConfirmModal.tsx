@@ -10,6 +10,10 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import Toast from "react-native-toast-message";
+import { analytics } from "@/app/config/firebase";
+import { logEvent } from "@react-native-firebase/analytics";
+import { useSelector } from "react-redux";
+import { RootState } from "@/store/store";
 
 type ConfirmModalProps = {
   title: string;
@@ -30,12 +34,74 @@ const ConfirmModal: React.FC<ConfirmModalProps> = ({
   onModalHide,
   visible,
 }) => {
+  const userType = useSelector((state: RootState) => state?.agent?.docData?.userType) || "free";
+
+  const handleConfirm = () => {
+    try {
+      logEvent(analytics, 'confirm_modal_action', {
+        event_category: 'modal',
+        event_label: 'confirm',
+        modal_title: title,
+        action: 'confirm',
+        user_type: userType
+      });
+    } catch (error) {
+      console.error('Error logging confirm action:', error);
+    }
+    onConfirm();
+  };
+
+  const handleCancel = () => {
+    try {
+      logEvent(analytics, 'confirm_modal_action', {
+        event_category: 'modal',
+        event_label: 'cancel',
+        modal_title: title,
+        action: 'cancel',
+        user_type: userType
+      });
+    } catch (error) {
+      console.error('Error logging cancel action:', error);
+    }
+    onCancel();
+  };
+
+  const handleModalHide = () => {
+    try {
+      logEvent(analytics, 'confirm_modal_hide', {
+        event_category: 'modal',
+        event_label: 'hide',
+        modal_title: title,
+        user_type: userType
+      });
+    } catch (error) {
+      console.error('Error logging modal hide:', error);
+    }
+    onModalHide();
+  };
+
+  // Track modal visibility
+  React.useEffect(() => {
+    if (visible) {
+      try {
+        logEvent(analytics, 'confirm_modal_show', {
+          event_category: 'modal',
+          event_label: 'show',
+          modal_title: title,
+          user_type: userType
+        });
+      } catch (error) {
+        console.error('Error logging modal show:', error);
+      }
+    }
+  }, [visible]);
+
   return (
     <Modal
       transparent
       visible={visible}
       animationType="fade"
-      onDismiss={onModalHide}
+      onDismiss={handleModalHide}
     >
       <View style={styles.overlay}>
         <Toast config={toastConfig} />
@@ -51,13 +117,13 @@ const ConfirmModal: React.FC<ConfirmModalProps> = ({
               <Text style={styles.message}>{message}</Text>
               <View style={styles.buttonContainer}>
                 <TouchableOpacity
-                  onPress={onCancel}
+                  onPress={handleCancel}
                   style={styles.cancelButton}
                 >
                   <Text style={styles.cancelText}>Cancel</Text>
                 </TouchableOpacity>
                 <TouchableOpacity
-                  onPress={onConfirm}
+                  onPress={handleConfirm}
                   style={styles.confirmButton}
                 >
                   <Text style={styles.confirmText}>Yes</Text>

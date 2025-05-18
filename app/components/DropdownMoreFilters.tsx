@@ -19,6 +19,10 @@ import {
 } from "react-native";
 import { useRefinementList } from "react-instantsearch";
 import { Ionicons } from "@expo/vector-icons";
+import { analytics } from "@/app/config/firebase";
+import { logEvent } from "@react-native-firebase/analytics";
+import { useSelector } from "react-redux";
+import { RootState } from "@/store/store";
 
 export interface RefinementItem {
   value: string;
@@ -53,6 +57,7 @@ const DropdownMoreFilters = ({
   const [buttonPosition, setButtonPosition] = useState({ x: 0, y: 0 });
   const [modalVisible, setModalVisible] = useState(false);
   const buttonRef = useRef<View | null>(null);
+  const userType = useSelector((state: RootState) => state.agent?.docData?.userType) || "free";
 
   // Handle back button press on Android to close dropdown
   useEffect(() => {
@@ -74,17 +79,26 @@ const DropdownMoreFilters = ({
 
   const handleToggle = useCallback(() => {
     if (!isOpen) {
+      try {
+        logEvent(analytics, 'open_more_filters', {
+          event_category: 'filters',
+          event_label: 'open',
+          filter_type: title.toLowerCase(),
+          available_options: items.length,
+          user_type: userType
+        });
+      } catch (error) {
+        console.error('Error logging filter open:', error);
+      }
       calculateButtonPosition();
       setTimeout(() => {
         setModalVisible(true);
         setIsOpen(true);
       }, 0);
-
-      // }
     } else {
       closeDropdown();
     }
-  }, [isOpen]);
+  }, [isOpen, title, items.length, userType]);
 
   const closeDropdown = useCallback(() => {
     setModalVisible(false);
@@ -101,9 +115,22 @@ const DropdownMoreFilters = ({
 
   const handleRefine = useCallback(
     (value: string) => {
+      const selectedItem = items.find(item => item.value === value);
+      try {
+        logEvent(analytics, 'apply_more_filter', {
+          event_category: 'filters',
+          event_label: 'apply',
+          filter_type: title.toLowerCase(),
+          filter_value: value,
+          filter_label: selectedItem?.label,
+          user_type: userType
+        });
+      } catch (error) {
+        console.error('Error logging filter application:', error);
+      }
       refine(value);
     },
-    [refine],
+    [refine, title, items, userType],
   );
 
   const calculateButtonPosition = () => {

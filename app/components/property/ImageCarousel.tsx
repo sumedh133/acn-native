@@ -10,10 +10,13 @@ import {
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import ImageViewing from "react-native-image-viewing";
+import { analytics } from "@/app/config/firebase";
+import { logEvent } from "@react-native-firebase/analytics";
 
 interface ImageCarouselProps {
   images: string[];
   onImagePress?: () => void;
+  propertyId?: string;
 }
 
 const { width } = Dimensions.get("window");
@@ -21,6 +24,7 @@ const { width } = Dimensions.get("window");
 const ImageCarousel: React.FC<ImageCarouselProps> = ({
   images,
   onImagePress,
+  propertyId,
 }) => {
   const [activeIndex, setActiveIndex] = useState(0);
   const [isImageViewVisible, setIsImageViewVisible] = useState(false);
@@ -45,12 +49,17 @@ const ImageCarousel: React.FC<ImageCarouselProps> = ({
   }
 
   const handleImagePress = () => {
-    // If there's an external onImagePress handler, call it
-    // if (onImagePress) {
-    //   onImagePress();
-    // }
-
-    // Open the image viewer with the current active index
+    try {
+      logEvent(analytics, 'property_image_fullscreen', {
+        event_category: 'property',
+        event_label: 'interaction',
+        property_id: propertyId,
+        image_index: activeIndex,
+        total_images: images.length
+      });
+    } catch (error) {
+      console.error('Error logging image fullscreen:', error);
+    }
     setIsImageViewVisible(true);
   };
 
@@ -74,6 +83,20 @@ const ImageCarousel: React.FC<ImageCarouselProps> = ({
 
   const handlePageChange = (index: number) => {
     if (index >= 0 && index < images.length) {
+      try {
+        logEvent(analytics, 'property_image_change', {
+          event_category: 'property',
+          event_label: 'interaction',
+          property_id: propertyId,
+          previous_index: activeIndex,
+          new_index: index,
+          total_images: images.length,
+          navigation_method: 'dot_click'
+        });
+      } catch (error) {
+        console.error('Error logging image change:', error);
+      }
+
       setActiveIndex(index);
       flatListRef.current?.scrollToIndex({
         index,
@@ -86,25 +109,64 @@ const ImageCarousel: React.FC<ImageCarouselProps> = ({
   // Enhanced scroll event handling
   const handleScroll = (event: any) => {
     const contentOffsetX = event.nativeEvent.contentOffset.x;
-    const currentIndex = Math.floor(contentOffsetX / width + 0.5); // Improved rounding
+    const newIndex = Math.floor(contentOffsetX / width + 0.5);
 
     if (
-      currentIndex >= 0 &&
-      currentIndex < images.length &&
-      currentIndex !== activeIndex
+      newIndex >= 0 &&
+      newIndex < images.length &&
+      newIndex !== activeIndex
     ) {
-      setActiveIndex(currentIndex);
+      try {
+        logEvent(analytics, 'property_image_change', {
+          event_category: 'property',
+          event_label: 'interaction',
+          property_id: propertyId,
+          previous_index: activeIndex,
+          new_index: newIndex,
+          total_images: images.length,
+          navigation_method: 'swipe'
+        });
+      } catch (error) {
+        console.error('Error logging image change:', error);
+      }
+      setActiveIndex(newIndex);
     }
   };
 
   // Navigation handlers
   const handlePrevious = () => {
     const newIndex = Math.max(0, activeIndex - 1);
+    try {
+      logEvent(analytics, 'property_image_change', {
+        event_category: 'property',
+        event_label: 'interaction',
+        property_id: propertyId,
+        previous_index: activeIndex,
+        new_index: newIndex,
+        total_images: images.length,
+        navigation_method: 'arrow_previous'
+      });
+    } catch (error) {
+      console.error('Error logging image change:', error);
+    }
     handlePageChange(newIndex);
   };
 
   const handleNext = () => {
     const newIndex = Math.min(images.length - 1, activeIndex + 1);
+    try {
+      logEvent(analytics, 'property_image_change', {
+        event_category: 'property',
+        event_label: 'interaction',
+        property_id: propertyId,
+        previous_index: activeIndex,
+        new_index: newIndex,
+        total_images: images.length,
+        navigation_method: 'arrow_next'
+      });
+    } catch (error) {
+      console.error('Error logging image change:', error);
+    }
     handlePageChange(newIndex);
   };
 

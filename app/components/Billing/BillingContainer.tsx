@@ -32,6 +32,8 @@ import {
 } from "@/utils/toastUtils";
 import CloseIcon from "@/assets/icons/svg/CloseIcon";
 import { WebViewNavigationEvent } from "react-native-webview/lib/RNCWebViewNativeComponent.js";
+import { analytics } from "@/app/config/firebase";
+import { logEvent } from "@react-native-firebase/analytics";
 
 if (
   Platform.OS === "android" &&
@@ -65,9 +67,38 @@ const BillingContainer: React.FC<BillingContainerProps> = ({
   const cpId =
     useSelector((state: RootState) => state?.agent?.docData?.cpId) || null;
 
+  const userType = useSelector((state: RootState) => state?.agent?.docData?.userType) || "free";
+
+  // Track page view
+  useEffect(() => {
+    try {
+      logEvent(analytics, 'view_billing_page', {
+        event_category: 'billing',
+        event_label: 'page_view',
+        user_type: userType,
+        has_business_details: !!(businessName || gstNo)
+      });
+    } catch (error) {
+      console.error('Error logging page view:', error);
+    }
+  }, []);
+
   const toggleKeyBenefits = () => {
     LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
-    setShowKeyBenefits((prev) => !prev);
+    setShowKeyBenefits((prev) => {
+      const newState = !prev;
+      try {
+        logEvent(analytics, 'toggle_key_benefits', {
+          event_category: 'billing',
+          event_label: 'interaction',
+          new_state: newState ? 'expanded' : 'collapsed',
+          user_type: userType
+        });
+      } catch (error) {
+        console.error('Error logging key benefits toggle:', error);
+      }
+      return newState;
+    });
   };
 
   const [allCoupons, setAllCoupons] = useState<Coupon[] | []>([]);
@@ -99,15 +130,23 @@ const BillingContainer: React.FC<BillingContainerProps> = ({
   const initiatePayment = async () => {
     setProcessing(true);
 
-    const functions = getFunctions();
-    const initiatePhonePePayment = httpsCallable(
-      functions,
-      "initiatePhonePePayment"
-    );
-
     try {
+      // Track payment initiation
+      logEvent(analytics, 'initiate_payment', {
+        event_category: 'billing',
+        event_label: 'payment',
+        amount: totalAmount,
+        original_amount: originalAmount,
+        discount_applied: originalAmount - totalAmount,
+        coupon_code: matchedCoupon?.code || null,
+        has_business_details: !!(businessName || gstNo),
+        user_type: userType
+      });
+
+      const functions = getFunctions();
+      const initiatePhonePePayment = httpsCallable(functions, "initiatePhonePePayment");
+
       const transactionId = "TXN" + Date.now();
-      //figure out and validate anoter redirect url for app.
       const mobileNumber = phoneNumber;
       const userId = cpId;
 
@@ -121,16 +160,42 @@ const BillingContainer: React.FC<BillingContainerProps> = ({
 
       if (response.data.success) {
         const paymentUrl: string = response.data.paymentUrl;
+        
+        // Track successful payment initiation
+        logEvent(analytics, 'payment_url_generated', {
+          event_category: 'billing',
+          event_label: 'payment',
+          transaction_id: transactionId,
+          amount: totalAmount,
+          user_type: userType
+        });
+
         setPaymentUrl(paymentUrl);
         setShowWebView(true);
       } else {
+        // Track payment initiation failure
+        logEvent(analytics, 'payment_initiation_failed', {
+          event_category: 'billing',
+          event_label: 'error',
+          error_message: response.data.error || 'Unknown error',
+          transaction_id: transactionId,
+          amount: totalAmount,
+          user_type: userType
+        });
+
         console.error("Payment failed:", response.data.error);
-        Alert.alert(
-          "Payment Failed",
-          response.data.error || "Something went wrong."
-        );
+        Alert.alert("Payment Failed", response.data.error || "Something went wrong.");
       }
     } catch (error: any) {
+      // Track payment error
+      logEvent(analytics, 'payment_error', {
+        event_category: 'billing',
+        event_label: 'error',
+        error_message: error.message || 'Unknown error',
+        amount: totalAmount,
+        user_type: userType
+      });
+
       console.error("Payment initiation error:", error.message);
       Alert.alert("Error", error.message || "Payment could not be initiated.");
     }
@@ -138,10 +203,19 @@ const BillingContainer: React.FC<BillingContainerProps> = ({
     setProcessing(false);
   };
 
-  const handleNavigationStateChange = async (
-    navState: WebViewNavigationEvent
-  ) => {
+  const handleNavigationStateChange = async (navState: WebViewNavigationEvent) => {
     if (navState.url.startsWith(redirectUrl)) {
+      // Track payment flow completion
+      try {
+        logEvent(analytics, 'payment_flow_completed', {
+          event_category: 'billing',
+          event_label: 'payment',
+          final_url: navState.url,
+          user_type: userType
+        });
+      } catch (error) {
+        console.error('Error logging payment flow completion:', error);
+      }
       setShowWebView(false);
     }
   };
@@ -157,14 +231,36 @@ const BillingContainer: React.FC<BillingContainerProps> = ({
 
   const applyCoupon = () => {
     if (!allCoupons || allCoupons?.length === 0) {
+      try {
+        logEvent(analytics, 'coupon_error', {
+          event_category: 'billing',
+          event_label: 'error',
+          error_type: 'no_coupons_available',
+          user_type: userType
+        });
+      } catch (error) {
+        console.error('Error logging coupon error:', error);
+      }
       setMatchedCoupon(null);
       showErrorToast("Invalid Coupon Code");
       return;
     }
 
-    const match =
-      allCoupons?.find((item) => item?.code === couponCode && item.active) ||
-      null;
+    const match = allCoupons?.find((item) => item?.code === couponCode && item.active) || null;
+    
+    try {
+      logEvent(analytics, 'apply_coupon', {
+        event_category: 'billing',
+        event_label: 'interaction',
+        coupon_code: couponCode,
+        is_valid: !!match,
+        discount_amount: match?.discount || 0,
+        user_type: userType
+      });
+    } catch (error) {
+      console.error('Error logging coupon application:', error);
+    }
+
     if (match) {
       setMatchedCoupon(match);
       showSuccessToast("Coupon Applied");
@@ -172,11 +268,20 @@ const BillingContainer: React.FC<BillingContainerProps> = ({
       setMatchedCoupon(null);
       showErrorToast("Invalid Coupon Code");
     }
-
-    return;
   };
 
   const removeCoupon = () => {
+    try {
+      logEvent(analytics, 'remove_coupon', {
+        event_category: 'billing',
+        event_label: 'interaction',
+        coupon_code: matchedCoupon?.code,
+        discount_amount: matchedCoupon?.discount || 0,
+        user_type: userType
+      });
+    } catch (error) {
+      console.error('Error logging coupon removal:', error);
+    }
     setMatchedCoupon(null);
     setCouponCode("");
     showInfoToast("Coupon Removed");
