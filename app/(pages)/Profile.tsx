@@ -151,15 +151,16 @@ const Profile = () => {
           })}
         </View>
         {userType !== "premium" && (
-          <GetPremiumCard handleClick={handleCardClick} slug={"get_premium"} />
+          <GetPremiumCard
+            handleClick={handleCardClick}
+            slug={"compare_plans"}
+          />
         )}
         <CreditsCard handleCardClick={handleCardClick} slug={"credits_card"} />
         <TouchableOpacity style={styles.logoutButton} onPress={handleLogOut}>
           <LogoutIcon width={18} height={18} />
           <Text style={styles.logoutText}>Logout</Text>
-        </TouchableOpacity> 
-        
-        
+        </TouchableOpacity>
       </ScrollView>
     </>
   );

@@ -19,7 +19,13 @@ interface OnboardingFlowProps {
 }
 
 const OnboardingFlowContent: React.FC<OnboardingFlowProps> = ({ visible, onComplete, onClose }) => {
-  const { currentStep, nextStep, resetOnboarding, onboardingCompleted } = useOnboardingContext();
+  const {
+    currentStep,
+    nextStep,
+    resetOnboarding,
+    onboardingCompleted,
+    setOnboardingCompleted,
+  } = useOnboardingContext();
   const userType = useSelector((state: RootState) => state?.agent?.docData?.userType) || "free";
 
   React.useEffect(() => {
@@ -66,6 +72,7 @@ const OnboardingFlowContent: React.FC<OnboardingFlowProps> = ({ visible, onCompl
       console.error('Error logging onboarding success:', error);
     }
     nextStep();
+    setOnboardingCompleted(true);
     resetOnboarding();
   };
 

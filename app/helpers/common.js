@@ -66,7 +66,7 @@ export function formatCost(price) {
   otherNumbers = otherNumbers.replace(/\B(?=(\d{2})+(?!\d))/g, ",");
 
   // Combine the formatted integer part with decimal part (if exists)
-  let formattedPrice = `₹ ${otherNumbers}${lastThree}`;
+  let formattedPrice = `₹${otherNumbers}${lastThree}`;
   if (decimalPart) {
     formattedPrice += `.${decimalPart}`;
   }

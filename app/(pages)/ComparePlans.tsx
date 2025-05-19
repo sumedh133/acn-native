@@ -60,10 +60,15 @@ const ComparePlans = () => {
     } catch (error) {
       console.error("Error logging premium plan click:", error);
     }
-    router.push({
-      pathname: "/CheckoutScreen",
-      params: { planId: "premium" },
-    });
+
+    if (Platform.OS !== "ios") {
+      router.push({
+        pathname: "/CheckoutScreen",
+        params: { planId: "premium" },
+      });
+    } else {
+      router.push("/billings");
+    }
   };
 
   const handleTrialStart = () => {
@@ -248,7 +253,7 @@ const ComparePlans = () => {
                   {plan.description}
                 </Text>
 
-                {Platform.OS !== "ios" && (
+                {/* {Platform.OS !== "ios" && ( */}
                   <View className="flex flex-row items-end mb-4 gap-2">
                     <Text
                       style={{ fontFamily: "Montserrat_700Bold" }}
@@ -279,7 +284,7 @@ const ComparePlans = () => {
                       )}
                     </View>
                   </View>
-                )}
+                {/* )} */}
 
                 {/* <View className="h-px bg-gray-200 my-4" /> */}
 
@@ -317,7 +322,7 @@ const ComparePlans = () => {
                   ))}
                 </View>
 
-                {Platform.OS === "ios" ? (
+                {/* {Platform.OS === "ios" ? (
                   <>
                     {index === 1 && (
                       <View className="mt-4">
@@ -337,7 +342,7 @@ const ComparePlans = () => {
                       </View>
                     )}
                   </>
-                ) : (
+                ) : ( */}
                   <View className="gap-2 mt-auto">
                     {index === 1 && (
                       <>
@@ -361,7 +366,7 @@ const ComparePlans = () => {
                       </>
                     )}
                   </View>
-                )}
+                {/* )} */}
               </View>
             ))}
           </ScrollView>

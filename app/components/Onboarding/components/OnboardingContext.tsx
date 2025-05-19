@@ -15,6 +15,7 @@ interface OnboardingContextType {
   nextStep: () => void;
   resetOnboarding: () => void;
   onboardingCompleted: boolean;
+  setOnboardingCompleted: (completed: boolean) => void;
 }
 
 const OnboardingContext = createContext<OnboardingContextType | undefined>(undefined);
@@ -54,7 +55,7 @@ export function OnboardingProvider({ children }: OnboardingProviderProps): JSX.E
         }
         await updateDoc(agentRef, updatedData);
         dispatch(updateAgentDocData(updatedData));
-        setOnboardingCompleted(true);
+        // setOnboardingCompleted(true);
 
         logEvent(analytics, 'onboarding_complete', {
           event_category: 'onboarding',
@@ -106,7 +107,8 @@ export function OnboardingProvider({ children }: OnboardingProviderProps): JSX.E
     currentStep,
     nextStep,
     resetOnboarding,
-    onboardingCompleted
+    onboardingCompleted,
+    setOnboardingCompleted,
   };
   
   return (

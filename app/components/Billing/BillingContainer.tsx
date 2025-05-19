@@ -54,8 +54,23 @@ const BillingContainer: React.FC<BillingContainerProps> = ({
   const scrollRef = useRef<ScrollView>(null);
   const [showKeyBenefits, setShowKeyBenefits] = useState(false);
 
-  const originalAmount = 10000;
-  const [totalAmount, setTotalAmount] = useState(originalAmount);
+  const originalAmount = 8474;
+  const [discountAmount, setDiscountAmount] = useState(0);
+  const [taxAmount, setTaxAmount] = useState(
+    parseFloat((originalAmount * 0.18).toFixed(2))
+  );
+  const [totalAmount, setTotalAmount] = useState(originalAmount + taxAmount);
+
+  useEffect(() => {
+    const tax = parseFloat(
+      ((originalAmount - discountAmount) * 0.18).toFixed(2)
+    );
+    setTaxAmount(tax);
+    // const newAmount = originalAmount - discountAmount + tax;
+    let newAmount = Math.round(originalAmount - discountAmount + tax);
+    // if (discountAmount == 0) { newAmount += 1 }
+    setTotalAmount(newAmount);
+  }, [discountAmount]);
 
   const businessName =
     useSelector((state: RootState) => state?.agent?.docData?.businessName) ||
@@ -67,19 +82,21 @@ const BillingContainer: React.FC<BillingContainerProps> = ({
   const cpId =
     useSelector((state: RootState) => state?.agent?.docData?.cpId) || null;
 
-  const userType = useSelector((state: RootState) => state?.agent?.docData?.userType) || "free";
+  const userType =
+    useSelector((state: RootState) => state?.agent?.docData?.userType) ||
+    "free";
 
   // Track page view
   useEffect(() => {
     try {
-      logEvent(analytics, 'view_billing_page', {
-        event_category: 'billing',
-        event_label: 'page_view',
+      logEvent(analytics, "view_billing_page", {
+        event_category: "billing",
+        event_label: "page_view",
         user_type: userType,
-        has_business_details: !!(businessName || gstNo)
+        has_business_details: !!(businessName || gstNo),
       });
     } catch (error) {
-      console.error('Error logging page view:', error);
+      console.error("Error logging page view:", error);
     }
   }, []);
 
@@ -88,14 +105,14 @@ const BillingContainer: React.FC<BillingContainerProps> = ({
     setShowKeyBenefits((prev) => {
       const newState = !prev;
       try {
-        logEvent(analytics, 'toggle_key_benefits', {
-          event_category: 'billing',
-          event_label: 'interaction',
-          new_state: newState ? 'expanded' : 'collapsed',
-          user_type: userType
+        logEvent(analytics, "toggle_key_benefits", {
+          event_category: "billing",
+          event_label: "interaction",
+          new_state: newState ? "expanded" : "collapsed",
+          user_type: userType,
         });
       } catch (error) {
-        console.error('Error logging key benefits toggle:', error);
+        console.error("Error logging key benefits toggle:", error);
       }
       return newState;
     });
@@ -132,19 +149,22 @@ const BillingContainer: React.FC<BillingContainerProps> = ({
 
     try {
       // Track payment initiation
-      logEvent(analytics, 'initiate_payment', {
-        event_category: 'billing',
-        event_label: 'payment',
+      logEvent(analytics, "initiate_payment", {
+        event_category: "billing",
+        event_label: "payment",
         amount: totalAmount,
         original_amount: originalAmount,
-        discount_applied: originalAmount - totalAmount,
+        discount_applied: discountAmount,
         coupon_code: matchedCoupon?.code || null,
         has_business_details: !!(businessName || gstNo),
-        user_type: userType
+        user_type: userType,
       });
 
       const functions = getFunctions();
-      const initiatePhonePePayment = httpsCallable(functions, "initiatePhonePePayment");
+      const initiatePhonePePayment = httpsCallable(
+        functions,
+        "initiatePhonePePayment"
+      );
 
       const transactionId = "TXN" + Date.now();
       const mobileNumber = phoneNumber;
@@ -160,40 +180,43 @@ const BillingContainer: React.FC<BillingContainerProps> = ({
 
       if (response.data.success) {
         const paymentUrl: string = response.data.paymentUrl;
-        
+
         // Track successful payment initiation
-        logEvent(analytics, 'payment_url_generated', {
-          event_category: 'billing',
-          event_label: 'payment',
+        logEvent(analytics, "payment_url_generated", {
+          event_category: "billing",
+          event_label: "payment",
           transaction_id: transactionId,
           amount: totalAmount,
-          user_type: userType
+          user_type: userType,
         });
 
         setPaymentUrl(paymentUrl);
         setShowWebView(true);
       } else {
         // Track payment initiation failure
-        logEvent(analytics, 'payment_initiation_failed', {
-          event_category: 'billing',
-          event_label: 'error',
-          error_message: response.data.error || 'Unknown error',
+        logEvent(analytics, "payment_initiation_failed", {
+          event_category: "billing",
+          event_label: "error",
+          error_message: response.data.error || "Unknown error",
           transaction_id: transactionId,
           amount: totalAmount,
-          user_type: userType
+          user_type: userType,
         });
 
         console.error("Payment failed:", response.data.error);
-        Alert.alert("Payment Failed", response.data.error || "Something went wrong.");
+        Alert.alert(
+          "Payment Failed",
+          response.data.error || "Something went wrong."
+        );
       }
     } catch (error: any) {
       // Track payment error
-      logEvent(analytics, 'payment_error', {
-        event_category: 'billing',
-        event_label: 'error',
-        error_message: error.message || 'Unknown error',
+      logEvent(analytics, "payment_error", {
+        event_category: "billing",
+        event_label: "error",
+        error_message: error.message || "Unknown error",
         amount: totalAmount,
-        user_type: userType
+        user_type: userType,
       });
 
       console.error("Payment initiation error:", error.message);
@@ -203,18 +226,20 @@ const BillingContainer: React.FC<BillingContainerProps> = ({
     setProcessing(false);
   };
 
-  const handleNavigationStateChange = async (navState: WebViewNavigationEvent) => {
+  const handleNavigationStateChange = async (
+    navState: WebViewNavigationEvent
+  ) => {
     if (navState.url.startsWith(redirectUrl)) {
       // Track payment flow completion
       try {
-        logEvent(analytics, 'payment_flow_completed', {
-          event_category: 'billing',
-          event_label: 'payment',
+        logEvent(analytics, "payment_flow_completed", {
+          event_category: "billing",
+          event_label: "payment",
           final_url: navState.url,
-          user_type: userType
+          user_type: userType,
         });
       } catch (error) {
-        console.error('Error logging payment flow completion:', error);
+        console.error("Error logging payment flow completion:", error);
       }
       setShowWebView(false);
     }
@@ -222,43 +247,47 @@ const BillingContainer: React.FC<BillingContainerProps> = ({
 
   useEffect(() => {
     if (matchedCoupon) {
-      const newAmount = originalAmount - matchedCoupon.discount;
-      setTotalAmount(newAmount);
+      const offPrice = Math.floor(
+        originalAmount * (matchedCoupon.discount_percent / 100)
+      );
+      setDiscountAmount(offPrice);
     } else {
-      setTotalAmount(originalAmount);
+      setDiscountAmount(0);
     }
   }, [matchedCoupon]);
 
   const applyCoupon = () => {
     if (!allCoupons || allCoupons?.length === 0) {
       try {
-        logEvent(analytics, 'coupon_error', {
-          event_category: 'billing',
-          event_label: 'error',
-          error_type: 'no_coupons_available',
-          user_type: userType
+        logEvent(analytics, "coupon_error", {
+          event_category: "billing",
+          event_label: "error",
+          error_type: "no_coupons_available",
+          user_type: userType,
         });
       } catch (error) {
-        console.error('Error logging coupon error:', error);
+        console.error("Error logging coupon error:", error);
       }
       setMatchedCoupon(null);
       showErrorToast("Invalid Coupon Code");
       return;
     }
 
-    const match = allCoupons?.find((item) => item?.code === couponCode && item.active) || null;
-    
+    const match =
+      allCoupons?.find((item) => item?.code === couponCode && item.active) ||
+      null;
+
     try {
-      logEvent(analytics, 'apply_coupon', {
-        event_category: 'billing',
-        event_label: 'interaction',
+      logEvent(analytics, "apply_coupon", {
+        event_category: "billing",
+        event_label: "interaction",
         coupon_code: couponCode,
         is_valid: !!match,
-        discount_amount: match?.discount || 0,
-        user_type: userType
+        discount_amount: discountAmount || 0,
+        user_type: userType,
       });
     } catch (error) {
-      console.error('Error logging coupon application:', error);
+      console.error("Error logging coupon application:", error);
     }
 
     if (match) {
@@ -272,15 +301,15 @@ const BillingContainer: React.FC<BillingContainerProps> = ({
 
   const removeCoupon = () => {
     try {
-      logEvent(analytics, 'remove_coupon', {
-        event_category: 'billing',
-        event_label: 'interaction',
+      logEvent(analytics, "remove_coupon", {
+        event_category: "billing",
+        event_label: "interaction",
         coupon_code: matchedCoupon?.code,
-        discount_amount: matchedCoupon?.discount || 0,
-        user_type: userType
+        discount_amount: discountAmount || 0,
+        user_type: userType,
       });
     } catch (error) {
-      console.error('Error logging coupon removal:', error);
+      console.error("Error logging coupon removal:", error);
     }
     setMatchedCoupon(null);
     setCouponCode("");
@@ -328,15 +357,16 @@ const BillingContainer: React.FC<BillingContainerProps> = ({
             <View style={styles.card}>
               <View style={styles.header}>
                 <Text style={styles.title}>
-                  ACN Annual{"\n"}
-                  <Text style={styles.subtext}>Membership (1 year)</Text>
+                  ACN Premium{"\n"}
+                  <Text style={styles.subtext}>1 Premium Account</Text>
                 </Text>
                 <Text style={styles.costText}>
-                  {formatCost(originalAmount)}/yr
+                  {formatCost(originalAmount)}/yr{"\n"}
+                  <Text style={styles.subtext}>For 12 Month</Text>
                 </Text>
               </View>
 
-              <Text style={styles.description}>
+              {/* <Text style={styles.description}>
                 Get full access to <Text style={styles.bold}>ACN</Text> with a
                 mandatory{" "}
                 <Text style={styles.regular}>12-month subscription</Text>,
@@ -392,13 +422,38 @@ const BillingContainer: React.FC<BillingContainerProps> = ({
                     ))}
                   </View>
                 )}
-              </View>
+              </View> */}
 
               <View style={styles.validitySection}>
-                <Text style={styles.validityText}>
+                {/* <Text style={styles.validityText}>
                   Validity: <Text style={styles.bold}>12 Months</Text> from the
                   date of activation.
-                </Text>
+                </Text> */}
+                <View style={styles.validityView}>
+                  <View style={styles.validityLine}>
+                    <View className="w-4 h-4 rounded-full bg-gray-900"></View>
+                    <Text>Today: 100 Credits per month for a year</Text>
+                  </View>
+                  <View className="w-0.5 h-[14px] bg-gray-900 ml-[7px]"></View>
+                  <View style={styles.validityLine}>
+                    <View className="w-4 h-4 rounded-full bg-transparent border-2 border-gray-900"></View>
+                    <Text>
+                      Valid till{" "}
+                      {(() => {
+                        const futureDate = new Date(
+                          Date.now() + 365 * 24 * 60 * 60 * 1000
+                        );
+                        const day = futureDate.getDate();
+                        const month = futureDate.toLocaleString("en-US", {
+                          month: "short",
+                        });
+                        const year = futureDate.getFullYear();
+                        return `${day} ${month} ${year}`;
+                      })()}
+                    </Text>
+                  </View>
+                </View>
+                x
                 <Text style={styles.refundText}>
                   Non-refundable & Non-transferable.**
                 </Text>
@@ -476,7 +531,7 @@ const BillingContainer: React.FC<BillingContainerProps> = ({
                 <View style={styles.couponRow}>
                   <View style={styles.appliedCoupon}>
                     <FAIcon name="tag" size={20} style={styles.icon} />
-                    <Text style={styles.couponCodeText}>
+                    <Text style={styles.couponCodeText} numberOfLines={1}>
                       {matchedCoupon.code}
                     </Text>
                   </View>
@@ -484,7 +539,7 @@ const BillingContainer: React.FC<BillingContainerProps> = ({
                     style={styles.removeBtn}
                     onPress={removeCoupon}
                   >
-                    <CloseIcon />
+                    <CloseIcon width={20} height={20} />
                     <Text style={styles.removeText}>Remove</Text>
                   </TouchableOpacity>
                 </View>
@@ -501,7 +556,12 @@ const BillingContainer: React.FC<BillingContainerProps> = ({
                   <View>
                     <View style={styles.rowBetween}>
                       <Text style={styles.label}>Annual membership</Text>
-                      <Text style={styles.value}>{formatCost(10000)}</Text>
+                      <Text style={styles.value}>
+                        {/* {matchedCoupon
+                          ? formatCost(originalAmount)
+                          : formatCost(originalAmount + 1)} */}
+                        {formatCost(originalAmount)}
+                      </Text>
                     </View>
                     <Text style={styles.orderDescription}>
                       Valid for 12 months
@@ -513,7 +573,7 @@ const BillingContainer: React.FC<BillingContainerProps> = ({
                       <View style={styles.rowBetween}>
                         <Text style={styles.label}>{matchedCoupon.name}</Text>
                         <Text style={[styles.value, { color: "#898483" }]}>
-                          - {formatCost(matchedCoupon.discount)}
+                          - {formatCost(discountAmount)}
                         </Text>
                       </View>
                       <Text style={styles.orderDescription}>
@@ -521,6 +581,13 @@ const BillingContainer: React.FC<BillingContainerProps> = ({
                       </Text>
                     </View>
                   )}
+
+                  <View>
+                    <View style={styles.rowBetween}>
+                      <Text style={styles.label}>GST 18%</Text>
+                      <Text style={styles.value}>{formatCost(taxAmount)}</Text>
+                    </View>
+                  </View>
                 </View>
 
                 {/* Divider */}
@@ -549,31 +616,11 @@ const BillingContainer: React.FC<BillingContainerProps> = ({
                       style={styles.iconSmall}
                     />
                     <Text style={styles.savingText}>
-                      Nice! You saved {formatCost(originalAmount - totalAmount)}{" "}
-                      on your order.
+                      Nice! You saved {formatCost(discountAmount)} on your
+                      order.
                     </Text>
                   </View>
                 )}
-
-                <TouchableOpacity
-                  style={styles.payButton}
-                  onPress={initiatePayment}
-                  disabled={processing}
-                >
-                  {processing ? (
-                    <Text style={styles.payText}>Processing...</Text>
-                  ) : (
-                    <View style={styles.row}>
-                      <Text style={styles.payText}>I am Ready to Pay</Text>
-                      <FAIcon
-                        name="arrow-right"
-                        size={20}
-                        style={styles.iconSmall}
-                        color={"white"}
-                      />
-                    </View>
-                  )}
-                </TouchableOpacity>
 
                 <View style={styles.paymentMethods}>
                   <View style={styles.row}>
@@ -606,6 +653,28 @@ const BillingContainer: React.FC<BillingContainerProps> = ({
                 </View>
               </View>
             </View>
+
+            <TouchableOpacity
+              style={styles.payButton}
+              onPress={initiatePayment}
+              disabled={processing}
+            >
+              {processing ? (
+                <Text style={styles.payText}>Processing...</Text>
+              ) : (
+                <View style={styles.row}>
+                  <Text style={styles.payText}>
+                    Pay {formatCost(totalAmount)}
+                  </Text>
+                  <FAIcon
+                    name="arrow-right"
+                    size={20}
+                    style={styles.iconSmall}
+                    color={"white"}
+                  />
+                </View>
+              )}
+            </TouchableOpacity>
           </View>
         </View>
       </ScrollView>
@@ -615,7 +684,7 @@ const BillingContainer: React.FC<BillingContainerProps> = ({
 
 const styles = StyleSheet.create({
   scrollContent: {
-    paddingBottom: 12,
+    paddingBottom: 40,
   },
   container: {
     width: "100%",
@@ -668,6 +737,9 @@ const styles = StyleSheet.create({
   },
   subtext: {
     fontFamily: "Montserrat_700Bold",
+    fontSize: 14,
+    color: "#4b5563",
+    fontWeight: "600",
   },
   costText: {
     fontFamily: "Montserrat_600SemiBold",
@@ -739,7 +811,18 @@ const styles = StyleSheet.create({
   },
   validitySection: {
     alignItems: "flex-start",
-    gap: 4,
+    gap: 16,
+  },
+  validityView: {
+    alignItems: "flex-start",
+    // gap: 12,
+  },
+  validityLine: {
+    // flex: 1,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "flex-start",
+    gap: 12,
   },
   validityText: {
     fontFamily: "System",
@@ -808,17 +891,17 @@ const styles = StyleSheet.create({
     backgroundColor: "#FFFFFF",
     textAlignVertical: "center",
     fontSize: 17,
-    ...Platform.select({
-      ios: {
-        shadowColor: "#000",
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.8,
-        shadowRadius: 5,
-      },
-      android: {
-        elevation: 8, // Android shadow
-      },
-    }),
+    // ...Platform.select({
+    //   ios: {
+    //     shadowColor: "#000",
+    //     shadowOffset: { width: 0, height: 2 },
+    //     shadowOpacity: 0.8,
+    //     shadowRadius: 5,
+    //   },
+    //   android: {
+    //     elevation: 8, // Android shadow
+    //   },
+    // }),
   },
   applyBtn: {
     paddingHorizontal: 26,
@@ -827,6 +910,20 @@ const styles = StyleSheet.create({
     backgroundColor: "#153E3B",
   },
   applyText: {
+    color: "#FFFFFF",
+    fontSize: 17,
+    fontWeight: "500",
+  },
+  removeBtn: {
+    paddingHorizontal: 10,
+    paddingVertical: 10,
+    borderRadius: 10,
+    backgroundColor: "#153E3B",
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+  },
+  removeText: {
     color: "#FFFFFF",
     fontSize: 17,
     fontWeight: "500",
@@ -842,6 +939,7 @@ const styles = StyleSheet.create({
     height: 45,
     flex: 1,
     flexDirection: "row",
+    gap: 8,
     alignItems: "center",
     borderRadius: 10,
     borderWidth: 1,
@@ -849,38 +947,25 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
     paddingVertical: 10,
     backgroundColor: "#E3E3E3",
-    ...Platform.select({
-      ios: {
-        shadowColor: "#000",
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.8,
-        shadowRadius: 5,
-      },
-      android: {
-        elevation: 8, // Android shadow
-      },
-    }),
+    // ...Platform.select({
+    //   ios: {
+    //     shadowColor: "#000",
+    //     shadowOffset: { width: 0, height: 2 },
+    //     shadowOpacity: 0.8,
+    //     shadowRadius: 5,
+    //   },
+    //   android: {
+    //     elevation: 8, // Android shadow
+    //   },
+    // }),
   },
   couponCodeText: {
-    height: 45,
+    // height: 45,
     textAlignVertical: "center",
     fontSize: 17,
     fontWeight: "bold",
     color: "#747474",
-  },
-  removeBtn: {
-    paddingHorizontal: 10,
-    paddingVertical: 10,
-    borderRadius: 10,
-    backgroundColor: "#153E3B",
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 6,
-  },
-  removeText: {
-    color: "#FFFFFF",
-    fontSize: 17,
-    fontWeight: "500",
+    flex: 1,
   },
   icon: {
     width: 20,
@@ -972,10 +1057,11 @@ const styles = StyleSheet.create({
     color: "#0A0B0A",
   },
   payButton: {
+    marginTop: 20,
     backgroundColor: "#153E3B",
     borderRadius: 10,
     paddingHorizontal: 16,
-    paddingVertical: 10,
+    paddingVertical: 16,
     width: "100%",
     alignItems: "center",
     flexDirection: "row",
@@ -984,7 +1070,7 @@ const styles = StyleSheet.create({
   },
   payText: {
     color: "#FFFFFF",
-    fontSize: 18,
+    fontSize: 20,
     fontWeight: "500",
   },
   paymentMethods: {
@@ -995,7 +1081,7 @@ const styles = StyleSheet.create({
   secureText: {
     paddingLeft: 5,
     fontSize: 18,
-    fontWeight: "bold",
+    fontWeight: "semibold",
     color: "#0A0B0A",
   },
   iconSmall: {
