@@ -11,7 +11,7 @@ import useAppUpdate from "./helpers/checkUpdates";
 SplashScreen.preventAutoHideAsync();
 
 export default function RootLayout() {
-  const { checkForUpdate } = useAppUpdate();
+  const { checkForUpdate, alreadyPromptedOnce } = useAppUpdate();
   // Function to calculate dynamic top margin based on screen dimensions and orientation
   // const calculateTopMargin = () => {
   //   const { height, width } = Dimensions.get('window');
@@ -60,6 +60,7 @@ export default function RootLayout() {
       }
     );
     const interval = setInterval(() => {
+      alreadyPromptedOnce.current = false;
       checkUpdateStatus();
     }, 3600000);
     return () => {
