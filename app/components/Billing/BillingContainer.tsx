@@ -19,6 +19,19 @@ import { FontAwesome5 as FA5Icon } from "@expo/vector-icons";
 import { getFunctions, httpsCallable } from "firebase/functions";
 import { WebView } from "react-native-webview";
 
+// did not exist before IAP
+import {
+  initConnection,
+  endConnection,
+  getProducts,
+  requestSubscription,
+  SubscriptionPurchase,
+  ProductPurchase,
+  PurchaseError,
+  getAvailablePurchases,
+  finishTransaction,
+} from 'react-native-iap';
+
 import { formatCost } from "../../helpers/common.js";
 import { useSelector } from "react-redux";
 import { RootState } from "@/store/store.js";
@@ -53,6 +66,11 @@ const BillingContainer: React.FC<BillingContainerProps> = ({
   const [processing, setProcessing] = useState(false);
   const scrollRef = useRef<ScrollView>(null);
   const [showKeyBenefits, setShowKeyBenefits] = useState(false);
+
+  // did not exist before IAP, next 3 lines
+  const [product, setProduct] = useState<any>(null);
+  const [iapError, setIapError] = useState<string | null>(null);
+  const [isIAPInitialized, setIsIAPInitialized] = useState(false);
 
   const originalAmount = 8474;
   const [discountAmount, setDiscountAmount] = useState(0);
@@ -142,6 +160,71 @@ const BillingContainer: React.FC<BillingContainerProps> = ({
     });
 
     return () => unsubscribe();
+  }, []);
+
+  // did not exist before IAP
+  useEffect(() => {
+    if (Platform.OS === "ios") {
+      const initializeIAP = async () => {
+        try {
+          await initConnection();
+          setIsIAPInitialized(true);
+
+          // For testing, you can use a mock product
+          if (__DEV__) {
+            setProduct({
+              productId: "acn_premium_annual",
+              localizedPrice: "₹9,999.00",
+              price: "9999",
+              currency: "INR",
+              title: "ACN Premium Annual",
+              description: "Annual subscription to ACN Premium",
+            });
+            return;
+          }
+
+          // Try to fetch real products
+          const products = await getProducts({ skus: ["acn_premium_annual"] });
+          if (products.length > 0) {
+            setProduct(products[0]);
+          } else {
+            console.log("No products found");
+            // For testing, set a mock product if no real products are found
+            if (__DEV__) {
+              setProduct({
+                productId: "acn_premium_annual",
+                localizedPrice: "₹9,999.00",
+                price: "9999",
+                currency: "INR",
+                title: "ACN Premium Annual",
+                description: "Annual subscription to ACN Premium",
+              });
+            }
+          }
+        } catch (error) {
+          console.error("IAP initialization error:", error);
+          setIapError("Failed to initialize in-app purchases");
+
+          // For testing, set a mock product on error
+          if (__DEV__) {
+            setProduct({
+              productId: "acn_premium_annual",
+              localizedPrice: "₹9,999.00",
+              price: "9999",
+              currency: "INR",
+              title: "ACN Premium Annual",
+              description: "Annual subscription to ACN Premium",
+            });
+          }
+        }
+      };
+
+      initializeIAP();
+
+      return () => {
+        endConnection();
+      };
+    }
   }, []);
 
   const initiatePayment = async () => {
@@ -331,6 +414,74 @@ const BillingContainer: React.FC<BillingContainerProps> = ({
     "shield-check": "shield-alt",
     whatsapp: "whatsapp",
     headset: "headphones",
+  };
+
+  // did not exist before IAP
+  const initiateIAPPayment = async () => {
+    if (!product) {
+      Alert.alert("Error", "Product not available");
+      return;
+    }
+
+    setProcessing(true);
+    try {
+      if (__DEV__) {
+        // Simulate a successful purchase in development
+        console.log("Simulating purchase in development mode");
+        const mockPurchase = {
+          productId: product.productId,
+          transactionId: "mock_transaction_" + Date.now(),
+          transactionDate: Date.now(),
+          receipt: "mock_receipt",
+        };
+
+        // Track successful purchase
+        logEvent(analytics, "iap_purchase_success", {
+          event_category: "billing",
+          event_label: "payment",
+          product_id: product.productId,
+          amount: product.price,
+          user_type: userType,
+          is_sandbox: true,
+        });
+
+        console.log("Mock purchase successful:", mockPurchase);
+        Alert.alert("Success", "Mock purchase completed successfully");
+        return;
+      }
+
+      const purchase = await requestSubscription({
+        sku: product.productId,
+        andDangerouslyFinishTransactionAutomaticallyIOS: false,
+      });
+
+      console.log("Purchase successful:", purchase);
+
+      // Track successful purchase
+      logEvent(analytics, "iap_purchase_success", {
+        event_category: "billing",
+        event_label: "payment",
+        product_id: product.productId,
+        amount: product.price,
+        user_type: userType,
+      });
+    } catch (error: any) {
+      console.error("IAP purchase error:", error);
+      setIapError(error.message || "Purchase failed");
+
+      // Track purchase error
+      logEvent(analytics, "iap_purchase_error", {
+        event_category: "billing",
+        event_label: "error",
+        error_message: error.message || "Unknown error",
+        product_id: product?.productId,
+        user_type: userType,
+      });
+
+      Alert.alert("Error", error.message || "Purchase failed");
+    } finally {
+      setProcessing(false);
+    }
   };
 
   return (
@@ -655,7 +806,12 @@ const BillingContainer: React.FC<BillingContainerProps> = ({
 
             <TouchableOpacity
               style={styles.payButton}
-              onPress={initiatePayment}
+              // before IAP
+              // onPress={initiatePayment}
+
+              onPress={
+                Platform.OS === "ios" ? initiateIAPPayment : initiatePayment
+              }
               disabled={processing}
             >
               {processing ? (
@@ -663,7 +819,12 @@ const BillingContainer: React.FC<BillingContainerProps> = ({
               ) : (
                 <View style={styles.row}>
                   <Text style={styles.payText}>
-                    Pay {formatCost(totalAmount)}
+                    {/* before IAP */}
+                    {/* Pay {formatCost(totalAmount)} */}
+                    Pay {product?.localizedPrice}
+                    {/* {Platform.OS === "ios" && product
+                      ? product.localizedPrice
+                      : formatCost(totalAmount)} */}
                   </Text>
                   <FAIcon
                     name="arrow-right"

@@ -7,10 +7,11 @@ import "../global.css";
 import ReduxProvider from "@/providers/ReduxProvider";
 import LayoutApp from "./_layoutApp";
 import useAppUpdate from "./helpers/checkUpdates";
+import { withIAPContext } from "react-native-iap";
 
 SplashScreen.preventAutoHideAsync();
 
-export default function RootLayout() {
+function RootLayout() {
   const { checkForUpdate } = useAppUpdate();
   // Function to calculate dynamic top margin based on screen dimensions and orientation
   // const calculateTopMargin = () => {
@@ -78,3 +79,5 @@ export default function RootLayout() {
     </ReduxProvider>
   );
 }
+
+export default withIAPContext(RootLayout);
