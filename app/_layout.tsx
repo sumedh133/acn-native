@@ -12,7 +12,7 @@ import { withIAPContext } from "react-native-iap";
 SplashScreen.preventAutoHideAsync();
 
 function RootLayout() {
-  const { checkForUpdate } = useAppUpdate();
+  const { checkForUpdate, alreadyPromptedOnce } = useAppUpdate();
   // Function to calculate dynamic top margin based on screen dimensions and orientation
   // const calculateTopMargin = () => {
   //   const { height, width } = Dimensions.get('window');
@@ -61,8 +61,9 @@ function RootLayout() {
       }
     );
     const interval = setInterval(() => {
+      alreadyPromptedOnce.current = false;
       checkUpdateStatus();
-    }, 3600000);
+    }, 43200000);
     return () => {
       clearInterval(interval);
       appStateChangeListener.remove();
