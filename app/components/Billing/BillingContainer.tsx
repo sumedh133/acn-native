@@ -453,7 +453,6 @@ const BillingContainer: React.FC<BillingContainerProps> = ({
                     </Text>
                   </View>
                 </View>
-                x
                 <Text style={styles.refundText}>
                   Non-refundable & Non-transferable.**
                 </Text>

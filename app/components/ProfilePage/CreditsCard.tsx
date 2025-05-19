@@ -67,7 +67,11 @@ const CreditsCard = ({
           <Text style={styles.creditsLabel}>Available Credits :</Text>
           <Text style={styles.creditsText}>{monthlyCredits}</Text>
         </View>
-        <TouchableOpacity style={styles.button} onPress={handleAddCredits}>
+        <TouchableOpacity
+          style={styles.button}
+          onPress={handleClick}
+          // onPress={handleAddCredits}
+        >
           <Text style={styles.buttonText}>Add Credits</Text>
         </TouchableOpacity>
       </View>
