@@ -1,7 +1,7 @@
 import { useEffect } from "react";
 import * as SplashScreen from "expo-splash-screen";
 import { SafeAreaProvider, SafeAreaView } from "react-native-safe-area-context";
-import { AppState, Dimensions } from "react-native";
+import { AppState, Dimensions, Platform } from "react-native";
 import "react-native-reanimated";
 import "../global.css";
 import ReduxProvider from "@/providers/ReduxProvider";
@@ -81,4 +81,4 @@ function RootLayout() {
   );
 }
 
-export default withIAPContext(RootLayout);
+export default Platform.OS === "ios" ? withIAPContext(RootLayout) : RootLayout;
