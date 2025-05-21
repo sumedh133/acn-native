@@ -67,7 +67,9 @@ const TrialStatusNotification: React.FC<TrialStatusNotificationProps> = ({
   const [credits, setCredits] = useState<number>(20);
   const agentData = useSelector((state: RootState) => state?.agent?.docData);
   const [showOnboarding, setShowOnboarding] = useState(false);
-  const userType = useSelector((state: RootState) => state?.agent?.docData?.userType) || "free";
+  const userType =
+    useSelector((state: RootState) => state?.agent?.docData?.userType) ||
+    "free";
 
   const calculateDaysLeft = (trialStartedAt: number): number => {
     try {
@@ -128,16 +130,16 @@ const TrialStatusNotification: React.FC<TrialStatusNotificationProps> = ({
 
       // Track trial status view
       try {
-        logEvent(analytics, 'trial_status_view', {
-          event_category: 'trial',
-          event_label: 'status',
+        logEvent(analytics, "trial_status_view", {
+          event_category: "trial",
+          event_label: "status",
           trial_status: trialStatus,
           days_left: calculatedDaysLeft,
           credits_remaining: agentData?.monthlyCredits,
-          user_type: userType
+          user_type: userType,
         });
       } catch (error) {
-        console.error('Error logging trial status view:', error);
+        console.error("Error logging trial status view:", error);
       }
     }
   }, [agentData]);
@@ -146,33 +148,34 @@ const TrialStatusNotification: React.FC<TrialStatusNotificationProps> = ({
 
   const handleDismiss = (): void => {
     try {
-      logEvent(analytics, 'dismiss_trial_notification', {
-        event_category: 'trial',
-        event_label: 'dismiss',
+      logEvent(analytics, "dismiss_trial_notification", {
+        event_category: "trial",
+        event_label: "dismiss",
         trial_status: status,
         days_left: daysLeft,
         credits_remaining: credits,
-        user_type: userType
+        user_type: userType,
       });
     } catch (error) {
-      console.error('Error logging notification dismiss:', error);
+      console.error("Error logging notification dismiss:", error);
     }
     setDismissed(true);
   };
 
   const handleNotificationClick = () => {
     try {
-      logEvent(analytics, 'trial_notification_click', {
-        event_category: 'trial',
-        event_label: 'click',
+      logEvent(analytics, "trial_notification_click", {
+        event_category: "trial",
+        event_label: "click",
         trial_status: status,
-        destination: status === TrialStatusType.TO_START ? 'onboarding' : 'compare_plans',
+        destination:
+          status === TrialStatusType.TO_START ? "onboarding" : "compare_plans",
         days_left: daysLeft,
         credits_remaining: credits,
-        user_type: userType
+        user_type: userType,
       });
     } catch (error) {
-      console.error('Error logging notification click:', error);
+      console.error("Error logging notification click:", error);
     }
 
     if (status === TrialStatusType.TO_START) {
@@ -184,28 +187,28 @@ const TrialStatusNotification: React.FC<TrialStatusNotificationProps> = ({
 
   const handleOnboardingComplete = () => {
     try {
-      logEvent(analytics, 'onboarding_complete_from_trial', {
-        event_category: 'trial',
-        event_label: 'onboarding',
+      logEvent(analytics, "onboarding_complete_from_trial", {
+        event_category: "trial",
+        event_label: "onboarding",
         trial_status: status,
-        user_type: userType
+        user_type: userType,
       });
     } catch (error) {
-      console.error('Error logging onboarding completion:', error);
+      console.error("Error logging onboarding completion:", error);
     }
     setShowOnboarding(false);
   };
 
   const handleOnboardingClose = () => {
     try {
-      logEvent(analytics, 'onboarding_close_from_trial', {
-        event_category: 'trial',
-        event_label: 'onboarding',
+      logEvent(analytics, "onboarding_close_from_trial", {
+        event_category: "trial",
+        event_label: "onboarding",
         trial_status: status,
-        user_type: userType
+        user_type: userType,
       });
     } catch (error) {
-      console.error('Error logging onboarding close:', error);
+      console.error("Error logging onboarding close:", error);
     }
     setShowOnboarding(false);
   };
@@ -230,7 +233,7 @@ const TrialStatusNotification: React.FC<TrialStatusNotificationProps> = ({
           iconBgColor: "#FFF8D4", // amber-400
           icon: <LowCreditsIcon height={40} width={40} />, // amber-800
           title: `Only ${credits} credits left`,
-          message: customMessage || `Add more credits or explore plans.`,
+          message: customMessage || `Upgrade to premium for more credits.`,
         } as NotificationConfig;
       case TrialStatusType.EXPIRING_SOON:
         return {
@@ -248,7 +251,7 @@ const TrialStatusNotification: React.FC<TrialStatusNotificationProps> = ({
           iconBgColor: "#FFF8D4", // amber-400
           icon: <LowCreditsIcon height={40} width={40} />, // amber-800
           title: `Out of credits!`,
-          message: customMessage || `Add more credits or explore plans.`,
+          message: customMessage || `Upgrade to premium for more credits.`,
         };
       case TrialStatusType.EXPIRED:
         return {

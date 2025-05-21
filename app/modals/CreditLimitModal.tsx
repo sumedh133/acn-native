@@ -1,5 +1,12 @@
 import React from "react";
-import { Modal, View, Text, TouchableOpacity, StyleSheet } from "react-native";
+import {
+  Modal,
+  View,
+  Text,
+  TouchableOpacity,
+  StyleSheet,
+  Platform,
+} from "react-native";
 import { Ionicons } from "@expo/vector-icons"; // Using Expo icons
 import { useSelector } from "react-redux";
 import { RootState } from "@/store/store";
@@ -27,55 +34,55 @@ const CreditLimitModal: React.FC<CreditLimitModalProps> = ({
   React.useEffect(() => {
     if (isVisible) {
       try {
-        logEvent(analytics, 'credit_limit_modal_show', {
-          event_category: 'modal',
-          event_label: 'credit_limit',
-          user_type: userType
+        logEvent(analytics, "credit_limit_modal_show", {
+          event_category: "modal",
+          event_label: "credit_limit",
+          user_type: userType,
         });
       } catch (error) {
-        console.error('Error logging modal show:', error);
+        console.error("Error logging modal show:", error);
       }
     }
   }, [isVisible]);
 
   const handleClose = () => {
     try {
-      logEvent(analytics, 'credit_limit_modal_close', {
-        event_category: 'modal',
-        event_label: 'credit_limit',
-        action: 'close',
-        user_type: userType
+      logEvent(analytics, "credit_limit_modal_close", {
+        event_category: "modal",
+        event_label: "credit_limit",
+        action: "close",
+        user_type: userType,
       });
     } catch (error) {
-      console.error('Error logging modal close:', error);
+      console.error("Error logging modal close:", error);
     }
     onClose();
   };
 
   const handleGoPremium = () => {
     try {
-      logEvent(analytics, 'credit_limit_action', {
-        event_category: 'modal',
-        event_label: 'credit_limit',
-        action: 'go_premium',
-        user_type: userType
+      logEvent(analytics, "credit_limit_action", {
+        event_category: "modal",
+        event_label: "credit_limit",
+        action: "go_premium",
+        user_type: userType,
       });
     } catch (error) {
-      console.error('Error logging go premium action:', error);
+      console.error("Error logging go premium action:", error);
     }
     onGoPremium();
   };
 
   const handleBuyCredits = () => {
     try {
-      logEvent(analytics, 'credit_limit_action', {
-        event_category: 'modal',
-        event_label: 'credit_limit',
-        action: 'buy_credits',
-        user_type: userType
+      logEvent(analytics, "credit_limit_action", {
+        event_category: "modal",
+        event_label: "credit_limit",
+        action: "buy_credits",
+        user_type: userType,
       });
     } catch (error) {
-      console.error('Error logging buy credits action:', error);
+      console.error("Error logging buy credits action:", error);
     }
     onBuyCredits();
   };
@@ -97,12 +104,14 @@ const CreditLimitModal: React.FC<CreditLimitModalProps> = ({
 
           <View style={styles.messageContainer}>
             <Text style={styles.message}>
-              Out of credits—top-up
-              {userType!=="premium" ? (
+              Out of credits—
+              {Platform.OS !== "ios" && "top - up"}
+              {userType !== "premium" ? (
                 <>
                   {" "}
-                  or go <Text style={styles.boldText}>Premium</Text> for
-                  unlimited enquiries.
+                  {Platform.OS !== "ios" ? "or go" : "Go"}{" "}
+                  <Text style={styles.boldText}>Premium</Text> for unlimited
+                  enquiries.
                 </>
               ) : (
                 <> for more enquiries.</>
@@ -111,7 +120,7 @@ const CreditLimitModal: React.FC<CreditLimitModalProps> = ({
           </View>
 
           <View style={styles.buttonContainer}>
-            {userType!== "premium"  && (
+            {userType !== "premium" && (
               <TouchableOpacity
                 style={styles.premiumButton}
                 onPress={handleGoPremium}
@@ -119,13 +128,14 @@ const CreditLimitModal: React.FC<CreditLimitModalProps> = ({
                 <Text style={styles.premiumButtonText}>Go Premium</Text>
               </TouchableOpacity>
             )}
-
-            <TouchableOpacity
-              style={styles.creditsButton}
-              onPress={handleBuyCredits}
-            >
-              <Text style={styles.creditsButtonText}>Buy Credits</Text>
-            </TouchableOpacity>
+            {Platform.OS !== "ios" && (
+              <TouchableOpacity
+                style={styles.creditsButton}
+                onPress={handleBuyCredits}
+              >
+                <Text style={styles.creditsButtonText}>Buy Credits</Text>
+              </TouchableOpacity>
+            )}
           </View>
         </View>
       </View>

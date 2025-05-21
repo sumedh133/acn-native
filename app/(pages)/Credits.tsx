@@ -264,76 +264,81 @@ const Credits = () => {
           </LinearGradient>
 
           {/* Buy More Credits Card */}
-          <View className="bg-white rounded-xl p-5 border border-gray-200">
-            <Text
-              className=" text-lg text-[#433F3E] mb-2"
-              style={{ fontFamily: "Montserrat_700Bold" }}
-            >
-              {Platform.OS === "ios"
-                ? "Enquiry Booster Pack"
-                : "Need more enquiries?"}
-            </Text>
-            <Text className="font-medium text-sm text-[#433F3E] mb-4">
-              {Platform.OS === "ios"
-                ? "Unlock agent contacts with 5 non-expiring credits"
-                : "Credits are needed to get agent's contact details on ACN Platform."}
-            </Text>
-
-            {Platform.OS === "ios" ? null : (
-              <View className="flex-row justify-between items-center mb-4">
-                <View>
-                  <Text
-                    className="font-heading text-[22px]  text-[#153E3B]"
-                    style={{ fontFamily: "Montserrat_700Bold" }}
-                  >
-                    ₹249
-                  </Text>
-                  <Text className="font-medium text-xs text-[#153E3B]">
-                    Price is all-inclusive**
-                  </Text>
-                </View>
-
-                <TouchableOpacity
-                  className="bg-[#153E3B] rounded-lg py-3.5 px-5"
-                  onPress={handleAddCredits}
-                >
-                  <Text
-                    className="text-white text-sm"
-                    style={{ fontFamily: "Montserrat_600SemiBold" }}
-                  >
-                    Add 5 Credits
-                  </Text>
-                </TouchableOpacity>
-              </View>
-            )}
-
-            <View className="bg-[#1B665D1A] rounded-lg p-3 flex-row justify-center items-center">
-              <View className="w-5 h-5 rounded-full bg-white border border-gray-300 justify-center items-center mr-2">
-                <Text className="text-xs text-[#757575]">i</Text>
-              </View>
-              <Text className="text-sm" style={{ fontFamily: "Lato_700Bold" }}>
-                5 credits = 5 fresh leads
+          {Platform.OS !== "ios" && (
+            <View className="bg-white rounded-xl p-5 border border-gray-200">
+              <Text
+                className=" text-lg text-[#433F3E] mb-2"
+                style={{ fontFamily: "Montserrat_700Bold" }}
+              >
+                {Platform.OS === "ios"
+                  ? "Enquiry Booster Pack"
+                  : "Need more enquiries?"}
               </Text>
-            </View>
+              <Text className="font-medium text-sm text-[#433F3E] mb-4">
+                {Platform.OS === "ios"
+                  ? "Unlock agent contacts with 5 non-expiring credits"
+                  : "Credits are needed to get agent's contact details on ACN Platform."}
+              </Text>
 
-            {Platform.OS === "ios" ? (
-              <View className="mt-4">
-                <Text className="text-sm">
-                  <Text className="font-bold">Note:</Text>{" "}
-                  <Text className="pl-2">
-                    Credit top-ups aren't available through the app. For
-                    assistance, please contact{" "}
+              {Platform.OS === "ios" ? null : (
+                <View className="flex-row justify-between items-center mb-4">
+                  <View>
                     <Text
-                      className="ml-2 text-[#007AFF] underline"
-                      onPress={handleSupportClick}
+                      className="font-heading text-[22px]  text-[#153E3B]"
+                      style={{ fontFamily: "Montserrat_700Bold" }}
                     >
-                      ACN Support.
+                      ₹249
                     </Text>
-                  </Text>
+                    <Text className="font-medium text-xs text-[#153E3B]">
+                      Price is all-inclusive**
+                    </Text>
+                  </View>
+
+                  <TouchableOpacity
+                    className="bg-[#153E3B] rounded-lg py-3.5 px-5"
+                    onPress={handleAddCredits}
+                  >
+                    <Text
+                      className="text-white text-sm"
+                      style={{ fontFamily: "Montserrat_600SemiBold" }}
+                    >
+                      Add 5 Credits
+                    </Text>
+                  </TouchableOpacity>
+                </View>
+              )}
+
+              <View className="bg-[#1B665D1A] rounded-lg p-3 flex-row justify-center items-center">
+                <View className="w-5 h-5 rounded-full bg-white border border-gray-300 justify-center items-center mr-2">
+                  <Text className="text-xs text-[#757575]">i</Text>
+                </View>
+                <Text
+                  className="text-sm"
+                  style={{ fontFamily: "Lato_700Bold" }}
+                >
+                  5 credits = 5 fresh leads
                 </Text>
               </View>
-            ) : null}
-          </View>
+
+              {Platform.OS === "ios" ? (
+                <View className="mt-4">
+                  <Text className="text-sm">
+                    <Text className="font-bold">Note:</Text>{" "}
+                    <Text className="pl-2">
+                      Credit top-ups aren't available through the app. For
+                      assistance, please contact{" "}
+                      <Text
+                        className="ml-2 text-[#007AFF] underline"
+                        onPress={handleSupportClick}
+                      >
+                        ACN Support.
+                      </Text>
+                    </Text>
+                  </Text>
+                </View>
+              ) : null}
+            </View>
+          )}
 
           {userType !== "premium" && (
             <View>
@@ -361,16 +366,19 @@ const Credits = () => {
             {myEnquiries &&
               myEnquiries.slice(0, 3).map((enquiry, index) => (
                 <View key={index} className="mb-3">
-                  <TouchableOpacity 
+                  <TouchableOpacity
                     onPress={() => {
                       try {
                         logEvent(analytics, "enquiry_item_click", {
                           event_category: "profile",
                           event_label: "enquiry_details",
                           source: "credits_page",
-                          property_name: enquiry.property?.nameOfTheProperty || "N/A",
-                          enquiry_date: enquiry.added ? formatUnixDate(enquiry.added) : "N/A",
-                          user_type: userType || "free"
+                          property_name:
+                            enquiry.property?.nameOfTheProperty || "N/A",
+                          enquiry_date: enquiry.added
+                            ? formatUnixDate(enquiry.added)
+                            : "N/A",
+                          user_type: userType || "free",
                         });
                       } catch (error) {
                         console.error("Error logging analytics:", error);

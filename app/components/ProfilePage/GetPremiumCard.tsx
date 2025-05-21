@@ -87,7 +87,7 @@ const GetPremiumCard = ({
             </Text>
             <Text className="text-white text-xl font-extrabold mt-1">
               {/* {Platform.OS !== 'ios' && */}
-                "₹10,000/year!"
+                ₹10,000/year!
               {/* } */}
             </Text>
           </View>
