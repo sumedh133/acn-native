@@ -44,23 +44,23 @@ const menuItems: MenuItem[] = [
     icon: <RequirementsIcon width={24} height={24} />,
     activeIcon: <ActiveRequirementsIcon width={24} height={24} />,
   },
-  // {
-  //   title: "Notifications",
-  //   path: "/NotificationPage",
-  //   icon: <NotificationIcon width={24} height={24} />,
-  //   activeIcon: <ActiveNotificationIcon width={24} height={24} />,
-  // },
-  {
-    title: "Dashboard",
-    path: "/dashboardTab",
-    icon: <DashboardIcon width={24} height={24} />,
-    activeIcon: <ActiveDashboardIcon width={24} height={24} />,
-  },
   {
     title: "",
     path: "/add",
     icon: <PlusIcon width={24} height={24} />,
     activeIcon: null,
+  },
+  {
+    title: "Notifications",
+    path: "/NotificationPage",
+    icon: <NotificationIcon width={24} height={24} />,
+    activeIcon: <ActiveNotificationIcon width={24} height={24} />,
+  },
+  {
+    title: "Dashboard",
+    path: "/dashboardTab",
+    icon: <DashboardIcon width={24} height={24} />,
+    activeIcon: <ActiveDashboardIcon width={24} height={24} />,
   },
 ];
 
@@ -69,7 +69,9 @@ const FooterNavigation = () => {
   const router = useRouter();
   const navigation = useNavigation();
   const { height } = Dimensions.get("window");
-  const userType = useSelector((state: RootState) => state?.agent?.docData?.userType) || "free";
+  const userType =
+    useSelector((state: RootState) => state?.agent?.docData?.userType) ||
+    "free";
 
   const [popupAnimationFlag, setPopupAnimationFlag] = useState<boolean>(false);
   const [showPopup, setShowPopup] = useState<boolean>(false);
@@ -91,17 +93,17 @@ const FooterNavigation = () => {
       return;
     }
     if (path === pathname) return;
-    
+
     try {
-      logEvent(analytics, 'footer_navigation', {
-        event_category: 'navigation',
-        event_label: 'footer',
+      logEvent(analytics, "footer_navigation", {
+        event_category: "navigation",
+        event_label: "footer",
         from_path: pathname,
         to_path: path,
-        user_type: userType
+        user_type: userType,
       });
     } catch (error) {
-      console.error('Error logging navigation:', error);
+      console.error("Error logging navigation:", error);
     }
 
     setTimeout(() => {
@@ -112,17 +114,17 @@ const FooterNavigation = () => {
   const handlePopupCardClick = (path: string) => {
     setPopupAnimationFlag(false);
     if (path === pathname) return;
-    
+
     try {
-      logEvent(analytics, 'popup_card_click', {
-        event_category: 'navigation',
-        event_label: 'popup',
+      logEvent(analytics, "popup_card_click", {
+        event_category: "navigation",
+        event_label: "popup",
         selected_path: path,
         from_path: pathname,
-        user_type: userType
+        user_type: userType,
       });
     } catch (error) {
-      console.error('Error logging popup card click:', error);
+      console.error("Error logging popup card click:", error);
     }
 
     navigateAtEndOfAnimation.current = path;
@@ -130,17 +132,17 @@ const FooterNavigation = () => {
 
   const handlePopupClick = () => {
     const newState = !popupAnimationFlag;
-    
+
     try {
-      logEvent(analytics, newState ? 'open_add_popup' : 'close_add_popup', {
-        event_category: 'interaction',
-        event_label: 'popup',
-        action: newState ? 'open' : 'close',
+      logEvent(analytics, newState ? "open_add_popup" : "close_add_popup", {
+        event_category: "interaction",
+        event_label: "popup",
+        action: newState ? "open" : "close",
         current_path: pathname,
-        user_type: userType
+        user_type: userType,
       });
     } catch (error) {
-      console.error('Error logging popup interaction:', error);
+      console.error("Error logging popup interaction:", error);
     }
 
     setPopupAnimationFlag(newState);

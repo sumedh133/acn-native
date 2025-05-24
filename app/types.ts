@@ -153,3 +153,14 @@ export interface ListingProperty extends Property {
   plotFacing?: string | null;
   // [key: string]: any;
 }
+
+export interface NotificationItem {
+  id: string;
+  addedTime: number;
+  cpId: string;
+  cta: string[];
+  body: string;
+  expiryTime: number;
+  title: string;
+  type: string;
+}

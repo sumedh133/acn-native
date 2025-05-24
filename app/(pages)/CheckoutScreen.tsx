@@ -22,6 +22,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import { updateAgentDocData } from '@/store/slices/agentSlice';
 import { logEvent } from "@react-native-firebase/analytics";
 import { analytics } from "../config/firebase";
+import { getUnixDateTime } from '../helpers/getUnixDateTime';
 
 
 type CheckoutScreenRouteProp = RouteProp<{
@@ -179,7 +180,7 @@ const CheckoutScreen: React.FC = () => {
       const agentSnap = await getDoc(agentRef);
       const agentData = agentSnap.data();
       
-      const now = new Date();
+      const now = getUnixDateTime();
       
       let planExpiry = new Date();
       planExpiry.setFullYear(planExpiry.getFullYear() + 1);
