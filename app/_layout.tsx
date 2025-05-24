@@ -1,16 +1,17 @@
 import { useEffect } from "react";
 import * as SplashScreen from "expo-splash-screen";
 import { SafeAreaProvider, SafeAreaView } from "react-native-safe-area-context";
-import { AppState, Dimensions } from "react-native";
+import { AppState, Dimensions, Platform } from "react-native";
 import "react-native-reanimated";
 import "../global.css";
 import ReduxProvider from "@/providers/ReduxProvider";
 import LayoutApp from "./_layoutApp";
 import useAppUpdate from "./helpers/checkUpdates";
+import { withIAPContext } from "react-native-iap";
 
 SplashScreen.preventAutoHideAsync();
 
-export default function RootLayout() {
+function RootLayout() {
   const { checkForUpdate, alreadyPromptedOnce } = useAppUpdate();
   // Function to calculate dynamic top margin based on screen dimensions and orientation
   // const calculateTopMargin = () => {
@@ -79,3 +80,5 @@ export default function RootLayout() {
     </ReduxProvider>
   );
 }
+
+export default Platform.OS === "ios" ? withIAPContext(RootLayout) : RootLayout;

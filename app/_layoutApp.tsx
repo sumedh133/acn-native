@@ -346,7 +346,7 @@ export default function LayoutApp() {
         <Stack.Screen
           name="(tabs)/billings"
           options={{ title: "Billing", headerBackVisible: true }}
-          initialParams={{ showFooter: false }}
+          initialParams={{ showFooter: false, showNotificationBanner: false }}
         />
         <Stack.Screen
           name="(tabs)/help"
@@ -442,7 +442,7 @@ export default function LayoutApp() {
             title: "Checkout",
             headerBackVisible: true,
           }}
-          initialParams={{ showFooter: false }}
+          initialParams={{ showFooter: false, showNotificationBanner: false }}
         />
         <Stack.Screen
           name="(pages)/PaymentRecords"

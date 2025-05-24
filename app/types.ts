@@ -82,7 +82,8 @@ export interface Coupon {
   name: string;
   code: string;
   description: string;
-  discount: number; // in rupees
+  discount_percent: number; // in percentage
+  // discount: number; // in rupees
   active: boolean;
 }
 

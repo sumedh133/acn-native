@@ -2,7 +2,7 @@ import RightArrowIcon from "@/assets/icons/svg/Common/ArrowRightIcon";
 import CoinIcon from "@/assets/icons/svg/Sidebar/CoinIcon";
 import { RootState } from "@/store/store";
 import React from "react";
-import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { Platform, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { useSelector } from "react-redux";
 import { analytics } from "@/app/config/firebase";
 import { logEvent } from "@react-native-firebase/analytics";
@@ -67,9 +67,15 @@ const CreditsCard = ({
           <Text style={styles.creditsLabel}>Available Credits :</Text>
           <Text style={styles.creditsText}>{monthlyCredits}</Text>
         </View>
-        <TouchableOpacity style={styles.button} onPress={handleAddCredits}>
-          <Text style={styles.buttonText}>Add Credits</Text>
-        </TouchableOpacity>
+        {Platform.OS != "ios" && (
+          <TouchableOpacity
+            style={styles.button}
+            onPress={handleClick}
+            // onPress={handleAddCredits}
+          >
+            <Text style={styles.buttonText}>Add Credits</Text>
+          </TouchableOpacity>
+        )}
       </View>
     </TouchableOpacity>
   );

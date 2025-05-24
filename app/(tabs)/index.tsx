@@ -8,9 +8,13 @@ import * as Notifications from "expo-notifications";
 // import * as Permissions from 'expo-permissions';
 import { RootState } from "@/store/store";
 import Offline from "../components/Offline";
-import messaging from '@react-native-firebase/messaging'
+import messaging from "@react-native-firebase/messaging";
 import { analytics } from "../config/firebase";
-import { logEvent, setUserId, setUserProperties } from "@react-native-firebase/analytics";
+import {
+  logEvent,
+  setUserId,
+  setUserProperties,
+} from "@react-native-firebase/analytics";
 import SessionTracker from "../services/SessionTracker";
 
 // Keep splash screen visible until explicitly hidden
@@ -23,13 +27,25 @@ export default function TabOneScreen() {
 
   const agentData = useSelector((state: RootState) => state?.agent?.docData);
   const userType = agentData?.userType || "free";
-  const userName = agentData?.name || '';
+  const userName = agentData?.name || "";
 
-  const userPhoneNumber = useSelector((state: RootState) => state.agent.phonenumber);
+  const userPhoneNumber = useSelector(
+    (state: RootState) => state.agent.phonenumber
+  );
+
+  // Get authentication status from Redux
+  const isAuthenticated = useSelector(
+    (state: RootState) => state.auth.isAuthenticated
+  );
+
+  const isConnectedToInternet = useSelector(
+    (state: RootState) => state.app.isConnectedToInternet
+  );
+
   // Initialize session tracking
   useEffect(() => {
     const sessionTracker = SessionTracker.getInstance();
-    sessionTracker.setUserInfo(userType, userPhoneNumber || '', userName);
+    sessionTracker.setUserInfo(userType, userPhoneNumber || "", userName);
 
     return () => {
       sessionTracker.cleanup();
@@ -39,13 +55,13 @@ export default function TabOneScreen() {
   // Track initial app launch
   useEffect(() => {
     try {
-      logEvent(analytics, 'app_launch', {
-        event_category: 'app',
-        event_label: 'launch',
-        user_type: userType
+      logEvent(analytics, "app_launch", {
+        event_category: "app",
+        event_label: "launch",
+        user_type: userType,
       });
     } catch (error) {
-      console.error('Error logging app launch:', error);
+      console.error("Error logging app launch:", error);
     }
   }, [userType]);
 
@@ -53,18 +69,20 @@ export default function TabOneScreen() {
     if (userPhoneNumber) {
       setUserId(analytics, userPhoneNumber);
     }
-  }, [userPhoneNumber]);
+  }, [isAuthenticated, userPhoneNumber]);
 
   // user name as a custom param and can add more details to log for the user.
   try {
-    const userName = useSelector((state: RootState) => state.agent.docData.name);
+    const userName = useSelector(
+      (state: RootState) => state.agent.docData.name
+    );
     const customParams = { user_name: userName };
     useEffect(() => {
       if (userName) {
         setUserProperties(analytics, customParams);
       }
-    }, [customParams]);
-  } catch {}  
+    }, [isAuthenticated, customParams]);
+  } catch {}
 
   // useEffect(() => {
   //   // Function to request permission and get the token
@@ -83,15 +101,6 @@ export default function TabOneScreen() {
   //   getPushNotificationPermission();
   // }, []);
 
-  // Get authentication status from Redux
-  const isAuthenticated = useSelector(
-    (state: RootState) => state.auth.isAuthenticated,
-  );
-
-  const isConnectedToInternet = useSelector(
-    (state: RootState) => state.app.isConnectedToInternet,
-  );
-
   // Handle navigation based on auth state once store is ready
   useEffect(() => {
     if (isStoreReady) {
@@ -101,22 +110,22 @@ export default function TabOneScreen() {
       // Track navigation based on auth status
       try {
         if (isAuthenticated) {
-          logEvent(analytics, 'auth_redirect', {
-            event_category: 'authentication',
-            event_label: 'authenticated',
-            destination: 'properties',
-            user_type: userType
+          logEvent(analytics, "auth_redirect", {
+            event_category: "authentication",
+            event_label: "authenticated",
+            destination: "properties",
+            user_type: userType,
           });
           router.replace("/(tabs)/properties");
         } else {
-          logEvent(analytics, 'landing_page_view', {
-            event_category: 'authentication',
-            event_label: 'unauthenticated',
-            user_type: 'guest'
+          logEvent(analytics, "landing_page_view", {
+            event_category: "authentication",
+            event_label: "unauthenticated",
+            user_type: "guest",
           });
         }
       } catch (error) {
-        console.error('Error logging auth state:', error);
+        console.error("Error logging auth state:", error);
       }
     }
   }, [isStoreReady, isAuthenticated, router, userType]);
@@ -125,13 +134,13 @@ export default function TabOneScreen() {
   useEffect(() => {
     if (!isConnectedToInternet) {
       try {
-        logEvent(analytics, 'offline_state', {
-          event_category: 'connectivity',
-          event_label: 'offline',
-          user_type: userType
+        logEvent(analytics, "offline_state", {
+          event_category: "connectivity",
+          event_label: "offline",
+          user_type: userType,
         });
       } catch (error) {
-        console.error('Error logging offline state:', error);
+        console.error("Error logging offline state:", error);
       }
     }
   }, [isConnectedToInternet, userType]);
@@ -146,19 +155,19 @@ export default function TabOneScreen() {
     return null;
   }
 
-  messaging().setBackgroundMessageHandler(async remoteMessage => {
+  messaging().setBackgroundMessageHandler(async (remoteMessage) => {
     try {
-      logEvent(analytics, 'background_notification', {
-        event_category: 'notifications',
-        event_label: 'background',
-        notification_type: remoteMessage?.data?.type || 'unknown',
-        user_type: userType
+      logEvent(analytics, "background_notification", {
+        event_category: "notifications",
+        event_label: "background",
+        notification_type: remoteMessage?.data?.type || "unknown",
+        user_type: userType,
       });
     } catch (error) {
-      console.error('Error logging background notification:', error);
+      console.error("Error logging background notification:", error);
     }
-    console.log('', remoteMessage)
-  })
+    console.log("", remoteMessage);
+  });
 
   if (!isConnectedToInternet) return <Offline />;
 

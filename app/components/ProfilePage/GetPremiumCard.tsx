@@ -43,10 +43,14 @@ const GetPremiumCard = ({
     if (!trialUsed) {
       setShowOnboarding(true);
     } else {
-      router.push({
-        pathname: "/CheckoutScreen",
-        params: { planId: "premium" },
-      });
+      if (Platform.OS !== "ios") {
+            router.push({
+              pathname: "/CheckoutScreen",
+              params: { planId: "premium" },
+            });
+          } else {
+            router.push("/billings");
+          }
     }
   };
 
@@ -82,7 +86,9 @@ const GetPremiumCard = ({
               ACN Premium
             </Text>
             <Text className="text-white text-xl font-extrabold mt-1">
-              {Platform.OS !== 'ios' && "₹10,000/year!"}
+              {/* {Platform.OS !== 'ios' && */}
+                ₹10,000/year!
+              {/* } */}
             </Text>
           </View>
           <View className="justify-center">
@@ -111,7 +117,7 @@ const GetPremiumCard = ({
           </View>
         </View>
 
-        {Platform.OS !== 'ios' ? (
+        {/* {Platform.OS !== 'ios' ? ( */}
           <TouchableOpacity
             className=" py-3 rounded-md mb-2 bg-white"
             onPress={handleStartTrial}
@@ -123,21 +129,27 @@ const GetPremiumCard = ({
               {!trialUsed ? "1 month free trial" : 'Get Premium'}
             </Text>
           </TouchableOpacity>
-        ) : null}
+        {/* ) : null} */}
 
         <TouchableOpacity
-          className={`flex-row justify-center items-center gap-1 ${
-            Platform.OS === 'ios' ? "bg-white  py-3 rounded-md mb-2" : "text-white"
-          }`}
+          className={`flex-row justify-center items-center gap-1 text-white`}
+          // ${Platform.OS === 'ios' ? "bg-white  py-3 rounded-md mb-2" : "text-white"}
           onPress={handleComparePlans}
         >
-          <Text className={`text-sm ${Platform.OS === 'ios' ? "text-[#10302D]" : "text-white"}`} style={{ fontFamily: "Lato_700Bold" }}>
-            { Platform.OS === 'ios' ? "View Details" : "Compare Plans"}
+          <Text
+            className={`text-sm text-white`}
+            // ${Platform.OS === 'ios' ? "text-[#10302D]" : "text-white"}
+            style={{ fontFamily: "Lato_700Bold" }}
+          >
+            {/* {Platform.OS === 'ios' ? "View Details" : */}
+              Compare Plans
+            {/* } */}
           </Text>
           <Ionicons
             name="arrow-forward"
             size={18}
-            color={Platform.OS === 'ios' ? "#10302D" : "white"}
+            color={"white"}
+            // Platform.OS === 'ios' ? "#10302D" : "white"
           />
         </TouchableOpacity>
       </LinearGradient>
