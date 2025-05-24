@@ -14,6 +14,9 @@ import Svg, { G, Path, Polyline } from "react-native-svg";
 import { useDoubleBackPressExit } from "@/hooks/useDoubleBackPressExit";
 import { analytics } from "@/app/config/firebase";
 import { logEvent } from "@react-native-firebase/analytics";
+import { logOut } from "@/store/slices/authSlice";
+import { useDispatch } from "react-redux";
+import { AnyAction, ThunkDispatch } from "@reduxjs/toolkit";
 
 const { width, height } = Dimensions.get("window");
 
@@ -108,6 +111,7 @@ const BidirectionalArrowIcon = () => (
 
 export default function LandingPage() {
   const router = useRouter();
+  const dispatch = useDispatch<ThunkDispatch<RootState, unknown, AnyAction>>();
   const isAuthenticated = useSelector(
     (state: RootState) => state.auth.isAuthenticated,
   );
@@ -126,7 +130,7 @@ export default function LandingPage() {
     }
   }, [isAuthenticated, userType]);
 
-  const handleNavigate = () => {
+  const handleNavigate = async () => {
     try {
       logEvent(analytics, 'landing_page_navigation', {
         event_category: 'auth',
@@ -140,6 +144,7 @@ export default function LandingPage() {
     }
 
     if (!isAuthenticated) {
+      await dispatch(logOut());
       router.replace("/components/Auth/Signin");
     } else {
       router.replace("/(tabs)/properties");
