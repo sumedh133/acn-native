@@ -15,7 +15,10 @@ const notificationTypeConfig: Record<
     defaultCta: ["View", "Reply"],
   },
   "new-feature-alert": { icon: "star-outline", color: "#f59e42" },
-  "enquiry-success": { icon: "check-circle-outline", color: "#22C55E" },
+  enquiry_buyer_notification: {
+    icon: "check-circle-outline",
+    color: "#22C55E",
+  },
   "going-to-be-delisted-alert": {
     icon: "alert-outline",
     color: "#fbbf24",
@@ -35,21 +38,36 @@ const notificationTypeConfig: Record<
 
 interface NotificationCardProps {
   notification: NotificationItem;
+  addedTime: number;
   onCtaPress?: (action: string, notification: NotificationItem) => void;
 }
 
 const NotificationCard: React.FC<NotificationCardProps> = ({
   notification,
   onCtaPress,
+  addedTime,
 }) => {
   const config = notificationTypeConfig[notification.type] || {
     icon: "bell-outline",
     color: "#888",
   };
+
+  const getTimeAgo = (timestamp: number) => {
+    const now = Math.floor(Date.now() / 1000);
+    const diff = now - timestamp;
+
+    if (diff < 60) return "just now";
+    if (diff < 3600) return `${Math.floor(diff / 60)}m ago`;
+    if (diff < 86400) return `${Math.floor(diff / 3600)}h ago`;
+    return `${Math.floor(diff / 86400)}d ago`;
+  };
+
   const ctaButtons =
-    notification.cta && notification.cta.length > 0
+    Array.isArray(notification.cta) && notification.cta.length > 0
       ? notification.cta
-      : config.defaultCta || [];
+      : Array.isArray(config.defaultCta)
+      ? config.defaultCta
+      : [];
 
   return (
     <View
@@ -58,6 +76,7 @@ const NotificationCard: React.FC<NotificationCardProps> = ({
         backgroundColor: "#fff",
         borderRadius: 10,
         marginVertical: 6,
+        // marginBottom: 70,
         padding: 16,
         alignItems: "flex-start",
       }}
@@ -123,7 +142,10 @@ const NotificationCard: React.FC<NotificationCardProps> = ({
           </View>
         )}
       </View>
-      <TouchableOpacity style={{ padding: 4, marginLeft: 2 }}>
+      <Text style={{ fontSize: 12, color: "#666", right: 0 }}>
+        {getTimeAgo(addedTime)}
+      </Text>
+      <TouchableOpacity style={{ paddingTop: 54, marginLeft: 2 }}>
         <MaterialIcons name="more-horiz" size={20} color="#6B7280" />
       </TouchableOpacity>
     </View>

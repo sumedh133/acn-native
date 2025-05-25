@@ -163,4 +163,6 @@ export interface NotificationItem {
   expiryTime: number;
   title: string;
   type: string;
+  propertyId?: string;
+  [key: string]: any;
 }

@@ -28,11 +28,12 @@ xi. Requirement Submitted
 
 ## 3. Database Fields per Notification Type
 
-### a. Enquiry Sent
+### a. Enquiry Sent -> `enquiry_buyer_notification`
 
 - `propertyId` – ID of the property enquired on
+- `nameOfTheProperty` - Name of the property enquired on
 
-### b. Enquiry Received
+### b. Enquiry Received -> `enquiry_seller_notification`
 
 - `propertyId` – ID of the property
 - `name` – Name of the user who enquired
@@ -43,24 +44,24 @@ xi. Requirement Submitted
 
 - No extra fields required
 
-### d. Going to be De-listed
+### d. Going to be De-listed -> `delisting_notification`
 
 - `propertyId` – Property to be de-listed
 - `days` – Number of days left (3, 2, 1...)
 - `cta` – Options: Make Available, Sold
 
-### e. Property De-listed
+### e. Property De-listed -> `delistied_notification`
 
 - `propertyId` – ID of the de-listed property
 - `cta` – Options: Call your KAM, Go to Dashboard
 
-### f. Inventory Became Live
+### f. Inventory Became Live -> `listing_live_notification`
 
 - `propertyId` – ID of the property
 - `nameOfTheProperty` – Property name
 - `cta` – View Details (redirect to property details page)
 
-### g. Status Other Than Live
+### g. Status Other Than Live -> `qc_notification`
 
 - `propertyId`
 - `nameOfTheProperty`
@@ -82,11 +83,11 @@ xi. Requirement Submitted
 
 - `requirementId` – ID of the requirement
 
-### l. Free Trial Ended
+### l. Free Trial Ended -> `trial_ended_notification`
 
 - `cta` – Get Premium, Compare Plans
 
-### m. Trial Expires in X Days
+### m. Trial Expires in X Days -> `trial_notification`
 
 - `cta` – Properties, Add New Inventories
 
