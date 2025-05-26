@@ -30,12 +30,12 @@ import {
   PurchaseError,
   getAvailablePurchases,
   finishTransaction,
-} from 'react-native-iap';
+} from "react-native-iap";
 
 import { formatCost } from "../../helpers/common.js";
 import { useSelector } from "react-redux";
 import { RootState } from "@/store/store.js";
-import { Coupon } from "@/app/types.js";
+import { Coupon, SubscriptionPlan } from "@/app/types.js";
 import { doc, onSnapshot } from "firebase/firestore";
 import { db } from "@/app/config/firebase";
 import {
@@ -47,6 +47,7 @@ import CloseIcon from "@/assets/icons/svg/CloseIcon";
 import { WebViewNavigationEvent } from "react-native-webview/lib/RNCWebViewNativeComponent.js";
 import { analytics } from "@/app/config/firebase";
 import { logEvent } from "@react-native-firebase/analytics";
+import { RouteProp, useRoute } from "@react-navigation/native";
 
 if (
   Platform.OS === "android" &&
@@ -59,20 +60,31 @@ type BillingContainerProps = {
   onOpenBusinessModal: () => void;
 };
 
+type BillingContainerRouteProp = RouteProp<{
+  BillingContainer: {
+    planId?: string;
+  };
+}>;
+
 const BillingContainer: React.FC<BillingContainerProps> = ({
   onOpenBusinessModal,
 }) => {
+  const route = useRoute<BillingContainerRouteProp>();
+  const planId = route.params?.planId || "premium";
+
+  const [availablePlans, setAvailablePlans] = useState<SubscriptionPlan[]>([]);
+  const [selectedPlan, setSelectedPlan] = useState<SubscriptionPlan>();
+
   const redirectUrl = "https://acnonline.in/billing";
   const [processing, setProcessing] = useState(false);
   const scrollRef = useRef<ScrollView>(null);
-  const [showKeyBenefits, setShowKeyBenefits] = useState(false);
 
   // did not exist before IAP, next 3 lines
   const [product, setProduct] = useState<any>(null);
   const [iapError, setIapError] = useState<string | null>(null);
   const [isIAPInitialized, setIsIAPInitialized] = useState(false);
 
-  const originalAmount = 8474;
+  const [originalAmount, setOriginalAmount] = useState(0);
   const [discountAmount, setDiscountAmount] = useState(0);
   const [taxAmount, setTaxAmount] = useState(
     parseFloat((originalAmount * 0.18).toFixed(2))
@@ -80,15 +92,42 @@ const BillingContainer: React.FC<BillingContainerProps> = ({
   const [totalAmount, setTotalAmount] = useState(originalAmount + taxAmount);
 
   useEffect(() => {
+    if (!db) return;
+
+    const unsubscribe = onSnapshot(
+      doc(db, "admin", "subscriptionPlans"),
+      (docSnap) => {
+        if (docSnap.exists()) {
+          const data = docSnap.data();
+          if (data && Array.isArray(data.plans)) {
+            setAvailablePlans(data.plans);
+          }
+        }
+      }
+    );
+
+    return () => unsubscribe();
+  }, []);
+
+  useEffect(() => {
+    const plan = availablePlans.find((p) => p.id === planId);
+    setSelectedPlan(plan);
+    setOriginalAmount(plan?.productPrice!);
+  }, [planId, availablePlans]);
+
+  useEffect(() => {
     const tax = parseFloat(
-      ((originalAmount - discountAmount) * 0.18).toFixed(2)
+      (
+        (originalAmount - discountAmount) *
+        (selectedPlan?.taxPercentage! / 100)
+      ).toFixed(2)
     );
     setTaxAmount(tax);
     // const newAmount = originalAmount - discountAmount + tax;
     let newAmount = Math.round(originalAmount - discountAmount + tax);
     // if (discountAmount == 0) { newAmount += 1 }
     setTotalAmount(newAmount);
-  }, [discountAmount]);
+  }, [discountAmount, originalAmount]);
 
   const businessName =
     useSelector((state: RootState) => state?.agent?.docData?.businessName) ||
@@ -117,24 +156,6 @@ const BillingContainer: React.FC<BillingContainerProps> = ({
       console.error("Error logging page view:", error);
     }
   }, []);
-
-  const toggleKeyBenefits = () => {
-    LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
-    setShowKeyBenefits((prev) => {
-      const newState = !prev;
-      try {
-        logEvent(analytics, "toggle_key_benefits", {
-          event_category: "billing",
-          event_label: "interaction",
-          new_state: newState ? "expanded" : "collapsed",
-          user_type: userType,
-        });
-      } catch (error) {
-        console.error("Error logging key benefits toggle:", error);
-      }
-      return newState;
-    });
-  };
 
   const [allCoupons, setAllCoupons] = useState<Coupon[] | []>([]);
   const [couponCode, setCouponCode] = useState("");
@@ -357,8 +378,12 @@ const BillingContainer: React.FC<BillingContainerProps> = ({
     }
 
     const match =
-      allCoupons?.find((item) => item?.code === couponCode && item.active) ||
-      null;
+      allCoupons?.find(
+        (item) =>
+          item?.code === couponCode &&
+          item.active &&
+          item.plansApplicable.includes(planId)
+      ) || null;
 
     try {
       logEvent(analytics, "apply_coupon", {
@@ -397,23 +422,6 @@ const BillingContainer: React.FC<BillingContainerProps> = ({
     setMatchedCoupon(null);
     setCouponCode("");
     showInfoToast("Coupon Removed");
-  };
-
-  const benefitIcons: Record<
-    | "earth"
-    | "file-cloud"
-    | "message-text-outline"
-    | "shield-check"
-    | "whatsapp"
-    | "headset",
-    string
-  > = {
-    earth: "globe",
-    "file-cloud": "cloud",
-    "message-text-outline": "comment",
-    "shield-check": "shield-alt",
-    whatsapp: "whatsapp",
-    headset: "headphones",
   };
 
   // did not exist before IAP
@@ -508,102 +516,49 @@ const BillingContainer: React.FC<BillingContainerProps> = ({
             <View style={styles.card}>
               <View style={styles.header}>
                 <Text style={styles.title}>
-                  ACN Premium{"\n"}
-                  <Text style={styles.subtext}>1 Premium Account</Text>
+                  {selectedPlan?.productName}
+                  {"\n"}
+                  <Text style={styles.subtext}>
+                    {selectedPlan?.productDescription}
+                  </Text>
                 </Text>
                 <Text style={styles.costText}>
-                  {formatCost(originalAmount)}/yr{"\n"}
-                  <Text style={styles.subtext}>For 12 Month</Text>
+                  {formatCost(originalAmount)}
+                  {"\n"}
+                  <Text style={styles.subtext}>
+                    {selectedPlan?.validityPeriod &&
+                      `For ${selectedPlan?.validityPeriod}`}
+                  </Text>
                 </Text>
               </View>
 
-              {/* <Text style={styles.description}>
-                Get full access to <Text style={styles.bold}>ACN</Text> with a
-                mandatory{" "}
-                <Text style={styles.regular}>12-month subscription</Text>,
-                allowing verified agents to list, manage, and inquire about
-                resale inventories while connecting with a trusted real estate
-                network.
-              </Text>
-
-              <View style={styles.keyBenefitsSection}>
-                <View style={styles.keyBenefitsHeader}>
-                  <Text style={styles.keyBenefitsTitle}>KEY BENEFITS</Text>
-                  <TouchableOpacity
-                    onPress={toggleKeyBenefits}
-                    style={styles.keyBenefitsTitle}
-                  >
-                    <FA5Icon
-                      name="chevron-down"
-                      size={24}
-                      style={[
-                        styles.arrowIcon,
-                        showKeyBenefits && styles.arrowIconRotated,
-                      ]}
-                    />
-                  </TouchableOpacity>
-                </View>
-
-                {showKeyBenefits && (
-                  <View style={styles.benefitsList}>
-                    {[
-                      { icon: "earth", label: "Exclusive Access" },
-                      { icon: "file-cloud", label: "Post & Manage Listings" },
-                      {
-                        icon: "message-text-outline",
-                        label: "On-demand Enquiries",
-                      },
-                      { icon: "shield-check", label: "Verified Network" },
-                      { icon: "whatsapp", label: "WhatsApp Community" },
-                      { icon: "headset", label: "Priority Support" },
-                    ].map((item, index) => (
-                      <View key={index} style={styles.benefitItem}>
-                        <View style={styles.iconContainer}>
-                          <FA5Icon
-                            name={
-                              benefitIcons[
-                                item.icon as keyof typeof benefitIcons
-                              ]
-                            }
-                            size={20}
-                          />
-                        </View>
-                        <Text style={styles.benefitText}>{item.label}</Text>
-                      </View>
-                    ))}
+              <View style={styles.validitySection}>
+                {selectedPlan?.id === "premium" && (
+                  <View style={styles.validityView}>
+                    <View style={styles.validityLine}>
+                      <View className="w-4 h-4 rounded-full bg-gray-900"></View>
+                      <Text>Today: 100 Credits per month for a year</Text>
+                    </View>
+                    <View className="w-0.5 h-[14px] bg-gray-900 ml-[7px]"></View>
+                    <View style={styles.validityLine}>
+                      <View className="w-4 h-4 rounded-full bg-transparent border-2 border-gray-900"></View>
+                      <Text>
+                        Valid till{" "}
+                        {(() => {
+                          const futureDate = new Date(
+                            Date.now() + 365 * 24 * 60 * 60 * 1000
+                          );
+                          const day = futureDate.getDate();
+                          const month = futureDate.toLocaleString("en-US", {
+                            month: "short",
+                          });
+                          const year = futureDate.getFullYear();
+                          return `${day} ${month} ${year}`;
+                        })()}
+                      </Text>
+                    </View>
                   </View>
                 )}
-              </View> */}
-
-              <View style={styles.validitySection}>
-                {/* <Text style={styles.validityText}>
-                  Validity: <Text style={styles.bold}>12 Months</Text> from the
-                  date of activation.
-                </Text> */}
-                <View style={styles.validityView}>
-                  <View style={styles.validityLine}>
-                    <View className="w-4 h-4 rounded-full bg-gray-900"></View>
-                    <Text>Today: 100 Credits per month for a year</Text>
-                  </View>
-                  <View className="w-0.5 h-[14px] bg-gray-900 ml-[7px]"></View>
-                  <View style={styles.validityLine}>
-                    <View className="w-4 h-4 rounded-full bg-transparent border-2 border-gray-900"></View>
-                    <Text>
-                      Valid till{" "}
-                      {(() => {
-                        const futureDate = new Date(
-                          Date.now() + 365 * 24 * 60 * 60 * 1000
-                        );
-                        const day = futureDate.getDate();
-                        const month = futureDate.toLocaleString("en-US", {
-                          month: "short",
-                        });
-                        const year = futureDate.getFullYear();
-                        return `${day} ${month} ${year}`;
-                      })()}
-                    </Text>
-                  </View>
-                </View>
                 <Text style={styles.refundText}>
                   Non-refundable & Non-transferable.**
                 </Text>
@@ -655,46 +610,48 @@ const BillingContainer: React.FC<BillingContainerProps> = ({
             )}
 
             {/* coupon container */}
-            <View style={styles.couponContainer}>
-              <Text style={styles.heading}>Coupon code</Text>
-              <Text style={styles.couponSubtext}>
-                Have a coupon? Enter the code here to avail discounts!
-              </Text>
+            {planId != "booster" && (
+              <View style={styles.couponContainer}>
+                <Text style={styles.heading}>Coupon code</Text>
+                <Text style={styles.couponSubtext}>
+                  Have a coupon? Enter the code here to avail discounts!
+                </Text>
 
-              {!matchedCoupon ? (
-                <View style={styles.inputRow}>
-                  <TextInput
-                    value={couponCode}
-                    onChangeText={setCouponCode}
-                    placeholder="Coupon code"
-                    style={styles.input}
-                    placeholderTextColor="#747474"
-                  />
-                  <TouchableOpacity
-                    style={styles.applyBtn}
-                    onPress={applyCoupon}
-                  >
-                    <Text style={styles.applyText}>Apply</Text>
-                  </TouchableOpacity>
-                </View>
-              ) : (
-                <View style={styles.couponRow}>
-                  <View style={styles.appliedCoupon}>
-                    <FAIcon name="tag" size={20} style={styles.icon} />
-                    <Text style={styles.couponCodeText} numberOfLines={1}>
-                      {matchedCoupon.code}
-                    </Text>
+                {!matchedCoupon ? (
+                  <View style={styles.inputRow}>
+                    <TextInput
+                      value={couponCode}
+                      onChangeText={setCouponCode}
+                      placeholder="Coupon code"
+                      style={styles.input}
+                      placeholderTextColor="#747474"
+                    />
+                    <TouchableOpacity
+                      style={styles.applyBtn}
+                      onPress={applyCoupon}
+                    >
+                      <Text style={styles.applyText}>Apply</Text>
+                    </TouchableOpacity>
                   </View>
-                  <TouchableOpacity
-                    style={styles.removeBtn}
-                    onPress={removeCoupon}
-                  >
-                    <CloseIcon width={20} height={20} />
-                    <Text style={styles.removeText}>Remove</Text>
-                  </TouchableOpacity>
-                </View>
-              )}
-            </View>
+                ) : (
+                  <View style={styles.couponRow}>
+                    <View style={styles.appliedCoupon}>
+                      <FAIcon name="tag" size={20} style={styles.icon} />
+                      <Text style={styles.couponCodeText} numberOfLines={1}>
+                        {matchedCoupon.code}
+                      </Text>
+                    </View>
+                    <TouchableOpacity
+                      style={styles.removeBtn}
+                      onPress={removeCoupon}
+                    >
+                      <CloseIcon width={20} height={20} />
+                      <Text style={styles.removeText}>Remove</Text>
+                    </TouchableOpacity>
+                  </View>
+                )}
+              </View>
+            )}
 
             {/* order container */}
             <View style={styles.orderContainer}>
@@ -705,7 +662,7 @@ const BillingContainer: React.FC<BillingContainerProps> = ({
                 <View style={styles.paymentBreakdown}>
                   <View>
                     <View style={styles.rowBetween}>
-                      <Text style={styles.label}>Annual membership</Text>
+                      <Text style={styles.label}>{selectedPlan?.product}</Text>
                       <Text style={styles.value}>
                         {/* {matchedCoupon
                           ? formatCost(originalAmount)
@@ -713,9 +670,11 @@ const BillingContainer: React.FC<BillingContainerProps> = ({
                         {formatCost(originalAmount)}
                       </Text>
                     </View>
-                    <Text style={styles.orderDescription}>
-                      Valid for 12 months
-                    </Text>
+                    {selectedPlan?.validityPeriod && (
+                      <Text style={styles.orderDescription}>
+                        Valid for {selectedPlan?.validityPeriod}
+                      </Text>
+                    )}
                   </View>
 
                   {matchedCoupon && (
@@ -734,7 +693,9 @@ const BillingContainer: React.FC<BillingContainerProps> = ({
 
                   <View>
                     <View style={styles.rowBetween}>
-                      <Text style={styles.label}>GST 18%</Text>
+                      <Text style={styles.label}>
+                        GST {selectedPlan?.taxPercentage}%
+                      </Text>
                       <Text style={styles.value}>{formatCost(taxAmount)}</Text>
                     </View>
                   </View>

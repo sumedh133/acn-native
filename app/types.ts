@@ -85,6 +85,7 @@ export interface Coupon {
   discount_percent: number; // in percentage
   // discount: number; // in rupees
   active: boolean;
+  plansApplicable: string[];
 }
 
 export interface Landmark {
@@ -152,4 +153,15 @@ export interface ListingProperty extends Property {
   extraRoom?: string[] | null;
   plotFacing?: string | null;
   // [key: string]: any;
+}
+
+export interface SubscriptionPlan {
+  id: string;
+  product: string;
+  productDescription: string;
+  productDescriptionDesktop: string;
+  productName: string;
+  productPrice: number;
+  taxPercentage: number;
+  validityPeriod: string;
 }
