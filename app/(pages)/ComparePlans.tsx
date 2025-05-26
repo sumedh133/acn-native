@@ -37,7 +37,7 @@ const ComparePlans = () => {
         event_label: "page_view",
         platform: Platform.OS,
         user_type: userType,
-        trial_used: agentData?.trialUsed || false
+        trial_used: agentData?.trialUsed || false,
       });
     } catch (error) {
       console.error("Error logging page view:", error);
@@ -55,7 +55,7 @@ const ComparePlans = () => {
         price: "10000",
         currency: "INR",
         billing_period: "yearly",
-        user_type: userType
+        user_type: userType,
       });
     } catch (error) {
       console.error("Error logging premium plan click:", error);
@@ -67,7 +67,11 @@ const ComparePlans = () => {
         params: { planId: "premium" },
       });
     } else {
-      router.push("/billings");
+      // router.push("/billings");
+      router.push({
+        pathname: "/billings",
+        params: { planId: "premium" },
+      });
     }
   };
 
@@ -77,7 +81,7 @@ const ComparePlans = () => {
         event_category: "plans",
         event_label: "free_trial",
         platform: Platform.OS,
-        user_type: userType
+        user_type: userType,
       });
     } catch (error) {
       console.error("Error logging trial start:", error);
@@ -92,7 +96,7 @@ const ComparePlans = () => {
         event_label: "support",
         platform: Platform.OS,
         source: "compare_plans",
-        user_type: userType
+        user_type: userType,
       });
     } catch (error) {
       console.error("Error logging support click:", error);
@@ -254,36 +258,36 @@ const ComparePlans = () => {
                 </Text>
 
                 {/* {Platform.OS !== "ios" && ( */}
-                  <View className="flex flex-row items-end mb-4 gap-2">
+                <View className="flex flex-row items-end mb-4 gap-2">
+                  <Text
+                    style={{ fontFamily: "Montserrat_700Bold" }}
+                    className={`text-3xl  ${
+                      index === 0 ? "text-[#111827]" : "text-white"
+                    }`}
+                  >
+                    {plan.price}
+                  </Text>
+                  <View>
                     <Text
-                      style={{ fontFamily: "Montserrat_700Bold" }}
-                      className={`text-3xl  ${
-                        index === 0 ? "text-[#111827]" : "text-white"
+                      style={{ fontFamily: "Montserrat_500Medium" }}
+                      className={`text-lg  ${
+                        index === 0 ? "text-[#6B7280]" : "text-[#CCCBCB]"
                       }`}
                     >
-                      {plan.price}
+                      {plan.period}
                     </Text>
-                    <View>
+                    {plan.monthlyPrice && (
                       <Text
                         style={{ fontFamily: "Montserrat_500Medium" }}
-                        className={`text-lg  ${
+                        className={`text-[16px]  ${
                           index === 0 ? "text-[#6B7280]" : "text-[#CCCBCB]"
                         }`}
                       >
-                        {plan.period}
+                        {plan.monthlyPrice}
                       </Text>
-                      {plan.monthlyPrice && (
-                        <Text
-                          style={{ fontFamily: "Montserrat_500Medium" }}
-                          className={`text-[16px]  ${
-                            index === 0 ? "text-[#6B7280]" : "text-[#CCCBCB]"
-                          }`}
-                        >
-                          {plan.monthlyPrice}
-                        </Text>
-                      )}
-                    </View>
+                    )}
                   </View>
+                </View>
                 {/* )} */}
 
                 {/* <View className="h-px bg-gray-200 my-4" /> */}
@@ -343,29 +347,31 @@ const ComparePlans = () => {
                     )}
                   </>
                 ) : ( */}
-                  <View className="gap-2 mt-auto">
-                    {index === 1 && (
-                      <>
-                        { !agentData.trialUsed  && <TouchableOpacity
+                <View className="gap-2 mt-auto">
+                  {index === 1 && (
+                    <>
+                      {!agentData.trialUsed && (
+                        <TouchableOpacity
                           className="py-2 h-[40px] rounded-md items-center bg-white"
                           onPress={plan.secondaryButton?.action}
                         >
                           <Text className="text-sm font-medium text-[#153E3B]">
                             {plan.secondaryButton?.text}
                           </Text>
-                        </TouchableOpacity>}
-
-                        <TouchableOpacity
-                          className="py-2 h-[40px] rounded-md items-center bg-[#1E3A37] border border-white"
-                          onPress={plan.primaryButton.action}
-                        >
-                          <Text className="text-sm font-medium text-white">
-                            {plan.primaryButton.text}
-                          </Text>
                         </TouchableOpacity>
-                      </>
-                    )}
-                  </View>
+                      )}
+
+                      <TouchableOpacity
+                        className="py-2 h-[40px] rounded-md items-center bg-[#1E3A37] border border-white"
+                        onPress={plan.primaryButton.action}
+                      >
+                        <Text className="text-sm font-medium text-white">
+                          {plan.primaryButton.text}
+                        </Text>
+                      </TouchableOpacity>
+                    </>
+                  )}
+                </View>
                 {/* )} */}
               </View>
             ))}
@@ -381,7 +387,7 @@ const ComparePlans = () => {
                 event_category: "plans",
                 event_label: "onboarding",
                 platform: Platform.OS,
-                user_type: userType
+                user_type: userType,
               });
             } catch (error) {
               console.error("Error logging onboarding completion:", error);
@@ -394,7 +400,7 @@ const ComparePlans = () => {
                 event_category: "plans",
                 event_label: "onboarding",
                 platform: Platform.OS,
-                user_type: userType
+                user_type: userType,
               });
             } catch (error) {
               console.error("Error logging onboarding closure:", error);

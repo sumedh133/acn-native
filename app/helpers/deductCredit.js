@@ -7,6 +7,7 @@ import {
 } from "firebase/firestore";
 import { db } from "../config/firebase";
 import { setMonthlyCredit } from "@/store/slices/agentSlice";
+import { useSelector } from "react-redux";
 
 /**
  * Deducts 1 credit from the user's monthly credits.
@@ -21,12 +22,27 @@ const deductMonthlyCredit = async (phoneNumber, currentCredits, dispatch) => {
     return;
   }
 
-  if (typeof currentCredits !== "number" || currentCredits <= 0) {
+  const boosterCredits = useSelector((state) => state?.agent?.docData?.boosterCredits) || 0;
+
+  if ((typeof currentCredits !== "number" || currentCredits <= 0) && boosterCredits <= 0) {
     console.error("Invalid credit value. Cannot deduct.");
     return;
   }
 
-  const finalCredit = Math.max(0, currentCredits - 1);
+  let finalCredit = currentCredits;
+  let finalBoosterCredit = boosterCredits;
+
+  if (currentCredits <= 0 && boosterCredits <= 0) {
+    console.error("No credits available to deduct.");
+    return;
+  } else if (currentCredits <= 0) {
+    // If no monthly credits left, deduct from booster credits
+    finalBoosterCredit = Math.max(0, boosterCredits - 1);
+  }
+  else {
+    // If monthly credits left, deduct from monthly credits
+    finalCredit = Math.max(0, currentCredits - 1);
+  }
 
   try {
     const agentsCollection = collection(db, "agents");
@@ -40,9 +56,9 @@ const deductMonthlyCredit = async (phoneNumber, currentCredits, dispatch) => {
 
     const docRef = querySnapshot.docs[0].ref;
 
-    await updateDoc(docRef, { monthlyCredits: finalCredit });
+    await updateDoc(docRef, { monthlyCredits: finalCredit, boosterCredits: finalBoosterCredit });
 
-    dispatch(setMonthlyCredit(finalCredit));
+    dispatch(setMonthlyCredit({ monthlyCredits: finalCredit, boosterCredits: finalBoosterCredit }));
   } catch (error) {
     console.error("Error deducting credits:", error.message || error);
     throw error;
