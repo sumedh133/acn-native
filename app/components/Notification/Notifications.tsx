@@ -102,6 +102,14 @@ const Notifications = () => {
       case "enquiry_buyer_notification":
         // No CTAs for buyer agent on enquiry
         console.log("Handling buyer enquiry action:", action);
+        if (action === "Call Agent") {
+          const phoneNumber = notification.phoneNumber; // Remove non-digits
+          if (phoneNumber) {
+            Linking.openURL(`tel:${phoneNumber}`);
+          } else {
+            console.log("No phone number available");
+          }
+        }
         break;
       case "listing_live_notification":
         if (action === "View Details" && notification.propertyId) {

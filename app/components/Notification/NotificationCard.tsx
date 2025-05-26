@@ -1,5 +1,5 @@
 import React from "react";
-import { View, Text, TouchableOpacity } from "react-native";
+import { View, Text, TouchableOpacity, StyleSheet } from "react-native";
 import { MaterialIcons, MaterialCommunityIcons } from "@expo/vector-icons";
 import { toCapitalizedWords } from "@/app/helpers/common";
 import { NotificationItem } from "@/app/types";
@@ -49,8 +49,21 @@ const NotificationCard: React.FC<NotificationCardProps> = ({
 }) => {
   const config = notificationTypeConfig[notification.type] || {
     icon: "bell-outline",
-    color: "#888",
+    color: "#153E3B",
   };
+
+  const notifType = {
+    "enquired-on-your-property": {
+      icon: "email-outline",
+      color: "#007bff",
+      title: false,
+    },
+  };
+  const ctaIcons = {
+    "Message Agent": {
+      icon: "",
+    }
+  }
 
   const getTimeAgo = (timestamp: number) => {
     const now = Math.floor(Date.now() / 1000);
@@ -70,27 +83,9 @@ const NotificationCard: React.FC<NotificationCardProps> = ({
       : [];
 
   return (
-    <View
-      style={{
-        flexDirection: "row",
-        backgroundColor: "#fff",
-        borderRadius: 10,
-        marginVertical: 6,
-        // marginBottom: 70,
-        padding: 16,
-        alignItems: "flex-start",
-      }}
-    >
+    <View style={styles.container}>
       <View
-        style={{
-          width: 40,
-          height: 40,
-          borderRadius: 20,
-          backgroundColor: config.color + "22",
-          justifyContent: "center",
-          alignItems: "center",
-          marginRight: 12,
-        }}
+        style={[styles.iconContainer, { backgroundColor: config.color + "22" }]}
       >
         <MaterialCommunityIcons
           name={config.icon as any}
@@ -98,42 +93,28 @@ const NotificationCard: React.FC<NotificationCardProps> = ({
           color={config.color}
         />
       </View>
-      <View style={{ flex: 1 }}>
-        <Text style={{ fontFamily: "Inter_600SemiBold", fontSize: 15 }}>
-          {notification.title}
-        </Text>
-        <Text
-          style={{
-            fontFamily: "Inter_400Regular",
-            fontSize: 14,
-            color: "#374151",
-            marginVertical: 4,
-          }}
-        >
-          {notification.body}
-        </Text>
+      <View style={styles.contentContainer}>
+        <Text style={styles.title}>{notification.title}</Text>
+        <Text style={styles.body}>{notification.body}</Text>
         {ctaButtons.length > 0 && (
-          <View style={{ flexDirection: "row", gap: 10, marginTop: 2 }}>
+          <View style={styles.ctaContainer}>
             {ctaButtons.map((action, idx) => (
               <TouchableOpacity
                 key={idx}
                 onPress={() => onCtaPress && onCtaPress(action, notification)}
-                style={{
-                  paddingVertical: 6,
-                  paddingHorizontal: 16,
-                  borderRadius: 6,
-                  backgroundColor: idx === 0 ? config.color : "#fff",
-                  borderWidth: 1,
-                  borderColor: idx === 0 ? config.color : "#ccc",
-                  marginRight: 8,
-                }}
+                style={[
+                  styles.ctaButton,
+                  {
+                    backgroundColor: idx === 0 ? config.color : "#fff",
+                    borderColor: idx === 0 ? config.color : "#ccc",
+                  },
+                ]}
               >
                 <Text
-                  style={{
-                    color: idx === 0 ? "#fff" : "#374151",
-                    fontFamily: "Inter_500Medium",
-                    fontSize: 14,
-                  }}
+                  style={[
+                    styles.ctaButtonText,
+                    { color: idx === 0 ? "#fff" : "#374151" },
+                  ]}
                 >
                   {toCapitalizedWords(action)}
                 </Text>
@@ -142,14 +123,69 @@ const NotificationCard: React.FC<NotificationCardProps> = ({
           </View>
         )}
       </View>
-      <Text style={{ fontSize: 12, color: "#666", right: 0 }}>
-        {getTimeAgo(addedTime)}
-      </Text>
-      <TouchableOpacity style={{ paddingTop: 54, marginLeft: 2 }}>
+      <Text style={styles.timeText}>{getTimeAgo(addedTime)}</Text>
+      <TouchableOpacity style={styles.moreButton}>
         <MaterialIcons name="more-horiz" size={20} color="#6B7280" />
       </TouchableOpacity>
     </View>
   );
 };
+
+const styles = StyleSheet.create({
+  container: {
+    flexDirection: "row",
+    backgroundColor: "#fff",
+    borderRadius: 10,
+    marginVertical: 6,
+    padding: 16,
+    alignItems: "flex-start",
+  },
+  iconContainer: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    justifyContent: "center",
+    alignItems: "center",
+    marginRight: 12,
+  },
+  contentContainer: {
+    flex: 1,
+  },
+  title: {
+    fontFamily: "Inter_600SemiBold",
+    fontSize: 15,
+  },
+  body: {
+    fontFamily: "Inter_400Regular",
+    fontSize: 14,
+    color: "#374151",
+    marginVertical: 4,
+  },
+  ctaContainer: {
+    flexDirection: "row",
+    gap: 10,
+    marginTop: 2,
+  },
+  ctaButton: {
+    paddingVertical: 6,
+    paddingHorizontal: 16,
+    borderRadius: 6,
+    borderWidth: 1,
+    marginRight: 8,
+  },
+  ctaButtonText: {
+    fontFamily: "Inter_500Medium",
+    fontSize: 14,
+  },
+  timeText: {
+    fontSize: 12,
+    color: "#666",
+    right: 0,
+  },
+  moreButton: {
+    paddingTop: 54,
+    marginLeft: 2,
+  },
+});
 
 export default NotificationCard;

@@ -71,7 +71,7 @@ xi. Requirement Submitted
 
 - `cta` – View Credits
 
-### i. Listing Submit
+### i. Listing Submit -> `add_inventory_notification`
 
 - `nameOfTheProperty` – Inventory name
 
@@ -79,7 +79,7 @@ xi. Requirement Submitted
 
 - `cta` – Properties, Add New Inventories
 
-### k. Requirement Posted
+### k. Requirement Posted -> `add_requirement_notification`
 
 - `requirementId` – ID of the requirement
 
