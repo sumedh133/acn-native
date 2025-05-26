@@ -27,10 +27,7 @@ import {
   Montserrat_600SemiBold,
   Montserrat_700Bold,
 } from "@expo-google-fonts/montserrat";
-import {
-  Inter_400Regular,
-  Inter_600SemiBold
-} from "@expo-google-fonts/inter"
+import { Inter_400Regular, Inter_600SemiBold } from "@expo-google-fonts/inter";
 import {
   Lato_400Regular,
   Lato_700Bold,
@@ -458,6 +455,10 @@ export default function LayoutApp() {
             headerBackVisible: true,
           }}
           initialParams={{ showFooter: false }}
+        />
+        <Stack.Screen
+          name="components/Notification/NotificationSettings"
+          options={{ headerShown: false }}
         />
       </Stack>
 

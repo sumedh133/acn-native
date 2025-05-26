@@ -21,6 +21,7 @@ import Notifications from "../components/Notification/Notifications";
 import useNotification from "../components/Notification/useNotification";
 import Checkmark from "@/assets/icons/InAppNotifications/Checkmark";
 import DoubleCheck from "@/assets/icons/InAppNotifications/DoubleCheck";
+import { useRouter } from "expo-router";
 
 const { width } = Dimensions.get("window");
 
@@ -50,6 +51,7 @@ const NotificationPage: React.FC<NotificationPageProps> = () => {
     markAllVisibleAsRead,
   } = useNotification();
   const [showFilters, setShowFilters] = useState(false);
+  const router = useRouter();
 
   const filters = [
     { id: "all", label: "All" },
@@ -101,7 +103,11 @@ const NotificationPage: React.FC<NotificationPageProps> = () => {
           <TouchableOpacity onPress={markAllVisibleAsRead}>
             <DoubleCheck width={24} height={24} color="#153E3B" />
           </TouchableOpacity>
-          <TouchableOpacity>
+          <TouchableOpacity
+            onPress={() =>
+              router.push("/components/Notification/NotificationSettings")
+            }
+          >
             <SettingsIcon />
           </TouchableOpacity>
         </View>
