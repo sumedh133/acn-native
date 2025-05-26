@@ -67,7 +67,7 @@ xi. Requirement Submitted
 - `nameOfTheProperty`
 - `cta` – Call your KAM
 
-### h. Purchased Credits
+### h. Purchased Credits -> `payment_notification`
 
 - `cta` – View Credits
 
@@ -75,7 +75,7 @@ xi. Requirement Submitted
 
 - `nameOfTheProperty` – Inventory name
 
-### j. Purchased Premium
+### j. Purchased Premium -> `payment_notification`
 
 - `cta` – Properties, Add New Inventories
 
