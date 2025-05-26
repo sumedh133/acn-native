@@ -13,132 +13,20 @@
 // Trial Expires in 20 days
 // Free trial is live
 
-import { db } from "@/app/config/firebase";
-import { toCapitalizedWords } from "@/app/helpers/common";
-import { NotificationItem, Property } from "@/app/types";
-import { RootState } from "@/store/store";
-import { MaterialIcons } from "@expo/vector-icons";
-import { collection, doc, onSnapshot, getDoc } from "firebase/firestore";
-import { useEffect, useState } from "react";
-import { View, Text, TouchableOpacity, Linking } from "react-native";
-import { useSelector } from "react-redux";
+import { NotificationItem } from "@/app/types";
 import NotificationCard from "./NotificationCard";
-import { router } from "expo-router";
-import { useDispatch } from "react-redux";
-import { setPropertyDataThunk } from "@/store/slices/propertySlice";
-import { AnyAction, ThunkDispatch } from "@reduxjs/toolkit";
-import useNotification from "./useNotification";
+import React from "react";
+import { View, Text } from "react-native";
 
-const Notifications = () => {
-  const cpId = useSelector((state: RootState) => state.agent.docData.cpId);
-  const [notifications, setNotifications] = useState<NotificationItem[]>([]);
+interface NotificationsProps {
+  notifications: NotificationItem[];
+  onCtaPress?: (action: string, notification: NotificationItem) => void;
+}
 
-  const dispatch = useDispatch<ThunkDispatch<RootState, unknown, AnyAction>>();
-  const { notifications: useNotificationNotifications, markAsRead } =
-    useNotification();
-
-  useEffect(() => {
-    // Reference to the specific document using cpId
-    const docRef = doc(db, "Notifications", cpId);
-
-    // Set up real-time listener for the document
-    const unsubscribe = onSnapshot(
-      docRef,
-      (docSnapshot) => {
-        if (docSnapshot.exists()) {
-          const data = docSnapshot.data();
-          const notificationsData: NotificationItem[] =
-            data.notifications || [];
-
-          // Sort notifications by addedTime in descending order (newest first)
-          const sortedNotifications = notificationsData.sort(
-            (a, b) => b.addedTime - a.addedTime
-          );
-
-          setNotifications(sortedNotifications);
-        } else {
-          console.log("No notifications document found for cpId:", cpId);
-          setNotifications([]);
-        }
-      },
-      (error) => {
-        console.error("Error fetching notifications:", error);
-      }
-    );
-
-    // Cleanup listener on unmount
-    return () => unsubscribe();
-  }, [cpId]);
-
-  // Handler for CTA button clicks
-  const handleCtaPress = async (
-    action: string,
-    notification: NotificationItem
-  ) => {
-    // Mark notification as read when it's viewed
-    if (!notification.isRead) {
-      await markAsRead(notification.id);
-    }
-
-    switch (notification.type) {
-      case "going_to_be_delisted":
-        if (action === "available") {
-          // Handle setting property as available
-          console.log("Setting property as available");
-        } else if (action === "sold") {
-          // Handle setting property as sold
-          console.log("Setting property as sold");
-        }
-        break;
-
-      case "enquiry_seller_notification":
-        // Handle seller enquiry actions
-        if (action === "Call Agent") {
-          const phoneNumber = notification.phoneNumber;
-          if (phoneNumber) {
-            Linking.openURL(`tel:${phoneNumber}`);
-          } else {
-            console.log("No phone number available");
-          }
-        } else if (action === "Message Agent") {
-          const whatsappUrl = `https://wa.me/${notification.phoneNumber}`;
-          Linking.openURL(whatsappUrl);
-          console.log("Message :", notification.phoneNumber);
-        }
-        break;
-
-      case "enquiry_buyer_notification":
-        if (action === "Call Agent") {
-          const phoneNumber = notification.phoneNumber;
-          if (phoneNumber) {
-            Linking.openURL(`tel:${phoneNumber}`);
-          } else {
-            console.log("No phone number available");
-          }
-        }
-        break;
-
-      case "listing_live_notification":
-        if (action === "View Details" && notification.propertyId) {
-          const propertyDocRef = doc(db, "ACN123", notification.propertyId);
-          const propertyDoc = await getDoc(propertyDocRef);
-          const property = propertyDoc.data();
-          if (property) {
-            dispatch(setPropertyDataThunk(property as Property));
-          }
-          router.push("/components/property/PropertyDetailsScreen");
-        }
-        break;
-
-      case "qc_notification":
-        console.log("handling qc notification", action);
-        break;
-
-      default:
-        console.log("Unhandled notification type:", notification.type);
-    }
-  };
-
+const Notifications: React.FC<NotificationsProps> = ({
+  notifications,
+  onCtaPress,
+}) => {
   return (
     <View style={{ backgroundColor: "#f0f0f0", flex: 1 }}>
       {notifications.length === 0 ? (
@@ -154,7 +42,7 @@ const Notifications = () => {
           <NotificationCard
             key={`${notification.id || index}-${notification.addedTime}`}
             notification={notification}
-            onCtaPress={handleCtaPress}
+            onCtaPress={onCtaPress}
             addedTime={notification.addedTime}
           />
         ))
