@@ -27,12 +27,15 @@ import { router } from "expo-router";
 import { useDispatch } from "react-redux";
 import { setPropertyDataThunk } from "@/store/slices/propertySlice";
 import { AnyAction, ThunkDispatch } from "@reduxjs/toolkit";
+import useNotification from "./useNotification";
 
 const Notifications = () => {
   const cpId = useSelector((state: RootState) => state.agent.docData.cpId);
   const [notifications, setNotifications] = useState<NotificationItem[]>([]);
 
   const dispatch = useDispatch<ThunkDispatch<RootState, unknown, AnyAction>>();
+  const { notifications: useNotificationNotifications, markAsRead } =
+    useNotification();
 
   useEffect(() => {
     // Reference to the specific document using cpId
@@ -72,6 +75,11 @@ const Notifications = () => {
     action: string,
     notification: NotificationItem
   ) => {
+    // Mark notification as read when it's viewed
+    if (!notification.isRead) {
+      await markAsRead(notification.id);
+    }
+
     switch (notification.type) {
       case "going_to_be_delisted":
         if (action === "available") {
@@ -86,7 +94,7 @@ const Notifications = () => {
       case "enquiry_seller_notification":
         // Handle seller enquiry actions
         if (action === "Call Agent") {
-          const phoneNumber = notification.phoneNumber; // Remove non-digits
+          const phoneNumber = notification.phoneNumber;
           if (phoneNumber) {
             Linking.openURL(`tel:${phoneNumber}`);
           } else {
@@ -100,10 +108,8 @@ const Notifications = () => {
         break;
 
       case "enquiry_buyer_notification":
-        // No CTAs for buyer agent on enquiry
-        console.log("Handling buyer enquiry action:", action);
         if (action === "Call Agent") {
-          const phoneNumber = notification.phoneNumber; // Remove non-digits
+          const phoneNumber = notification.phoneNumber;
           if (phoneNumber) {
             Linking.openURL(`tel:${phoneNumber}`);
           } else {
@@ -111,6 +117,7 @@ const Notifications = () => {
           }
         }
         break;
+
       case "listing_live_notification":
         if (action === "View Details" && notification.propertyId) {
           const propertyDocRef = doc(db, "ACN123", notification.propertyId);
@@ -122,16 +129,18 @@ const Notifications = () => {
           router.push("/components/property/PropertyDetailsScreen");
         }
         break;
+
       case "qc_notification":
-        console.log("handing listing_live_notification", action);
+        console.log("handling qc notification", action);
         break;
+
       default:
         console.log("Unhandled notification type:", notification.type);
     }
   };
 
   return (
-    <View style={{ backgroundColor: "#f0f0f0", flex: 1, marginBottom: 55 }}>
+    <View style={{ backgroundColor: "#f0f0f0", flex: 1 }}>
       {notifications.length === 0 ? (
         <View
           style={{ flex: 1, justifyContent: "center", alignItems: "center" }}
@@ -141,9 +150,9 @@ const Notifications = () => {
           </Text>
         </View>
       ) : (
-        notifications.map((notification) => (
+        notifications.map((notification, index) => (
           <NotificationCard
-            key={`${notification.id}-${notification.addedTime}`}
+            key={`${notification.id || index}-${notification.addedTime}`}
             notification={notification}
             onCtaPress={handleCtaPress}
             addedTime={notification.addedTime}

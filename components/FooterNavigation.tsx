@@ -23,6 +23,7 @@ import { analytics } from "@/app/config/firebase";
 import { logEvent } from "@react-native-firebase/analytics";
 import { useSelector } from "react-redux";
 import { RootState } from "@/store/store";
+import useNotification from "@/app/components/Notification/useNotification";
 
 interface MenuItem {
   title: string;
@@ -72,6 +73,7 @@ const FooterNavigation = () => {
   const userType =
     useSelector((state: RootState) => state?.agent?.docData?.userType) ||
     "free";
+  const { unreadCount } = useNotification();
 
   const [popupAnimationFlag, setPopupAnimationFlag] = useState<boolean>(false);
   const [showPopup, setShowPopup] = useState<boolean>(false);
@@ -263,6 +265,7 @@ const FooterNavigation = () => {
               </TouchableOpacity>
             );
           }
+          const isNotificationsTab = item?.path === "/NotificationPage";
           return (
             <TouchableOpacity
               onPress={() => handleNavigation(item?.path)}
@@ -270,7 +273,12 @@ const FooterNavigation = () => {
             >
               <View style={active ? styles.activeItem : styles.item}>
                 {active && <View style={styles.activeBar}></View>}
-                {active ? item?.activeIcon : item?.icon}
+                <View style={{ position: "relative" }}>
+                  {active ? item?.activeIcon : item?.icon}
+                  {isNotificationsTab && unreadCount > 0 && (
+                    <View style={styles.notificationDot} />
+                  )}
+                </View>
                 <Text style={active ? styles.itemActiveText : styles.itemText}>
                   {item?.title}
                 </Text>
@@ -363,6 +371,18 @@ const styles = StyleSheet.create({
     fontWeight: 700,
     fontFamily: "Lato",
     color: "#10302D",
+  },
+  notificationDot: {
+    position: "absolute",
+    top: -2,
+    right: -2,
+    width: 12,
+    height: 12,
+    borderRadius: 6,
+    backgroundColor: "#E53935",
+    borderWidth: 2,
+    borderColor: "#fff",
+    zIndex: 1,
   },
 });
 
