@@ -10,6 +10,7 @@ import {
   ScrollView,
   Modal,
   Pressable,
+  Linking,
 } from "react-native";
 import { useSelector } from "react-redux";
 import { RootState } from "@/store/store";
@@ -26,10 +27,12 @@ import { NotificationItem, Requirement } from "../types";
 import { setPropertyDataThunk } from "@/store/slices/propertySlice";
 import { setRequirementDataThunk } from "@/store/slices/requirementSlice";
 import { useDispatch } from "react-redux";
-import { doc, getDoc } from "firebase/firestore";
+import { doc, getDoc, updateDoc } from "firebase/firestore";
 import { db } from "@/app/config/firebase";
 import { ThunkDispatch } from "@reduxjs/toolkit";
 import { AnyAction } from "redux";
+import MarkasRead from "@/assets/icons/Notification/MarkasRead.svg";
+import { getUnixDateTime } from "../helpers/getUnixDateTime";
 
 const { width } = Dimensions.get("window");
 
@@ -51,6 +54,7 @@ const notificationTypeToFilter: Record<string, string> = {
 const NotificationPage: React.FC<NotificationPageProps> = () => {
   const agentData = useSelector((state: RootState) => state?.agent?.docData);
   const userType = agentData?.userType || "free";
+  const kamPhone = (state: any) => state?.kam?.kamDocData?.phonenumber || "";
   const dispatch = useDispatch<ThunkDispatch<RootState, unknown, AnyAction>>();
   const {
     unreadCount,
@@ -96,7 +100,7 @@ const NotificationPage: React.FC<NotificationPageProps> = () => {
     }
   };
 
-  const onCTAPress = (action: string, notification: NotificationItem) => {
+  const onCTAPress = async (action: string, notification: NotificationItem) => {
     try {
       logEvent(analytics, "notification_cta_click", {
         event_category: "notifications",
@@ -119,16 +123,36 @@ const NotificationPage: React.FC<NotificationPageProps> = () => {
 
       case "enquiry_seller_notification":
         // Handle enquiry received notification
-        if (notification.propertyId) {
-          fetchAndDispatchProperty(notification.propertyId);
+        if (action === "Call Agents") {
+          // Linking.openURL(`tel:${notification.additionalData.buyerPhone}`);
+          Linking.openURL(`tel:${kamPhone}`);
+        } else if (action === "Message Agents") {
+          Linking.openURL(
+            `https://wa.me/${notification.additionalData.buyerPhone}`
+          );
         }
         break;
 
       case "delisting_notification":
         // Handle going to be de-listed notification
-        if (action === "Make Available" || action === "Sold") {
-          if (notification.propertyId) {
-            fetchAndDispatchProperty(notification.propertyId);
+        if (action === "Available" || action === "Sold") {
+          try {
+            const propertyRef = doc(
+              db,
+              "properties",
+              notification.propertyId as string
+            );
+            const propertySnap = await getDoc(propertyRef);
+
+            if (propertySnap.exists()) {
+              // Update the status field to the action value
+              await updateDoc(propertyRef, {
+                status: action,
+                ageOfStatus: getUnixDateTime(),
+              });
+            }
+          } catch (error) {
+            console.error("Error updating property status:", error);
           }
         }
         break;
@@ -136,7 +160,7 @@ const NotificationPage: React.FC<NotificationPageProps> = () => {
       case "delistied_notification":
         // Handle de-listed notification
         if (action === "Call your KAM") {
-          router.push("/modals/KamModal");
+          Linking.openURL(`tel:${kamPhone}`);
         } else if (action === "Go to Dashboard") {
           router.push("/(tabs)/dashboardTab");
         }
@@ -259,7 +283,7 @@ const NotificationPage: React.FC<NotificationPageProps> = () => {
         </View>
         <View style={styles.headerContent}>
           <TouchableOpacity onPress={markAllVisibleAsRead}>
-            <DoubleCheck width={24} height={24} color="#153E3B" />
+            <MarkasRead width={24} height={24} />
           </TouchableOpacity>
           <TouchableOpacity
             onPress={() =>

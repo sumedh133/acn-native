@@ -1,6 +1,15 @@
 import messaging from "@react-native-firebase/messaging";
 import * as firebaseMessaging from "@react-native-firebase/messaging";
-import { arrayUnion, doc, onSnapshot, updateDoc } from "firebase/firestore";
+import {
+  arrayUnion,
+  doc,
+  onSnapshot,
+  updateDoc,
+  collection,
+  getDocs,
+  getDoc,
+  setDoc,
+} from "firebase/firestore";
 import { db } from "@/app/config/firebase";
 import { useSelector } from "react-redux";
 import { RootState } from "@/store/store";
@@ -125,27 +134,19 @@ export default function useNotification() {
 
   useEffect(() => {
     if (!cpId) return;
-    
+
     const docRef = doc(db, "Notifications", cpId);
 
     const unsubscribe = onSnapshot(docRef, (docSnapshot) => {
       if (docSnapshot.exists()) {
         const data = docSnapshot.data();
         const notificationsData: NotificationItem[] = data.notifications || [];
-
-        // Sort notifications by addedTime in descending order
-        const sortedNotifications = notificationsData.sort(
-          (a, b) => b.addedTime - a.addedTime
-        );
-
+        // Filter out archived notifications and sort
+        const sortedNotifications = notificationsData
+          .filter((n) => !n.archived)
+          .sort((a, b) => b.addedTime - a.addedTime);
         setNotifications(sortedNotifications);
-
-        // Calculate unread count
-        const unread = sortedNotifications.filter((n) => !n.isRead).length;
-        setUnreadCount(unread);
-      } else {
-        setNotifications([]);
-        setUnreadCount(0);
+        setUnreadCount(sortedNotifications.filter((n) => !n.isRead).length);
       }
     });
 
@@ -170,11 +171,27 @@ export default function useNotification() {
     try {
       const docRef = doc(db, "Notifications", cpId);
       const updatedNotifications = notifications.map((notification) =>
-        notification.id === notificationId
+        notification.notificationId === notificationId
           ? { ...notification, isRead: true }
           : notification
       );
+      console.log(updatedNotifications, "updatedNotifications");
+      await updateDoc(docRef, { notifications: updatedNotifications });
+    } catch (error) {
+      console.error("Error marking notification as read:", error);
+    }
+  };
 
+  const markAsUnRead = async (notificationId: string) => {
+    try {
+      console.log(notificationId, "notificationId");
+      const docRef = doc(db, "Notifications", cpId);
+      const updatedNotifications = notifications.map((notification) =>
+        notification.notificationId === notificationId
+          ? { ...notification, isRead: false }
+          : notification
+      );
+      console.log(updatedNotifications, "updatedNotifications");
       await updateDoc(docRef, { notifications: updatedNotifications });
     } catch (error) {
       console.error("Error marking notification as read:", error);
@@ -185,12 +202,56 @@ export default function useNotification() {
   const markAllVisibleAsRead = async () => {
     try {
       const docRef = doc(db, "Notifications", cpId);
+      // Get the current notifications array
+      const docSnap = await getDoc(docRef);
+      if (!docSnap.exists()) return;
+      const notifications: NotificationItem[] =
+        docSnap.data().notifications || [];
+      // Mark all as read
       const updatedNotifications = notifications.map((notification) =>
         !notification.isRead ? { ...notification, isRead: true } : notification
       );
       await updateDoc(docRef, { notifications: updatedNotifications });
     } catch (error) {
       console.error("Error marking all visible notifications as read:", error);
+    }
+  };
+
+  // Mark notification as archived
+  const archiveNotification = async (notificationId: string) => {
+    try {
+      console.log(notificationId, "blablablabla");
+      const docRef = doc(db, "Notifications", cpId);
+      const updatedNotifications = notifications.map((notification) =>
+        notification.notificationId === notificationId
+          ? { ...notification, archived: true }
+          : notification
+      );
+      await updateDoc(docRef, { notifications: updatedNotifications });
+    } catch (error) {
+      console.error("Error archiving notification:", error);
+    }
+  };
+
+  // Migrate notifications from array to subcollection
+  const migrateNotifications = async () => {
+    if (!cpId) return;
+    try {
+      const notificationsDoc = await getDoc(doc(db, "Notifications", cpId));
+      if (notificationsDoc.exists()) {
+        const notifications = notificationsDoc.data().notifications || [];
+        for (const notif of notifications) {
+          await setDoc(
+            doc(db, "Notifications", cpId, "items", notif.id),
+            notif
+          );
+        }
+        console.log("Migration complete!");
+      } else {
+        console.log("No notifications found for this cpId.");
+      }
+    } catch (error) {
+      console.error("Error migrating notifications:", error);
     }
   };
 
@@ -204,5 +265,8 @@ export default function useNotification() {
     setActiveFilter,
     markAsRead,
     markAllVisibleAsRead,
+    archiveNotification,
+    migrateNotifications,
+    markAsUnRead,
   };
 }

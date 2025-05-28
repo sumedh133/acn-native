@@ -165,6 +165,7 @@ export interface NotificationItem {
   title: string;
   type: string;
   propertyId?: string;
+  archived?: boolean;
   [key: string]: any;
 }
 

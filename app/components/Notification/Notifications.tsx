@@ -28,13 +28,13 @@ const Notifications: React.FC<NotificationsProps> = ({
   onCtaPress,
 }) => {
   return (
-    <View style={{ backgroundColor: "#f0f0f0", flex: 1 }}>
+    <View style={{ flex: 1 }}>
       {notifications.length === 0 ? (
         <View
           style={{ flex: 1, justifyContent: "center", alignItems: "center" }}
         >
           <Text style={{ fontSize: 16, color: "#666" }}>
-            No notifications yet
+            No Notifications Yet
           </Text>
         </View>
       ) : (
