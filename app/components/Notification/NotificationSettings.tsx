@@ -27,7 +27,6 @@ const NotificationSettings: React.FC = () => {
   const cpCode = useSelector((state: RootState) => state?.agent?.docData?.cpId);
   const [loading, setLoading] = useState(true);
   const [preference, setPreference] = useState<NotificationPreference>("all");
-  console.log(preference, "THis is nigga")
 
   useEffect(() => {
     const fetchSettings = async () => {

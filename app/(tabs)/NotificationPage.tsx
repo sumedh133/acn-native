@@ -22,6 +22,14 @@ import useNotification from "../components/Notification/useNotification";
 import Checkmark from "@/assets/icons/InAppNotifications/Checkmark";
 import DoubleCheck from "@/assets/icons/InAppNotifications/DoubleCheck";
 import { useRouter } from "expo-router";
+import { NotificationItem, Requirement } from "../types";
+import { setPropertyDataThunk } from "@/store/slices/propertySlice";
+import { setRequirementDataThunk } from "@/store/slices/requirementSlice";
+import { useDispatch } from "react-redux";
+import { doc, getDoc } from "firebase/firestore";
+import { db } from "@/app/config/firebase";
+import { ThunkDispatch } from "@reduxjs/toolkit";
+import { AnyAction } from "redux";
 
 const { width } = Dimensions.get("window");
 
@@ -43,6 +51,7 @@ const notificationTypeToFilter: Record<string, string> = {
 const NotificationPage: React.FC<NotificationPageProps> = () => {
   const agentData = useSelector((state: RootState) => state?.agent?.docData);
   const userType = agentData?.userType || "free";
+  const dispatch = useDispatch<ThunkDispatch<RootState, unknown, AnyAction>>();
   const {
     unreadCount,
     activeFilter,
@@ -69,6 +78,155 @@ const NotificationPage: React.FC<NotificationPageProps> = () => {
           (notification) =>
             notificationTypeToFilter[notification.type] === activeFilter
         );
+
+  const fetchAndDispatchProperty = async (propertyId: string) => {
+    try {
+      const propertyRef = doc(db, "properties", propertyId);
+      const propertySnap = await getDoc(propertyRef);
+
+      if (propertySnap.exists()) {
+        const propertyData = propertySnap.data();
+        dispatch(setPropertyDataThunk(propertyData));
+        router.push({
+          pathname: "/components/property/PropertyDetailsScreen",
+        });
+      }
+    } catch (error) {
+      console.error("Error fetching property data:", error);
+    }
+  };
+
+  const onCTAPress = (action: string, notification: NotificationItem) => {
+    try {
+      logEvent(analytics, "notification_cta_click", {
+        event_category: "notifications",
+        event_label: "cta_action",
+        notification_type: notification.type,
+        action: action,
+        user_type: userType,
+      });
+    } catch (error) {
+      console.error("Error logging CTA click:", error);
+    }
+
+    switch (notification.type) {
+      case "enquiry_buyer_notification":
+        // Handle enquiry sent notification
+        if (notification.propertyId) {
+          fetchAndDispatchProperty(notification.propertyId);
+        }
+        break;
+
+      case "enquiry_seller_notification":
+        // Handle enquiry received notification
+        if (notification.propertyId) {
+          fetchAndDispatchProperty(notification.propertyId);
+        }
+        break;
+
+      case "delisting_notification":
+        // Handle going to be de-listed notification
+        if (action === "Make Available" || action === "Sold") {
+          if (notification.propertyId) {
+            fetchAndDispatchProperty(notification.propertyId);
+          }
+        }
+        break;
+
+      case "delistied_notification":
+        // Handle de-listed notification
+        if (action === "Call your KAM") {
+          router.push("/modals/KamModal");
+        } else if (action === "Go to Dashboard") {
+          router.push("/(tabs)/dashboardTab");
+        }
+        break;
+
+      case "listing_live_notification":
+        // Handle inventory became live notification
+        if (action === "View Details" && notification.propertyId) {
+          fetchAndDispatchProperty(notification.propertyId);
+        }
+        break;
+
+      case "qc_notification":
+        // Handle status other than live notification
+        if (action === "Call your KAM") {
+          router.push("/modals/KamModal");
+        }
+        break;
+
+      case "payment_notification":
+        // Handle purchased credits notification
+        if (action === "View Credits") {
+          router.push("/(pages)/Credits");
+        } else if (action === "Properties") {
+          router.push("/(tabs)/properties");
+        } else if (action === "Add New Inventory") {
+          router.push("/(tabs)/AddInventoryForm");
+        }
+        break;
+
+      case "add_inventory_notification":
+        // Handle listing submit notification
+        if (notification.propertyId) {
+          fetchAndDispatchProperty(notification.propertyId);
+        } else {
+          router.push("/(tabs)/properties");
+        }
+        break;
+
+      case "add_requirement_notification":
+        // Handle requirement posted notification
+        if (notification.requirementId) {
+          const fetchAndDispatchRequirement = async () => {
+            try {
+              const requirementRef = doc(
+                db,
+                "requirements",
+                notification.requirementId as string
+              );
+              const requirementSnap = await getDoc(requirementRef);
+
+              if (requirementSnap.exists()) {
+                const requirementData = requirementSnap.data() as Requirement;
+                dispatch(setRequirementDataThunk(requirementData));
+              }
+            } catch (error) {
+              console.error("Error fetching requirement data:", error);
+            }
+          };
+
+          fetchAndDispatchRequirement();
+        }
+        router.push({
+          pathname: "/components/requirement/RequirementDetailsScreen",
+        });
+        break;
+
+      case "trial_ended_notification":
+        // Handle free trial ended notification
+        if (action === "Get Premium") {
+          router.push("/(pages)/ComparePlans");
+        } else if (action === "Compare Plans") {
+          router.push("/(pages)/ComparePlans");
+        }
+        break;
+
+      case "trial_notification":
+        // Handle trial expires in X days notification
+        if (action === "Properties") {
+          router.push("/(tabs)/properties");
+        } else if (action === "Add New Inventories") {
+          router.push("/(tabs)/AddInventoryForm");
+        }
+        break;
+
+      default:
+        console.log("Unhandled notification type:", notification.type);
+        break;
+    }
+  };
 
   // Track page view
   useEffect(() => {
@@ -115,7 +273,10 @@ const NotificationPage: React.FC<NotificationPageProps> = () => {
 
       <View style={styles.notificationsContainer}>
         <ScrollView>
-          <Notifications notifications={filteredNotifications} />
+          <Notifications
+            notifications={filteredNotifications}
+            onCtaPress={onCTAPress}
+          />
         </ScrollView>
       </View>
 

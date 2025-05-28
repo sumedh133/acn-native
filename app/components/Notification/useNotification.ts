@@ -124,6 +124,8 @@ export default function useNotification() {
   };
 
   useEffect(() => {
+    if (!cpId) return;
+    
     const docRef = doc(db, "Notifications", cpId);
 
     const unsubscribe = onSnapshot(docRef, (docSnapshot) => {
