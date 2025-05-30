@@ -143,7 +143,7 @@ const Transaction = () => {
   const handleEmailInvoice = async () => {
     try {
       const response = await fetch(
-        `http://192.168.7.9:3000/mail/send-invoice/${paymentDetails.id}`,
+        `https://notification-server-acn-zdgg.onrender.com/mail/send-invoice/${paymentDetails.id}`,
         {
           method: "POST",
           headers: {
