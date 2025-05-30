@@ -296,12 +296,12 @@ const NotificationPage: React.FC<NotificationPageProps> = () => {
       </View>
 
       <View style={styles.notificationsContainer}>
-        <ScrollView>
+        {/* <ScrollView style={{ height: "100%", backgroundColor: "red" }}> */}
           <Notifications
             notifications={filteredNotifications}
             onCtaPress={onCTAPress}
           />
-        </ScrollView>
+        {/* </ScrollView> */}
       </View>
 
       {/* Filter Modal */}
@@ -350,7 +350,7 @@ const NotificationPage: React.FC<NotificationPageProps> = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#FFFFFF",
+    height: "100%",
   },
   header: {
     paddingHorizontal: 20,
@@ -389,6 +389,7 @@ const styles = StyleSheet.create({
   },
   notificationsContainer: {
     flex: 1,
+    height: "100%",
   },
   modalOverlay: {
     flex: 1,

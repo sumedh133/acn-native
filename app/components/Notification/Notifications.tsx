@@ -16,7 +16,8 @@
 import { NotificationItem } from "@/app/types";
 import NotificationCard from "./NotificationCard";
 import React from "react";
-import { View, Text } from "react-native";
+import { View, Text, ScrollView } from "react-native";
+import NoNotificationsIcon from "@/assets/icons/InAppNotifications/noNotifications.svg";
 
 interface NotificationsProps {
   notifications: NotificationItem[];
@@ -28,24 +29,28 @@ const Notifications: React.FC<NotificationsProps> = ({
   onCtaPress,
 }) => {
   return (
-    <View style={{ flex: 1 }}>
-      {notifications.length === 0 ? (
+    <View style={{ flex: 1, height: "100%" }}>
+      {notifications.length == 0 ? (
         <View
-          style={{ flex: 1, justifyContent: "center", alignItems: "center" }}
+          style={{
+            flex: 1,
+            justifyContent: "center",
+            alignItems: "center",
+          }}
         >
-          <Text style={{ fontSize: 16, color: "#666" }}>
-            No Notifications Yet
-          </Text>
+          <NoNotificationsIcon width={293} height={429} />
         </View>
       ) : (
-        notifications.map((notification, index) => (
-          <NotificationCard
-            key={`${notification.id || index}-${notification.addedTime}`}
-            notification={notification}
-            onCtaPress={onCtaPress}
-            addedTime={notification.addedTime}
-          />
-        ))
+        <ScrollView>
+          {notifications.map((notification, index) => (
+            <NotificationCard
+              key={`${notification.id || index}-${notification.addedTime}`}
+              notification={notification}
+              onCtaPress={onCtaPress}
+              addedTime={notification.addedTime}
+            />
+          ))}
+        </ScrollView>
       )}
     </View>
   );

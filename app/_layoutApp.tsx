@@ -460,6 +460,11 @@ export default function LayoutApp() {
           name="components/Notification/NotificationSettings"
           options={{ headerShown: false }}
         />
+        <Stack.Screen
+          name="components/Payments/transaction"
+          options={{ headerShown: false }}
+          initialParams={{ showFooter: false }}
+        />
       </Stack>
 
       <Toast config={toastConfig} />
