@@ -161,6 +161,28 @@ const Profile = () => {
           <LogoutIcon width={18} height={18} />
           <Text style={styles.logoutText}>Logout</Text>
         </TouchableOpacity>
+        <Text
+          style={styles.logoutText}
+          onPress={() =>
+            router.push({
+              pathname: "/(pages)/Legal",
+              params: { id: "tnc" },
+            })
+          }
+        >
+          Terms of use
+        </Text>
+        <Text
+          style={styles.logoutText}
+          onPress={() =>
+            router.push({
+              pathname: "/(pages)/Legal",
+              params: { id: "privacy" },
+            })
+          }
+        >
+          Privacy policy
+        </Text>
       </ScrollView>
     </>
   );

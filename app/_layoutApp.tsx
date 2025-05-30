@@ -452,6 +452,24 @@ export default function LayoutApp() {
           }}
           initialParams={{ showFooter: false }}
         />
+        <Stack.Screen
+          name="(pages)/Legal"
+          options={({ route }: { route: any }) => {
+            const { id } = (route.params as { id?: string }) || {};
+
+            // Define your title mapping
+            const titleMap: Record<string, string> = {
+              tnc: "Terms of Use",
+              privacy: "Privacy Policy",
+            };
+
+            return {
+              title: titleMap[id || ""] || "Legal", // fallback to "Legal" if id not found
+              headerBackVisible: true,
+            };
+          }}
+          initialParams={{ showFooter: false }}
+        />
       </Stack>
 
       <Toast config={toastConfig} />
