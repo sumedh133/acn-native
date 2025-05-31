@@ -28,7 +28,6 @@ import {
   Montserrat_700Bold,
 } from "@expo-google-fonts/montserrat";
 import { Inter_400Regular, Inter_600SemiBold } from "@expo-google-fonts/inter";
-import { Inter_400Regular, Inter_600SemiBold } from "@expo-google-fonts/inter";
 import {
   Lato_400Regular,
   Lato_700Bold,
