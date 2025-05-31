@@ -435,7 +435,10 @@ export default function LayoutApp() {
         <Stack.Screen
           name="(pages)/ComparePlans"
           options={{
-            title: "Plans Page",
+            title:
+              Platform.OS === "ios"
+                ? "Choose the right plan for you"
+                : "Plans Page",
             headerBackVisible: true,
           }}
           initialParams={{ showFooter: false }}
@@ -459,6 +462,22 @@ export default function LayoutApp() {
         <Stack.Screen
           name="components/Notification/NotificationSettings"
           options={{ headerShown: false }}
+        />
+        <Stack.Screen
+          name="(pages)/Legal"
+          options={{
+            title: " ",
+            headerBackVisible: true,
+          }}
+          initialParams={{ showFooter: false }}
+        />
+        <Stack.Screen
+          name="(tabs)/ReportIssue"
+          options={{
+            title: "Report an Issue or Misuse",
+            headerBackVisible: true,
+          }}
+          initialParams={{ showFooter: false }}
         />
       </Stack>
 

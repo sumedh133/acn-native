@@ -12,5 +12,5 @@
     ".expo/types/**/*.ts",
     "expo-env.d.ts",
     "assets/icons/svg/HamburgerMenuIcon.tsx"
-  ]
+, "app/(pages)/legalContent.js"  ]
 }
