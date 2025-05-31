@@ -9,6 +9,7 @@ import {
   Pressable,
   Image,
   Linking,
+  ActivityIndicator,
 } from "react-native";
 import { router, useLocalSearchParams, useRouter } from "expo-router";
 import { useEffect, useState } from "react";
@@ -54,6 +55,7 @@ interface PaymentDetails {
     seconds: number;
     nanoseconds: number;
   };
+  invoiceUrl: string;
 }
 
 const Transaction = () => {
@@ -61,6 +63,7 @@ const Transaction = () => {
   const [paymentDetails, setPaymentDetails] = useState<PaymentDetails | null>(
     null
   );
+  const [isDownloading, setIsDownloading] = useState(false);
 
   useEffect(() => {
     const fetchPaymentDetails = async () => {
@@ -163,48 +166,23 @@ const Transaction = () => {
 
   const handleDownloadPDF = async () => {
     try {
-      const response = await fetch(
-        `https://notification-server-acn-zdgg.onrender.com/invoices/download-invoice/${paymentDetails.id}`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-        }
-      );
+      setIsDownloading(true);
+      // Convert the URL to a Google Drive viewer URL
+      const driveUrl = `https://drive.google.com/viewerng/viewer?embedded=true&url=${encodeURIComponent(
+        paymentDetails.invoiceUrl
+      )}`;
+      const supported = await Linking.canOpenURL(driveUrl);
 
-      if (!response.ok) {
-        throw new Error("Failed to download PDF");
+      if (supported) {
+        await Linking.openURL(driveUrl);
+      } else {
+        Alert.alert("Error", "Cannot open PDF in Google Drive");
       }
-
-      const blob = await response.blob();
-      const fileUri = `${FileSystem.cacheDirectory}invoice-${paymentDetails.id}.pdf`;
-
-      // Convert blob to base64
-      const reader = new FileReader();
-      reader.readAsDataURL(blob);
-      reader.onloadend = async () => {
-        const base64data = reader.result?.toString().split(",")[1];
-        if (base64data) {
-          await FileSystem.writeAsStringAsync(fileUri, base64data, {
-            encoding: FileSystem.EncodingType.Base64,
-          });
-
-          // Share the PDF
-          const isAvailable = await Sharing.isAvailableAsync();
-          if (isAvailable) {
-            await Sharing.shareAsync(fileUri, {
-              mimeType: "application/pdf",
-              dialogTitle: "Share PDF",
-            });
-          } else {
-            Alert.alert("Error", "Sharing is not available on this device");
-          }
-        }
-      };
     } catch (error) {
-      console.error("Error downloading PDF:", error);
-      Alert.alert("Error", "Failed to download PDF");
+      console.error("Error opening PDF in Drive:", error);
+      Alert.alert("Error", "Failed to open PDF in Drive");
+    } finally {
+      setIsDownloading(false);
     }
   };
 
@@ -308,10 +286,15 @@ const Transaction = () => {
             <TouchableOpacity
               style={[styles.footerBtn, styles.footerBtnPrimary]}
               onPress={handleDownloadPDF}
+              disabled={isDownloading}
             >
-              <DownloadPDFIcon width={18} height={18} />
+              {isDownloading ? (
+                <ActivityIndicator color="#fff" size="small" />
+              ) : (
+                <DownloadPDFIcon width={18} height={18} />
+              )}
               <Text style={[styles.footerBtnText, { color: "#fff" }]}>
-                Download PDF Invoice
+                {isDownloading ? "Downloading..." : "Download PDF Invoice"}
               </Text>
             </TouchableOpacity>
           </>
