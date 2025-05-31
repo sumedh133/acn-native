@@ -26,6 +26,8 @@ import EmailInvoiceIcon from "@/assets/icons/billing/emailInvoice.svg";
 import DownloadPDFIcon from "@/assets/icons/billing/downloadPDF.svg";
 import ContactSupportIcon from "@/assets/icons/billing/contactSupport.svg";
 import RetryPaymentIcon from "@/assets/icons/billing/retryPayment.svg";
+import * as FileSystem from "expo-file-system";
+import * as Sharing from "expo-sharing";
 
 interface PaymentDetails {
   id: string;
@@ -143,7 +145,7 @@ const Transaction = () => {
   const handleEmailInvoice = async () => {
     try {
       const response = await fetch(
-        `https://notification-server-acn-zdgg.onrender.com/mail/send-invoice/${paymentDetails.id}`,
+        `https://notification-server-acn-zdgg.onrender.com/invoices/send-invoice/${paymentDetails.id}`,
         {
           method: "POST",
           headers: {
@@ -156,6 +158,53 @@ const Transaction = () => {
       console.log(data);
     } catch (error) {
       console.error("Error sending invoice email:", error);
+    }
+  };
+
+  const handleDownloadPDF = async () => {
+    try {
+      const response = await fetch(
+        `https://notification-server-acn-zdgg.onrender.com/invoices/download-invoice/${paymentDetails.id}`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error("Failed to download PDF");
+      }
+
+      const blob = await response.blob();
+      const fileUri = `${FileSystem.cacheDirectory}invoice-${paymentDetails.id}.pdf`;
+
+      // Convert blob to base64
+      const reader = new FileReader();
+      reader.readAsDataURL(blob);
+      reader.onloadend = async () => {
+        const base64data = reader.result?.toString().split(",")[1];
+        if (base64data) {
+          await FileSystem.writeAsStringAsync(fileUri, base64data, {
+            encoding: FileSystem.EncodingType.Base64,
+          });
+
+          // Share the PDF
+          const isAvailable = await Sharing.isAvailableAsync();
+          if (isAvailable) {
+            await Sharing.shareAsync(fileUri, {
+              mimeType: "application/pdf",
+              dialogTitle: "Share PDF",
+            });
+          } else {
+            Alert.alert("Error", "Sharing is not available on this device");
+          }
+        }
+      };
+    } catch (error) {
+      console.error("Error downloading PDF:", error);
+      Alert.alert("Error", "Failed to download PDF");
     }
   };
 
@@ -258,6 +307,7 @@ const Transaction = () => {
             </TouchableOpacity>
             <TouchableOpacity
               style={[styles.footerBtn, styles.footerBtnPrimary]}
+              onPress={handleDownloadPDF}
             >
               <DownloadPDFIcon width={18} height={18} />
               <Text style={[styles.footerBtnText, { color: "#fff" }]}>
