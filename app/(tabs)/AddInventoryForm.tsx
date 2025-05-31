@@ -948,6 +948,15 @@ const AddInventoryForm = () => {
           docsToUpload.document.length,
         user_type: userType,
       });
+      fetch(
+        `https://notification-server-acn.onrender.com/addinventory/${property.propertyId}`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+        }
+      );
     } catch (error) {
       // Track submission failure
       logEvent(analytics, "inventory_submit_error", {

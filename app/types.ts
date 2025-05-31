@@ -155,6 +155,20 @@ export interface ListingProperty extends Property {
   // [key: string]: any;
 }
 
+export interface NotificationItem {
+  id: string;
+  addedTime: number;
+  cpId: string;
+  cta: string[];
+  body: string;
+  expiryTime: number;
+  title: string;
+  type: string;
+  propertyId?: string;
+  archived?: boolean;
+  [key: string]: any;
+}
+
 export interface SubscriptionPlan {
   id: string;
   product: string;

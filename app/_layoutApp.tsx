@@ -27,6 +27,7 @@ import {
   Montserrat_600SemiBold,
   Montserrat_700Bold,
 } from "@expo-google-fonts/montserrat";
+import { Inter_400Regular, Inter_600SemiBold } from "@expo-google-fonts/inter";
 import {
   Lato_400Regular,
   Lato_700Bold,
@@ -111,6 +112,8 @@ export default function LayoutApp() {
     Lato_700Bold,
     Lato_300Light,
     Lato_900Black,
+    Inter_400Regular,
+    Inter_600SemiBold,
   });
   const navigation = useNavigation();
 
@@ -360,7 +363,8 @@ export default function LayoutApp() {
         />
         <Stack.Screen
           name="(tabs)/NotificationPage"
-          options={{ title: "Notifications" }}
+          options={{ title: "Notifications", headerShown: false }}
+          initialParams={{ showNotificationBanner: true }}
         />
 
         <Stack.Screen
@@ -451,6 +455,10 @@ export default function LayoutApp() {
             headerBackVisible: true,
           }}
           initialParams={{ showFooter: false }}
+        />
+        <Stack.Screen
+          name="components/Notification/NotificationSettings"
+          options={{ headerShown: false }}
         />
       </Stack>
 

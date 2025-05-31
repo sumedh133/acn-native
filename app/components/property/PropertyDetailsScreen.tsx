@@ -160,6 +160,9 @@ export default function PropertyDetailsScreen() {
   const isConnectedToInternet = useSelector(
     (state: RootState) => state.app.isConnectedToInternet
   );
+  const boosterCredits =
+    useSelector((state: RootState) => state.agent?.docData?.boosterCredits) ||
+    0;
 
   const parent = (params.parent as string) || "properties";
   const enqId = params.enqId as string;
@@ -387,7 +390,12 @@ export default function PropertyDetailsScreen() {
       }
 
       // ✅ Deduct credits first
-      await deductMonthlyCredit(phoneNumber, monthlyCredits, dispatch);
+      await deductMonthlyCredit(
+        phoneNumber,
+        monthlyCredits,
+        dispatch,
+        boosterCredits
+      );
 
       if (typeof nextEnqId === "string") {
         await submitEnquiry(nextEnqId);
