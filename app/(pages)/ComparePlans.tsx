@@ -141,9 +141,10 @@ const ComparePlans = () => {
       name: "ACN Premium",
       label: "Recommended",
       tagline: "For Professionals",
-      price: "₹10,000",
-      period: "per year",
-      monthlyPrice: "(₹833/month)",
+      price: "₹9,999",
+      period: Platform.OS === "ios" ? "for one year" : "per year",
+      monthlyPrice:
+        Platform.OS === "ios" ? "(inclusive of all taxes)" : "(₹833/month)",
       color: "text-white",
       textColor: "text-white",
       bgColor: "bg-[#1E3A37]",
@@ -165,6 +166,10 @@ const ComparePlans = () => {
           name: "Exclusive Access to Resale Market Data and Micromarket Reports",
           included: true,
         },
+        // {
+        //   name: "Validity: 1 year",
+        //   included: true,
+        // },
       ],
       description: "Unlock ACN's full potential with additional features.",
       primaryButton: {
@@ -183,12 +188,14 @@ const ComparePlans = () => {
       <SafeAreaView className="flex-1 pb-2">
         <ScrollView className="pb-2 bg-[#EEEEEE] gap-6">
           <View className="px-4 pt-6 mt-2">
-            <Text
-              className="text-lg  text-black text-center mb-2"
-              style={{ fontFamily: "Montserrat_700Bold" }}
-            >
-              Choose the right plan for you
-            </Text>
+            {Platform.OS != "ios" && (
+              <Text
+                className="text-lg  text-black text-center mb-2"
+                style={{ fontFamily: "Montserrat_700Bold" }}
+              >
+                Choose the right plan for you
+              </Text>
+            )}
           </View>
 
           <ScrollView
@@ -302,7 +309,7 @@ const ComparePlans = () => {
                 </Text>
 
                 <View className="mb-4">
-                  {plan.features.map((feature, fidx) => (
+                  {plan?.features?.map((feature, fidx) => (
                     <View key={fidx} className="flex-row items-start mb-3">
                       <View
                         className={`w-5 h-5 rounded-full justify-center items-center mr-2 mt-0.5 ${
@@ -324,6 +331,24 @@ const ComparePlans = () => {
                       </Text>
                     </View>
                   ))}
+                  {Platform.OS === "ios" && (
+                    <View className="flex-row items-start mb-3">
+                      <View
+                        className={`w-5 h-5 rounded-full justify-center items-center mr-2 mt-0.5 bg-[#F4FBF8]`}
+                      >
+                        <Ionicons
+                          name="checkmark"
+                          size={18}
+                          color={"#153E3B"}
+                        />
+                      </View>
+                      <Text
+                        className={`text-base font-medium flex-1 text-[#F4FBF8]`}
+                      >
+                        Validity: 1 Year
+                      </Text>
+                    </View>
+                  )}
                 </View>
 
                 {/* {Platform.OS === "ios" ? (
@@ -376,6 +401,36 @@ const ComparePlans = () => {
               </View>
             ))}
           </ScrollView>
+
+          {Platform.OS === "ios" && (
+            <Text className="w-full px-[16px] py-[6px] items-center justify-center text-center font-lato font-medium text-[12px] leading-[150%] text-[#8A8A8A]">
+              Please read our{" "}
+              <Text
+                className="font-bold underline p-2"
+                onPress={() =>
+                  router.push({
+                    pathname: "/(pages)/Legal",
+                    params: { id: "privacy" },
+                  })
+                }
+              >
+                Privacy Policy
+              </Text>{" "}
+              and{" "}
+              <Text
+                className="font-bold underline p-2"
+                onPress={() =>
+                  router.push({
+                    pathname: "/(pages)/Legal",
+                    params: { id: "tnc" },
+                  })
+                }
+              >
+                Terms of Use
+              </Text>
+              .
+            </Text>
+          )}
         </ScrollView>
       </SafeAreaView>
       {showOnboarding && (

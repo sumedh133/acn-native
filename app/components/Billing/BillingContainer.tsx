@@ -48,6 +48,7 @@ import { WebViewNavigationEvent } from "react-native-webview/lib/RNCWebViewNativ
 import { analytics } from "@/app/config/firebase";
 import { logEvent } from "@react-native-firebase/analytics";
 import { RouteProp, useRoute } from "@react-navigation/native";
+import { useRouter } from "expo-router";
 
 if (
   Platform.OS === "android" &&
@@ -70,6 +71,7 @@ const BillingContainer: React.FC<BillingContainerProps> = ({
   onOpenBusinessModal,
 }) => {
   const route = useRoute<BillingContainerRouteProp>();
+  const router = useRouter();
   const planId = route.params?.planId || "premium";
 
   const [availablePlans, setAvailablePlans] = useState<SubscriptionPlan[]>([]);
@@ -764,6 +766,36 @@ const BillingContainer: React.FC<BillingContainerProps> = ({
                 </View>
               </View>
             </View>
+
+            {Platform.OS === "ios" && (
+              <Text className="w-full px-[16px] my-[16px] items-center justify-center text-left font-lato font-medium text-[14px] leading-[150%] text-[#8A8A8A]">
+                By proceeding with the payment, you acknowledge and agree to our{" "}
+                <Text
+                  className="font-bold underline p-2"
+                  onPress={() =>
+                    router.push({
+                      pathname: "/(pages)/Legal",
+                      params: { id: "privacy" },
+                    })
+                  }
+                >
+                  Privacy Policy
+                </Text>{" "}
+                and{" "}
+                <Text
+                  className="font-bold underline p-2"
+                  onPress={() =>
+                    router.push({
+                      pathname: "/(pages)/Legal",
+                      params: { id: "tnc" },
+                    })
+                  }
+                >
+                  Terms of Use
+                </Text>
+                .
+              </Text>
+            )}
 
             <TouchableOpacity
               style={styles.payButton}

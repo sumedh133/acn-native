@@ -27,6 +27,7 @@ import {
   Montserrat_600SemiBold,
   Montserrat_700Bold,
 } from "@expo-google-fonts/montserrat";
+import { Inter_400Regular, Inter_600SemiBold } from "@expo-google-fonts/inter";
 import {
   Lato_400Regular,
   Lato_700Bold,
@@ -111,6 +112,8 @@ export default function LayoutApp() {
     Lato_700Bold,
     Lato_300Light,
     Lato_900Black,
+    Inter_400Regular,
+    Inter_600SemiBold,
   });
   const navigation = useNavigation();
 
@@ -360,7 +363,8 @@ export default function LayoutApp() {
         />
         <Stack.Screen
           name="(tabs)/NotificationPage"
-          options={{ title: "Notifications" }}
+          options={{ title: "Notifications", headerShown: false }}
+          initialParams={{ showNotificationBanner: true }}
         />
 
         <Stack.Screen
@@ -431,7 +435,10 @@ export default function LayoutApp() {
         <Stack.Screen
           name="(pages)/ComparePlans"
           options={{
-            title: "Plans Page",
+            title:
+              Platform.OS === "ios"
+                ? "Choose the right plan for you"
+                : "Plans Page",
             headerBackVisible: true,
           }}
           initialParams={{ showFooter: false }}
@@ -453,20 +460,22 @@ export default function LayoutApp() {
           initialParams={{ showFooter: false }}
         />
         <Stack.Screen
+          name="components/Notification/NotificationSettings"
+          options={{ headerShown: false }}
+        />
+        <Stack.Screen
           name="(pages)/Legal"
-          options={({ route }: { route: any }) => {
-            const { id } = (route.params as { id?: string }) || {};
-
-            // Define your title mapping
-            const titleMap: Record<string, string> = {
-              tnc: "Terms of Use",
-              privacy: "Privacy Policy",
-            };
-
-            return {
-              title: titleMap[id || ""] || "Legal", // fallback to "Legal" if id not found
-              headerBackVisible: true,
-            };
+          options={{
+            title: " ",
+            headerBackVisible: true,
+          }}
+          initialParams={{ showFooter: false }}
+        />
+        <Stack.Screen
+          name="(tabs)/ReportIssue"
+          options={{
+            title: "Report an Issue or Misuse",
+            headerBackVisible: true,
           }}
           initialParams={{ showFooter: false }}
         />

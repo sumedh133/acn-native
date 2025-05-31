@@ -16,13 +16,13 @@ import { useSelector } from "react-redux";
  * @param {Function} dispatch - Redux dispatch function to update state.
  * @returns {Promise<void>} - Resolves when the operation completes.
  */
-const deductMonthlyCredit = async (phoneNumber, currentCredits, dispatch) => {
+const deductMonthlyCredit = async (phoneNumber, currentCredits, dispatch, boosterCredits) => {
   if (!phoneNumber) {
     console.error("Phone number is required.");
     return;
   }
 
-  const boosterCredits = useSelector((state) => state?.agent?.docData?.boosterCredits) || 0;
+  // const boosterCredits = useSelector((state) => state?.agent?.docData?.boosterCredits) || 0;
 
   if ((typeof currentCredits !== "number" || currentCredits <= 0) && boosterCredits <= 0) {
     console.error("Invalid credit value. Cannot deduct.");
