@@ -315,13 +315,12 @@ const styles = StyleSheet.create({
     backgroundColor: "#F2F2F2",
     justifyContent: "center",
     alignItems: "center",
-    marginRight: 12,
   },
   avatarText: {
     fontWeight: "bold",
     fontSize: 16,
     color: "#222",
-    fontFamily: "Inter_600SemiBold",
+    fontFamily: "Lora_600SemiBold",
   },
   contentContainer: {
     flex: 1,

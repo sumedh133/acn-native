@@ -18,6 +18,9 @@ import OnboardingFlow from "../components/Onboarding";
 import { logEvent } from "@react-native-firebase/analytics";
 import { analytics } from "../config/firebase";
 
+import Basic from "@/assets/icons/paperPlane.svg";
+import Premium from "@/assets/icons/paperPlanePremium.svg";
+
 const ComparePlans = () => {
   const router = useRouter();
   const isConnectedToInternet = useSelector(
@@ -227,7 +230,7 @@ const ComparePlans = () => {
 
                 <View className="flex flex-row pt-4 mt-4 mb-3 gap-4">
                   <View className="mb-2">
-                    <View className="w-14 h-14 rounded-full bg-[#E0F9F6] items-center justify-center">
+                    {/* <View className="w-14 h-14 rounded-full bg-[#E0F9F6] items-center justify-center">
                       <View
                         className={`${
                           index === 0
@@ -235,7 +238,8 @@ const ComparePlans = () => {
                             : "w-4 h-4 rounded-full"
                         } bg-[#1E3A37]`}
                       />
-                    </View>
+                    </View> */}
+                    {index === 0 ? <Basic /> : <Premium />}
                   </View>
                   <View>
                     <Text
@@ -331,7 +335,7 @@ const ComparePlans = () => {
                       </Text>
                     </View>
                   ))}
-                  {Platform.OS === "ios" && (
+                  {Platform.OS === "ios" && index != 0 && (
                     <View className="flex-row items-start mb-3">
                       <View
                         className={`w-5 h-5 rounded-full justify-center items-center mr-2 mt-0.5 bg-[#F4FBF8]`}

@@ -34,6 +34,12 @@ import {
   Lato_300Light,
   Lato_900Black,
 } from "@expo-google-fonts/lato";
+import {
+  Lora_400Regular,
+  Lora_500Medium,
+  Lora_600SemiBold,
+  Lora_700Bold,
+} from "@expo-google-fonts/lora";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useDispatch } from "react-redux";
 import NetInfo from "@react-native-community/netinfo";
@@ -92,7 +98,9 @@ const CustomHeader = ({
             style={styles.headerRight}
             onPress={() => router.push("/(pages)/Credits")}
           >
-            <Text style={styles.creditsText}>{monthlyCredits + boosterCredits}</Text>
+            <Text style={styles.creditsText}>
+              {monthlyCredits + boosterCredits}
+            </Text>
             <CoinIcon width={18} height={18} />
           </TouchableOpacity>
         )}
@@ -118,6 +126,10 @@ export default function LayoutApp() {
     Lato_900Black,
     Inter_400Regular,
     Inter_600SemiBold,
+    Lora_400Regular,
+    Lora_500Medium,
+    Lora_600SemiBold,
+    Lora_700Bold,
   });
   const navigation = useNavigation();
 

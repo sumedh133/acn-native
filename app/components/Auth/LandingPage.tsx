@@ -164,13 +164,15 @@ export default function LandingPage() {
           <View style={styles.logoContainer}>
             <Text style={styles.title}>ACN</Text>
             <View style={styles.subtitleRow}>
-              <Text style={[styles.subtitle, styles.subtitleFirst]}>
+              <Text style={[styles.subtitle]}>
                 Connect
               </Text>
-              <Text style={[styles.subtitle, styles.subtitleMiddle]}>
+              <Text style={[styles.subtitle]}>|</Text>
+              <Text style={[styles.subtitle]}>
                 Collaborate
               </Text>
-              <Text style={[styles.subtitle, styles.subtitleLast]}>
+              <Text style={[styles.subtitle]}>|</Text>
+              <Text style={[styles.subtitle]}>
                 Succeed
               </Text>
             </View>
@@ -254,7 +256,7 @@ const styles = StyleSheet.create({
     fontSize: 48,
     color: "#FFFFFF",
     fontWeight: "bold",
-    fontFamily: "Lora-Bold",
+    fontFamily: "Lora_700Bold",
     marginBottom: 10,
   },
   subtitleRow: {
@@ -266,18 +268,6 @@ const styles = StyleSheet.create({
   subtitle: {
     fontSize: 14,
     textAlign: "center",
-  },
-  subtitleFirst: {
-    color: "#BFE9E6",
-  },
-  subtitleMiddle: {
-    color: "#BFE9E6",
-    paddingHorizontal: 8,
-    borderLeftWidth: 1,
-    borderRightWidth: 1,
-    borderColor: "#DFF4F3",
-  },
-  subtitleLast: {
     color: "#BFE9E6",
   },
   icon: {

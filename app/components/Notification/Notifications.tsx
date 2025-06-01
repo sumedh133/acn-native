@@ -43,12 +43,15 @@ const Notifications: React.FC<NotificationsProps> = ({
       ) : (
         <ScrollView>
           {notifications.map((notification, index) => (
-            <NotificationCard
-              key={`${notification.id || index}-${notification.addedTime}`}
-              notification={notification}
-              onCtaPress={onCtaPress}
-              addedTime={notification.addedTime}
-            />
+            <>
+              <NotificationCard
+                key={`${notification.id || index}-${notification.addedTime}`}
+                notification={notification}
+                onCtaPress={onCtaPress}
+                addedTime={notification.addedTime}
+              />
+              {/* <View className="border-t-[0.5px] border-[#000] w-[80%] align-right"></View> */}
+            </>
           ))}
         </ScrollView>
       )}
