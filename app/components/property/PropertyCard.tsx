@@ -156,7 +156,7 @@ const PropertyCard: React.FC<PropertyCardProps> = ({ property }) => {
     }
 
     setSelectedCPID(property.cpCode || "");
-    if (monthlyCredits > 0) {
+    if ((monthlyCredits + boosterCredits) > 0) {
       setIsConfirmModelOpen(true);
       return;
     } else {
@@ -219,7 +219,7 @@ const PropertyCard: React.FC<PropertyCardProps> = ({ property }) => {
       return;
     }
 
-    if (!(monthlyCredits > 0)) {
+    if (!((monthlyCredits + boosterCredits) > 0)) {
       showErrorToast(
         "You don't have enough credits. Please contact your account manager."
       );
@@ -487,7 +487,9 @@ const PropertyCard: React.FC<PropertyCardProps> = ({ property }) => {
 
       <ConfirmModal
         title="Confirm Enquiry"
-        message={`Are you sure you want to enquire? You have ${monthlyCredits} credits remaining for this month.`}
+        message={`Are you sure you want to enquire? You have ${
+          monthlyCredits + boosterCredits
+        } credits remaining for this month.`}
         onConfirm={onConfirmEnquiry}
         onCancel={handleCancel}
         onModalHide={() => {

@@ -302,7 +302,7 @@ export default function PropertyDetailsScreen() {
     }
 
     setSelectedCPID(property.cpCode || "");
-    if (monthlyCredits > 0) {
+    if ((monthlyCredits + boosterCredits) > 0) {
       setIsConfirmModelOpen(true);
       return;
     } else {
@@ -371,7 +371,7 @@ export default function PropertyDetailsScreen() {
       return;
     }
 
-    if (!(monthlyCredits > 0)) {
+    if (!(monthlyCredits + boosterCredits > 0)) {
       setCreditLimitModalVisible(true);
       setIsConfirmModelOpen(false);
       return;
@@ -828,7 +828,9 @@ export default function PropertyDetailsScreen() {
 
       <ConfirmModal
         title="Confirm Enquiry"
-        message={`Are you sure you want to enquire? You have ${monthlyCredits} credits remaining for this month.`}
+        message={`Are you sure you want to enquire? You have ${
+          monthlyCredits + boosterCredits
+        } credits remaining for this month.`}
         onConfirm={onConfirmEnquiry}
         onCancel={handleCancel}
         onModalHide={() => {

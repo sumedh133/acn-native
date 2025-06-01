@@ -70,6 +70,10 @@ const CustomHeader = ({
   const monthlyCredits = useSelector(
     (state: RootState) => state?.agent?.docData?.monthlyCredits
   );
+  const boosterCredits =
+    useSelector((state: RootState) => state.agent?.docData?.boosterCredits) ||
+    0;
+
   return (
     <View style={styles.headerContainer}>
       <View style={styles.headerContent}>
@@ -88,7 +92,7 @@ const CustomHeader = ({
             style={styles.headerRight}
             onPress={() => router.push("/(pages)/Credits")}
           >
-            <Text style={styles.creditsText}>{monthlyCredits}</Text>
+            <Text style={styles.creditsText}>{monthlyCredits + boosterCredits}</Text>
             <CoinIcon width={18} height={18} />
           </TouchableOpacity>
         )}
