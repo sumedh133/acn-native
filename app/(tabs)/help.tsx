@@ -7,6 +7,7 @@ import {
   StyleSheet,
   Dimensions,
   Linking,
+  Platform,
 } from "react-native";
 import { useNavigation } from "@react-navigation/native";
 
@@ -16,6 +17,7 @@ import TncIcon from "../../assets/icons/tnc.svg";
 import ArrowRightIcon from "../../assets/icons/arrowRightt.svg";
 import LockIcon from "../../assets/icons/lock.svg";
 import ReceiptMoneyIcon from "../../assets/icons/receiptMoney.svg";
+import FlagIcon from "../../assets/icons/flag.svg";
 import { useSelector } from "react-redux";
 import { RootState } from "@/store/store";
 import Offline from "../components/Offline";
@@ -25,10 +27,22 @@ import { router } from "expo-router";
 import { showErrorToast } from "@/utils/toastUtils";
 import { useDispatch } from "react-redux";
 import { AnyAction, ThunkDispatch } from "@reduxjs/toolkit";
-import { collection, deleteDoc, doc, getDoc, getDocs, query, serverTimestamp, setDoc, updateDoc, where } from "firebase/firestore";
+import {
+  collection,
+  deleteDoc,
+  doc,
+  getDoc,
+  getDocs,
+  query,
+  serverTimestamp,
+  setDoc,
+  updateDoc,
+  where,
+} from "firebase/firestore";
 import { db } from "../config/firebase";
 import { logEvent } from "@react-native-firebase/analytics";
 import { analytics } from "../config/firebase";
+import { Ionicons } from "@expo/vector-icons";
 
 interface HelpMobileProps {}
 
@@ -47,7 +61,7 @@ const HelpMobile: React.FC<HelpMobileProps> = () => {
       logEvent(analytics, "help_page_view", {
         event_category: "help",
         event_label: "page_view",
-        user_type: userType
+        user_type: userType,
       });
     } catch (error) {
       console.error("Error logging page view:", error);
@@ -81,23 +95,37 @@ const HelpMobile: React.FC<HelpMobileProps> = () => {
     return () => subscription.remove();
   }, [navigation]);
 
-  const openLink = useCallback((url: string) => {
-    try {
-      // Extract policy type from URL
-      const policyType = url.split('/').pop() || '';
-      
-      logEvent(analytics, "help_policy_click", {
-        event_category: "help",
-        event_label: "policy",
-        policy_type: policyType,
-        user_type: userType
-      });
-    } catch (error) {
-      console.error("Error logging policy click:", error);
-    }
-    
-    Linking.openURL(url);
-  }, [userType]);
+  const openLink = useCallback(
+    (url: string) => {
+      console.log("url", url);
+      if (url.startsWith("/(tabs)")) {
+        router.push(url);
+        return;
+      }
+
+      try {
+        // Extract policy type from URL
+        const policyType = url.split("/").pop() || "";
+
+        logEvent(analytics, "help_policy_click", {
+          event_category: "help",
+          event_label: "policy",
+          policy_type: policyType,
+          user_type: userType,
+        });
+      } catch (error) {
+        console.error("Error logging policy click:", error);
+      }
+
+      Linking.openURL(url);
+    },
+    [userType]
+  );
+
+  const handleContactSupport = () => {
+    const phonenumber = "+917206498895";
+    Linking.openURL(`tel:${phonenumber}`);
+  }
 
   const handleDelete = async () => {
     try {
@@ -105,12 +133,12 @@ const HelpMobile: React.FC<HelpMobileProps> = () => {
       logEvent(analytics, "account_deletion_attempt", {
         event_category: "help",
         event_label: "account",
-        user_type: userType
+        user_type: userType,
       });
-      
+
       const agentRef = doc(db, "agents", agentData.cpId);
       const agentSnapshot = await getDoc(agentRef);
-      
+
       if (!agentSnapshot.exists()) {
         throw new Error("Agent not found");
       }
@@ -136,7 +164,7 @@ const HelpMobile: React.FC<HelpMobileProps> = () => {
       // Update each enquiry to mark it as delisted
       const updatePromises = enquiriesSnapshot.docs.map((enquiryDoc) => {
         return updateDoc(doc(db, "ACN123", enquiryDoc.id), {
-          status: 'inactive',
+          status: "inactive",
           deletedAt: serverTimestamp(),
         });
       });
@@ -151,7 +179,7 @@ const HelpMobile: React.FC<HelpMobileProps> = () => {
         event_category: "help",
         event_label: "account",
         user_type: userType,
-        enquiries_archived: enquiriesSnapshot.docs.length
+        enquiries_archived: enquiriesSnapshot.docs.length,
       });
 
       await dispatch(logOut());
@@ -165,7 +193,7 @@ const HelpMobile: React.FC<HelpMobileProps> = () => {
         event_category: "help",
         event_label: "error",
         error_message: error instanceof Error ? error.message : "Unknown error",
-        user_type: userType
+        user_type: userType,
       });
 
       console.error("Error during Delete:", error);
@@ -211,12 +239,25 @@ const HelpMobile: React.FC<HelpMobileProps> = () => {
           "Refund Policy",
           "https://acnonline.in/refund-policy"
         )}
-        <View style={{}}>
+
+        {renderLinkItem(
+          <FlagIcon width={20} height={20} />,
+          "Report Misuse",
+          "/(tabs)/ReportIssue"
+        )}
+      </View>
+      <View style={{}}>
+        <TouchableOpacity
+          style={styles.contactButton}
+          onPress={handleContactSupport}
+        >
+          <Ionicons name="call-outline" size={20} color="white" />
+          <Text style={styles.contactText}>Contact Support</Text>
+        </TouchableOpacity>
         <TouchableOpacity style={styles.logoutButton} onPress={handleDelete}>
           <LogoutIcon width={18} height={18} />
           <Text style={styles.logoutText}>DELETE ACCOUNT</Text>
         </TouchableOpacity>
-        </View>
       </View>
     </View>
   );
@@ -225,8 +266,12 @@ const HelpMobile: React.FC<HelpMobileProps> = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    marginTop: 32,
+    marginVertical: 32,
     marginHorizontal: 16,
+    height: "100%",
+    display: "flex",
+    flexDirection: "column",
+    justifyContent: "space-between",
   },
   linksContainer: {
     gap: 24,
@@ -252,6 +297,16 @@ const styles = StyleSheet.create({
     color: "#000000",
     marginLeft: 8,
   },
+  contactButton: {
+    flexDirection: "row",
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "#003F3B",
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    borderRadius: 6,
+    gap: 8,
+  },
   logoutButton: {
     flexDirection: "row",
     justifyContent: "center",
@@ -260,13 +315,18 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     paddingVertical: 12,
     borderRadius: 4,
-    gap: 6,
+    gap: 8,
+    marginTop: 24,
+  },
+  contactText: {
+    color: "#FFFFFF",
+    fontWeight: 500,
+    fontSize: 16,
   },
   logoutText: {
     color: "#DE1135",
     fontWeight: 600,
     fontSize: 14,
-    marginLeft: 6,
   },
 });
 

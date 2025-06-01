@@ -60,7 +60,6 @@ const Profile = () => {
       case "payment_records":
         try {
           logEvent(analytics, "payment_records_click", { "event_category" : "profile", "event_label" : "payment_record", "user_type": userType })
-          console.log("Sent")
         } catch (error) {
           console.error("Error: ", error)
         }

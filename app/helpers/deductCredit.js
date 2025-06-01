@@ -7,6 +7,7 @@ import {
 } from "firebase/firestore";
 import { db } from "../config/firebase";
 import { setMonthlyCredit } from "@/store/slices/agentSlice";
+import { useSelector } from "react-redux";
 
 /**
  * Deducts 1 credit from the user's monthly credits.
@@ -15,18 +16,32 @@ import { setMonthlyCredit } from "@/store/slices/agentSlice";
  * @param {Function} dispatch - Redux dispatch function to update state.
  * @returns {Promise<void>} - Resolves when the operation completes.
  */
-const deductMonthlyCredit = async (phoneNumber, currentCredits, dispatch) => {
+const deductMonthlyCredit = async (phoneNumber, currentCredits, dispatch, boosterCredits) => {
   if (!phoneNumber) {
-    console.error("Phone number is required.");
-    return;
+    const errorMessage = "Phone number is required. Please try logging in again.";
+    console.error(errorMessage);
+    throw new Error(errorMessage);
   }
 
-  if (typeof currentCredits !== "number" || currentCredits <= 0) {
-    console.error("Invalid credit value. Cannot deduct.");
-    return;
+  // const boosterCredits = useSelector((state) => state?.agent?.docData?.boosterCredits) || 0;
+
+  if ((typeof currentCredits !== "number" || currentCredits <= 0) && boosterCredits <= 0) {
+    const errorMessage = `Invalid credit value. Cannot deduct.`;
+    console.error(errorMessage);
+    throw new Error(errorMessage);
   }
 
-  const finalCredit = Math.max(0, currentCredits - 1);
+  let finalCredit = currentCredits;
+  let finalBoosterCredit = boosterCredits;
+
+  if (currentCredits <= 0) {
+    // If no monthly credits left, deduct from booster credits
+    finalBoosterCredit = Math.max(0, boosterCredits - 1);
+  }
+  else {
+    // If monthly credits left, deduct from monthly credits
+    finalCredit = Math.max(0, currentCredits - 1);
+  }
 
   try {
     const agentsCollection = collection(db, "agents");
@@ -34,15 +49,16 @@ const deductMonthlyCredit = async (phoneNumber, currentCredits, dispatch) => {
     const querySnapshot = await getDocs(q);
 
     if (querySnapshot.empty) {
-      console.error(`No document found for phone number: ${phoneNumber}`);
-      return;
+      const errorMessage = `No agent found for phone number: ${phoneNumber}`;
+      console.error(errorMessage);
+      throw new Error(errorMessage);
     }
 
     const docRef = querySnapshot.docs[0].ref;
 
-    await updateDoc(docRef, { monthlyCredits: finalCredit });
+    await updateDoc(docRef, { monthlyCredits: finalCredit, boosterCredits: finalBoosterCredit });
 
-    dispatch(setMonthlyCredit(finalCredit));
+    dispatch(setMonthlyCredit({ monthlyCredits: finalCredit, boosterCredits: finalBoosterCredit }));
   } catch (error) {
     console.error("Error deducting credits:", error.message || error);
     throw error;

@@ -133,6 +133,9 @@ const Credits = () => {
   const monthlyCredits = useSelector(
     (state: RootState) => state?.agent?.docData?.monthlyCredits
   );
+  const boosterCredits = useSelector(
+    (state: RootState) => state?.agent?.docData?.boosterCredits
+  ) || 0;
   const userType: string | null =
     useSelector((state: RootState) => state?.agent?.docData?.userType) || "";
 
@@ -250,7 +253,7 @@ const Credits = () => {
               className=" text-4xl  mt-1 mb-1"
               style={{ fontFamily: "Montserrat_700Bold" }}
             >
-              {monthlyCredits}
+              {monthlyCredits + boosterCredits}
             </Text>
             <Text
               className=" text-xs text-gray-600 max-w-[80%]"

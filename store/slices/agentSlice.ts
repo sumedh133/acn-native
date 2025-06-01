@@ -26,7 +26,7 @@ export const setAgentDataState = createAsyncThunk(
     try {
       const q = query(
         collection(db, "agents"),
-        where("phonenumber", "==", phonenumber),
+        where("phonenumber", "==", phonenumber)
       );
       const querySnapshot = await getDocs(q);
 
@@ -44,7 +44,7 @@ export const setAgentDataState = createAsyncThunk(
     } catch (error: any) {
       return rejectWithValue(error.message);
     }
-  },
+  }
 );
 
 export const listenToAgentChanges =
@@ -52,7 +52,7 @@ export const listenToAgentChanges =
   (dispatch, getState) => {
     dispatch(clearAgentListener());
     const docRef = doc(db, "agents", agentId);
-    
+
     let previousVerificationStatus: boolean | undefined;
     let isInitialSnapshot = true;
 
@@ -62,64 +62,71 @@ export const listenToAgentChanges =
         if (docSnap.exists()) {
           const newData = docSnap.data();
           const currentVerificationStatus = newData.verified;
-          
+
           // Track initial verification state
           if (isInitialSnapshot) {
             try {
-              logEvent(analytics, 'agent_verification_initial_state', {
-                event_category: 'auth',
-                event_label: 'verification',
-                status: currentVerificationStatus ? 'verified' : 'unverified',
+              logEvent(analytics, "agent_verification_initial_state", {
+                event_category: "auth",
+                event_label: "verification",
+                status: currentVerificationStatus ? "verified" : "unverified",
                 phone_number: newData.phonenumber,
-                user_type: newData.userType || 'free'
+                user_type: newData.userType || "free",
               });
             } catch (error) {
-              console.error('Error logging initial verification state:', error);
+              console.error("Error logging initial verification state:", error);
             }
             isInitialSnapshot = false;
           }
-          
+
           // Check if verification status has changed
-          if (previousVerificationStatus !== undefined && previousVerificationStatus !== currentVerificationStatus) {
+          if (
+            previousVerificationStatus !== undefined &&
+            previousVerificationStatus !== currentVerificationStatus
+          ) {
             try {
-              logEvent(analytics, 'agent_verification_status_change', {
-                event_category: 'auth',
-                event_label: 'verification',
-                new_status: currentVerificationStatus ? 'verified' : 'unverified',
-                previous_status: previousVerificationStatus ? 'verified' : 'unverified',
+              logEvent(analytics, "agent_verification_status_change", {
+                event_category: "auth",
+                event_label: "verification",
+                new_status: currentVerificationStatus
+                  ? "verified"
+                  : "unverified",
+                previous_status: previousVerificationStatus
+                  ? "verified"
+                  : "unverified",
                 phone_number: newData.phonenumber,
-                user_type: newData.userType || 'free',
+                user_type: newData.userType || "free",
                 verified_at: newData.verifiedAt || null,
                 verified_by: newData.verifiedBy || null,
-                time_to_verify: currentVerificationStatus ? 
-                  ((newData.verifiedAt || Date.now()) - newData.added) / 1000 : // Time in seconds
-                  null
+                time_to_verify: currentVerificationStatus
+                  ? ((newData.verifiedAt || Date.now()) - newData.added) / 1000 // Time in seconds
+                  : null,
               });
             } catch (error) {
-              console.error('Error logging verification status change:', error);
+              console.error("Error logging verification status change:", error);
             }
           }
-          
+
           // Update previous status for next comparison
           previousVerificationStatus = currentVerificationStatus;
-          
+
           dispatch(
             setUserDoc({
               docData: newData,
               docId: docSnap.id,
-            }),
+            })
           );
         } else {
           // Track document deletion or non-existence
           try {
-            logEvent(analytics, 'agent_document_missing', {
-              event_category: 'auth',
-              event_label: 'error',
+            logEvent(analytics, "agent_document_missing", {
+              event_category: "auth",
+              event_label: "error",
               agent_id: agentId,
-              previous_verification_status: previousVerificationStatus
+              previous_verification_status: previousVerificationStatus,
             });
           } catch (error) {
-            console.error('Error logging document missing:', error);
+            console.error("Error logging document missing:", error);
           }
           dispatch(resetAgentState());
           dispatch(signOut());
@@ -128,22 +135,22 @@ export const listenToAgentChanges =
       (error) => {
         // Track listener errors
         try {
-          logEvent(analytics, 'agent_verification_listener_error', {
-            event_category: 'auth',
-            event_label: 'error',
+          logEvent(analytics, "agent_verification_listener_error", {
+            event_category: "auth",
+            event_label: "error",
             error_message: error.message,
-            agent_id: agentId
+            agent_id: agentId,
           });
         } catch (analyticsError) {
-          console.error('Error logging listener error:', analyticsError);
+          console.error("Error logging listener error:", analyticsError);
         }
         console.error("Agent listener error:", error);
         dispatch(setError(error.message));
-      },
+      }
     );
 
     dispatch(setAgentListener(unsubscribe));
-    
+
     // Return unsubscribe function for cleanup
     return unsubscribe;
   };
@@ -178,7 +185,8 @@ const agentSlice = createSlice({
       if (state.docData) {
         state.docData = {
           ...state.docData,
-          monthlyCredits: action.payload,
+          monthlyCredits: action.payload.monthlyCredits,
+          boosterCredits: action.payload.boosterCredits,
         };
       }
     },

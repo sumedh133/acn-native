@@ -17,6 +17,9 @@ const CreditsCard = ({
   const monthlyCredits = useSelector(
     (state: RootState) => state?.agent?.docData?.monthlyCredits
   );
+  const boosterCredits = useSelector(
+    (state: RootState) => state?.agent?.docData?.boosterCredits
+  ) || 0;
   const userType = useSelector((state: RootState) => state?.agent?.docData?.userType) || "free";
 
   const handleClick = () => {
@@ -65,7 +68,9 @@ const CreditsCard = ({
       <View style={styles.container}>
         <View style={styles.textContainer}>
           <Text style={styles.creditsLabel}>Available Credits :</Text>
-          <Text style={styles.creditsText}>{monthlyCredits}</Text>
+          <Text style={styles.creditsText}>
+            {monthlyCredits + boosterCredits}
+          </Text>
         </View>
         {Platform.OS != "ios" && (
           <TouchableOpacity

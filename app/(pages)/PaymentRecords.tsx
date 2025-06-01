@@ -1,4 +1,4 @@
-import React, { useMemo, useEffect } from "react";
+import React, { useMemo, useEffect, useState } from "react";
 import {
   StyleSheet,
   View,
@@ -12,21 +12,46 @@ import {
 import { useSelector } from "react-redux";
 import { RootState } from "@/store/store";
 import { logEvent } from "@react-native-firebase/analytics";
-import { analytics } from "../config/firebase";
+import { analytics, db } from "../config/firebase";
+import {
+  doc,
+  getDoc,
+  getDocs,
+  query,
+  collection,
+  where,
+} from "firebase/firestore";
+import { router } from "expo-router";
 
 interface PaymentHistoryItem {
-  lastPaymentAmount?: number;
-  lastPaymentDate?: {
-    seconds: number;
+  id: string;
+  createdAt: {
     nanoseconds: number;
-    toDate?: () => Date;
+    seconds: number;
   };
-  lastPaymentId?: string;
-  lastPlanId?: string;
-  paymentAmount?: number;
-  paymentDate?: { seconds: number; nanoseconds: number; toDate?: () => Date };
-  paymentId?: string;
-  planId?: string;
+  data: {
+    amount: number;
+    feesContext: {
+      amount: number;
+    };
+    merchantId: string;
+    merchantTransactionId: string;
+    paymentInstrument: {
+      accountType: string;
+      cardType: string;
+      cardNetwork: string;
+      type: string;
+    };
+    transactionId: string;
+    state: string;
+    responseCode: string;
+  };
+  phonenumber: string;
+  status: string;
+  updatedAt: {
+    nanoseconds: number;
+    seconds: number;
+  };
 }
 
 interface FormattedPaymentRecord {
@@ -34,14 +59,45 @@ interface FormattedPaymentRecord {
   title: string;
   amount: string;
   date: string;
+  status: string;
 }
 
 const PaymentRecords: React.FC = () => {
-  const paymentHistory: Array<PaymentHistoryItem> | null =
-    useSelector((state: RootState) => state?.agent?.docData?.paymentHistory) ||
-    null;
+  // const paymentHistory: Array<PaymentHistoryItem> | null =
+  //   useSelector((state: RootState) => state?.agent?.docData?.paymentHistory) ||
+  //   null;
 
-  const userType = useSelector((state: RootState) => state?.agent?.docData?.userType) || "free";
+  const phoneNumber = useSelector(
+    (state: RootState) => state?.agent?.docData?.phonenumber
+  );
+
+  const [paymentHistory, setPaymentHistory] =
+    useState<Array<PaymentHistoryItem> | null>(null);
+
+  const fetchPaymentHistory = async () => {
+    try {
+      const querySnapshot = await getDocs(
+        query(
+          collection(db, "payments"),
+          where("phonenumber", "==", phoneNumber)
+        )
+      );
+      let data: PaymentHistoryItem[] = [];
+      if (!querySnapshot.empty) {
+        data = querySnapshot.docs.map((doc) => ({
+          ...(doc.data() as PaymentHistoryItem),
+          id: doc.id,
+        }));
+      }
+      setPaymentHistory(data);
+    } catch (error) {
+      console.error("Error fetching payment history:", error);
+    }
+  };
+
+  const userType =
+    useSelector((state: RootState) => state?.agent?.docData?.userType) ||
+    "free";
 
   // Add page view tracking
   useEffect(() => {
@@ -50,7 +106,7 @@ const PaymentRecords: React.FC = () => {
         event_category: "payment_records",
         event_label: "page_view",
         records_count: paymentHistory?.length || 0,
-        user_type: userType
+        user_type: userType,
       });
     } catch (error) {
       console.error("Error logging page view:", error);
@@ -61,86 +117,77 @@ const PaymentRecords: React.FC = () => {
     if (!paymentHistory || !paymentHistory.length) return [];
 
     return paymentHistory.map((item) => {
-      const isPremiumPlan =
-        item.lastPlanId === "premium" || item.planId === "premium";
-      const paymentAmount = item.lastPaymentAmount || item.paymentAmount || 0;
-      const paymentId = item.lastPaymentId || item.paymentId || "";
+      // console.log(item, "This is the item");
+      const isPremiumPlan = item.data.amount === 24900 ? false : true;
+      const paymentAmount = item.data.amount;
+      const paymentId = item.id;
 
       let dateString = "";
-      const timestamp = item.lastPaymentDate || item.paymentDate;
+      const timestamp = item.updatedAt;
 
-      if (timestamp) {
-        if (timestamp.toDate && typeof timestamp.toDate === "function") {
-          const date = timestamp.toDate();
-          const monthNames = [
-            "January",
-            "February",
-            "March",
-            "April",
-            "May",
-            "June",
-            "July",
-            "August",
-            "September",
-            "October",
-            "November",
-            "December",
-          ];
-          dateString = `${
-            monthNames[date.getMonth()]
-          } ${date.getDate()} • ${date.getHours()}:${String(
-            date.getMinutes()
-          ).padStart(2, "0")} ${date.getHours() >= 12 ? "PM" : "AM"}`;
-        } else if (timestamp.seconds) {
-          const date = new Date(timestamp.seconds * 1000);
-          const monthNames = [
-            "January",
-            "February",
-            "March",
-            "April",
-            "May",
-            "June",
-            "July",
-            "August",
-            "September",
-            "October",
-            "November",
-            "December",
-          ];
-          dateString = `${
-            monthNames[date.getMonth()]
-          } ${date.getDate()} • ${date.getHours()}:${String(
-            date.getMinutes()
-          ).padStart(2, "0")} ${date.getHours() >= 12 ? "PM" : "AM"}`;
-        }
+      if (timestamp?.seconds) {
+        const date = new Date(timestamp.seconds * 1000);
+        const monthNames = [
+          "January",
+          "February",
+          "March",
+          "April",
+          "May",
+          "June",
+          "July",
+          "August",
+          "September",
+          "October",
+          "November",
+          "December",
+        ];
+        dateString = `${
+          monthNames[date.getMonth()]
+        } ${date.getDate()} • ${date.getHours()}:${String(
+          date.getMinutes()
+        ).padStart(2, "0")} ${date.getHours() >= 12 ? "PM" : "AM"}`;
       }
 
       return {
         id: paymentId,
         title: isPremiumPlan ? "ACN Premium Plan" : "Enquiry Booster Pack",
-        amount: `₹${(paymentAmount/100).toFixed(2)}`,
+        amount: `₹${(paymentAmount / 100).toFixed(2)}`,
         date: dateString,
+        status:
+          item.status === "PAYMENT_SUCCESS"
+            ? "Paid Successfully"
+            : "Payment Failed",
       };
     });
   }, [paymentHistory]);
 
   const handlePaymentItemClick = (item: FormattedPaymentRecord) => {
+    router.push({
+      pathname: "/components/Payments/transaction",
+      params: { id: item.id },
+    });
     try {
       logEvent(analytics, "payment_record_item_click", {
         event_category: "payment_records",
         event_label: "item_click",
         payment_id: item.id,
-        plan_type: item.title.toLowerCase().includes("premium") ? "premium" : "booster",
+        plan_type: item.title.toLowerCase().includes("premium")
+          ? "premium"
+          : "booster",
         amount: parseFloat(item.amount.replace("₹", "")),
-        user_type: userType
+        user_type: userType,
       });
     } catch (error) {
       console.error("Error logging payment item click:", error);
     }
   };
 
+  useEffect(() => {
+    fetchPaymentHistory();
+  }, []);
+
   const renderPaymentItem = ({ item }: { item: FormattedPaymentRecord }) => (
-    <TouchableOpacity 
+    <TouchableOpacity
       style={styles.paymentCard}
       onPress={() => handlePaymentItemClick(item)}
     >
@@ -150,7 +197,7 @@ const PaymentRecords: React.FC = () => {
       </View>
       <View style={styles.paymentStatusContainer}>
         <Text style={styles.paymentAmount}>{item.amount}</Text>
-        <Text style={styles.paymentStatus}>{"Paid Successfully"}</Text>
+        <Text style={styles.paymentStatus}>{item.status}</Text>
       </View>
     </TouchableOpacity>
   );
@@ -171,24 +218,24 @@ const PaymentRecords: React.FC = () => {
           <Text style={styles.emptyText}>No payment records found</Text>
         </View>
       )}
-      {Platform.OS === "ios" ? (
-      <View style={styles.NoteView}>
-        <Text
-          style={{
-            color: "#050505",
-            fontFamily: "Lato_400Regular",
-            fontSize: 12,
-            fontWeight:500,
-          }}
-        >
-          Note:{" "}
-          <Text style={styles.NoteText}>
-            Credit top-ups and plan upgrades are not available within the app.
-            We apologize for any inconvenience caused.
+      {/* {Platform.OS === "ios" ? (
+        <View style={styles.NoteView}>
+          <Text
+            style={{
+              color: "#050505",
+              fontFamily: "Lato_400Regular",
+              fontSize: 12,
+              fontWeight: 500,
+            }}
+          >
+            Note:{" "}
+            <Text style={styles.NoteText}>
+              Credit top-ups and plan upgrades are not available within the app.
+              We apologize for any inconvenience caused.
+            </Text>
           </Text>
-        </Text>
-      </View>
-      ) : null}
+        </View>
+      ) : null} */}
     </SafeAreaView>
   );
 };
@@ -260,7 +307,7 @@ const styles = StyleSheet.create({
     color: "#707070",
     fontFamily: "Lato_400Regular",
     fontSize: 12,
-    fontWeight:500,
+    fontWeight: 500,
   },
 });
 

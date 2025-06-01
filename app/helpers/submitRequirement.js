@@ -21,7 +21,7 @@ export default async function submitRequirement(userRequirement, cpId) {
     const nextReqId = await generateNextReqId();
     if (!nextReqId) {
       throw new Error(
-        "Failed to generate the Requirement ID. Please try again later.",
+        "Failed to generate the Requirement ID. Please try again later."
       );
     }
 
@@ -49,6 +49,15 @@ export default async function submitRequirement(userRequirement, cpId) {
     await updateDoc(doc(db, "agents", formData.agentCpid), {
       myRequirements: arrayUnion(nextReqId),
     });
+    fetch(
+      `https://notification-server-acn.onrender.com/addedrequirements/${formData.requirementId}`,
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+      }
+    );
   } catch (error) {
     return error;
   }

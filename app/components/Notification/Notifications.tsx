@@ -1,0 +1,62 @@
+// Enquired on your property
+// New Feature Alert
+// You have successfully Enquired a property
+// Going to be De-Listd Property Alert
+// De-Listed Property Alert
+// Status Update on Property
+// Listing Updates
+// Credits Purchased
+// Listing Submitted
+// Premium Purchased
+// Requirement Posted
+// Your Free Trial has ended
+// Trial Expires in 20 days
+// Free trial is live
+
+import { NotificationItem } from "@/app/types";
+import NotificationCard from "./NotificationCard";
+import React from "react";
+import { View, Text, ScrollView } from "react-native";
+import NoNotificationsIcon from "@/assets/icons/InAppNotifications/noNotifications.svg";
+
+interface NotificationsProps {
+  notifications: NotificationItem[];
+  onCtaPress?: (action: string, notification: NotificationItem) => void;
+}
+
+const Notifications: React.FC<NotificationsProps> = ({
+  notifications,
+  onCtaPress,
+}) => {
+  return (
+    <View style={{ flex: 1, height: "100%" }}>
+      {notifications.length == 0 ? (
+        <View
+          style={{
+            flex: 1,
+            justifyContent: "center",
+            alignItems: "center",
+          }}
+        >
+          <NoNotificationsIcon width={293} height={429} />
+        </View>
+      ) : (
+        <ScrollView>
+          {notifications.map((notification, index) => (
+            <>
+              <NotificationCard
+                key={`${notification.id || index}-${notification.addedTime}`}
+                notification={notification}
+                onCtaPress={onCtaPress}
+                addedTime={notification.addedTime}
+              />
+              {/* <View className="border-t-[0.5px] border-[#000] w-[80%] align-right"></View> */}
+            </>
+          ))}
+        </ScrollView>
+      )}
+    </View>
+  );
+};
+
+export default Notifications;

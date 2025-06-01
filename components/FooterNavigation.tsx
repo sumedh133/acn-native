@@ -23,6 +23,7 @@ import { analytics } from "@/app/config/firebase";
 import { logEvent } from "@react-native-firebase/analytics";
 import { useSelector } from "react-redux";
 import { RootState } from "@/store/store";
+import useNotification from "@/app/components/Notification/useNotification";
 
 interface MenuItem {
   title: string;
@@ -44,23 +45,23 @@ const menuItems: MenuItem[] = [
     icon: <RequirementsIcon width={24} height={24} />,
     activeIcon: <ActiveRequirementsIcon width={24} height={24} />,
   },
-  // {
-  //   title: "Notifications",
-  //   path: "/NotificationPage",
-  //   icon: <NotificationIcon width={24} height={24} />,
-  //   activeIcon: <ActiveNotificationIcon width={24} height={24} />,
-  // },
-  {
-    title: "Dashboard",
-    path: "/dashboardTab",
-    icon: <DashboardIcon width={24} height={24} />,
-    activeIcon: <ActiveDashboardIcon width={24} height={24} />,
-  },
   {
     title: "",
     path: "/add",
     icon: <PlusIcon width={24} height={24} />,
     activeIcon: null,
+  },
+  {
+    title: "Notifications",
+    path: "/NotificationPage",
+    icon: <NotificationIcon width={24} height={24} />,
+    activeIcon: <ActiveNotificationIcon width={24} height={24} />,
+  },
+  {
+    title: "Dashboard",
+    path: "/dashboardTab",
+    icon: <DashboardIcon width={24} height={24} />,
+    activeIcon: <ActiveDashboardIcon width={24} height={24} />,
   },
 ];
 
@@ -69,7 +70,10 @@ const FooterNavigation = () => {
   const router = useRouter();
   const navigation = useNavigation();
   const { height } = Dimensions.get("window");
-  const userType = useSelector((state: RootState) => state?.agent?.docData?.userType) || "free";
+  const userType =
+    useSelector((state: RootState) => state?.agent?.docData?.userType) ||
+    "free";
+  const { unreadCount } = useNotification();
 
   const [popupAnimationFlag, setPopupAnimationFlag] = useState<boolean>(false);
   const [showPopup, setShowPopup] = useState<boolean>(false);
@@ -91,17 +95,17 @@ const FooterNavigation = () => {
       return;
     }
     if (path === pathname) return;
-    
+
     try {
-      logEvent(analytics, 'footer_navigation', {
-        event_category: 'navigation',
-        event_label: 'footer',
+      logEvent(analytics, "footer_navigation", {
+        event_category: "navigation",
+        event_label: "footer",
         from_path: pathname,
         to_path: path,
-        user_type: userType
+        user_type: userType,
       });
     } catch (error) {
-      console.error('Error logging navigation:', error);
+      console.error("Error logging navigation:", error);
     }
 
     setTimeout(() => {
@@ -112,17 +116,17 @@ const FooterNavigation = () => {
   const handlePopupCardClick = (path: string) => {
     setPopupAnimationFlag(false);
     if (path === pathname) return;
-    
+
     try {
-      logEvent(analytics, 'popup_card_click', {
-        event_category: 'navigation',
-        event_label: 'popup',
+      logEvent(analytics, "popup_card_click", {
+        event_category: "navigation",
+        event_label: "popup",
         selected_path: path,
         from_path: pathname,
-        user_type: userType
+        user_type: userType,
       });
     } catch (error) {
-      console.error('Error logging popup card click:', error);
+      console.error("Error logging popup card click:", error);
     }
 
     navigateAtEndOfAnimation.current = path;
@@ -130,17 +134,17 @@ const FooterNavigation = () => {
 
   const handlePopupClick = () => {
     const newState = !popupAnimationFlag;
-    
+
     try {
-      logEvent(analytics, newState ? 'open_add_popup' : 'close_add_popup', {
-        event_category: 'interaction',
-        event_label: 'popup',
-        action: newState ? 'open' : 'close',
+      logEvent(analytics, newState ? "open_add_popup" : "close_add_popup", {
+        event_category: "interaction",
+        event_label: "popup",
+        action: newState ? "open" : "close",
         current_path: pathname,
-        user_type: userType
+        user_type: userType,
       });
     } catch (error) {
-      console.error('Error logging popup interaction:', error);
+      console.error("Error logging popup interaction:", error);
     }
 
     setPopupAnimationFlag(newState);
@@ -261,6 +265,7 @@ const FooterNavigation = () => {
               </TouchableOpacity>
             );
           }
+          const isNotificationsTab = item?.path === "/NotificationPage";
           return (
             <TouchableOpacity
               onPress={() => handleNavigation(item?.path)}
@@ -268,7 +273,12 @@ const FooterNavigation = () => {
             >
               <View style={active ? styles.activeItem : styles.item}>
                 {active && <View style={styles.activeBar}></View>}
-                {active ? item?.activeIcon : item?.icon}
+                <View style={{ position: "relative" }}>
+                  {active ? item?.activeIcon : item?.icon}
+                  {isNotificationsTab && unreadCount > 0 && (
+                    <View style={styles.notificationDot} />
+                  )}
+                </View>
                 <Text style={active ? styles.itemActiveText : styles.itemText}>
                   {item?.title}
                 </Text>
@@ -361,6 +371,18 @@ const styles = StyleSheet.create({
     fontWeight: 700,
     fontFamily: "Lato",
     color: "#10302D",
+  },
+  notificationDot: {
+    position: "absolute",
+    top: -2,
+    right: -2,
+    width: 12,
+    height: 12,
+    borderRadius: 6,
+    backgroundColor: "#E53935",
+    borderWidth: 2,
+    borderColor: "#fff",
+    zIndex: 1,
   },
 });
 

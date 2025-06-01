@@ -145,6 +145,9 @@ export const HamburgerMenu = ({
   const monthlyCredits = useSelector(
     (state: RootState) => state?.agent?.docData?.monthlyCredits
   );
+  const boosterCredits = useSelector(
+    (state: RootState) => state?.agent?.docData?.boosterCredits
+  ) || 0;
   const isAuthenticated = useSelector(
     (state: RootState) => state?.auth?.isAuthenticated
   );
@@ -333,7 +336,7 @@ export const HamburgerMenu = ({
                     color="#FFD700"
                   />
                   <Text style={styles.creditsText}>
-                    {monthlyCredits} Credits
+                    {monthlyCredits + boosterCredits} Credits
                   </Text>
                 </View>
                 <AnimatedTooltip message="1 Credit is used per enquiry." />

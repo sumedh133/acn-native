@@ -54,6 +54,9 @@ interface IdGenerationResult {
 
 const PropertyCard: React.FC<PropertyCardProps> = ({ property }) => {
   const dispatch = useDispatch<ThunkDispatch<RootState, unknown, AnyAction>>();
+  const boosterCredits =
+    useSelector((state: RootState) => state.agent?.docData?.boosterCredits) ||
+    0;
 
   const [selectedCPID, setSelectedCPID] = useState("");
   const [isConfirmModelOpen, setIsConfirmModelOpen] = useState(false);
@@ -68,7 +71,9 @@ const PropertyCard: React.FC<PropertyCardProps> = ({ property }) => {
   const monthlyCredits = useSelector(
     (state: RootState) => state?.agent?.docData?.monthlyCredits
   );
-  const userType = useSelector((state: RootState) => state?.agent?.docData?.userType) || "free";
+  const userType =
+    useSelector((state: RootState) => state?.agent?.docData?.userType) ||
+    "free";
 
   const enquiryConfirmed = useRef<Boolean>(false);
   // Format price display
@@ -116,15 +121,15 @@ const PropertyCard: React.FC<PropertyCardProps> = ({ property }) => {
   const handleOpenDriveDetails = (e: any) => {
     e.stopPropagation();
     try {
-      logEvent(analytics, 'property_drive_click', {
-        event_category: 'property',
-        event_label: 'interaction',
+      logEvent(analytics, "property_drive_click", {
+        event_category: "property",
+        event_label: "interaction",
         property_id: property.propertyId,
         has_drive_link: !!property.driveLink,
-        user_type: userType
+        user_type: userType,
       });
     } catch (error) {
-      console.error('Error logging drive click:', error);
+      console.error("Error logging drive click:", error);
     }
 
     if (!property.driveLink) {
@@ -139,23 +144,22 @@ const PropertyCard: React.FC<PropertyCardProps> = ({ property }) => {
   const handleEnquireNowBtn = (e: any) => {
     e.stopPropagation();
     try {
-      logEvent(analytics, 'property_enquire_click', {
-        event_category: 'property',
-        event_label: 'interaction',
+      logEvent(analytics, "property_enquire_click", {
+        event_category: "property",
+        event_label: "interaction",
         property_id: property.propertyId,
         credits_available: monthlyCredits,
-        user_type: userType
+        user_type: userType,
       });
     } catch (error) {
-      console.error('Error logging enquire click:', error);
+      console.error("Error logging enquire click:", error);
     }
 
     setSelectedCPID(property.cpCode || "");
-    if (monthlyCredits > 0) {
+    if ((monthlyCredits + boosterCredits) > 0) {
       setIsConfirmModelOpen(true);
       return;
-    }
-    else{
+    } else {
       setCreditLimitModalVisible(true);
     }
   };
@@ -164,20 +168,20 @@ const PropertyCard: React.FC<PropertyCardProps> = ({ property }) => {
     setIsConfirmModelOpen(false);
   };
   const handleGoPremium = () => {
-      setCreditLimitModalVisible(false);
-      router.push({
-        pathname: "/CheckoutScreen",
-        params: { planId: "premium" },
-      });
-    };
-  
-    const handleBuyCredits = () => {
-      setCreditLimitModalVisible(false);
-      router.push({
-        pathname: "/CheckoutScreen",
-        params: { planId: "booster" },
-      });
-    };
+    setCreditLimitModalVisible(false);
+    router.push({
+      pathname: "/CheckoutScreen",
+      params: { planId: "premium" },
+    });
+  };
+
+  const handleBuyCredits = () => {
+    setCreditLimitModalVisible(false);
+    router.push({
+      pathname: "/CheckoutScreen",
+      params: { planId: "booster" },
+    });
+  };
 
   const submitEnquiry = async (nextEnqId: string) => {
     const enq: Enquiry = {
@@ -215,7 +219,7 @@ const PropertyCard: React.FC<PropertyCardProps> = ({ property }) => {
       return;
     }
 
-    if (!(monthlyCredits > 0)) {
+    if (!((monthlyCredits + boosterCredits) > 0)) {
       showErrorToast(
         "You don't have enough credits. Please contact your account manager."
       );
@@ -235,16 +239,21 @@ const PropertyCard: React.FC<PropertyCardProps> = ({ property }) => {
         return;
       }
 
-      logEvent(analytics, 'property_enquiry_submit', {
-        event_category: 'property',
-        event_label: 'conversion',
+      logEvent(analytics, "property_enquiry_submit", {
+        event_category: "property",
+        event_label: "conversion",
         credits_used: 1,
         credits_remaining: monthlyCredits - 1,
-        user_type: userType
+        user_type: userType,
       });
 
       // ✅ Deduct credits first
-      await deductMonthlyCredit(phoneNumber, monthlyCredits, dispatch);
+      await deductMonthlyCredit(
+        phoneNumber,
+        monthlyCredits,
+        dispatch,
+        boosterCredits
+      );
 
       if (typeof nextEnqId === "string") {
         await submitEnquiry(nextEnqId);
@@ -259,22 +268,24 @@ const PropertyCard: React.FC<PropertyCardProps> = ({ property }) => {
       } else {
         setIsEnquiryCPModelOpen(true);
       }
-      await fetch(`https://notification-server-acn-zdgg.onrender.com/enquiries/${nextEnqId}`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-      })
-        .catch((error) => {
-          console.error("Error:", error);
-        });
+      await fetch(
+        `https://notification-server-acn-zdgg.onrender.com/enquiries/${nextEnqId}`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+        }
+      ).catch((error) => {
+        console.error("Error:", error);
+      });
     } catch (error) {
-      logEvent(analytics, 'property_enquiry_error', {
-        event_category: 'property',
-        event_label: 'error',
+      logEvent(analytics, "property_enquiry_error", {
+        event_category: "property",
+        event_label: "error",
         property_id: property.propertyId,
-        error_message: error instanceof Error ? error.message : 'Unknown error',
-        user_type: userType
+        error_message: error instanceof Error ? error.message : "Unknown error",
+        user_type: userType,
       });
       console.error("Error during enquiry process:", error);
       showErrorToast(
@@ -287,14 +298,14 @@ const PropertyCard: React.FC<PropertyCardProps> = ({ property }) => {
   const handleShareButton = (e: any) => {
     e.stopPropagation();
     try {
-      logEvent(analytics, 'property_share_click', {
-        event_category: 'property',
-        event_label: 'interaction',
+      logEvent(analytics, "property_share_click", {
+        event_category: "property",
+        event_label: "interaction",
         property_id: property.propertyId,
-        user_type: userType
+        user_type: userType,
       });
     } catch (error) {
-      console.error('Error logging share click:', error);
+      console.error("Error logging share click:", error);
     }
     setIsShareModalOpen(true);
   };
@@ -302,16 +313,16 @@ const PropertyCard: React.FC<PropertyCardProps> = ({ property }) => {
   // Function to open property details screen with routing
   const openPropertyDetails = () => {
     try {
-      logEvent(analytics, 'property_details_view', {
-        event_category: 'property',
-        event_label: 'navigation',
+      logEvent(analytics, "property_details_view", {
+        event_category: "property",
+        event_label: "navigation",
         property_id: property.propertyId,
         property_type: property.assetType,
         micromarket: property.micromarket,
-        user_type: userType
+        user_type: userType,
       });
     } catch (error) {
-      console.error('Error logging property details view:', error);
+      console.error("Error logging property details view:", error);
     }
 
     if (property) {
@@ -476,7 +487,9 @@ const PropertyCard: React.FC<PropertyCardProps> = ({ property }) => {
 
       <ConfirmModal
         title="Confirm Enquiry"
-        message={`Are you sure you want to enquire? You have ${monthlyCredits} credits remaining for this month.`}
+        message={`Are you sure you want to enquire? You have ${
+          monthlyCredits + boosterCredits
+        } credits remaining for this month.`}
         onConfirm={onConfirmEnquiry}
         onCancel={handleCancel}
         onModalHide={() => {

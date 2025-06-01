@@ -4,7 +4,13 @@ import { RootState } from "@/store/store";
 import { Ionicons } from "@expo/vector-icons";
 import { router } from "expo-router";
 import React, { useState } from "react";
-import { Platform, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import {
+  Platform,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
+} from "react-native";
 import LinearGradient from "react-native-linear-gradient";
 import { useSelector } from "react-redux";
 import OnboardingFlow from "../Onboarding";
@@ -21,103 +27,136 @@ const GetPremiumCard = ({
 }) => {
   const [showOnboarding, setShowOnboarding] = useState(false);
   const trialUsed: boolean | null =
-    useSelector(
-      (state: RootState) => state?.agent?.docData?.trialUsed
-    ) || false;
-  const userType = useSelector((state: RootState) => state?.agent?.docData?.userType) || "free";
-    
+    useSelector((state: RootState) => state?.agent?.docData?.trialUsed) ||
+    false;
+  const userType =
+    useSelector((state: RootState) => state?.agent?.docData?.userType) ||
+    "free";
 
   const handleStartTrial = () => {
     try {
-      logEvent(analytics, 'premium_trial_click', {
-        event_category: 'profile',
-        event_label: 'interaction',
+      logEvent(analytics, "premium_trial_click", {
+        event_category: "profile",
+        event_label: "interaction",
         trial_used: trialUsed,
         platform: Platform.OS,
-        user_type: userType
+        user_type: userType,
       });
     } catch (error) {
-      console.error('Error logging trial start:', error);
+      console.error("Error logging trial start:", error);
     }
 
     if (!trialUsed) {
       setShowOnboarding(true);
     } else {
       if (Platform.OS !== "ios") {
-            router.push({
-              pathname: "/CheckoutScreen",
-              params: { planId: "premium" },
-            });
-          } else {
-            router.push("/billings");
-          }
+        router.push({
+          pathname: "/CheckoutScreen",
+          params: { planId: "premium" },
+        });
+      } else {
+        router.push("/billings");
+      }
     }
   };
 
   const handleComparePlans = () => {
     try {
-      logEvent(analytics, 'compare_plans_click', {
-        event_category: 'profile',
-        event_label: 'navigation',
-        source: 'premium_card',
+      logEvent(analytics, "compare_plans_click", {
+        event_category: "profile",
+        event_label: "navigation",
+        source: "premium_card",
         platform: Platform.OS,
-        user_type: userType
+        user_type: userType,
       });
     } catch (error) {
-      console.error('Error logging compare plans:', error);
+      console.error("Error logging compare plans:", error);
     }
     handleClick(slug);
   };
 
   return (
     <>
-      <LinearGradient
-        colors={["#153E3B", "#05635C"]}
-        start={{ x: 0, y: 0 }}
-        end={{ x: 1, y: 0 }}
-        style={styles.gradientContainer}
-      >
-        <View className="flex-row justify-between">
-          <View>
-            <Text
-              className="text-white text-lg"
-              style={{ fontFamily: "Montserrat_700Bold" }}
-            >
-              ACN Premium
-            </Text>
-            <Text className="text-white text-xl font-extrabold mt-1">
-              {/* {Platform.OS !== 'ios' && */}
-                ₹10,000/year!
-              {/* } */}
-            </Text>
-          </View>
-          <View className="justify-center">
-            <Ionicons
-              name="people-circle-outline"
-              size={40}
-              color="rgba(255,255,255,0.8)"
-            />
-          </View>
-        </View>
+      <View className="rounded-[10px] bg-white">
+        <LinearGradient
+          colors={["#153E3B", "#05635C"]}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 0 }}
+          style={styles.gradientContainer}
+        >
+          <View className="flex-row justify-between">
+            <View>
+              <Text
+                className="text-white text-[18px] leading-[150%]"
+                style={{ fontFamily: "Montserrat_700Bold" }}
+              >
+                ACN Premium
+              </Text>
 
-        <View className="border-t border-[#FAFAFA] my-4" />
+              {Platform.OS === "ios" ? (
+                <Text className="text-white text-[14px] font-extrabold leading-[150%] mt-1">
+                  ₹9,999/-{" "}
+                  <Text className="font-normal">(Inclusive of all taxes)</Text>
+                </Text>
+              ) : (
+                <Text className="text-white text-xl font-extrabold mt-1">
+                  ₹9,999/year!
+                </Text>
+              )}
+            </View>
+            <View className="justify-center">
+              <Ionicons
+                name="people-circle-outline"
+                size={40}
+                color="rgba(255,255,255,0.8)"
+              />
+            </View>
+          </View>
 
-        <View className="mb-6">
-          <View className="flex-row items-center mb-2">
-            <View className="w-2 h-2 bg-white font-normal rounded-full mr-2" />
-            <Text className="text-white text-sm" style={{ fontFamily: "Lato_400Regular" }}>Unlimited enquiries</Text>
-          </View>
-          <View className="flex-row items-center mb-2">
-            <View className="w-2 h-2 bg-white rounded-full mr-2" />
-            <Text className="text-white text-sm" style={{ fontFamily: "Lato_400Regular" }}>Priority KAM support</Text>
-          </View>
-          <View className="flex-row items-center">
-            <View className="w-2 h-2 bg-white rounded-full mr-2" />
-            <Text className="text-white text-sm" style={{ fontFamily: "Lato_400Regular" }}>Exclusive market features</Text>
-          </View>
-        </View>
+          <View className="border-t border-[#FAFAFA] my-4" />
 
-        {/* {Platform.OS !== 'ios' ? ( */}
+          <View className="mb-6">
+            <View className="flex-row items-center mb-2">
+              <View className="w-2 h-2 bg-white font-normal rounded-full mr-2" />
+              <Text
+                className="text-white text-sm"
+                style={{ fontFamily: "Lato_400Regular" }}
+              >
+                Unlimited enquiries
+              </Text>
+            </View>
+            <View className="flex-row items-center mb-2">
+              <View className="w-2 h-2 bg-white rounded-full mr-2" />
+              <Text
+                className="text-white text-sm"
+                style={{ fontFamily: "Lato_400Regular" }}
+              >
+                Priority KAM support
+              </Text>
+            </View>
+            <View className="flex-row items-center mb-2">
+              <View className="w-2 h-2 bg-white rounded-full mr-2" />
+              <Text
+                className="text-white text-sm"
+                style={{ fontFamily: "Lato_400Regular" }}
+              >
+                Exclusive market features
+              </Text>
+            </View>
+            {Platform.OS === "ios" && (
+              <View className="flex-row items-center">
+                <View className="w-2 h-2 bg-white rounded-full mr-2" />
+                <Text
+                  className="text-white text-sm"
+                  style={{ fontFamily: "Lato_400Regular" }}
+                >
+                  Validity : 1 Year
+                </Text>
+              </View>
+            )}
+          </View>
+
+          {/* {Platform.OS !== 'ios' ? ( */}
           <TouchableOpacity
             className=" py-3 rounded-md mb-2 bg-white"
             onPress={handleStartTrial}
@@ -126,33 +165,63 @@ const GetPremiumCard = ({
               className="text-center text-sm text-[#153E3B]"
               style={{ fontFamily: "Lato_700Bold" }}
             >
-              {!trialUsed ? "1 month free trial" : 'Get Premium'}
+              {!trialUsed ? "Start 1 month free trial" : "Get Premium"}
             </Text>
           </TouchableOpacity>
-        {/* ) : null} */}
+          {/* ) : null} */}
 
-        <TouchableOpacity
-          className={`flex-row justify-center items-center gap-1 text-white`}
-          // ${Platform.OS === 'ios' ? "bg-white  py-3 rounded-md mb-2" : "text-white"}
-          onPress={handleComparePlans}
-        >
-          <Text
-            className={`text-sm text-white`}
-            // ${Platform.OS === 'ios' ? "text-[#10302D]" : "text-white"}
-            style={{ fontFamily: "Lato_700Bold" }}
+          <TouchableOpacity
+            className={`flex-row justify-center items-center gap-1 text-white`}
+            // ${Platform.OS === 'ios' ? "bg-white  py-3 rounded-md mb-2" : "text-white"}
+            onPress={handleComparePlans}
           >
-            {/* {Platform.OS === 'ios' ? "View Details" : */}
+            <Text
+              className={`text-sm text-white`}
+              // ${Platform.OS === 'ios' ? "text-[#10302D]" : "text-white"}
+              style={{ fontFamily: "Lato_700Bold" }}
+            >
+              {/* {Platform.OS === 'ios' ? "View Details" : */}
               Compare Plans
-            {/* } */}
+              {/* } */}
+            </Text>
+            <Ionicons
+              name="arrow-forward"
+              size={18}
+              color={"white"}
+              // Platform.OS === 'ios' ? "#10302D" : "white"
+            />
+          </TouchableOpacity>
+        </LinearGradient>
+        {Platform.OS === "ios" && (
+          <Text className="w-full px-[16px] py-[6px] items-center justify-center text-center font-lato font-medium text-[12px] leading-[150%] text-[#8A8A8A]">
+            Please read our{" "}
+            <Text
+              className="font-bold underline p-2"
+              onPress={() =>
+                router.push({
+                  pathname: "/(pages)/Legal",
+                  params: { id: "privacy" },
+                })
+              }
+            >
+              Privacy Policy
+            </Text>{" "}
+            and{" "}
+            <Text
+              className="font-bold underline p-2"
+              onPress={() =>
+                router.push({
+                  pathname: "/(pages)/Legal",
+                  params: { id: "tnc" },
+                })
+              }
+            >
+              Terms of Use
+            </Text>
+            .
           </Text>
-          <Ionicons
-            name="arrow-forward"
-            size={18}
-            color={"white"}
-            // Platform.OS === 'ios' ? "#10302D" : "white"
-          />
-        </TouchableOpacity>
-      </LinearGradient>
+        )}
+      </View>
       {showOnboarding && (
         <OnboardingFlow
           visible={showOnboarding}

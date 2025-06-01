@@ -36,53 +36,61 @@ const DraftsScreen: React.FC = () => {
     (state: RootState) => state.agent?.docData?.cpId
   );
 
-  const userType = useSelector((state: RootState) => state?.agent?.docData?.userType) || "free";
+  const userType =
+    useSelector((state: RootState) => state?.agent?.docData?.userType) ||
+    "free";
 
-  const deleteDraft = useCallback(async (id: string) => {
-    try {
-      await deleteDoc(doc(db, "QC_Inventories", id));
-      setDrafts((prev) => prev?.filter((draft) => draft.propertyId !== id));
-      logEvent(analytics, "draft_delete", {
-        event_category: "drafts",
-        event_label: "delete",
-        property_id: id,
-        user_type: userType
-      });
-    } catch (error) {
-      logEvent(analytics, "drafts_error", {
-        event_category: "drafts",
-        event_label: "error",
-        error_type: error instanceof Error ? error.name : "unknown",
-        operation: "delete_draft",
-        user_type: userType
-      });
-      console.error("Error deleting draft:", error);
-    }
-  }, [userType]);
+  const deleteDraft = useCallback(
+    async (id: string) => {
+      try {
+        await deleteDoc(doc(db, "QC_Inventories", id));
+        setDrafts((prev) => prev?.filter((draft) => draft.propertyId !== id));
+        logEvent(analytics, "draft_delete", {
+          event_category: "drafts",
+          event_label: "delete",
+          property_id: id,
+          user_type: userType,
+        });
+      } catch (error) {
+        logEvent(analytics, "drafts_error", {
+          event_category: "drafts",
+          event_label: "error",
+          error_type: error instanceof Error ? error.name : "unknown",
+          operation: "delete_draft",
+          user_type: userType,
+        });
+        console.error("Error deleting draft:", error);
+      }
+    },
+    [userType]
+  );
 
-  const pressDraftCard = useCallback((item: ListingProperty) => {
-    try {
-      logEvent(analytics, "draft_card_click", {
-        event_category: "drafts",
-        event_label: "draft_click",
-        property_id: item.propertyId,
-        user_type: userType
-      });
-      router.push({
-        pathname: "/(tabs)/AddInventoryForm",
-        params: { item: JSON.stringify(item) },
-      });
-    } catch (error) {
-      console.error("Error logging draft click:", error);
-    }
-  }, [userType]);
+  const pressDraftCard = useCallback(
+    (item: ListingProperty) => {
+      try {
+        logEvent(analytics, "draft_card_click", {
+          event_category: "drafts",
+          event_label: "draft_click",
+          property_id: item.propertyId,
+          user_type: userType,
+        });
+        router.push({
+          pathname: "/(tabs)/AddInventoryForm",
+          params: { item: JSON.stringify(item) },
+        });
+      } catch (error) {
+        console.error("Error logging draft click:", error);
+      }
+    },
+    [userType]
+  );
 
   const addNewProperty = () => {
     try {
       logEvent(analytics, "add_new_property_click", {
         event_category: "drafts",
         event_label: "add_new",
-        user_type: userType
+        user_type: userType,
       });
       router.push("/(tabs)/AddInventoryForm");
     } catch (error) {
@@ -111,7 +119,8 @@ const DraftsScreen: React.FC = () => {
         where("status", "==", "draft")
       )
     );
-    if (count.data().count === 0) router.replace("/(tabs)/AddInventoryForm");
+    if (count.data().count === 0 || count.data().count === undefined)
+      router.replace("/(tabs)/AddInventoryForm");
     const drafts = await getDocs(
       query(
         collection(db, "QC_Inventories"),
@@ -132,7 +141,7 @@ const DraftsScreen: React.FC = () => {
         event_category: "drafts",
         event_label: "page_view",
         drafts_count: stateDrafts.length,
-        user_type: userType
+        user_type: userType,
       });
     } catch (error) {
       logEvent(analytics, "drafts_error", {
@@ -140,7 +149,7 @@ const DraftsScreen: React.FC = () => {
         event_label: "error",
         error_type: error instanceof Error ? error.name : "unknown",
         operation: "fetch_drafts",
-        user_type: userType
+        user_type: userType,
       });
       console.error("Error fetching drafts:", error);
     } finally {

@@ -27,12 +27,19 @@ import {
   Montserrat_600SemiBold,
   Montserrat_700Bold,
 } from "@expo-google-fonts/montserrat";
+import { Inter_400Regular, Inter_600SemiBold } from "@expo-google-fonts/inter";
 import {
   Lato_400Regular,
   Lato_700Bold,
   Lato_300Light,
   Lato_900Black,
 } from "@expo-google-fonts/lato";
+import {
+  Lora_400Regular,
+  Lora_500Medium,
+  Lora_600SemiBold,
+  Lora_700Bold,
+} from "@expo-google-fonts/lora";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useDispatch } from "react-redux";
 import NetInfo from "@react-native-community/netinfo";
@@ -69,6 +76,10 @@ const CustomHeader = ({
   const monthlyCredits = useSelector(
     (state: RootState) => state?.agent?.docData?.monthlyCredits
   );
+  const boosterCredits =
+    useSelector((state: RootState) => state.agent?.docData?.boosterCredits) ||
+    0;
+
   return (
     <View style={styles.headerContainer}>
       <View style={styles.headerContent}>
@@ -87,7 +98,9 @@ const CustomHeader = ({
             style={styles.headerRight}
             onPress={() => router.push("/(pages)/Credits")}
           >
-            <Text style={styles.creditsText}>{monthlyCredits}</Text>
+            <Text style={styles.creditsText}>
+              {monthlyCredits + boosterCredits}
+            </Text>
             <CoinIcon width={18} height={18} />
           </TouchableOpacity>
         )}
@@ -111,6 +124,12 @@ export default function LayoutApp() {
     Lato_700Bold,
     Lato_300Light,
     Lato_900Black,
+    Inter_400Regular,
+    Inter_600SemiBold,
+    Lora_400Regular,
+    Lora_500Medium,
+    Lora_600SemiBold,
+    Lora_700Bold,
   });
   const navigation = useNavigation();
 
@@ -360,7 +379,8 @@ export default function LayoutApp() {
         />
         <Stack.Screen
           name="(tabs)/NotificationPage"
-          options={{ title: "Notifications" }}
+          options={{ title: "Notifications", headerShown: false }}
+          initialParams={{ showNotificationBanner: true }}
         />
 
         <Stack.Screen
@@ -431,7 +451,10 @@ export default function LayoutApp() {
         <Stack.Screen
           name="(pages)/ComparePlans"
           options={{
-            title: "Plans Page",
+            title:
+              Platform.OS === "ios"
+                ? "Choose the right plan for you"
+                : "Plans Page",
             headerBackVisible: true,
           }}
           initialParams={{ showFooter: false }}
@@ -448,6 +471,31 @@ export default function LayoutApp() {
           name="(pages)/PaymentRecords"
           options={{
             title: "Payment Records",
+            headerBackVisible: true,
+          }}
+          initialParams={{ showFooter: false }}
+        />
+        <Stack.Screen
+          name="components/Notification/NotificationSettings"
+          options={{ headerShown: false }}
+        />
+        <Stack.Screen
+          name="components/Payments/transaction"
+          options={{ headerShown: false }}
+          initialParams={{ showFooter: false }}
+        />
+        <Stack.Screen
+          name="(pages)/Legal"
+          options={{
+            title: " ",
+            headerBackVisible: true,
+          }}
+          initialParams={{ showFooter: false }}
+        />
+        <Stack.Screen
+          name="(tabs)/ReportIssue"
+          options={{
+            title: "Report an Issue or Misuse",
             headerBackVisible: true,
           }}
           initialParams={{ showFooter: false }}
