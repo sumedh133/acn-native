@@ -464,6 +464,11 @@ export default function LayoutApp() {
           options={{ headerShown: false }}
         />
         <Stack.Screen
+          name="components/Payments/transaction"
+          options={{ headerShown: false }}
+          initialParams={{ showFooter: false }}
+        />
+        <Stack.Screen
           name="(pages)/Legal"
           options={{
             title: " ",
