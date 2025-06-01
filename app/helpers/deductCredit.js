@@ -18,24 +18,23 @@ import { useSelector } from "react-redux";
  */
 const deductMonthlyCredit = async (phoneNumber, currentCredits, dispatch, boosterCredits) => {
   if (!phoneNumber) {
-    console.error("Phone number is required.");
-    return;
+    const errorMessage = "Phone number is required. Please try logging in again.";
+    console.error(errorMessage);
+    throw new Error(errorMessage);
   }
 
   // const boosterCredits = useSelector((state) => state?.agent?.docData?.boosterCredits) || 0;
 
   if ((typeof currentCredits !== "number" || currentCredits <= 0) && boosterCredits <= 0) {
-    console.error("Invalid credit value. Cannot deduct.");
-    return;
+    const errorMessage = `Invalid credit value. Cannot deduct.`;
+    console.error(errorMessage);
+    throw new Error(errorMessage);
   }
 
   let finalCredit = currentCredits;
   let finalBoosterCredit = boosterCredits;
 
-  if (currentCredits <= 0 && boosterCredits <= 0) {
-    console.error("No credits available to deduct.");
-    return;
-  } else if (currentCredits <= 0) {
+  if (currentCredits <= 0) {
     // If no monthly credits left, deduct from booster credits
     finalBoosterCredit = Math.max(0, boosterCredits - 1);
   }
@@ -50,8 +49,9 @@ const deductMonthlyCredit = async (phoneNumber, currentCredits, dispatch, booste
     const querySnapshot = await getDocs(q);
 
     if (querySnapshot.empty) {
-      console.error(`No document found for phone number: ${phoneNumber}`);
-      return;
+      const errorMessage = `No agent found for phone number: ${phoneNumber}`;
+      console.error(errorMessage);
+      throw new Error(errorMessage);
     }
 
     const docRef = querySnapshot.docs[0].ref;
