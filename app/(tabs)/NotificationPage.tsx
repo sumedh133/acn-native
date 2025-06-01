@@ -54,7 +54,9 @@ const notificationTypeToFilter: Record<string, string> = {
 const NotificationPage: React.FC<NotificationPageProps> = () => {
   const agentData = useSelector((state: RootState) => state?.agent?.docData);
   const userType = agentData?.userType || "free";
-  const kamPhone = (state: any) => state?.kam?.kamDocData?.phonenumber || "";
+  const kamPhone = useSelector(
+    (state: RootState) => state?.kam?.kamDocData?.phonenumber
+  );
   const dispatch = useDispatch<ThunkDispatch<RootState, unknown, AnyAction>>();
   const {
     unreadCount,
@@ -297,10 +299,10 @@ const NotificationPage: React.FC<NotificationPageProps> = () => {
 
       <View style={styles.notificationsContainer}>
         {/* <ScrollView style={{ height: "100%", backgroundColor: "red" }}> */}
-          <Notifications
-            notifications={filteredNotifications}
-            onCtaPress={onCTAPress}
-          />
+        <Notifications
+          notifications={filteredNotifications}
+          onCtaPress={onCTAPress}
+        />
         {/* </ScrollView> */}
       </View>
 

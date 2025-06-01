@@ -2,12 +2,9 @@ import React from "react";
 import {
   View,
   Text,
-  ScrollView,
   TouchableOpacity,
   Alert,
   StyleSheet,
-  Pressable,
-  Image,
   Linking,
   ActivityIndicator,
 } from "react-native";
@@ -15,11 +12,7 @@ import { router, useLocalSearchParams, useRouter } from "expo-router";
 import { useEffect, useState } from "react";
 import { doc, getDoc, updateDoc } from "firebase/firestore";
 import { db } from "../../config/firebase";
-import { Header } from "react-native-elements";
-import ArrowLeftIcon from "@/assets/icons/svg/Common/ArrowLeftIcon";
-import { LinearGradient } from "expo-linear-gradient";
 import * as Clipboard from "expo-clipboard";
-import { Feather, AntDesign, MaterialIcons } from "@expo/vector-icons";
 import PaymentHeader from "./PaymentHeader";
 import { formatCardType } from "@/app/helpers/formatCardType";
 import { formatCost, formatCost2 } from "@/app/helpers/common";
@@ -27,8 +20,6 @@ import EmailInvoiceIcon from "@/assets/icons/billing/emailInvoice.svg";
 import DownloadPDFIcon from "@/assets/icons/billing/downloadPDF.svg";
 import ContactSupportIcon from "@/assets/icons/billing/contactSupport.svg";
 import RetryPaymentIcon from "@/assets/icons/billing/retryPayment.svg";
-import * as FileSystem from "expo-file-system";
-import * as Sharing from "expo-sharing";
 
 interface PaymentDetails {
   id: string;
@@ -56,6 +47,7 @@ interface PaymentDetails {
     nanoseconds: number;
   };
   invoiceUrl: string;
+  invoiceDriveLink: string;
 }
 
 const Transaction = () => {
@@ -86,7 +78,6 @@ const Transaction = () => {
   }, [id]);
 
   const paymentMethod = paymentDetails?.data?.paymentInstrument?.type;
-
   if (!paymentDetails) {
     return (
       <View
@@ -167,20 +158,18 @@ const Transaction = () => {
   const handleDownloadPDF = async () => {
     try {
       setIsDownloading(true);
-      // Convert the URL to a Google Drive viewer URL
-      const driveUrl = `https://drive.google.com/viewerng/viewer?embedded=true&url=${encodeURIComponent(
-        paymentDetails.invoiceUrl
-      )}`;
-      const supported = await Linking.canOpenURL(driveUrl);
+      const supported = await Linking.canOpenURL(
+        paymentDetails.invoiceDriveLink
+      );
 
       if (supported) {
-        await Linking.openURL(driveUrl);
+        await Linking.openURL(paymentDetails.invoiceDriveLink);
       } else {
-        Alert.alert("Error", "Cannot open PDF in Google Drive");
+        Alert.alert("Error", "Cannot open PDF URL");
       }
     } catch (error) {
-      console.error("Error opening PDF in Drive:", error);
-      Alert.alert("Error", "Failed to open PDF in Drive");
+      console.error("Error opening PDF:", error);
+      Alert.alert("Error", "Failed to open PDF");
     } finally {
       setIsDownloading(false);
     }
