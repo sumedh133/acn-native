@@ -48,6 +48,7 @@ import { WebViewNavigationEvent } from "react-native-webview/lib/RNCWebViewNativ
 import { analytics } from "@/app/config/firebase";
 import { logEvent } from "@react-native-firebase/analytics";
 import { RouteProp, useRoute } from "@react-navigation/native";
+import { useRouter } from "expo-router";
 
 if (
   Platform.OS === "android" &&
@@ -66,10 +67,16 @@ type BillingContainerRouteProp = RouteProp<{
   };
 }>;
 
+const iapProductIds = {
+  premiumAnnual: "acn_premium",
+  // boosterPack: "acn_booster_pack",
+};
+
 const BillingContainer: React.FC<BillingContainerProps> = ({
   onOpenBusinessModal,
 }) => {
   const route = useRoute<BillingContainerRouteProp>();
+  const router = useRouter();
   const planId = route.params?.planId || "premium";
 
   const [availablePlans, setAvailablePlans] = useState<SubscriptionPlan[]>([]);
@@ -194,7 +201,7 @@ const BillingContainer: React.FC<BillingContainerProps> = ({
           // For testing, you can use a mock product
           if (__DEV__) {
             setProduct({
-              productId: "acn_premium_annual",
+              productId: "acn_premium",
               localizedPrice: "₹9,999.00",
               price: "9999",
               currency: "INR",
@@ -205,7 +212,7 @@ const BillingContainer: React.FC<BillingContainerProps> = ({
           }
 
           // Try to fetch real products
-          const products = await getProducts({ skus: ["acn_premium_annual"] });
+          const products = await getProducts({ skus: [iapProductIds.premiumAnnual] });
           if (products.length > 0) {
             setProduct(products[0]);
           } else {
@@ -213,7 +220,7 @@ const BillingContainer: React.FC<BillingContainerProps> = ({
             // For testing, set a mock product if no real products are found
             if (__DEV__) {
               setProduct({
-                productId: "acn_premium_annual",
+                productId: "acn_premium",
                 localizedPrice: "₹9,999.00",
                 price: "9999",
                 currency: "INR",
@@ -229,7 +236,7 @@ const BillingContainer: React.FC<BillingContainerProps> = ({
           // For testing, set a mock product on error
           if (__DEV__) {
             setProduct({
-              productId: "acn_premium_annual",
+              productId: "acn_premium",
               localizedPrice: "₹9,999.00",
               price: "9999",
               currency: "INR",
@@ -610,7 +617,7 @@ const BillingContainer: React.FC<BillingContainerProps> = ({
             )}
 
             {/* coupon container */}
-            {planId != "booster" && (
+            {Platform.OS != "ios" && planId != "booster" && (
               <View style={styles.couponContainer}>
                 <Text style={styles.heading}>Coupon code</Text>
                 <Text style={styles.couponSubtext}>
@@ -764,6 +771,36 @@ const BillingContainer: React.FC<BillingContainerProps> = ({
                 </View>
               </View>
             </View>
+
+            {Platform.OS === "ios" && (
+              <Text className="w-full px-[16px] my-[16px] items-center justify-center text-left font-lato font-medium text-[14px] leading-[150%] text-[#8A8A8A]">
+                By proceeding with the payment, you acknowledge and agree to our{" "}
+                <Text
+                  className="font-bold underline p-2"
+                  onPress={() =>
+                    router.push({
+                      pathname: "/(pages)/Legal",
+                      params: { id: "privacy" },
+                    })
+                  }
+                >
+                  Privacy Policy
+                </Text>{" "}
+                and{" "}
+                <Text
+                  className="font-bold underline p-2"
+                  onPress={() =>
+                    router.push({
+                      pathname: "/(pages)/Legal",
+                      params: { id: "tnc" },
+                    })
+                  }
+                >
+                  Terms of Use
+                </Text>
+                .
+              </Text>
+            )}
 
             <TouchableOpacity
               style={styles.payButton}
