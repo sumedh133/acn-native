@@ -67,6 +67,11 @@ type BillingContainerRouteProp = RouteProp<{
   };
 }>;
 
+const iapProductIds = {
+  premiumAnnual: "acn_premium",
+  // boosterPack: "acn_booster_pack",
+};
+
 const BillingContainer: React.FC<BillingContainerProps> = ({
   onOpenBusinessModal,
 }) => {
@@ -196,7 +201,7 @@ const BillingContainer: React.FC<BillingContainerProps> = ({
           // For testing, you can use a mock product
           if (__DEV__) {
             setProduct({
-              productId: "acn_premium_annual",
+              productId: "acn_premium",
               localizedPrice: "₹9,999.00",
               price: "9999",
               currency: "INR",
@@ -207,7 +212,7 @@ const BillingContainer: React.FC<BillingContainerProps> = ({
           }
 
           // Try to fetch real products
-          const products = await getProducts({ skus: ["acn_premium_annual"] });
+          const products = await getProducts({ skus: [iapProductIds.premiumAnnual] });
           if (products.length > 0) {
             setProduct(products[0]);
           } else {
@@ -215,7 +220,7 @@ const BillingContainer: React.FC<BillingContainerProps> = ({
             // For testing, set a mock product if no real products are found
             if (__DEV__) {
               setProduct({
-                productId: "acn_premium_annual",
+                productId: "acn_premium",
                 localizedPrice: "₹9,999.00",
                 price: "9999",
                 currency: "INR",
@@ -231,7 +236,7 @@ const BillingContainer: React.FC<BillingContainerProps> = ({
           // For testing, set a mock product on error
           if (__DEV__) {
             setProduct({
-              productId: "acn_premium_annual",
+              productId: "acn_premium",
               localizedPrice: "₹9,999.00",
               price: "9999",
               currency: "INR",
@@ -612,7 +617,7 @@ const BillingContainer: React.FC<BillingContainerProps> = ({
             )}
 
             {/* coupon container */}
-            {planId != "booster" && (
+            {Platform.OS != "ios" && planId != "booster" && (
               <View style={styles.couponContainer}>
                 <Text style={styles.heading}>Coupon code</Text>
                 <Text style={styles.couponSubtext}>

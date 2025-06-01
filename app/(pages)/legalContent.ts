@@ -12,7 +12,7 @@ Please read these Terms carefully before using the App. By accessing or using th
 
 ## Table of Contents
 
-1. [Definitions & Glossary](#glossary-definitions)
+1. [Definitions & Glossary](#1-definitions-glossary)
 2. [License to Use the App](#2-license-to-use-the-app)
 3. [User Obligations and Acceptable Use](#3-user-obligations-and-acceptable-use)
 4. [User-Generated Content](#4-user-generated-content)
