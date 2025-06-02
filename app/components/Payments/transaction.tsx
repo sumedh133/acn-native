@@ -465,12 +465,12 @@ const styles = StyleSheet.create({
     textAlign: "center",
   },
   footer: {
+    flex: 1,
     position: "absolute",
     bottom: 0,
     width: "100%",
     height: 64,
     flexDirection: "row",
-    justifyContent: "space-between",
     alignItems: "center",
     padding: 12,
     paddingHorizontal: 8,
@@ -478,7 +478,7 @@ const styles = StyleSheet.create({
     gap: 12,
   },
   footerBtn: {
-    flex: 1,
+    flexGrow: 1,
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
@@ -487,6 +487,7 @@ const styles = StyleSheet.create({
     borderColor: "#153E3B",
     borderRadius: 6,
     paddingVertical: 8,
+    paddingHorizontal: 16,
     gap: 8,
   },
   footerBtnPrimary: {
