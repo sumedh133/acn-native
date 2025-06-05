@@ -32,7 +32,8 @@ const PaymentHeader: React.FC<PaymentHeaderProps> = ({
   const isSuccess =
     status === "PAYMENT_SUCCESS" || status === "Paid Successfully";
 
-  return paymentDetails.status === "PAYMENT_SUCCESS" ? (
+  return paymentDetails.status === "PAYMENT_SUCCESS" ||
+    paymentDetails.status === "completed" ? (
     <View style={styles.topBannerSuccess}>
       <View style={styles.headerRowBanner}>
         <TouchableOpacity onPress={() => router.back()}>

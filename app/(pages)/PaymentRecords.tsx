@@ -45,6 +45,7 @@ interface PaymentHistoryItem {
     transactionId: string;
     state: string;
     responseCode: string;
+    localizedPrice?: string;
   };
   phonenumber: string;
   status: string;
@@ -52,6 +53,7 @@ interface PaymentHistoryItem {
     nanoseconds: number;
     seconds: number;
   };
+  platform?: string;
 }
 
 interface FormattedPaymentRecord {
@@ -116,8 +118,18 @@ const PaymentRecords: React.FC = () => {
   const formattedPaymentRecords = useMemo(() => {
     if (!paymentHistory || !paymentHistory.length) return [];
 
-    return paymentHistory.map((item) => {
-      // console.log(item, "This is the item");
+    // Sort by createdAt in descending order
+    const sortedPaymentHistory = [...paymentHistory].sort((a, b) => {
+      const dateA = a.createdAt?.seconds
+        ? new Date(a.createdAt.seconds * 1000)
+        : new Date(0);
+      const dateB = b.createdAt?.seconds
+        ? new Date(b.createdAt.seconds * 1000)
+        : new Date(0);
+      return dateB.getTime() - dateA.getTime(); // Sort descending (newest first)
+    });
+
+    return sortedPaymentHistory.map((item) => {
       const isPremiumPlan = item.data.amount === 24900 ? false : true;
       const paymentAmount = item.data.amount;
       const paymentId = item.id;
@@ -151,10 +163,13 @@ const PaymentRecords: React.FC = () => {
       return {
         id: paymentId,
         title: isPremiumPlan ? "ACN Premium Plan" : "Enquiry Booster Pack",
-        amount: `₹${(paymentAmount / 100).toFixed(2)}`,
+        amount:
+          item?.platform === "ios"
+            ? item.data.localizedPrice
+            : `₹${(paymentAmount / 100).toFixed(2)}`,
         date: dateString,
         status:
-          item.status === "PAYMENT_SUCCESS"
+          item.status === "PAYMENT_SUCCESS" || item.status === "completed"
             ? "Paid Successfully"
             : "Payment Failed",
       };

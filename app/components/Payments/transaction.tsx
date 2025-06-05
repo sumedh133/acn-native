@@ -7,6 +7,7 @@ import {
   StyleSheet,
   Linking,
   ActivityIndicator,
+  Platform,
 } from "react-native";
 import { router, useLocalSearchParams, useRouter } from "expo-router";
 import { useEffect, useState } from "react";
@@ -40,6 +41,7 @@ interface PaymentDetails {
     transactionId: string;
     state: string;
     responseCode: string;
+    localizedPrice?: string;
   };
   status: string;
   updatedAt: {
@@ -48,6 +50,7 @@ interface PaymentDetails {
   };
   invoiceUrl: string;
   invoiceDriveLink: string;
+  platform?: string;
 }
 
 const Transaction = () => {
@@ -124,10 +127,36 @@ const Transaction = () => {
   };
 
   const handleRetryPayment = async () => {
-    if (paymentDetails.data.amount === 24900) {
-      router.push("/(pages)/Credits");
+    if (
+      paymentDetails.data.amount === 24900 ||
+      paymentDetails.data.amount === 249
+    ) {
+      if (Platform.OS !== "ios") {
+        router.push({
+          pathname: "/CheckoutScreen",
+          params: { planId: "booster" },
+        });
+      } else {
+        router.push({
+          pathname: "/billings",
+          params: { planId: "booster" },
+        });
+      }
+      // router.push("/(pages)/Credits");
     } else {
-      router.push("/billings");
+      if (Platform.OS !== "ios") {
+        router.push({
+          pathname: "/CheckoutScreen",
+          params: { planId: "premium" },
+        });
+      } else {
+        // router.push("/billings");
+        router.push({
+          pathname: "/billings",
+          params: { planId: "premium" },
+        });
+      }
+      // router.push("/billings");
     }
   };
 
@@ -195,7 +224,9 @@ const Transaction = () => {
         <View style={styles.row}>
           <Text style={styles.label}>Payment Method:</Text>
           <Text style={styles.value}>
-            {paymentDetails.status === "PAYMENT_SUCCESS"
+            {paymentDetails?.platform === "ios"
+              ? "Apple Pay"
+              : paymentDetails.status === "PAYMENT_SUCCESS"
               ? paymentMethod === "UPI"
                 ? "UPI"
                 : formatCardType(
@@ -213,7 +244,11 @@ const Transaction = () => {
         <View style={styles.row}>
           <Text style={styles.planTitle}>ACN Premium Plan</Text>
           <Text style={styles.planAmount}>
-            {formatCost((paymentDetails.data.amount / 100 / 1.18).toFixed(2))}
+            {paymentDetails?.platform === "ios"
+              ? formatCost((paymentDetails.data.amount / 1.18).toFixed(2))
+              : formatCost(
+                  (paymentDetails.data.amount / 100 / 1.18).toFixed(2)
+                )}
           </Text>
         </View>
         <View style={styles.row}>
@@ -227,43 +262,59 @@ const Transaction = () => {
         <View style={styles.row}>
           <Text style={styles.label}>Taxable Value</Text>
           <Text style={styles.value}>
-            {formatCost((paymentDetails.data.amount / 100 / 1.18).toFixed(2))}
+            {paymentDetails?.platform === "ios"
+              ? formatCost((paymentDetails.data.amount / 1.18).toFixed(2))
+              : formatCost(
+                  (paymentDetails.data.amount / 100 / 1.18).toFixed(2)
+                )}
           </Text>
         </View>
         <View style={styles.row}>
           <Text style={styles.label}>CGST (9%)</Text>
           <Text style={styles.value}>
-            {formatCost(
-              ((paymentDetails.data.amount / 100 / 1.18) * 0.09).toFixed(2)
-            )}
+            {paymentDetails?.platform === "ios"
+              ? formatCost(
+                  ((paymentDetails.data.amount / 1.18) * 0.09).toFixed(2)
+                )
+              : formatCost(
+                  ((paymentDetails.data.amount / 100 / 1.18) * 0.09).toFixed(2)
+                )}
           </Text>
         </View>
         <View style={styles.row}>
           <Text style={styles.label}>SGST (9%)</Text>
           <Text style={styles.value}>
-            {formatCost(
-              ((paymentDetails.data.amount / 100 / 1.18) * 0.09).toFixed(2)
-            )}
+            {paymentDetails?.platform === "ios"
+              ? formatCost(
+                  ((paymentDetails.data.amount / 1.18) * 0.09).toFixed(2)
+                )
+              : formatCost(
+                  ((paymentDetails.data.amount / 100 / 1.18) * 0.09).toFixed(2)
+                )}
           </Text>
         </View>
         <View style={styles.dashedLine} />
         <View style={styles.row}>
           <Text style={styles.totalLabel}>Total</Text>
           <Text style={styles.totalValue}>
-            {formatCost((paymentDetails.data.amount / 100).toFixed(2))}
+            {paymentDetails?.platform === "ios"
+              ? formatCost(paymentDetails.data.amount.toFixed(2))
+              : formatCost((paymentDetails.data.amount / 100).toFixed(2))}
           </Text>
         </View>
       </View>
 
-      {paymentDetails.status !== "PAYMENT_SUCCESS" && (
-        <Text style={styles.errorMsg}>
-          Your payment did not go through. Please try again or contact support
-          for assistance.
-        </Text>
-      )}
+      {paymentDetails.status !== "PAYMENT_SUCCESS" &&
+        paymentDetails.status !== "completed" && (
+          <Text style={styles.errorMsg}>
+            Your payment did not go through. Please try again or contact support
+            for assistance.
+          </Text>
+        )}
 
       <View style={styles.footer}>
-        {paymentDetails.status === "PAYMENT_SUCCESS" ? (
+        {paymentDetails.status === "PAYMENT_SUCCESS" ||
+        paymentDetails.status === "completed" ? (
           <>
             <TouchableOpacity
               style={styles.footerBtn}
