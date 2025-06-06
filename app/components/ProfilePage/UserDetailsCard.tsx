@@ -18,15 +18,15 @@ const UserDetailsCard = ({ userType }: { userType: string | null }) => {
 
   useEffect(() => {
     try {
-      logEvent(analytics, 'user_details_view', {
-        event_category: 'profile',
-        event_label: 'view',
+      logEvent(analytics, "user_details_view", {
+        event_category: "profile",
+        event_label: "view",
         has_name: !!name,
         has_phone: !!phonenumber,
-        user_type: userType || 'free'
+        user_type: userType || "free",
       });
     } catch (error) {
-      console.error('Error logging user details view:', error);
+      console.error("Error logging user details view:", error);
     }
   }, [name, phonenumber, userType]);
 
@@ -53,11 +53,15 @@ const UserDetailsCard = ({ userType }: { userType: string | null }) => {
         </View>
         <View style={styles.information}>
           <View style={styles.userData}>
-            <Text style={{fontFamily:'Montserrat_700Bold'}}>{name}</Text>
-            <Text style={{fontFamily:'Montserrat_500Medium',color:'#5A5555'}}>{"+91-" + phonenumber?.slice(3)}</Text>
+            <Text style={{ fontFamily: "Montserrat_700Bold" }}>{name}</Text>
+            <Text
+              style={{ fontFamily: "Montserrat_500Medium", color: "#5A5555" }}
+            >
+              {"+91-" + phonenumber?.slice(3)}
+            </Text>
           </View>
           <View style={styles.memberContainer}>
-            {userType && (
+            {/* {userType && (
               <Text
                 style={[
                   styles.userType,
@@ -68,6 +72,20 @@ const UserDetailsCard = ({ userType }: { userType: string | null }) => {
               >
                 {userType.charAt(0).toUpperCase() + userType.slice(1)}
               </Text>
+            )} */}
+            {userType && (
+              <View
+                className="border-[1px] rounded-full"
+                style={[
+                  userType === "premium"
+                    ? { backgroundColor: "#FFFFFF", borderColor: "##F2F2F2" }
+                    : { backgroundColor: "#F4FBF8", borderColor: "#BFE9E6" },
+                ]}
+              >
+                <Text style={[styles.userType]}>
+                  {userType.charAt(0).toUpperCase() + userType.slice(1)}
+                </Text>
+              </View>
             )}
             <Text style={styles.member}>Member</Text>
           </View>
@@ -129,7 +147,7 @@ const styles = StyleSheet.create({
   userData: {
     display: "flex",
     flexDirection: "column",
-    
+
     gap: 4,
     alignItems: "flex-start",
   },
@@ -140,8 +158,8 @@ const styles = StyleSheet.create({
     gap: 4,
   },
   userType: {
-    borderWidth: 1,
-    borderRadius: 24,
+    // borderWidth: 1,
+    // borderRadius: 24,
     paddingVertical: 4,
     paddingHorizontal: 12,
     fontFamily: "Lato",
