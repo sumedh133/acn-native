@@ -64,6 +64,7 @@ const NotificationPage: React.FC<NotificationPageProps> = () => {
     setActiveFilter,
     notifications,
     markAllVisibleAsRead,
+    isLoading,
   } = useNotification();
   const [showFilters, setShowFilters] = useState(false);
   const router = useRouter();
@@ -298,12 +299,11 @@ const NotificationPage: React.FC<NotificationPageProps> = () => {
       </View>
 
       <View style={styles.notificationsContainer}>
-        {/* <ScrollView style={{ height: "100%", backgroundColor: "red" }}> */}
         <Notifications
           notifications={filteredNotifications}
           onCtaPress={onCTAPress}
+          isLoading={isLoading}
         />
-        {/* </ScrollView> */}
       </View>
 
       {/* Filter Modal */}

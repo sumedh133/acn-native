@@ -39,6 +39,7 @@ export default function useNotification() {
   >([]);
   const [activeFilter, setActiveFilter] = useState<NotificationFilter>("all");
   const [unreadCount, setUnreadCount] = useState(0);
+  const [isLoading, setIsLoading] = useState(true);
   // const unreadCount = 2;
 
   // Map notification types to filter categories
@@ -148,6 +149,7 @@ export default function useNotification() {
         setNotifications(sortedNotifications);
         setUnreadCount(sortedNotifications.filter((n) => !n.isRead).length);
       }
+      setIsLoading(false);
     });
 
     return () => unsubscribe();
@@ -268,5 +270,6 @@ export default function useNotification() {
     archiveNotification,
     migrateNotifications,
     markAsUnRead,
+    isLoading,
   };
 }
