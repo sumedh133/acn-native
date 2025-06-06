@@ -227,6 +227,7 @@ const CheckoutScreen: React.FC = () => {
           updateData = {
             ...updateData,
             userType: "premium",
+            trialUsed: true,
             planExpiry: planExpiry,
             monthlyCredits: 100,
           };
@@ -235,7 +236,6 @@ const CheckoutScreen: React.FC = () => {
           updateData = {
             ...updateData,
             boosterCredits: (agentData?.boosterCredits || 0) + 5,
-            monthlyCredits: (agentData?.monthlyCredits || 0) + 5,
           };
           break;
         default:
