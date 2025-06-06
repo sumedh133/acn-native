@@ -414,12 +414,13 @@ const styles = StyleSheet.create({
   label: {
     color: "#707070",
     fontSize: 14,
-    fontFamily: "Montserrat_400Regular",
+    // fontFamily: "Montserrat_400Regular",
+    fontFamily: "Lato_700Bold",
   },
   value: {
     color: "#000",
     fontSize: 14,
-    fontFamily: "Montserrat_700Bold",
+    fontFamily: "Montserrat_600SemiBold",
   },
   planTitle: {
     color: "#000",
@@ -429,7 +430,7 @@ const styles = StyleSheet.create({
   planAmount: {
     color: "#000",
     fontSize: 16,
-    fontFamily: "Montserrat_700Bold",
+    fontFamily: "Montserrat_600SemiBold",
   },
   planSubLabel: {
     color: "#707070",
@@ -449,9 +450,9 @@ const styles = StyleSheet.create({
     marginVertical: 8,
   },
   totalLabel: {
-    color: "#000",
+    color: "#595959",
     fontSize: 14,
-    fontFamily: "Montserrat_700Bold",
+    fontFamily: "Lato_700Bold",
   },
   totalValue: {
     color: "#000",

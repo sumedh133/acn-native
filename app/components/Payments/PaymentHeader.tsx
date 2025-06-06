@@ -52,8 +52,8 @@ const PaymentHeader: React.FC<PaymentHeaderProps> = ({
         </TouchableOpacity>
         <Text style={styles.headerTextBanner}>Back</Text>
       </View>
-      <View style={[styles.bannerRowCols, { gap: windowWidth * 0.12 }]}>
-        <View style={styles.columnContainer}>
+      <View style={[styles.bannerRowCols]}>
+        <View style={[styles.columnContainer]}>
           <View style={styles.statusContainer}>
             <Text style={styles.statusTextSuccess}>Payment Successful</Text>
             <AntDesign
@@ -63,34 +63,28 @@ const PaymentHeader: React.FC<PaymentHeaderProps> = ({
               style={{ marginLeft: 6 }}
             />
           </View>
-          <View style={styles.txnContainer}>
-            <Text
-              style={styles.txnIdBanner}
-              numberOfLines={1}
-              ellipsizeMode="tail"
-            >
-              {paymentDetails.id}
-            </Text>
+          <View style={[styles.txnContainer]}>
+            <Text style={[styles.txnIdBanner]}>{paymentDetails.id}</Text>
             <TouchableOpacity onPress={handleCopy}>
               <Feather
                 name="copy"
                 size={windowWidth * 0.045}
                 color="#fff"
-                style={{ marginLeft: 8 }}
+                style={{ marginLeft: 6 }}
               />
             </TouchableOpacity>
           </View>
         </View>
-        <View style={styles.columnContainer}>
-          <View style={styles.infoContainer}>
+        <View style={[styles.columnContainer, { gap: 6 }]}>
+          <View style={[styles.infoContainer]}>
             <Feather name="clock" size={windowWidth * 0.04} color="#fff" />
-            <Text style={styles.infoTextBanner} numberOfLines={1}>
+            <Text style={[styles.infoTextBanner]} numberOfLines={1}>
               {dateStr}
             </Text>
           </View>
-          <View style={styles.infoContainer}>
+          <View style={[styles.infoContainer]}>
             <AntDesign name="calendar" size={windowWidth * 0.04} color="#fff" />
-            <Text style={styles.infoTextBanner} numberOfLines={1}>
+            <Text style={[styles.infoTextBanner]} numberOfLines={1}>
               {timeStr}
             </Text>
           </View>
@@ -113,8 +107,8 @@ const PaymentHeader: React.FC<PaymentHeaderProps> = ({
         </TouchableOpacity>
         <Text style={styles.headerTextBannerFailed}>Back</Text>
       </View>
-      <View style={[styles.bannerRowCols, { gap: windowWidth * 0.12 }]}>
-        <View style={styles.columnContainer}>
+      <View style={[styles.bannerRowCols]}>
+        <View style={[styles.columnContainer]}>
           <View style={styles.statusContainer}>
             <Text style={styles.statusTextFailed}>Payment Failed</Text>
             <AntDesign
@@ -125,31 +119,25 @@ const PaymentHeader: React.FC<PaymentHeaderProps> = ({
             />
           </View>
           <View style={styles.txnContainer}>
-            <Text
-              style={styles.txnIdBannerFailed}
-              numberOfLines={1}
-              ellipsizeMode="tail"
-            >
-              {paymentDetails.id}
-            </Text>
+            <Text style={styles.txnIdBannerFailed}>{paymentDetails.id}</Text>
             <TouchableOpacity onPress={handleCopy}>
               <Feather
                 name="copy"
                 size={windowWidth * 0.045}
                 color="#000"
-                style={{ marginLeft: 8 }}
+                style={{ marginLeft: 6 }}
               />
             </TouchableOpacity>
           </View>
         </View>
-        <View style={styles.columnContainer}>
-          <View style={styles.infoContainer}>
+        <View style={[styles.columnContainer, { gap: 6 }]}>
+          <View style={[styles.infoContainer]}>
             <Feather name="clock" size={windowWidth * 0.04} color="#707070" />
-            <Text style={styles.infoTextBannerFailed} numberOfLines={1}>
+            <Text style={[styles.infoTextBannerFailed]} numberOfLines={1}>
               {dateStr}
             </Text>
           </View>
-          <View style={styles.infoContainer}>
+          <View style={[styles.infoContainer]}>
             <AntDesign
               name="calendar"
               size={windowWidth * 0.04}
@@ -214,27 +202,27 @@ const styles = StyleSheet.create({
     color: "#fff",
     fontFamily: "Montserrat_700Bold",
     fontSize: 18,
-    flex: 1,
+    width: "auto",
   },
   txnIdBannerFailed: {
     color: "#000",
     fontFamily: "Montserrat_700Bold",
-    fontSize: 16,
-    flex: 1,
+    fontSize: 18,
+    width: "auto",
   },
   infoTextBanner: {
     color: "#fff",
     fontSize: 13,
     marginLeft: 4,
     fontFamily: "Montserrat_400Regular",
-    flex: 1,
+    width: "auto",
   },
   infoTextBannerFailed: {
     color: "#707070",
     fontSize: 13,
     marginLeft: 4,
     fontFamily: "Montserrat_400Regular",
-    flex: 1,
+    width: "auto",
   },
   card: {
     backgroundColor: "#fff",
@@ -242,10 +230,10 @@ const styles = StyleSheet.create({
     padding: 16,
     marginHorizontal: 16,
     marginTop: 16,
-    shadowColor: "#000",
-    shadowOpacity: 0.05,
-    shadowRadius: 4,
-    elevation: 2,
+    // shadowColor: "#000",
+    // shadowOpacity: 0.05,
+    // shadowRadius: 4,
+    // elevation: 2,
   },
   row: {
     flexDirection: "row",
@@ -342,11 +330,10 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "space-between",
     marginTop: 8,
-    flexWrap: "wrap",
+    width: "100%",
   },
   columnContainer: {
-    flex: 1,
-    minWidth: 140,
+    flexGrow: 1,
     justifyContent: "flex-start",
   },
   statusContainer: {
@@ -362,6 +349,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     marginBottom: 8,
+    justifyContent: "flex-end",
   },
 });
 
