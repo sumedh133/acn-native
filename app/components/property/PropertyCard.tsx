@@ -364,7 +364,11 @@ const PropertyCard: React.FC<PropertyCardProps> = ({ property }) => {
               {/* Micromarket in the middle-right */}
               <View className="flex-row items-center bg-[#747474] px-2 py-1 rounded-full mr-2">
                 <Ionicons name="location-outline" size={14} color="#FAFBFC" />
-                <Text className="text-[#FAFBFC] text-xs ml-1">
+                <Text
+                  className="text-[#FAFBFC] text-xs ml-1 max-w-[216px]"
+                  numberOfLines={1}
+                  ellipsizeMode="tail"
+                >
                   {property.micromarket || "-"}
                 </Text>
               </View>

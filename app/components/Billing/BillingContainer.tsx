@@ -303,6 +303,228 @@ const BillingContainer: React.FC<BillingContainerProps> = ({
   };
 
   // Direct save to Firebase (Implementation 1)
+  // const handlePurchaseUpdate = async (purchase: Purchase) => {
+  //   try {
+  //     setProcessing(true);
+
+  //     // Log purchase attempt
+  //     logEvent(analytics, "iap_purchase_processing", {
+  //       event_category: "billing",
+  //       event_label: "payment",
+  //       product_id: purchase.productId,
+  //       transaction_id: purchase.transactionId,
+  //       user_type: userType,
+  //     });
+
+  //     // Check if transaction already exists
+  //     const existingPurchaseQuery = query(
+  //       collection(db, "payments"),
+  //       where("transactionId", "==", purchase.transactionId)
+  //     );
+  //     const existingPurchase = await getDocs(existingPurchaseQuery);
+
+  //     if (!existingPurchase.empty) {
+  //       console.log("Transaction already processed:", purchase.transactionId);
+  //       await finishTransaction({ purchase, isConsumable: false });
+  //       showSuccessToast("Purchase already processed!");
+  //       setProcessing(false);
+  //       return;
+  //     }
+
+  //     // Calculate subscription dates
+  //     const purchaseDate = new Date(purchase.transactionDate);
+
+  //     // Prepare payment document
+  //     const paymentDoc = {
+  //       // User information
+  //       phonenumber: phoneNumber,
+
+  //       // Platform and status
+  //       platform: "ios",
+  //       status: "completed",
+
+  //       // Timestamps
+  //       createdAt: purchaseDate,
+  //       updatedAt: purchaseDate,
+
+  //       data: {
+  //         // Transaction information
+  //         transactionId: purchase.transactionId,
+  //         transactionReceipt: purchase.transactionReceipt,
+  //         originalTransactionId:
+  //           purchase.originalTransactionIdentifierIOS || purchase.transactionId,
+  //         transactionDate: purchase.transactionDate,
+
+  //         // Product information
+  //         productId: purchase.productId,
+  //         planId: selectedPlan?.id || planId,
+
+  //         // Pricing information
+  //         amount: product?.price || totalAmount,
+  //         currency: product?.currency || "INR",
+  //         localizedPrice: product?.localizedPrice || formatCost(totalAmount),
+  //       },
+
+  //       platformData: {
+  //         paymentMethod: "in_app_purchase",
+  //         isTestPurchase: __DEV__,
+  //         environment: __DEV__ ? "sandbox" : "production",
+  //       },
+  //     };
+
+  //     // Save payment to Firestore
+  //     const paymentRef = await setDoc(doc(db, "payments", purchase.transactionId!), paymentDoc);
+  //     console.log("Payment saved with ID:", purchase.transactionId);
+
+  //     // Update user subscription status
+  //     await updateUserSubscription(paymentDoc);
+
+  //     // Finish the transaction
+  //     await finishTransaction({ purchase, isConsumable: false });
+
+  //     // Log successful purchase
+  //     logEvent(analytics, "iap_purchase_success", {
+  //       event_category: "billing",
+  //       event_label: "payment",
+  //       product_id: purchase.productId,
+  //       transaction_id: purchase.transactionId,
+  //       amount: product?.price,
+  //       payment_id: purchase.transactionId,
+  //       user_type: userType,
+  //     });
+
+  //     showSuccessToast("Purchase successful! Your subscription is now active.");
+
+  //     // Navigate back after a delay
+  //     setTimeout(() => {
+  //       router.back();
+  //     }, 2000);
+  //   } catch (error: any) {
+  //     console.error("Error processing purchase:", error);
+
+  //     // Log purchase failure
+  //     logEvent(analytics, "iap_purchase_failed", {
+  //       event_category: "billing",
+  //       event_label: "error",
+  //       error_message: error.message,
+  //       product_id: purchase.productId,
+  //       user_type: userType,
+  //     });
+
+  //     showErrorToast(
+  //       error.message ||
+  //         "Failed to process purchase. Please contact support if you were charged."
+  //     );
+
+  //     // Don't finish the transaction if save failed
+  //     // This allows retry on next app launch
+  //   } finally {
+  //     setProcessing(false);
+  //   }
+  // };
+
+  // const updateUserSubscription = async (
+  //     paymentData: any
+  //   ) => {
+  //     try {
+  //       // Track payment success before updating subscription
+  //       logEvent(analytics, "payment_success", {
+  //         event_category: "checkout",
+  //         event_label: "payment",
+  //         plan_id: planId,
+  //         transaction_id: paymentData.data.transactionId,
+  //         amount: paymentData.data.amount,
+  //         currency: "INR",
+  //         user_type: userType,
+  //       });
+  
+  //       const agentRef = doc(db, "agents", cpId);
+  //       const currentTransactionId = paymentData.data.transactionId;
+  
+  //       // Get current document to access existing payment history
+  //       const agentSnap = await getDoc(agentRef);
+  //       const agentData = agentSnap.data();
+  
+  //       const now = getUnixDateTime();
+  
+  //       let planExpiry = getUnixDateTime() + 31536000;
+  
+  //       const newPaymentEntry = {
+  //         paymentDate: now,
+  //         paymentAmount: paymentData.data.amount,
+  //         paymentId: currentTransactionId,
+  //         planId: planId,
+  //       };
+  
+  //       const existingPaymentHistory = agentData?.paymentHistory || [];
+  
+  //       let updatedPaymentHistory = [];
+  
+  //       if (Array.isArray(existingPaymentHistory)) {
+  //         updatedPaymentHistory = [...existingPaymentHistory, newPaymentEntry];
+  //       } else if (
+  //         existingPaymentHistory &&
+  //         typeof existingPaymentHistory === "object"
+  //       ) {
+  //         updatedPaymentHistory = [existingPaymentHistory, newPaymentEntry];
+  //       } else {
+  //         updatedPaymentHistory = [newPaymentEntry];
+  //       }
+  
+  //       let updateData: any = {
+  //         paymentHistory: updatedPaymentHistory,
+  //       };
+  
+  //       switch (planId) {
+  //         case "premium":
+  //           updateData = {
+  //             ...updateData,
+  //             userType: "premium",
+  //             trialUsed: true,
+  //             planExpiry: planExpiry,
+  //             monthlyCredits: 100,
+  //           };
+  //           break;
+  //         case "booster":
+  //           updateData = {
+  //             ...updateData,
+  //             boosterCredits: (agentData?.boosterCredits || 0) + 5,
+  //           };
+  //           break;
+  //         default:
+  //           console.log("Unknown plan ID:", planId);
+  //           return false;
+  //       }
+  
+  //       await updateDoc(agentRef, updateData);
+  //       console.log("Successfully updated user subscription");
+  
+  //       dispatch(updateAgentDocData(updateData));
+  
+  //       // Track subscription update success
+  //       logEvent(analytics, "subscription_updated", {
+  //         event_category: "checkout",
+  //         event_label: "subscription",
+  //         plan_id: planId,
+  //         user_type: userType,
+  //         credits_added: planId === "premium" ? 100 : 5,
+  //       });
+  
+  //       return true;
+  //     } catch (error) {
+  //       // Track error in subscription update
+  //       logEvent(analytics, "subscription_update_error", {
+  //         event_category: "checkout",
+  //         event_label: "error",
+  //         plan_id: planId,
+  //         error_message: error instanceof Error ? error.message : "Unknown error",
+  //         user_type: userType,
+  //       });
+  //       console.error("Error updating user subscription:", error);
+  //       return false;
+  //     }
+  //   };
+
   const handlePurchaseUpdate = async (purchase: Purchase) => {
     try {
       setProcessing(true);
@@ -316,89 +538,111 @@ const BillingContainer: React.FC<BillingContainerProps> = ({
         user_type: userType,
       });
 
-      // Check if transaction already exists
-      const existingPurchaseQuery = query(
-        collection(db, "payments"),
-        where("transactionId", "==", purchase.transactionId)
+      console.log(
+        "Processing purchase with backend validation:",
+        purchase.transactionId
       );
-      const existingPurchase = await getDocs(existingPurchaseQuery);
 
-      if (!existingPurchase.empty) {
-        console.log("Transaction already processed:", purchase.transactionId);
-        await finishTransaction({ purchase, isConsumable: false });
-        showSuccessToast("Purchase already processed!");
-        setProcessing(false);
-        return;
+      // Prepare data for backend validation
+      // Validate required fields
+      if (!phoneNumber || !cpId) {
+        throw new Error('Missing user identification details');
       }
 
-      // Calculate subscription dates
-      const purchaseDate = new Date(purchase.transactionDate);
+      if (!purchase.transactionId || !purchase.transactionReceipt) {
+        throw new Error('Invalid purchase data');
+      }
 
-      // Prepare payment document
-      const paymentDoc = {
-        // User information
-        phonenumber: phoneNumber,
+      if (!selectedPlan?.id && !planId) {
+        throw new Error('Plan details not found');
+      }
 
-        // Platform and status
-        platform: "ios",
-        status: "completed",
-
-        // Timestamps
-        createdAt: purchaseDate,
-        updatedAt: purchaseDate,
-
-        data: {
-          // Transaction information
-          transactionId: purchase.transactionId,
-          transactionReceipt: purchase.transactionReceipt,
-          originalTransactionId:
-            purchase.originalTransactionIdentifierIOS || purchase.transactionId,
-          transactionDate: purchase.transactionDate,
-
-          // Product information
-          productId: purchase.productId,
-          planId: selectedPlan?.id || planId,
-
-          // Pricing information
-          amount: product?.price || totalAmount,
-          currency: product?.currency || "INR",
-          localizedPrice: product?.localizedPrice || formatCost(totalAmount),
-        },
-
-        platformData: {
-          paymentMethod: "in_app_purchase",
-          isTestPurchase: __DEV__,
-          environment: __DEV__ ? "sandbox" : "production",
-        },
+      const validationData = {
+        phoneNumber: phoneNumber,
+        transactionDate: purchase.transactionDate,
+        transactionId: purchase.transactionId,
+        transactionReceipt: purchase.transactionReceipt,
+        originalTransactionId:
+          purchase.originalTransactionIdentifierIOS || purchase.transactionId,
+        productId: purchase.productId,
+        planId: selectedPlan?.id || planId,
+        amount: product?.price || totalAmount,
+        currency: product?.currency || "INR",
+        localizedPrice: product?.localizedPrice || formatCost(totalAmount),
+        isTestPurchase: __DEV__,
+        environment: __DEV__ ? "sandbox" : "production", 
+        cpId: cpId,
       };
 
-      // Save payment to Firestore
-      const paymentRef = await setDoc(doc(db, "payments", purchase.transactionId!), paymentDoc);
-      console.log("Payment saved with ID:", purchase.transactionId);
+      // Additional validation of data structure
+      const requiredFields = Object.entries(validationData).filter(([_, value]) => 
+        value === undefined || value === null
+      );
 
-      // Update user subscription status
-      await updateUserSubscription(paymentDoc);
+      if (requiredFields.length > 0) {
+        throw new Error(`Missing required fields: ${requiredFields.map(([key]) => key).join(', ')}`);
+      }
 
-      // Finish the transaction
-      await finishTransaction({ purchase, isConsumable: false });
+      const validationRequest = JSON.stringify(validationData);
 
-      // Log successful purchase
-      logEvent(analytics, "iap_purchase_success", {
-        event_category: "billing",
-        event_label: "payment",
-        product_id: purchase.productId,
-        transaction_id: purchase.transactionId,
-        amount: product?.price,
-        payment_id: purchase.transactionId,
-        user_type: userType,
+      if (!validationRequest) {
+        throw new Error(
+          `Error in parsing JSON: ${validationData}`
+        );
+      }
+
+      // Call backend for validation and processing
+      const backendUrl = "https://notification-server-acn-zdgg.onrender.com";
+      const response = await fetch(`${backendUrl}/iap/validate-ios`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: validationRequest,
       });
 
-      showSuccessToast("Purchase successful! Your subscription is now active.");
+      const result = await response.json();
 
-      // Navigate back after a delay
-      setTimeout(() => {
-        router.back();
-      }, 2000);
+      if (!response.ok) {
+        throw new Error(result.error || "Backend validation failed");
+      }
+
+      if (result.success) {
+        // Finish the transaction only after successful backend validation
+        await finishTransaction({ purchase, isConsumable: false });
+
+        // Update local Redux state with the user update data
+        if (result.userUpdate) {
+          dispatch(updateAgentDocData(result.userUpdate));
+        }
+
+        // Log successful purchase
+        logEvent(analytics, "iap_purchase_success", {
+          event_category: "billing",
+          event_label: "payment",
+          product_id: purchase.productId,
+          transaction_id: purchase.transactionId,
+          amount: totalAmount,
+          payment_id: purchase.transactionId,
+          user_type: userType,
+        });
+
+        if (result.alreadyProcessed) {
+          showSuccessToast("Purchase already processed!");
+        } else {
+          showSuccessToast(
+            "Purchase successful! Your subscription is now active."
+          );
+        }
+
+        // Navigate back after a delay
+        setTimeout(() => {
+          router.dismissAll();
+          router.push("/(pages)/Profile");
+        }, 1000);
+      } else {
+        throw new Error(result.error || "Purchase validation failed");
+      }
     } catch (error: any) {
       console.error("Error processing purchase:", error);
 
@@ -416,114 +660,12 @@ const BillingContainer: React.FC<BillingContainerProps> = ({
           "Failed to process purchase. Please contact support if you were charged."
       );
 
-      // Don't finish the transaction if save failed
+      // Don't finish the transaction if validation failed
       // This allows retry on next app launch
     } finally {
       setProcessing(false);
     }
   };
-
-  const updateUserSubscription = async (
-      paymentData: any
-    ) => {
-      try {
-        // Track payment success before updating subscription
-        logEvent(analytics, "payment_success", {
-          event_category: "checkout",
-          event_label: "payment",
-          plan_id: planId,
-          transaction_id: paymentData.data.transactionId,
-          amount: paymentData.data.amount,
-          currency: "INR",
-          user_type: userType,
-        });
-  
-        const agentRef = doc(db, "agents", cpId);
-        const currentTransactionId = paymentData.data.transactionId;
-  
-        // Get current document to access existing payment history
-        const agentSnap = await getDoc(agentRef);
-        const agentData = agentSnap.data();
-  
-        const now = getUnixDateTime();
-  
-        let planExpiry = getUnixDateTime() + 31536000;
-  
-        const newPaymentEntry = {
-          paymentDate: now,
-          paymentAmount: paymentData.data.amount,
-          paymentId: currentTransactionId,
-          planId: planId,
-        };
-  
-        const existingPaymentHistory = agentData?.paymentHistory || [];
-  
-        let updatedPaymentHistory = [];
-  
-        if (Array.isArray(existingPaymentHistory)) {
-          updatedPaymentHistory = [...existingPaymentHistory, newPaymentEntry];
-        } else if (
-          existingPaymentHistory &&
-          typeof existingPaymentHistory === "object"
-        ) {
-          updatedPaymentHistory = [existingPaymentHistory, newPaymentEntry];
-        } else {
-          updatedPaymentHistory = [newPaymentEntry];
-        }
-  
-        let updateData: any = {
-          paymentHistory: updatedPaymentHistory,
-        };
-  
-        switch (planId) {
-          case "premium":
-            updateData = {
-              ...updateData,
-              userType: "premium",
-              trialUsed: true,
-              planExpiry: planExpiry,
-              monthlyCredits: 100,
-            };
-            break;
-          case "booster":
-            updateData = {
-              ...updateData,
-              boosterCredits: (agentData?.boosterCredits || 0) + 5,
-            };
-            break;
-          default:
-            console.log("Unknown plan ID:", planId);
-            return false;
-        }
-  
-        await updateDoc(agentRef, updateData);
-        console.log("Successfully updated user subscription");
-  
-        dispatch(updateAgentDocData(updateData));
-  
-        // Track subscription update success
-        logEvent(analytics, "subscription_updated", {
-          event_category: "checkout",
-          event_label: "subscription",
-          plan_id: planId,
-          user_type: userType,
-          credits_added: planId === "premium" ? 100 : 5,
-        });
-  
-        return true;
-      } catch (error) {
-        // Track error in subscription update
-        logEvent(analytics, "subscription_update_error", {
-          event_category: "checkout",
-          event_label: "error",
-          plan_id: planId,
-          error_message: error instanceof Error ? error.message : "Unknown error",
-          user_type: userType,
-        });
-        console.error("Error updating user subscription:", error);
-        return false;
-      }
-    };
 
   const initiatePayment = async () => {
     setProcessing(true);
@@ -724,10 +866,6 @@ const BillingContainer: React.FC<BillingContainerProps> = ({
       // Purchase will be handled by purchaseUpdatedListener
       console.log("Purchase request initiated:", purchase);
 
-      const paymentRecord = {
-        purchase: purchase,
-      };
-      await setDoc(doc(db, "payments", "A_Test"), paymentRecord);
     } catch (error: any) {
       console.error("IAP purchase error:", error);
       const errorMessage = getErrorMessage(error);
