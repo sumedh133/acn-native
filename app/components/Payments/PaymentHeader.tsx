@@ -1,5 +1,11 @@
 import React, { useState } from "react";
-import { View, Text, TouchableOpacity, StyleSheet } from "react-native";
+import {
+  View,
+  Text,
+  TouchableOpacity,
+  StyleSheet,
+  Dimensions,
+} from "react-native";
 import { Feather, AntDesign } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import { LinearGradient } from "expo-linear-gradient";
@@ -24,6 +30,7 @@ const PaymentHeader: React.FC<PaymentHeaderProps> = ({
 }) => {
   const router = useRouter();
   const [isCopied, setIsCopied] = useState(false);
+  const windowWidth = Dimensions.get("window").width;
 
   const handleCopyClick = () => {
     handleCopy();
@@ -32,69 +39,54 @@ const PaymentHeader: React.FC<PaymentHeaderProps> = ({
   const isSuccess =
     status === "PAYMENT_SUCCESS" || status === "Paid Successfully";
 
-  return paymentDetails.status === "PAYMENT_SUCCESS" ||
-    paymentDetails.status === "completed" ? (
-    <View style={styles.topBannerSuccess}>
+  return paymentDetails.status === "PAYMENT_SUCCESS" ? (
+    <View
+      style={[
+        styles.topBannerSuccess,
+        { paddingHorizontal: windowWidth * 0.05 },
+      ]}
+    >
       <View style={styles.headerRowBanner}>
         <TouchableOpacity onPress={() => router.back()}>
           <ArrowLeftIcon color="#fff" />
         </TouchableOpacity>
         <Text style={styles.headerTextBanner}>Back</Text>
       </View>
-      {/* Two-column layout for status/txn and date/time */}
-      <View style={styles.bannerRowCols}>
-        {/* Left column: status and txn id */}
-        <View style={{ flex: 1, justifyContent: "flex-start" }}>
-          <View
-            style={{
-              flexDirection: "row",
-              alignItems: "center",
-              marginBottom: 8,
-            }}
-          >
+      <View style={[styles.bannerRowCols]}>
+        <View style={[styles.columnContainer]}>
+          <View style={styles.statusContainer}>
             <Text style={styles.statusTextSuccess}>Payment Successful</Text>
             <AntDesign
               name="checkcircleo"
-              size={18}
+              size={windowWidth * 0.045}
               color="#4ADE80"
               style={{ marginLeft: 6 }}
             />
           </View>
-          <View style={{ flexDirection: "row", alignItems: "center" }}>
-            <Text style={styles.txnIdBanner}>{paymentDetails.id}</Text>
+          <View style={[styles.txnContainer]}>
+            <Text style={[styles.txnIdBanner]}>{paymentDetails.id}</Text>
             <TouchableOpacity onPress={handleCopy}>
               <Feather
                 name="copy"
-                size={18}
+                size={windowWidth * 0.045}
                 color="#fff"
-                style={{ marginLeft: 8 }}
+                style={{ marginLeft: 6 }}
               />
             </TouchableOpacity>
           </View>
         </View>
-        {/* Right column: date and time */}
-        <View
-          style={{
-            flex: 1,
-            // alignItems: "flex-end",
-            justifyContent: "flex-start",
-            flexDirection: "column",
-            gap: 4,
-          }}
-        >
-          <View
-            style={{
-              flexDirection: "row",
-              alignItems: "center",
-              marginBottom: 8,
-            }}
-          >
-            <Feather name="clock" size={16} color="#fff" />
-            <Text style={styles.infoTextBanner}>{dateStr}</Text>
+        <View style={[styles.columnContainer, { gap: 6 }]}>
+          <View style={[styles.infoContainer]}>
+            <Feather name="clock" size={windowWidth * 0.04} color="#fff" />
+            <Text style={[styles.infoTextBanner]} numberOfLines={1}>
+              {dateStr}
+            </Text>
           </View>
-          <View style={{ flexDirection: "row", alignItems: "center" }}>
-            <AntDesign name="calendar" size={16} color="#fff" />
-            <Text style={styles.infoTextBanner}>{timeStr}</Text>
+          <View style={[styles.infoContainer]}>
+            <AntDesign name="calendar" size={windowWidth * 0.04} color="#fff" />
+            <Text style={[styles.infoTextBanner]} numberOfLines={1}>
+              {timeStr}
+            </Text>
           </View>
         </View>
       </View>
@@ -104,7 +96,10 @@ const PaymentHeader: React.FC<PaymentHeaderProps> = ({
       colors={["#FFF1F3", "#FFFFFF"]}
       start={{ x: 0, y: 1 }}
       end={{ x: 0, y: 0 }}
-      style={styles.topBannerFailed}
+      style={[
+        styles.topBannerFailed,
+        { paddingHorizontal: windowWidth * 0.05 },
+      ]}
     >
       <View style={styles.headerRowBanner}>
         <TouchableOpacity onPress={() => router.back()}>
@@ -112,59 +107,45 @@ const PaymentHeader: React.FC<PaymentHeaderProps> = ({
         </TouchableOpacity>
         <Text style={styles.headerTextBannerFailed}>Back</Text>
       </View>
-      {/* Two-column layout for status/txn and date/time */}
-      <View style={styles.bannerRowCols}>
-        {/* Left column: status and txn id */}
-        <View style={{ flex: 1, justifyContent: "flex-start" }}>
-          <View
-            style={{
-              flexDirection: "row",
-              alignItems: "center",
-              marginBottom: 8,
-            }}
-          >
+      <View style={[styles.bannerRowCols]}>
+        <View style={[styles.columnContainer]}>
+          <View style={styles.statusContainer}>
             <Text style={styles.statusTextFailed}>Payment Failed</Text>
             <AntDesign
               name="closecircleo"
-              size={18}
+              size={windowWidth * 0.045}
               color="#E53935"
               style={{ marginLeft: 6 }}
             />
           </View>
-          <View style={{ flexDirection: "row", alignItems: "center" }}>
+          <View style={styles.txnContainer}>
             <Text style={styles.txnIdBannerFailed}>{paymentDetails.id}</Text>
             <TouchableOpacity onPress={handleCopy}>
               <Feather
                 name="copy"
-                size={18}
+                size={windowWidth * 0.045}
                 color="#000"
-                style={{ marginLeft: 8 }}
+                style={{ marginLeft: 6 }}
               />
             </TouchableOpacity>
           </View>
         </View>
-        {/* Right column: date and time */}
-        <View
-          style={{
-            flex: 1,
-            justifyContent: "flex-start",
-            flexDirection: "column",
-            gap: 4,
-          }}
-        >
-          <View
-            style={{
-              flexDirection: "row",
-              alignItems: "center",
-              marginBottom: 8,
-            }}
-          >
-            <Feather name="clock" size={16} color="#707070" />
-            <Text style={styles.infoTextBannerFailed}>{dateStr}</Text>
+        <View style={[styles.columnContainer, { gap: 6 }]}>
+          <View style={[styles.infoContainer]}>
+            <Feather name="clock" size={windowWidth * 0.04} color="#707070" />
+            <Text style={[styles.infoTextBannerFailed]} numberOfLines={1}>
+              {dateStr}
+            </Text>
           </View>
-          <View style={{ flexDirection: "row", alignItems: "center" }}>
-            <AntDesign name="calendar" size={16} color="#707070" />
-            <Text style={styles.infoTextBannerFailed}>{timeStr}</Text>
+          <View style={[styles.infoContainer]}>
+            <AntDesign
+              name="calendar"
+              size={windowWidth * 0.04}
+              color="#707070"
+            />
+            <Text style={styles.infoTextBannerFailed} numberOfLines={1}>
+              {timeStr}
+            </Text>
           </View>
         </View>
       </View>
@@ -181,14 +162,12 @@ const styles = StyleSheet.create({
     backgroundColor: "#153E3B",
     borderBottomLeftRadius: 16,
     borderBottomRightRadius: 16,
-    paddingHorizontal: 20,
     paddingTop: 32,
     paddingBottom: 20,
   },
   topBannerFailed: {
     borderBottomLeftRadius: 16,
     borderBottomRightRadius: 16,
-    paddingHorizontal: 20,
     paddingTop: 32,
     paddingBottom: 20,
   },
@@ -223,23 +202,27 @@ const styles = StyleSheet.create({
     color: "#fff",
     fontFamily: "Montserrat_700Bold",
     fontSize: 18,
+    width: "auto",
   },
   txnIdBannerFailed: {
     color: "#000",
     fontFamily: "Montserrat_700Bold",
-    fontSize: 16,
+    fontSize: 18,
+    width: "auto",
   },
   infoTextBanner: {
     color: "#fff",
     fontSize: 13,
     marginLeft: 4,
     fontFamily: "Montserrat_400Regular",
+    width: "auto",
   },
   infoTextBannerFailed: {
     color: "#707070",
     fontSize: 13,
     marginLeft: 4,
     fontFamily: "Montserrat_400Regular",
+    width: "auto",
   },
   card: {
     backgroundColor: "#fff",
@@ -247,10 +230,10 @@ const styles = StyleSheet.create({
     padding: 16,
     marginHorizontal: 16,
     marginTop: 16,
-    shadowColor: "#000",
-    shadowOpacity: 0.05,
-    shadowRadius: 4,
-    elevation: 2,
+    // shadowColor: "#000",
+    // shadowOpacity: 0.05,
+    // shadowRadius: 4,
+    // elevation: 2,
   },
   row: {
     flexDirection: "row",
@@ -345,11 +328,28 @@ const styles = StyleSheet.create({
   },
   bannerRowCols: {
     flexDirection: "row",
-    // justifyContent: "space-between",
-    justifyContent: "flex-start",
-    alignItems: "flex-start",
+    justifyContent: "space-between",
     marginTop: 8,
-    gap: 43,
+    width: "100%",
+  },
+  columnContainer: {
+    flexGrow: 1,
+    justifyContent: "flex-start",
+  },
+  statusContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginBottom: 8,
+  },
+  txnContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+  },
+  infoContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginBottom: 8,
+    justifyContent: "flex-end",
   },
 });
 

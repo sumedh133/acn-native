@@ -8,6 +8,7 @@ import {
   StatusBar,
   FlatList,
   Platform,
+  ActivityIndicator,
 } from "react-native";
 import { useSelector } from "react-redux";
 import { RootState } from "@/store/store";
@@ -75,9 +76,11 @@ const PaymentRecords: React.FC = () => {
 
   const [paymentHistory, setPaymentHistory] =
     useState<Array<PaymentHistoryItem> | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
 
   const fetchPaymentHistory = async () => {
     try {
+      setIsLoading(true);
       const querySnapshot = await getDocs(
         query(
           collection(db, "payments"),
@@ -94,6 +97,8 @@ const PaymentRecords: React.FC = () => {
       setPaymentHistory(data);
     } catch (error) {
       console.error("Error fetching payment history:", error);
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -221,7 +226,11 @@ const PaymentRecords: React.FC = () => {
     <SafeAreaView style={styles.container}>
       <StatusBar barStyle="dark-content" backgroundColor="#EEEEEE" />
 
-      {formattedPaymentRecords.length > 0 ? (
+      {isLoading ? (
+        <View style={styles.loadingContainer}>
+          <ActivityIndicator size="large" color="#000000" />
+        </View>
+      ) : formattedPaymentRecords.length > 0 ? (
         <FlatList
           data={formattedPaymentRecords}
           renderItem={renderPaymentItem}
@@ -323,6 +332,11 @@ const styles = StyleSheet.create({
     fontFamily: "Lato_400Regular",
     fontSize: 12,
     fontWeight: 500,
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
   },
 });
 

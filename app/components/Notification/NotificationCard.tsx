@@ -83,7 +83,7 @@ const ctaIconMap: Record<string, React.ReactNode> = {
       style={{ marginRight: 6 }}
     />
   ),
-  "Call KAM": (
+  "Call Kam": (
     <MaterialIcons
       name="call"
       size={16}
