@@ -16,25 +16,29 @@ SplashScreen.preventAutoHideAsync();
 
 function RootLayout() {
   const { checkForUpdate, alreadyPromptedOnce } = useAppUpdate();
-  
-  // Get user data from Redux
-  const agentData = useSelector((state: RootState) => state?.agent?.docData);
-  const userType = agentData?.userType || "free";
-  const userName = agentData?.name || "";
-  const userPhoneNumber = useSelector((state: RootState) => state.agent.phonenumber);
-  const isAuthenticated = useSelector((state: RootState) => state.auth.isAuthenticated);
 
-  // Initialize session tracking only for authenticated users
-  useEffect(() => {
-    if (isAuthenticated) {
-      const sessionTracker = SessionTracker.getInstance();
-      sessionTracker.setUserInfo(userType, userPhoneNumber || "", userName);
+  // // Get user data from Redux
+  // const agentData = useSelector((state: RootState) => state?.agent?.docData);
+  // const userType = agentData?.userType || "free";
+  // const userName = agentData?.name || "";
+  // const userPhoneNumber = useSelector(
+  //   (state: RootState) => state.agent.phonenumber
+  // );
+  // const isAuthenticated = useSelector(
+  //   (state: RootState) => state.auth.isAuthenticated
+  // );
 
-      return () => {
-        sessionTracker.cleanup();
-      };
-    }
-  }, [isAuthenticated, userType, userPhoneNumber, userName]);
+  // // Initialize session tracking only for authenticated users
+  // useEffect(() => {
+  //   if (isAuthenticated) {
+  //     const sessionTracker = SessionTracker.getInstance();
+  //     sessionTracker.setUserInfo(userType, userPhoneNumber || "", userName);
+
+  //     return () => {
+  //       sessionTracker.cleanup();
+  //     };
+  //   }
+  // }, [isAuthenticated, userType, userPhoneNumber, userName]);
 
   // Function to calculate dynamic top margin based on screen dimensions and orientation
   // const calculateTopMargin = () => {
