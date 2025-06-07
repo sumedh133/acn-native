@@ -42,28 +42,31 @@ export default function TabOneScreen() {
     (state: RootState) => state.app.isConnectedToInternet
   );
 
-  // Initialize session tracking
-  useEffect(() => {
-    const sessionTracker = SessionTracker.getInstance();
-    sessionTracker.setUserInfo(userType, userPhoneNumber || "", userName);
-
-    return () => {
-      sessionTracker.cleanup();
-    };
-  }, [userType, userPhoneNumber, userName]);
-
   // Track initial app launch
   useEffect(() => {
-    try {
-      logEvent(analytics, "app_launch", {
-        event_category: "app",
-        event_label: "launch",
-        user_type: userType,
-      });
-    } catch (error) {
-      console.error("Error logging app launch:", error);
-    }
-  }, [userType]);
+    const trackAppLaunch = async () => {
+      try {
+        if (!analytics) {
+          console.warn('Firebase Analytics not initialized');
+          return;
+        }
+
+        // Track app launch with minimal required data for accurate counting
+        await logEvent(analytics, "app_launch", {
+          event_category: "app",
+          event_label: "launch",
+          user_id: userPhoneNumber || "anonymous",  // For user-level aggregation
+          timestamp: new Date().toISOString()       // For time-based analysis
+        });
+
+      } catch (error) {
+        console.error("Error logging app launch:", error);
+      }
+    };
+
+    // Track launch immediately when component mounts
+    trackAppLaunch();
+  }, []); // Empty dependency array ensures it only runs once per app launch
 
   useEffect(() => {
     if (userPhoneNumber) {

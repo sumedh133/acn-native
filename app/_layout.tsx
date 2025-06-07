@@ -8,11 +8,34 @@ import ReduxProvider from "@/providers/ReduxProvider";
 import LayoutApp from "./_layoutApp";
 import useAppUpdate from "./helpers/checkUpdates";
 import { withIAPContext } from "react-native-iap";
+import SessionTracker from "./services/SessionTracker";
+import { useSelector } from "react-redux";
+import { RootState } from "@/store/store";
 
 SplashScreen.preventAutoHideAsync();
 
 function RootLayout() {
   const { checkForUpdate, alreadyPromptedOnce } = useAppUpdate();
+  
+  // Get user data from Redux
+  const agentData = useSelector((state: RootState) => state?.agent?.docData);
+  const userType = agentData?.userType || "free";
+  const userName = agentData?.name || "";
+  const userPhoneNumber = useSelector((state: RootState) => state.agent.phonenumber);
+  const isAuthenticated = useSelector((state: RootState) => state.auth.isAuthenticated);
+
+  // Initialize session tracking only for authenticated users
+  useEffect(() => {
+    if (isAuthenticated) {
+      const sessionTracker = SessionTracker.getInstance();
+      sessionTracker.setUserInfo(userType, userPhoneNumber || "", userName);
+
+      return () => {
+        sessionTracker.cleanup();
+      };
+    }
+  }, [isAuthenticated, userType, userPhoneNumber, userName]);
+
   // Function to calculate dynamic top margin based on screen dimensions and orientation
   // const calculateTopMargin = () => {
   //   const { height, width } = Dimensions.get('window');
