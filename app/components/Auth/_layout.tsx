@@ -71,7 +71,7 @@ export default function RootLayout() {
     }
   }, [isConnectedToInternet, userType]);
 
-  if (!isConnectedToInternet) return <Offline />;
+  
 
   return (
     <ThemeProvider value={colorScheme === "dark" ? DarkTheme : DefaultTheme}>

@@ -29,13 +29,8 @@ const PaymentHeader: React.FC<PaymentHeaderProps> = ({
   handleCopy,
 }) => {
   const router = useRouter();
-  const [isCopied, setIsCopied] = useState(false);
   const windowWidth = Dimensions.get("window").width;
 
-  const handleCopyClick = () => {
-    handleCopy();
-    setIsCopied(true);
-  };
   const isSuccess =
     status === "PAYMENT_SUCCESS" || status === "Paid Successfully";
 
@@ -50,7 +45,9 @@ const PaymentHeader: React.FC<PaymentHeaderProps> = ({
         <TouchableOpacity onPress={() => router.back()}>
           <ArrowLeftIcon color="#fff" />
         </TouchableOpacity>
-        <Text style={styles.headerTextBanner}>Back</Text>
+        <TouchableOpacity onPress={() => router.back()}>
+          <Text style={styles.headerTextBanner}>Back</Text>
+        </TouchableOpacity>
       </View>
       <View style={[styles.bannerRowCols]}>
         <View style={[styles.columnContainer]}>
@@ -105,7 +102,9 @@ const PaymentHeader: React.FC<PaymentHeaderProps> = ({
         <TouchableOpacity onPress={() => router.back()}>
           <ArrowLeftIcon color="#000" />
         </TouchableOpacity>
-        <Text style={styles.headerTextBannerFailed}>Back</Text>
+        <TouchableOpacity onPress={() => router.back()}>
+          <Text style={styles.headerTextBannerFailed}>Back</Text>
+        </TouchableOpacity>
       </View>
       <View style={[styles.bannerRowCols]}>
         <View style={[styles.columnContainer]}>
