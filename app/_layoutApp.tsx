@@ -62,6 +62,7 @@ import {
 
 import useNotification from "./components/Notification/useNotification";
 import SessionTracker from "./services/SessionTracker";
+import Offline from "./components/Offline";
 
 // Custom header component to apply the desired styling
 const CustomHeader = ({
@@ -133,6 +134,10 @@ export default function LayoutApp() {
     Lora_700Bold,
   });
   const navigation = useNavigation();
+
+  const isConnectedToInternet = useSelector(
+    (state: RootState) => state.app.isConnectedToInternet
+  );
 
   const { docData: agentData } = useSelector((state: RootState) => state.agent);
   const userType = agentData?.userType || "free";
@@ -242,7 +247,9 @@ export default function LayoutApp() {
 
   useEffect(() => {
     if (fontsLoaded) {
-      SplashScreen.hideAsync();
+      setTimeout(() => {
+        SplashScreen.hideAsync();
+      }, 2000);
     }
   }, [fontsLoaded]);
 
@@ -306,6 +313,8 @@ export default function LayoutApp() {
   const handleOnBoarding = () => {
     setShowOnboarding(false);
   };
+
+  if (!isConnectedToInternet) return <Offline />;
 
   return (
     <View style={{ flex: 1 }} onLayout={onLayoutRootView}>

@@ -42,6 +42,7 @@ import axios from "axios";
 import CreditLimitModal from "@/app/modals/CreditLimitModal";
 import { analytics } from "@/app/config/firebase";
 import { logEvent } from "@react-native-firebase/analytics";
+import { toCapitalizedWords } from "@/app/helpers/common";
 
 interface PropertyCardProps {
   property: Property;
@@ -365,11 +366,11 @@ const PropertyCard: React.FC<PropertyCardProps> = ({ property }) => {
               <View className="flex-row items-center bg-[#747474] px-2 py-1 rounded-full mr-2">
                 <Ionicons name="location-outline" size={14} color="#FAFBFC" />
                 <Text
-                  className="text-[#FAFBFC] text-xs ml-1 max-w-[216px]"
+                  className="text-[#FAFBFC] text-xs ml-1 max-w-[176px]"
                   numberOfLines={1}
                   ellipsizeMode="tail"
                 >
-                  {property.micromarket || "-"}
+                  {toCapitalizedWords(property.micromarket) || "-"}
                 </Text>
               </View>
 

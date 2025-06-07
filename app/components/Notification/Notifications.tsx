@@ -60,7 +60,6 @@ const Notifications: React.FC<NotificationsProps> = ({
                 onCtaPress={onCtaPress}
                 addedTime={notification.addedTime}
               />
-              {/* <View className="border-t-[0.5px] border-[#000] w-[80%] align-right"></View> */}
             </>
           ))}
         </ScrollView>

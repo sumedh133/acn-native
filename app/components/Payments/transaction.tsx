@@ -21,6 +21,7 @@ import EmailInvoiceIcon from "@/assets/icons/billing/emailInvoice.svg";
 import DownloadPDFIcon from "@/assets/icons/billing/downloadPDF.svg";
 import ContactSupportIcon from "@/assets/icons/billing/contactSupport.svg";
 import RetryPaymentIcon from "@/assets/icons/billing/retryPayment.svg";
+import { showErrorToast, showInfoToast, showSuccessToast } from "@/utils/toastUtils";
 
 interface PaymentDetails {
   id: string;
@@ -123,7 +124,14 @@ const Transaction = () => {
 
   // Copy logic
   const handleCopy = async () => {
-    await Clipboard.setStringAsync(paymentDetails.id);
+    const coppied = await Clipboard.setStringAsync(paymentDetails.id);
+    if (Platform.OS === "ios") {
+      if (coppied) {
+        showInfoToast("Transaction ID copied.");
+      } else {
+        showErrorToast("Copy failed. Try manually.");
+      }
+    }
   };
 
   const handleRetryPayment = async () => {
@@ -179,8 +187,10 @@ const Transaction = () => {
       const data = await response.json();
       // LOG  {"message": "Invoice sent successfully!", "messageId": "<13286786-cd8d-f52c-097d-9589099e74f6@acnonline.in>", "success": true}
       console.log(data);
+      showSuccessToast("Invoice emailed.");
     } catch (error) {
       console.error("Error sending invoice email:", error);
+      showErrorToast("Email failed. Try again or contact support.");
     }
   };
 
