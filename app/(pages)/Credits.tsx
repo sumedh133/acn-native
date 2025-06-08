@@ -31,6 +31,9 @@ import {
 } from "firebase/firestore";
 import { db } from "../config/firebase";
 import { formatUnixDate } from "../helpers/getUnixDateTime";
+import { setPropertyDataThunk } from "@/store/slices/propertySlice";
+import { useDispatch } from "react-redux";
+import { AnyAction, ThunkDispatch } from "@reduxjs/toolkit";
 
 interface UseEnquiriesResult {
   myEnquiries: EnquiryWithProperty[];
@@ -130,6 +133,7 @@ const useEnquiries = (): UseEnquiriesResult => {
 
 const Credits = () => {
   const router = useRouter();
+  const dispatch = useDispatch<ThunkDispatch<RootState, unknown, AnyAction>>();
   const monthlyCredits = useSelector(
     (state: RootState) => state?.agent?.docData?.monthlyCredits
   );
@@ -222,6 +226,32 @@ const Credits = () => {
     }
     const whatsappUrl = `https://wa.me/+919415006092`;
     Linking.openURL(whatsappUrl);
+  };
+
+  const handleOpenPropertyDetails = (enquiry: EnquiryWithProperty) => {
+    try {
+      logEvent(analytics, "enquiry_item_click", {
+        event_category: "profile",
+        event_label: "enquiry_details",
+        source: "credits_page",
+        property_name: enquiry.property?.nameOfTheProperty || "N/A",
+        enquiry_date: enquiry.added ? formatUnixDate(enquiry.added) : "N/A",
+        user_type: userType || "free",
+      });
+    } catch (error) {
+      console.error("Error logging analytics:", error);
+    }
+
+    if (enquiry?.property) {
+      dispatch(setPropertyDataThunk(enquiry.property));
+      router.push({
+        pathname: "/components/property/PropertyDetailsScreen",
+        params: {
+          parent: "dashboardEnquiry",
+          enqId: enquiry.enquiryId,
+        },
+      });
+    }
   };
 
   return (
@@ -370,23 +400,7 @@ const Credits = () => {
               myEnquiries.slice(0, 3).map((enquiry, index) => (
                 <View key={index} className="mb-3">
                   <TouchableOpacity
-                    onPress={() => {
-                      try {
-                        logEvent(analytics, "enquiry_item_click", {
-                          event_category: "profile",
-                          event_label: "enquiry_details",
-                          source: "credits_page",
-                          property_name:
-                            enquiry.property?.nameOfTheProperty || "N/A",
-                          enquiry_date: enquiry.added
-                            ? formatUnixDate(enquiry.added)
-                            : "N/A",
-                          user_type: userType || "free",
-                        });
-                      } catch (error) {
-                        console.error("Error logging analytics:", error);
-                      }
-                    }}
+                    onPress={() => handleOpenPropertyDetails(enquiry)}
                     className="flex-row justify-between items-start"
                   >
                     <View className="flex-1">

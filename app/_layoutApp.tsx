@@ -61,6 +61,8 @@ import {
 } from "./components/TrialStatusNotification";
 
 import useNotification from "./components/Notification/useNotification";
+import SessionTracker from "./services/SessionTracker";
+import Offline from "./components/Offline";
 
 // Custom header component to apply the desired styling
 const CustomHeader = ({
@@ -133,8 +135,31 @@ export default function LayoutApp() {
   });
   const navigation = useNavigation();
 
-  // Check if onboarding should be shown
+  const isConnectedToInternet = useSelector(
+    (state: RootState) => state.app.isConnectedToInternet
+  );
+
   const { docData: agentData } = useSelector((state: RootState) => state.agent);
+  const userType = agentData?.userType || "free";
+  const userName = agentData?.name || "";
+  const userPhoneNumber = useSelector(
+    (state: RootState) => state.agent.phonenumber
+  );
+  const isAuthenticated = useSelector(
+    (state: RootState) => state.auth.isAuthenticated
+  );
+
+  // Initialize session tracking only for authenticated users
+  useEffect(() => {
+    if (isAuthenticated) {
+      const sessionTracker = SessionTracker.getInstance();
+      sessionTracker.setUserInfo(userType, userPhoneNumber || "", userName);
+
+      return () => {
+        sessionTracker.cleanup();
+      };
+    }
+  }, [isAuthenticated, userType, userPhoneNumber, userName]);
 
   const calculateDaysLeft = (trialStartedAt: number): number => {
     try {
@@ -222,7 +247,9 @@ export default function LayoutApp() {
 
   useEffect(() => {
     if (fontsLoaded) {
-      SplashScreen.hideAsync();
+      setTimeout(() => {
+        SplashScreen.hideAsync();
+      }, 2000);
     }
   }, [fontsLoaded]);
 
@@ -249,9 +276,6 @@ export default function LayoutApp() {
     // Unsubscribe when component unmounts
     return () => unsubscribe();
   }, []);
-
-  const isAuthenticated =
-    useSelector((state: RootState) => state.auth.isAuthenticated) || false;
 
   const cpId =
     useSelector((state: RootState) => state?.agent?.docData?.cpId) || null;
@@ -289,6 +313,8 @@ export default function LayoutApp() {
   const handleOnBoarding = () => {
     setShowOnboarding(false);
   };
+
+  if (!isConnectedToInternet) return <Offline />;
 
   return (
     <View style={{ flex: 1 }} onLayout={onLayoutRootView}>

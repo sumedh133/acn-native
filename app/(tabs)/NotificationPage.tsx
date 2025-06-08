@@ -64,6 +64,7 @@ const NotificationPage: React.FC<NotificationPageProps> = () => {
     setActiveFilter,
     notifications,
     markAllVisibleAsRead,
+    isLoading,
   } = useNotification();
   const [showFilters, setShowFilters] = useState(false);
   const router = useRouter();
@@ -279,7 +280,7 @@ const NotificationPage: React.FC<NotificationPageProps> = () => {
               <Text style={styles.notificationText}>{unreadCount}</Text>
             </View>
           )}
-          <TouchableOpacity onPress={() => setShowFilters(true)}>
+          <TouchableOpacity onPress={() => setShowFilters(true)} className="">
             <FilterIcon />
           </TouchableOpacity>
         </View>
@@ -298,12 +299,11 @@ const NotificationPage: React.FC<NotificationPageProps> = () => {
       </View>
 
       <View style={styles.notificationsContainer}>
-        {/* <ScrollView style={{ height: "100%", backgroundColor: "red" }}> */}
         <Notifications
           notifications={filteredNotifications}
           onCtaPress={onCTAPress}
+          isLoading={isLoading}
         />
-        {/* </ScrollView> */}
       </View>
 
       {/* Filter Modal */}
@@ -358,7 +358,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     paddingVertical: 16,
     borderBottomColor: "#EEEEEE",
-    // backgroundColor: "pink",
+    backgroundColor: "#FAFAFA",
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",

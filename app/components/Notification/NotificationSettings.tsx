@@ -115,7 +115,7 @@ const styles = StyleSheet.create({
     marginLeft: 16,
     fontSize: 18,
     fontWeight: "600",
-    fontFamily: "Montserrat_700Bold",
+    fontFamily: "Lato_700Bold",
     letterSpacing: 0.25,
     lineHeight: 24,
   },
@@ -138,7 +138,7 @@ const styles = StyleSheet.create({
     fontSize: 15,
     fontWeight: "500",
     color: "#222",
-    fontFamily: "Montserrat_500Medium",
+    fontFamily: "Lato_500Medium",
   },
   desc: {
     fontSize: 13,

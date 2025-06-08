@@ -48,7 +48,7 @@ const ctaIconMap: Record<string, React.ReactNode> = {
       name="call"
       size={16}
       color="#fff"
-      style={{ marginRight: 6 }}
+      // style={{ marginRight: 6 }}
     />
   ),
   "Message Agent": (
@@ -56,7 +56,7 @@ const ctaIconMap: Record<string, React.ReactNode> = {
       name="whatsapp"
       size={16}
       color="#153E3B"
-      style={{ marginRight: 6 }}
+      // style={{ marginRight: 6 }}
     />
   ),
   "Try now": (
@@ -64,7 +64,7 @@ const ctaIconMap: Record<string, React.ReactNode> = {
       name="clock-outline"
       size={16}
       color="#fff"
-      style={{ marginRight: 6 }}
+      // style={{ marginRight: 6 }}
     />
   ),
   Available: (
@@ -72,7 +72,7 @@ const ctaIconMap: Record<string, React.ReactNode> = {
       name="check-circle"
       size={16}
       color="#fff"
-      style={{ marginRight: 6 }}
+      // style={{ marginRight: 6 }}
     />
   ),
   Sold: (
@@ -80,15 +80,15 @@ const ctaIconMap: Record<string, React.ReactNode> = {
       name="sell"
       size={16}
       color="#153E3B"
-      style={{ marginRight: 6 }}
+      // style={{ marginRight: 6 }}
     />
   ),
-  "Call KAM": (
+  "Call Kam": (
     <MaterialIcons
       name="call"
       size={16}
       color="#fff"
-      style={{ marginRight: 6 }}
+      // style={{ marginRight: 6 }}
     />
   ),
   Dashboard: (
@@ -96,7 +96,7 @@ const ctaIconMap: Record<string, React.ReactNode> = {
       name="dashboard"
       size={16}
       color="#153E3B"
-      style={{ marginRight: 6 }}
+      // style={{ marginRight: 6 }}
     />
   ),
   "View Credits": (
@@ -104,7 +104,7 @@ const ctaIconMap: Record<string, React.ReactNode> = {
       name="credit-card"
       size={16}
       color="#fff"
-      style={{ marginRight: 6 }}
+      // style={{ marginRight: 6 }}
     />
   ),
   "Add New Inventory": (
@@ -112,7 +112,7 @@ const ctaIconMap: Record<string, React.ReactNode> = {
       name="add"
       size={16}
       color="#153E3B"
-      style={{ marginRight: 6 }}
+      // style={{ marginRight: 6 }}
     />
   ),
   Edit: (
@@ -120,7 +120,7 @@ const ctaIconMap: Record<string, React.ReactNode> = {
       name="edit"
       size={16}
       color="#fff"
-      style={{ marginRight: 6 }}
+      // style={{ marginRight: 6 }}
     />
   ),
   "View Details": (
@@ -128,7 +128,7 @@ const ctaIconMap: Record<string, React.ReactNode> = {
       name="visibility"
       size={16}
       color="#fff"
-      style={{ marginRight: 6 }}
+      // style={{ marginRight: 6 }}
     />
   ),
   "Get Premium": (
@@ -136,7 +136,7 @@ const ctaIconMap: Record<string, React.ReactNode> = {
       name="crown-outline"
       size={16}
       color="#fff"
-      style={{ marginRight: 6 }}
+      // style={{ marginRight: 6 }}
     />
   ),
   "Compare Plans": (
@@ -144,7 +144,7 @@ const ctaIconMap: Record<string, React.ReactNode> = {
       name="compare"
       size={16}
       color="#153E3B"
-      style={{ marginRight: 6 }}
+      // style={{ marginRight: 6 }}
     />
   ),
   Properties: (
@@ -152,7 +152,7 @@ const ctaIconMap: Record<string, React.ReactNode> = {
       name="home"
       size={16}
       color="#fff"
-      style={{ marginRight: 6 }}
+      // style={{ marginRight: 6 }}
     />
   ),
 };
@@ -248,7 +248,8 @@ const NotificationCard: React.FC<NotificationCardProps> = ({
       </View>
       <View style={styles.contentContainer}>
         <View
-          style={{ flexDirection: "column", width: "80%", paddingLeft: 12 }}
+          // style={{ flexDirection: "column", width: "80%", paddingLeft: 12 }}
+          className="flex flex-col flex-1 items-start space-y-[8px]"
         >
           {notification.title !== "" && (
             <Text style={styles.title}>{notification.title}</Text>
@@ -265,17 +266,16 @@ const NotificationCard: React.FC<NotificationCardProps> = ({
                     {
                       backgroundColor: idx === 0 ? "#153E3B" : "#fff",
                       borderColor: idx === 0 ? "#153E3B" : "#ccc",
-                      flexDirection: "row",
-                      alignItems: "center",
                     },
                   ]}
                 >
                   {ctaIconMap[action] || null}
                   <Text
                     style={[
-                      styles.ctaButtonText,
+                      // styles.ctaButtonText,
                       { color: idx === 0 ? "#fff" : "#153E3B" },
                     ]}
+                    className="font-sans font-medium text-[14px] leading-1.5"
                   >
                     {toCapitalizedWords(action)}
                   </Text>
@@ -284,11 +284,9 @@ const NotificationCard: React.FC<NotificationCardProps> = ({
             </View>
           )}
         </View>
-        <View style={{ flexDirection: "column", alignItems: "center" }}>
+        <View className="flex flex-col items-end justify-start">
           <Text style={styles.timeText}>{getTimeAgo(addedTime)}</Text>
-          <View style={styles.moreButton}>
-            <NotificationMoreOptions notification={notification} />
-          </View>
+          <NotificationMoreOptions notification={notification} />
         </View>
       </View>
     </View>
@@ -298,11 +296,10 @@ const NotificationCard: React.FC<NotificationCardProps> = ({
 const styles = StyleSheet.create({
   container: {
     flexDirection: "row",
-    paddingRight: 16,
-    paddingLeft: 10,
-    paddingTop: 16,
-    paddingBottom: 16,
-    alignItems: "center",
+    gap: 12,
+    paddingLeft: 24,
+    paddingTop: 24,
+    alignItems: "flex-start",
   },
   avatarContainer: {
     flexDirection: "row",
@@ -325,10 +322,16 @@ const styles = StyleSheet.create({
   contentContainer: {
     flex: 1,
     flexDirection: "row",
+    gap: 12,
+    paddingBottom: 24,
+    paddingRight: 24,
+    borderBottomWidth: 1,
+    borderColor: "#E2E8F0",
   },
   title: {
     fontFamily: "Inter_600SemiBold",
-    fontSize: 15,
+    fontSize: 14,
+    color: "#1E293B",
   },
   boldText: {
     fontWeight: "bold",
@@ -341,33 +344,35 @@ const styles = StyleSheet.create({
   body: {
     fontFamily: "Inter_400Regular",
     fontSize: 14,
-    color: "#374151",
-    marginVertical: 4,
+    color: "#334155",
   },
   ctaContainer: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "flex-start",
-    marginTop: 8,
+    // flexWrap: "wrap",
+    gap: 8,
+    paddingVertical: 4,
+    // marginTop: 8,
   },
   ctaButton: {
     flexDirection: "row",
     alignItems: "center",
-    paddingVertical: 6,
-    paddingHorizontal: 16,
-    borderRadius: 6,
+    gap: 4,
+    paddingVertical: 4,
+    paddingHorizontal: 12,
+    borderRadius: 4,
     borderWidth: 1,
-    marginRight: 12,
-    marginBottom: 0,
   },
-  ctaButtonText: {
-    fontFamily: "Inter_500Medium",
-    fontSize: 14,
-  },
+  // ctaButtonText: {
+  //   fontFamily: "Inter_500Medium",
+  //   fontSize: 14,
+  //   // lineHeight: 15,
+  // },
   timeText: {
     fontSize: 12,
     color: "#666",
-    marginLeft: 8,
+    marginBottom: 4,
   },
   moreButton: {
     flex: 1,

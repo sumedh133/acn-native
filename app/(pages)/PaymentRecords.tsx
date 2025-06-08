@@ -8,6 +8,7 @@ import {
   StatusBar,
   FlatList,
   Platform,
+  ActivityIndicator,
 } from "react-native";
 import { useSelector } from "react-redux";
 import { RootState } from "@/store/store";
@@ -45,6 +46,7 @@ interface PaymentHistoryItem {
     transactionId: string;
     state: string;
     responseCode: string;
+    localizedPrice?: string;
   };
   phonenumber: string;
   status: string;
@@ -52,6 +54,7 @@ interface PaymentHistoryItem {
     nanoseconds: number;
     seconds: number;
   };
+  platform?: string;
 }
 
 interface FormattedPaymentRecord {
@@ -73,9 +76,11 @@ const PaymentRecords: React.FC = () => {
 
   const [paymentHistory, setPaymentHistory] =
     useState<Array<PaymentHistoryItem> | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
 
   const fetchPaymentHistory = async () => {
     try {
+      setIsLoading(true);
       const querySnapshot = await getDocs(
         query(
           collection(db, "payments"),
@@ -92,6 +97,8 @@ const PaymentRecords: React.FC = () => {
       setPaymentHistory(data);
     } catch (error) {
       console.error("Error fetching payment history:", error);
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -116,8 +123,18 @@ const PaymentRecords: React.FC = () => {
   const formattedPaymentRecords = useMemo(() => {
     if (!paymentHistory || !paymentHistory.length) return [];
 
-    return paymentHistory.map((item) => {
-      // console.log(item, "This is the item");
+    // Sort by createdAt in descending order
+    const sortedPaymentHistory = [...paymentHistory].sort((a, b) => {
+      const dateA = a.createdAt?.seconds
+        ? new Date(a.createdAt.seconds * 1000)
+        : new Date(0);
+      const dateB = b.createdAt?.seconds
+        ? new Date(b.createdAt.seconds * 1000)
+        : new Date(0);
+      return dateB.getTime() - dateA.getTime(); // Sort descending (newest first)
+    });
+
+    return sortedPaymentHistory.map((item) => {
       const isPremiumPlan = item.data.amount === 24900 ? false : true;
       const paymentAmount = item.data.amount;
       const paymentId = item.id;
@@ -151,10 +168,13 @@ const PaymentRecords: React.FC = () => {
       return {
         id: paymentId,
         title: isPremiumPlan ? "ACN Premium Plan" : "Enquiry Booster Pack",
-        amount: `₹${(paymentAmount / 100).toFixed(2)}`,
+        amount:
+          item?.platform === "ios"
+            ? item.data.localizedPrice
+            : `₹${(paymentAmount / 100).toFixed(2)}`,
         date: dateString,
         status:
-          item.status === "PAYMENT_SUCCESS"
+          item.status === "PAYMENT_SUCCESS" || item.status === "completed"
             ? "Paid Successfully"
             : "Payment Failed",
       };
@@ -206,7 +226,11 @@ const PaymentRecords: React.FC = () => {
     <SafeAreaView style={styles.container}>
       <StatusBar barStyle="dark-content" backgroundColor="#EEEEEE" />
 
-      {formattedPaymentRecords.length > 0 ? (
+      {isLoading ? (
+        <View style={styles.loadingContainer}>
+          <ActivityIndicator size="large" color="#000000" />
+        </View>
+      ) : formattedPaymentRecords.length > 0 ? (
         <FlatList
           data={formattedPaymentRecords}
           renderItem={renderPaymentItem}
@@ -308,6 +332,11 @@ const styles = StyleSheet.create({
     fontFamily: "Lato_400Regular",
     fontSize: 12,
     fontWeight: 500,
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
   },
 });
 

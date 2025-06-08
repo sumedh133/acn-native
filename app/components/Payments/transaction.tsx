@@ -7,6 +7,7 @@ import {
   StyleSheet,
   Linking,
   ActivityIndicator,
+  Platform,
 } from "react-native";
 import { router, useLocalSearchParams, useRouter } from "expo-router";
 import { useEffect, useState } from "react";
@@ -20,6 +21,7 @@ import EmailInvoiceIcon from "@/assets/icons/billing/emailInvoice.svg";
 import DownloadPDFIcon from "@/assets/icons/billing/downloadPDF.svg";
 import ContactSupportIcon from "@/assets/icons/billing/contactSupport.svg";
 import RetryPaymentIcon from "@/assets/icons/billing/retryPayment.svg";
+import { showErrorToast, showInfoToast, showSuccessToast } from "@/utils/toastUtils";
 
 interface PaymentDetails {
   id: string;
@@ -40,6 +42,7 @@ interface PaymentDetails {
     transactionId: string;
     state: string;
     responseCode: string;
+    localizedPrice?: string;
   };
   status: string;
   updatedAt: {
@@ -48,6 +51,7 @@ interface PaymentDetails {
   };
   invoiceUrl: string;
   invoiceDriveLink: string;
+  platform?: string;
 }
 
 const Transaction = () => {
@@ -120,14 +124,47 @@ const Transaction = () => {
 
   // Copy logic
   const handleCopy = async () => {
-    await Clipboard.setStringAsync(paymentDetails.id);
+    const coppied = await Clipboard.setStringAsync(paymentDetails.id);
+    if (Platform.OS === "ios") {
+      if (coppied) {
+        showInfoToast("Transaction ID copied.");
+      } else {
+        showErrorToast("Copy failed. Try manually.");
+      }
+    }
   };
 
   const handleRetryPayment = async () => {
-    if (paymentDetails.data.amount === 24900) {
-      router.push("/(pages)/Credits");
+    if (
+      paymentDetails.data.amount === 24900 ||
+      paymentDetails.data.amount === 249
+    ) {
+      if (Platform.OS !== "ios") {
+        router.push({
+          pathname: "/CheckoutScreen",
+          params: { planId: "booster" },
+        });
+      } else {
+        router.push({
+          pathname: "/billings",
+          params: { planId: "booster" },
+        });
+      }
+      // router.push("/(pages)/Credits");
     } else {
-      router.push("/billings");
+      if (Platform.OS !== "ios") {
+        router.push({
+          pathname: "/CheckoutScreen",
+          params: { planId: "premium" },
+        });
+      } else {
+        // router.push("/billings");
+        router.push({
+          pathname: "/billings",
+          params: { planId: "premium" },
+        });
+      }
+      // router.push("/billings");
     }
   };
 
@@ -150,8 +187,10 @@ const Transaction = () => {
       const data = await response.json();
       // LOG  {"message": "Invoice sent successfully!", "messageId": "<13286786-cd8d-f52c-097d-9589099e74f6@acnonline.in>", "success": true}
       console.log(data);
+      showSuccessToast("Invoice emailed.");
     } catch (error) {
       console.error("Error sending invoice email:", error);
+      showErrorToast("Email failed. Try again or contact support.");
     }
   };
 
@@ -195,7 +234,9 @@ const Transaction = () => {
         <View style={styles.row}>
           <Text style={styles.label}>Payment Method:</Text>
           <Text style={styles.value}>
-            {paymentDetails.status === "PAYMENT_SUCCESS"
+            {paymentDetails?.platform === "ios"
+              ? "Apple Pay"
+              : paymentDetails.status === "PAYMENT_SUCCESS"
               ? paymentMethod === "UPI"
                 ? "UPI"
                 : formatCardType(
@@ -213,7 +254,11 @@ const Transaction = () => {
         <View style={styles.row}>
           <Text style={styles.planTitle}>ACN Premium Plan</Text>
           <Text style={styles.planAmount}>
-            {formatCost((paymentDetails.data.amount / 100 / 1.18).toFixed(2))}
+            {paymentDetails?.platform === "ios"
+              ? formatCost((paymentDetails.data.amount / 1.18).toFixed(2))
+              : formatCost(
+                  (paymentDetails.data.amount / 100 / 1.18).toFixed(2)
+                )}
           </Text>
         </View>
         <View style={styles.row}>
@@ -227,43 +272,59 @@ const Transaction = () => {
         <View style={styles.row}>
           <Text style={styles.label}>Taxable Value</Text>
           <Text style={styles.value}>
-            {formatCost((paymentDetails.data.amount / 100 / 1.18).toFixed(2))}
+            {paymentDetails?.platform === "ios"
+              ? formatCost((paymentDetails.data.amount / 1.18).toFixed(2))
+              : formatCost(
+                  (paymentDetails.data.amount / 100 / 1.18).toFixed(2)
+                )}
           </Text>
         </View>
         <View style={styles.row}>
           <Text style={styles.label}>CGST (9%)</Text>
           <Text style={styles.value}>
-            {formatCost(
-              ((paymentDetails.data.amount / 100 / 1.18) * 0.09).toFixed(2)
-            )}
+            {paymentDetails?.platform === "ios"
+              ? formatCost(
+                  ((paymentDetails.data.amount / 1.18) * 0.09).toFixed(2)
+                )
+              : formatCost(
+                  ((paymentDetails.data.amount / 100 / 1.18) * 0.09).toFixed(2)
+                )}
           </Text>
         </View>
         <View style={styles.row}>
           <Text style={styles.label}>SGST (9%)</Text>
           <Text style={styles.value}>
-            {formatCost(
-              ((paymentDetails.data.amount / 100 / 1.18) * 0.09).toFixed(2)
-            )}
+            {paymentDetails?.platform === "ios"
+              ? formatCost(
+                  ((paymentDetails.data.amount / 1.18) * 0.09).toFixed(2)
+                )
+              : formatCost(
+                  ((paymentDetails.data.amount / 100 / 1.18) * 0.09).toFixed(2)
+                )}
           </Text>
         </View>
         <View style={styles.dashedLine} />
         <View style={styles.row}>
           <Text style={styles.totalLabel}>Total</Text>
           <Text style={styles.totalValue}>
-            {formatCost((paymentDetails.data.amount / 100).toFixed(2))}
+            {paymentDetails?.platform === "ios"
+              ? formatCost(paymentDetails.data.amount.toFixed(2))
+              : formatCost((paymentDetails.data.amount / 100).toFixed(2))}
           </Text>
         </View>
       </View>
 
-      {paymentDetails.status !== "PAYMENT_SUCCESS" && (
-        <Text style={styles.errorMsg}>
-          Your payment did not go through. Please try again or contact support
-          for assistance.
-        </Text>
-      )}
+      {paymentDetails.status !== "PAYMENT_SUCCESS" &&
+        paymentDetails.status !== "completed" && (
+          <Text style={styles.errorMsg}>
+            Your payment did not go through. Please try again or contact support
+            for assistance.
+          </Text>
+        )}
 
       <View style={styles.footer}>
-        {paymentDetails.status === "PAYMENT_SUCCESS" ? (
+        {paymentDetails.status === "PAYMENT_SUCCESS" ||
+        paymentDetails.status === "completed" ? (
           <>
             <TouchableOpacity
               style={styles.footerBtn}
@@ -414,12 +475,13 @@ const styles = StyleSheet.create({
   label: {
     color: "#707070",
     fontSize: 14,
-    fontFamily: "Montserrat_400Regular",
+    // fontFamily: "Montserrat_400Regular",
+    fontFamily: "Lato_700Bold",
   },
   value: {
     color: "#000",
     fontSize: 14,
-    fontFamily: "Montserrat_700Bold",
+    fontFamily: "Montserrat_600SemiBold",
   },
   planTitle: {
     color: "#000",
@@ -429,7 +491,7 @@ const styles = StyleSheet.create({
   planAmount: {
     color: "#000",
     fontSize: 16,
-    fontFamily: "Montserrat_700Bold",
+    fontFamily: "Montserrat_600SemiBold",
   },
   planSubLabel: {
     color: "#707070",
@@ -449,9 +511,9 @@ const styles = StyleSheet.create({
     marginVertical: 8,
   },
   totalLabel: {
-    color: "#000",
+    color: "#595959",
     fontSize: 14,
-    fontFamily: "Montserrat_700Bold",
+    fontFamily: "Lato_700Bold",
   },
   totalValue: {
     color: "#000",
@@ -465,12 +527,12 @@ const styles = StyleSheet.create({
     textAlign: "center",
   },
   footer: {
+    flex: 1,
     position: "absolute",
     bottom: 0,
     width: "100%",
     height: 64,
     flexDirection: "row",
-    justifyContent: "space-between",
     alignItems: "center",
     padding: 12,
     paddingHorizontal: 8,
@@ -478,7 +540,7 @@ const styles = StyleSheet.create({
     gap: 12,
   },
   footerBtn: {
-    flex: 1,
+    flexGrow: 1,
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
@@ -487,6 +549,7 @@ const styles = StyleSheet.create({
     borderColor: "#153E3B",
     borderRadius: 6,
     paddingVertical: 8,
+    paddingHorizontal: 16,
     gap: 8,
   },
   footerBtnPrimary: {

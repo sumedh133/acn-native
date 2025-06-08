@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useRef } from "react";
 import { View, Text, TouchableOpacity, StyleSheet, Modal } from "react-native";
 import { MaterialIcons } from "@expo/vector-icons";
 import { NotificationItem } from "@/app/types";
@@ -15,13 +15,22 @@ const NotificationMoreOptions: React.FC<NotificationMoreOptionsProps> = ({
   notification,
 }) => {
   const [modalVisible, setModalVisible] = useState(false);
+  const [menuPosition, setMenuPosition] = useState({ x: 0, y: 0 });
+  const buttonRef = useRef<View>(null);
   const { archiveNotification, markAsRead, markAsUnRead } = useNotification();
 
   const isRead = notification.isRead;
 
+  const handleMorePress = () => {
+    buttonRef.current?.measure((x: number, y: number, width: number, height: number, pageX: number, pageY: number) => {
+      setMenuPosition({ x: pageX, y: pageY + height });
+      setModalVisible(true);
+    });
+  };
+
   return (
     <>
-      <TouchableOpacity onPress={() => setModalVisible(true)}>
+      <TouchableOpacity ref={buttonRef} onPress={handleMorePress}>
         <MaterialIcons name="more-horiz" size={20} color="#6B7280" />
       </TouchableOpacity>
       <Modal
@@ -35,7 +44,7 @@ const NotificationMoreOptions: React.FC<NotificationMoreOptionsProps> = ({
           activeOpacity={1}
           onPressOut={() => setModalVisible(false)}
         >
-          <View style={styles.menuCard}>
+          <View style={[styles.menuCard, { position: 'absolute', top: menuPosition.y, left: menuPosition.x - 140 }]}>
             <TouchableOpacity
               style={styles.menuOption}
               onPress={() => {
@@ -89,8 +98,6 @@ const styles = StyleSheet.create({
   modalOverlay: {
     flex: 1,
     backgroundColor: "rgba(0,0,0,0.1)",
-    justifyContent: "center",
-    alignItems: "center",
   },
   menuCard: {
     backgroundColor: "#fff",

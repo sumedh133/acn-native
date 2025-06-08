@@ -30,13 +30,16 @@ import {
   PurchaseError,
   getAvailablePurchases,
   finishTransaction,
+  purchaseUpdatedListener,
+  purchaseErrorListener,
+  Purchase,
 } from "react-native-iap";
 
 import { formatCost } from "../../helpers/common.js";
 import { useSelector } from "react-redux";
 import { RootState } from "@/store/store.js";
 import { Coupon, SubscriptionPlan } from "@/app/types.js";
-import { doc, onSnapshot } from "firebase/firestore";
+import { collection, doc, getDoc, onSnapshot, query, setDoc, where, addDoc, serverTimestamp, updateDoc, getDocs } from "firebase/firestore";
 import { db } from "@/app/config/firebase";
 import {
   showErrorToast,
@@ -49,6 +52,9 @@ import { analytics } from "@/app/config/firebase";
 import { logEvent } from "@react-native-firebase/analytics";
 import { RouteProp, useRoute } from "@react-navigation/native";
 import { useRouter } from "expo-router";
+import { getUnixDateTime } from "@/app/helpers/getUnixDateTime.js";
+import { useDispatch } from "react-redux";
+import { updateAgentDocData } from "@/store/slices/agentSlice";
 
 if (
   Platform.OS === "android" &&
@@ -72,11 +78,39 @@ const iapProductIds = {
   // boosterPack: "acn_booster_pack",
 };
 
+// Enhanced error messages for better UX
+const getErrorMessage = (error: any): string => {
+  if (error instanceof PurchaseError) {
+    switch (error.code) {
+      case 'E_USER_CANCELLED':
+        return 'Purchase was cancelled';
+      case 'E_ITEM_UNAVAILABLE':
+        return 'This item is not available for purchase';
+      case 'E_NETWORK_ERROR':
+        return 'Network error. Please check your connection and try again';
+      case 'E_SERVICE_ERROR':
+        return 'App Store service error. Please try again later';
+      case 'E_RECEIPT_FAILED':
+        return 'Receipt validation failed';
+      case 'E_ALREADY_OWNED':
+        return 'You already own this subscription';
+      case 'E_DEVELOPER_ERROR':
+        return 'Configuration error. Please contact support';
+      case 'E_NOT_PREPARED':
+        return 'Billing service is not prepared';
+      default:
+        return error.message || 'Purchase failed. Please try again';
+    }
+  }
+  return error.message || 'An unexpected error occurred';
+};
+
 const BillingContainer: React.FC<BillingContainerProps> = ({
   onOpenBusinessModal,
 }) => {
   const route = useRoute<BillingContainerRouteProp>();
   const router = useRouter();
+  const dispatch = useDispatch();
   const planId = route.params?.planId || "premium";
 
   const [availablePlans, setAvailablePlans] = useState<SubscriptionPlan[]>([]);
@@ -90,6 +124,8 @@ const BillingContainer: React.FC<BillingContainerProps> = ({
   const [product, setProduct] = useState<any>(null);
   const [iapError, setIapError] = useState<string | null>(null);
   const [isIAPInitialized, setIsIAPInitialized] = useState(false);
+  const purchaseUpdateSubscription = useRef<any>(null);
+  const purchaseErrorSubscription = useRef<any>(null);
 
   const [originalAmount, setOriginalAmount] = useState(0);
   const [discountAmount, setDiscountAmount] = useState(0);
@@ -198,62 +234,438 @@ const BillingContainer: React.FC<BillingContainerProps> = ({
           await initConnection();
           setIsIAPInitialized(true);
 
-          // For testing, you can use a mock product
-          if (__DEV__) {
-            setProduct({
-              productId: "acn_premium",
-              localizedPrice: "₹9,999.00",
-              price: "9999",
-              currency: "INR",
-              title: "ACN Premium Annual",
-              description: "Annual subscription to ACN Premium",
-            });
-            return;
-          }
+          // Set up purchase listeners
+          purchaseUpdateSubscription.current = purchaseUpdatedListener(
+            async (purchase: Purchase) => {
+              console.log("Purchase updated:", purchase);
+              await handlePurchaseUpdate(purchase);
+            }
+          );
 
-          // Try to fetch real products
-          const products = await getProducts({ skus: [iapProductIds.premiumAnnual] });
+          purchaseErrorSubscription.current = purchaseErrorListener(
+            (error: PurchaseError) => {
+              console.error("Purchase error listener:", error);
+              const errorMessage = getErrorMessage(error);
+              setIapError(errorMessage);
+              showErrorToast(errorMessage);
+              setProcessing(false);
+            }
+          );
+
+          // Fetch products
+          const products = await getProducts({
+            skus: [iapProductIds.premiumAnnual],
+          });
           if (products.length > 0) {
             setProduct(products[0]);
           } else {
             console.log("No products found");
-            // For testing, set a mock product if no real products are found
-            if (__DEV__) {
-              setProduct({
-                productId: "acn_premium",
-                localizedPrice: "₹9,999.00",
-                price: "9999",
-                currency: "INR",
-                title: "ACN Premium Annual",
-                description: "Annual subscription to ACN Premium",
-              });
-            }
+            setIapError("Product not available in App Store");
           }
+
+          // Check for pending purchases
+          // await checkPendingPurchases();
         } catch (error) {
           console.error("IAP initialization error:", error);
           setIapError("Failed to initialize in-app purchases");
-
-          // For testing, set a mock product on error
-          if (__DEV__) {
-            setProduct({
-              productId: "acn_premium",
-              localizedPrice: "₹9,999.00",
-              price: "9999",
-              currency: "INR",
-              title: "ACN Premium Annual",
-              description: "Annual subscription to ACN Premium",
-            });
-          }
+          showErrorToast("Unable to connect to App Store");
         }
       };
 
       initializeIAP();
 
       return () => {
+        if (purchaseUpdateSubscription.current) {
+          purchaseUpdateSubscription.current.remove();
+        }
+        if (purchaseErrorSubscription.current) {
+          purchaseErrorSubscription.current.remove();
+        }
         endConnection();
       };
     }
   }, []);
+
+  // Check for pending purchases on app start
+  const checkPendingPurchases = async () => {
+    try {
+      const purchases = await getAvailablePurchases();
+      if (purchases && purchases.length > 0) {
+        console.log("Found pending purchases:", purchases.length);
+        // Process any pending purchases
+        for (const purchase of purchases) {
+          await handlePurchaseUpdate(purchase as Purchase);
+        }
+      }
+    } catch (error) {
+      console.error("Error checking pending purchases:", error);
+    }
+  };
+
+  // Direct save to Firebase (Implementation 1)
+  // const handlePurchaseUpdate = async (purchase: Purchase) => {
+  //   try {
+  //     setProcessing(true);
+
+  //     // Log purchase attempt
+  //     logEvent(analytics, "iap_purchase_processing", {
+  //       event_category: "billing",
+  //       event_label: "payment",
+  //       product_id: purchase.productId,
+  //       transaction_id: purchase.transactionId,
+  //       user_type: userType,
+  //     });
+
+  //     // Check if transaction already exists
+  //     const existingPurchaseQuery = query(
+  //       collection(db, "payments"),
+  //       where("transactionId", "==", purchase.transactionId)
+  //     );
+  //     const existingPurchase = await getDocs(existingPurchaseQuery);
+
+  //     if (!existingPurchase.empty) {
+  //       console.log("Transaction already processed:", purchase.transactionId);
+  //       await finishTransaction({ purchase, isConsumable: false });
+  //       showSuccessToast("Purchase already processed!");
+  //       setProcessing(false);
+  //       return;
+  //     }
+
+  //     // Calculate subscription dates
+  //     const purchaseDate = new Date(purchase.transactionDate);
+
+  //     // Prepare payment document
+  //     const paymentDoc = {
+  //       // User information
+  //       phonenumber: phoneNumber,
+
+  //       // Platform and status
+  //       platform: "ios",
+  //       status: "completed",
+
+  //       // Timestamps
+  //       createdAt: purchaseDate,
+  //       updatedAt: purchaseDate,
+
+  //       data: {
+  //         // Transaction information
+  //         transactionId: purchase.transactionId,
+  //         transactionReceipt: purchase.transactionReceipt,
+  //         originalTransactionId:
+  //           purchase.originalTransactionIdentifierIOS || purchase.transactionId,
+  //         transactionDate: purchase.transactionDate,
+
+  //         // Product information
+  //         productId: purchase.productId,
+  //         planId: selectedPlan?.id || planId,
+
+  //         // Pricing information
+  //         amount: product?.price || totalAmount,
+  //         currency: product?.currency || "INR",
+  //         localizedPrice: product?.localizedPrice || formatCost(totalAmount),
+  //       },
+
+  //       platformData: {
+  //         paymentMethod: "in_app_purchase",
+  //         isTestPurchase: __DEV__,
+  //         environment: __DEV__ ? "sandbox" : "production",
+  //       },
+  //     };
+
+  //     // Save payment to Firestore
+  //     const paymentRef = await setDoc(doc(db, "payments", purchase.transactionId!), paymentDoc);
+  //     console.log("Payment saved with ID:", purchase.transactionId);
+
+  //     // Update user subscription status
+  //     await updateUserSubscription(paymentDoc);
+
+  //     // Finish the transaction
+  //     await finishTransaction({ purchase, isConsumable: false });
+
+  //     // Log successful purchase
+  //     logEvent(analytics, "iap_purchase_success", {
+  //       event_category: "billing",
+  //       event_label: "payment",
+  //       product_id: purchase.productId,
+  //       transaction_id: purchase.transactionId,
+  //       amount: product?.price,
+  //       payment_id: purchase.transactionId,
+  //       user_type: userType,
+  //     });
+
+  //     showSuccessToast("Purchase successful! Your subscription is now active.");
+
+  //     // Navigate back after a delay
+  //     setTimeout(() => {
+  //       router.back();
+  //     }, 2000);
+  //   } catch (error: any) {
+  //     console.error("Error processing purchase:", error);
+
+  //     // Log purchase failure
+  //     logEvent(analytics, "iap_purchase_failed", {
+  //       event_category: "billing",
+  //       event_label: "error",
+  //       error_message: error.message,
+  //       product_id: purchase.productId,
+  //       user_type: userType,
+  //     });
+
+  //     showErrorToast(
+  //       error.message ||
+  //         "Failed to process purchase. Please contact support if you were charged."
+  //     );
+
+  //     // Don't finish the transaction if save failed
+  //     // This allows retry on next app launch
+  //   } finally {
+  //     setProcessing(false);
+  //   }
+  // };
+
+  // const updateUserSubscription = async (
+  //     paymentData: any
+  //   ) => {
+  //     try {
+  //       // Track payment success before updating subscription
+  //       logEvent(analytics, "payment_success", {
+  //         event_category: "checkout",
+  //         event_label: "payment",
+  //         plan_id: planId,
+  //         transaction_id: paymentData.data.transactionId,
+  //         amount: paymentData.data.amount,
+  //         currency: "INR",
+  //         user_type: userType,
+  //       });
+  
+  //       const agentRef = doc(db, "agents", cpId);
+  //       const currentTransactionId = paymentData.data.transactionId;
+  
+  //       // Get current document to access existing payment history
+  //       const agentSnap = await getDoc(agentRef);
+  //       const agentData = agentSnap.data();
+  
+  //       const now = getUnixDateTime();
+  
+  //       let planExpiry = getUnixDateTime() + 31536000;
+  
+  //       const newPaymentEntry = {
+  //         paymentDate: now,
+  //         paymentAmount: paymentData.data.amount,
+  //         paymentId: currentTransactionId,
+  //         planId: planId,
+  //       };
+  
+  //       const existingPaymentHistory = agentData?.paymentHistory || [];
+  
+  //       let updatedPaymentHistory = [];
+  
+  //       if (Array.isArray(existingPaymentHistory)) {
+  //         updatedPaymentHistory = [...existingPaymentHistory, newPaymentEntry];
+  //       } else if (
+  //         existingPaymentHistory &&
+  //         typeof existingPaymentHistory === "object"
+  //       ) {
+  //         updatedPaymentHistory = [existingPaymentHistory, newPaymentEntry];
+  //       } else {
+  //         updatedPaymentHistory = [newPaymentEntry];
+  //       }
+  
+  //       let updateData: any = {
+  //         paymentHistory: updatedPaymentHistory,
+  //       };
+  
+  //       switch (planId) {
+  //         case "premium":
+  //           updateData = {
+  //             ...updateData,
+  //             userType: "premium",
+  //             trialUsed: true,
+  //             planExpiry: planExpiry,
+  //             monthlyCredits: 100,
+  //           };
+  //           break;
+  //         case "booster":
+  //           updateData = {
+  //             ...updateData,
+  //             boosterCredits: (agentData?.boosterCredits || 0) + 5,
+  //           };
+  //           break;
+  //         default:
+  //           console.log("Unknown plan ID:", planId);
+  //           return false;
+  //       }
+  
+  //       await updateDoc(agentRef, updateData);
+  //       console.log("Successfully updated user subscription");
+  
+  //       dispatch(updateAgentDocData(updateData));
+  
+  //       // Track subscription update success
+  //       logEvent(analytics, "subscription_updated", {
+  //         event_category: "checkout",
+  //         event_label: "subscription",
+  //         plan_id: planId,
+  //         user_type: userType,
+  //         credits_added: planId === "premium" ? 100 : 5,
+  //       });
+  
+  //       return true;
+  //     } catch (error) {
+  //       // Track error in subscription update
+  //       logEvent(analytics, "subscription_update_error", {
+  //         event_category: "checkout",
+  //         event_label: "error",
+  //         plan_id: planId,
+  //         error_message: error instanceof Error ? error.message : "Unknown error",
+  //         user_type: userType,
+  //       });
+  //       console.error("Error updating user subscription:", error);
+  //       return false;
+  //     }
+  //   };
+
+  const handlePurchaseUpdate = async (purchase: Purchase) => {
+    try {
+      setProcessing(true);
+
+      // Log purchase attempt
+      logEvent(analytics, "iap_purchase_processing", {
+        event_category: "billing",
+        event_label: "payment",
+        product_id: purchase.productId,
+        transaction_id: purchase.transactionId,
+        user_type: userType,
+      });
+
+      console.log(
+        "Processing purchase with backend validation:",
+        purchase.transactionId
+      );
+
+      // Prepare data for backend validation
+      // Validate required fields
+      if (!phoneNumber || !cpId) {
+        throw new Error('Missing user identification details');
+      }
+
+      if (!purchase.transactionId || !purchase.transactionReceipt) {
+        throw new Error('Invalid purchase data');
+      }
+
+      if (!selectedPlan?.id && !planId) {
+        throw new Error('Plan details not found');
+      }
+
+      const validationData = {
+        phoneNumber: phoneNumber,
+        transactionDate: purchase.transactionDate,
+        transactionId: purchase.transactionId,
+        transactionReceipt: purchase.transactionReceipt,
+        originalTransactionId:
+          purchase.originalTransactionIdentifierIOS || purchase.transactionId,
+        productId: purchase.productId,
+        planId: selectedPlan?.id || planId,
+        amount: product?.price || totalAmount,
+        currency: product?.currency || "INR",
+        localizedPrice: product?.localizedPrice || formatCost(totalAmount),
+        isTestPurchase: __DEV__,
+        environment: __DEV__ ? "sandbox" : "production", 
+        cpId: cpId,
+      };
+
+      // Additional validation of data structure
+      const requiredFields = Object.entries(validationData).filter(([_, value]) => 
+        value === undefined || value === null
+      );
+
+      if (requiredFields.length > 0) {
+        throw new Error(`Missing required fields: ${requiredFields.map(([key]) => key).join(', ')}`);
+      }
+
+      const validationRequest = JSON.stringify(validationData);
+
+      if (!validationRequest) {
+        throw new Error(
+          `Error in parsing JSON: ${validationData}`
+        );
+      }
+
+      // Call backend for validation and processing
+      const backendUrl = "https://notification-server-acn-zdgg.onrender.com";
+      const response = await fetch(`${backendUrl}/iap/validate-ios`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: validationRequest,
+      });
+
+      const result = await response.json();
+
+      if (!response.ok) {
+        throw new Error(result.error || "Backend validation failed");
+      }
+
+      if (result.success) {
+        // Finish the transaction only after successful backend validation
+        await finishTransaction({ purchase, isConsumable: false });
+
+        // Update local Redux state with the user update data
+        if (result.userUpdate) {
+          dispatch(updateAgentDocData(result.userUpdate));
+        }
+
+        // Log successful purchase
+        logEvent(analytics, "iap_purchase_success", {
+          event_category: "billing",
+          event_label: "payment",
+          product_id: purchase.productId,
+          transaction_id: purchase.transactionId,
+          amount: totalAmount,
+          payment_id: purchase.transactionId,
+          user_type: userType,
+        });
+
+        if (result.alreadyProcessed) {
+          showSuccessToast("Purchase already processed!");
+        } else {
+          showSuccessToast(
+            "Purchase successful! Your subscription is now active."
+          );
+        }
+
+        // Navigate back after a delay
+        setTimeout(() => {
+          router.dismissAll();
+          router.push("/(pages)/Profile");
+        }, 1000);
+      } else {
+        throw new Error(result.error || "Purchase validation failed");
+      }
+    } catch (error: any) {
+      console.error("Error processing purchase:", error);
+
+      // Log purchase failure
+      logEvent(analytics, "iap_purchase_failed", {
+        event_category: "billing",
+        event_label: "error",
+        error_message: error.message,
+        product_id: purchase.productId,
+        user_type: userType,
+      });
+
+      showErrorToast(
+        error.message ||
+          "Failed to process purchase. Please contact support if you were charged."
+      );
+
+      // Don't finish the transaction if validation failed
+      // This allows retry on next app launch
+    } finally {
+      setProcessing(false);
+    }
+  };
 
   const initiatePayment = async () => {
     setProcessing(true);
@@ -434,66 +846,48 @@ const BillingContainer: React.FC<BillingContainerProps> = ({
   // did not exist before IAP
   const initiateIAPPayment = async () => {
     if (!product) {
-      Alert.alert("Error", "Product not available");
+      Alert.alert("Error", "Product not available. Please try again later.");
+      return;
+    }
+
+    if (!isIAPInitialized) {
+      Alert.alert("Error", "In-app purchases not available. Please try again.");
       return;
     }
 
     setProcessing(true);
+    setIapError(null);
     try {
-      if (__DEV__) {
-        // Simulate a successful purchase in development
-        console.log("Simulating purchase in development mode");
-        const mockPurchase = {
-          productId: product.productId,
-          transactionId: "mock_transaction_" + Date.now(),
-          transactionDate: Date.now(),
-          receipt: "mock_receipt",
-        };
-
-        // Track successful purchase
-        logEvent(analytics, "iap_purchase_success", {
-          event_category: "billing",
-          event_label: "payment",
-          product_id: product.productId,
-          amount: product.price,
-          user_type: userType,
-          is_sandbox: true,
-        });
-
-        console.log("Mock purchase successful:", mockPurchase);
-        Alert.alert("Success", "Mock purchase completed successfully");
-        return;
-      }
-
       const purchase = await requestSubscription({
         sku: product.productId,
         andDangerouslyFinishTransactionAutomaticallyIOS: false,
       });
 
-      console.log("Purchase successful:", purchase);
+      // Purchase will be handled by purchaseUpdatedListener
+      console.log("Purchase request initiated:", purchase);
 
-      // Track successful purchase
-      logEvent(analytics, "iap_purchase_success", {
-        event_category: "billing",
-        event_label: "payment",
-        product_id: product.productId,
-        amount: product.price,
-        user_type: userType,
-      });
     } catch (error: any) {
       console.error("IAP purchase error:", error);
-      setIapError(error.message || "Purchase failed");
+      const errorMessage = getErrorMessage(error);
+      setIapError(errorMessage);
 
-      // Track purchase error
-      logEvent(analytics, "iap_purchase_error", {
-        event_category: "billing",
-        event_label: "error",
-        error_message: error.message || "Unknown error",
-        product_id: product?.productId,
-        user_type: userType,
-      });
-
-      Alert.alert("Error", error.message || "Purchase failed");
+      // Show user-friendly error message
+      if (error.code === "E_USER_CANCELLED") {
+        showInfoToast(errorMessage);
+      } else {
+        Alert.alert(
+          "Purchase Failed",
+          errorMessage +
+            "\n\nPlease try again or contact support if the issue persists.",
+          [
+            { text: "OK", style: "default" },
+            {
+              text: "Contact Support",
+              onPress: () => Linking.openURL("mailto:support@acnonline.in"),
+            },
+          ]
+        );
+      }
     } finally {
       setProcessing(false);
     }
@@ -804,9 +1198,6 @@ const BillingContainer: React.FC<BillingContainerProps> = ({
 
             <TouchableOpacity
               style={styles.payButton}
-              // before IAP
-              // onPress={initiatePayment}
-
               onPress={
                 Platform.OS === "ios" ? initiateIAPPayment : initiatePayment
               }
@@ -817,12 +1208,9 @@ const BillingContainer: React.FC<BillingContainerProps> = ({
               ) : (
                 <View style={styles.row}>
                   <Text style={styles.payText}>
-                    {/* before IAP */}
-                    {/* Pay {formatCost(totalAmount)} */}
-                    Pay {product?.localizedPrice}
-                    {/* {Platform.OS === "ios" && product
+                    {Platform.OS === "ios" && product
                       ? product.localizedPrice
-                      : formatCost(totalAmount)} */}
+                      : formatCost(totalAmount)}
                   </Text>
                   <FAIcon
                     name="arrow-right"

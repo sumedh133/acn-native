@@ -16,18 +16,28 @@
 import { NotificationItem } from "@/app/types";
 import NotificationCard from "./NotificationCard";
 import React from "react";
-import { View, Text, ScrollView } from "react-native";
+import { View, Text, ScrollView, ActivityIndicator } from "react-native";
 import NoNotificationsIcon from "@/assets/icons/InAppNotifications/noNotifications.svg";
 
 interface NotificationsProps {
   notifications: NotificationItem[];
   onCtaPress?: (action: string, notification: NotificationItem) => void;
+  isLoading?: boolean;
 }
 
 const Notifications: React.FC<NotificationsProps> = ({
   notifications,
   onCtaPress,
+  isLoading = false,
 }) => {
+  if (isLoading) {
+    return (
+      <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
+        <ActivityIndicator size="large" color="#153E3B" />
+      </View>
+    );
+  }
+
   return (
     <View style={{ flex: 1, height: "100%" }}>
       {notifications.length == 0 ? (
@@ -50,7 +60,6 @@ const Notifications: React.FC<NotificationsProps> = ({
                 onCtaPress={onCtaPress}
                 addedTime={notification.addedTime}
               />
-              {/* <View className="border-t-[0.5px] border-[#000] w-[80%] align-right"></View> */}
             </>
           ))}
         </ScrollView>
