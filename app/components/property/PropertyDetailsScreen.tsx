@@ -53,6 +53,10 @@ import { setKamModalVisible } from "@/store/slices/kamSlice";
 import CreditLimitModal from "@/app/modals/CreditLimitModal";
 import { analytics } from "@/app/config/firebase";
 import { logEvent } from "@react-native-firebase/analytics";
+import {
+  camelCaseToCapitalizedWords,
+  toCapitalizedWords,
+} from "@/app/helpers/common";
 
 const { width } = Dimensions.get("window");
 
@@ -302,7 +306,7 @@ export default function PropertyDetailsScreen() {
     }
 
     setSelectedCPID(property.cpCode || "");
-    if ((monthlyCredits + boosterCredits) > 0) {
+    if (monthlyCredits + boosterCredits > 0) {
       setIsConfirmModelOpen(true);
       return;
     } else {
@@ -644,7 +648,9 @@ export default function PropertyDetailsScreen() {
         <View style={styles.locationInfo}>
           <View style={styles.infoItem}>
             <Ionicons name="location-outline" size={16} color="#374151" />
-            <Text style={styles.infoText}>{property.micromarket || "N/A"}</Text>
+            <Text style={styles.infoText}>
+              {toCapitalizedWords(property.micromarket) || "N/A"}
+            </Text>
           </View>
           <View style={styles.infoItem}>
             <Ionicons name="home-outline" size={16} color="#374151" />
@@ -749,6 +755,42 @@ export default function PropertyDetailsScreen() {
               }
             />
             <InfoRow label="Floor" value={property.floorNo} />
+
+            {/* <InfoRow
+              label="BIAPPA"
+              value={property.biappaApproved ? "Yes" : "No"}
+            />
+            <InfoRow label="BDA" value={property.bdaApproved ? "Yes" : "No"} />
+            <InfoRow label="Car Parking" value={property.carPark} />
+            <InfoRow label="Community Type" value={property.communityType} />
+            <InfoRow
+              label="Corner Unit"
+              value={property.cornerUnit ? "Yes" : "No"}
+            />
+            <InfoRow
+              label="Furnishing"
+              value={camelCaseToCapitalizedWords(property.furnishing)}
+            />
+            <InfoRow
+              label="Balcony Facing"
+              value={camelCaseToCapitalizedWords(property.balconyFacing)}
+            />
+            <InfoRow label="No of Balconies" value={property.noOfBalconies} />
+            <InfoRow label="No of Bathrooms" value={property.noOfBathrooms} />
+            <InfoRow label="No of Bedrooms" value={property.noOfBedrooms} />
+            <InfoRow
+              label="Rental Income"
+              value={formatCost(property.rentalIncome)}
+            />
+            <InfoRow label="Structure" value={property.structure} />
+            <InfoRow label="UDS Number" value={property.udsNumber} />
+            <InfoRow label="Unit Number" value={property.unitNumber} />
+            <InfoRow
+              label="Extra Room"
+              value={camelCaseToCapitalizedWords(property.extraRoom)}
+            />
+            <InfoRow label="Plot Facing" value={property.plotFacing} />
+            <InfoRow label="Address" value={property.address} /> */}
           </View>
           {/* Location Details Section */}
           <View style={styles.locationSection}>
