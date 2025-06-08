@@ -74,7 +74,7 @@ type BillingContainerRouteProp = RouteProp<{
 }>;
 
 const iapProductIds = {
-  premiumAnnual: "acn_premium",
+  premiumAnnual: "acn_9999",
   // boosterPack: "acn_booster_pack",
 };
 
