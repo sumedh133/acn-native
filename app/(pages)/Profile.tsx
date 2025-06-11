@@ -9,6 +9,9 @@ import {
   StyleSheet,
   TouchableOpacity,
   ScrollView,
+  Platform,
+  ActivityIndicator,
+  Alert,
 } from "react-native";
 import UserDetailsCard from "../components/ProfilePage/UserDetailsCard";
 import { useDispatch } from "react-redux";
@@ -30,6 +33,9 @@ import CreditsCard from "../components/ProfilePage/CreditsCard";
 import { setKamModalVisible } from "@/store/slices/kamSlice";
 import { logEvent } from "@react-native-firebase/analytics";
 import { analytics } from "../config/firebase";
+import { getAvailablePurchases, getPurchaseHistory, finishTransaction } from "react-native-iap";
+import { timeAgo } from "../components/property/PropertyDetailsScreen";
+import { circle } from "highcharts";
 
 const profileCards: ProfileCardInterface[] = [
   {
@@ -50,6 +56,7 @@ const profileCards: ProfileCardInterface[] = [
 ];
 
 const Profile = () => {
+  const [isLoading, setIsLoading] = useState(false);
   const dispatch = useDispatch<ThunkDispatch<RootState, unknown, AnyAction>>();
   const router = useRouter();
 
@@ -124,6 +131,34 @@ const Profile = () => {
       });
     }
   };
+
+  const handleRestorePurchase = async () => {
+    try {
+      setIsLoading(true);
+      console.log('started at: ', new Date().getTime());
+      console.log((await getAvailablePurchases()).length)
+      const purchases = await getAvailablePurchases();
+
+      if (purchases.length === 0) {
+        Alert.alert('No purchases found', 'No previous purchases were found to restore.');
+        return;
+      }
+
+      // Unlock features based on restored purchases
+      for (const purchase of purchases) {
+        // Example: if (purchase.productId === 'your_product_id') { unlockFeature(); }
+        // Optionally finish the transaction (iOS only)
+        await finishTransaction({ purchase });
+      }
+
+      Alert.alert('Success', 'Your purchases have been restored.');
+    } catch (error) {
+      console.error('Restore error:', error);
+      Alert.alert('Error', 'Failed to restore purchases. Please try again.');
+    } finally {
+      setIsLoading(false);
+    }
+  };
   
   const isConnectedToInternet = useSelector(
     (state: RootState) => state.app.isConnectedToInternet
@@ -156,6 +191,22 @@ const Profile = () => {
           />
         )}
         <CreditsCard handleCardClick={handleCardClick} slug={"credits_card"} />
+        {userType === "premium" && Platform.OS === "ios" && (
+          <TouchableOpacity 
+            style={styles.restorePurchaseButton} 
+            onPress={handleRestorePurchase}
+            disabled={isLoading}
+          >
+            {isLoading ? (
+              <ActivityIndicator size="small" color="green"/>
+            ) : (
+              <>
+                <LogoutIcon width={18} height={18} color="green"/>
+                <Text style={styles.restorePurchaseText}>Restore Purchase</Text>
+              </>
+            )}
+          </TouchableOpacity>
+        )}
         <TouchableOpacity style={styles.logoutButton} onPress={handleLogOut}>
           <LogoutIcon width={18} height={18} />
           <Text style={styles.logoutText}>Logout</Text>
@@ -196,6 +247,22 @@ const styles = StyleSheet.create({
   },
   logoutText: {
     color: "#DE1135",
+    fontWeight: 600,
+    fontSize: 14,
+    marginLeft: 6,
+  },
+  restorePurchaseButton: {
+    flexDirection: "row",
+    justifyContent: "center",
+    alignItems: "center",
+    borderColor: "green",
+    borderWidth: 1,
+    paddingVertical: 12,
+    borderRadius: 4,
+    gap: 6,
+  },
+  restorePurchaseText: {
+    color: "green",
     fontWeight: 600,
     fontSize: 14,
     marginLeft: 6,
