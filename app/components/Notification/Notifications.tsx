@@ -53,14 +53,15 @@ const Notifications: React.FC<NotificationsProps> = ({
       ) : (
         <ScrollView>
           {notifications.map((notification, index) => (
-            <>
+            <React.Fragment
+              key={`${notification.id || index}-${notification.addedTime}`}
+            >
               <NotificationCard
-                key={`${notification.id || index}-${notification.addedTime}`}
                 notification={notification}
                 onCtaPress={onCtaPress}
                 addedTime={notification.addedTime}
               />
-            </>
+            </React.Fragment>
           ))}
         </ScrollView>
       )}
