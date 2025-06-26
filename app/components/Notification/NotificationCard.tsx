@@ -51,7 +51,23 @@ const ctaIconMap: Record<string, React.ReactNode> = {
       // style={{ marginRight: 6 }}
     />
   ),
+  "Call Agents": (
+    <MaterialIcons
+      name="call"
+      size={16}
+      color="#fff"
+      // style={{ marginRight: 6 }}
+    />
+  ),
   "Message Agent": (
+    <MaterialCommunityIcons
+      name="whatsapp"
+      size={16}
+      color="#153E3B"
+      // style={{ marginRight: 6 }}
+    />
+  ),
+  "Message Agents": (
     <MaterialCommunityIcons
       name="whatsapp"
       size={16}

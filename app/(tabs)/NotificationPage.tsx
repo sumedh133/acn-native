@@ -126,10 +126,10 @@ const NotificationPage: React.FC<NotificationPageProps> = () => {
 
       case "enquiry_seller_notification":
         // Handle enquiry received notification
-        if (action === "Call Agent") {
+        if (action === "Call Agent" || action === "Call Agents") {
           // Linking.openURL(`tel:${notification.additionalData.buyerPhone}`);
           Linking.openURL(`tel:${kamPhone}`);
-        } else if (action === "Message Agent") {
+        } else if (action === "Message Agent" || action === "Message Agents") {
           Linking.openURL(
             `https://wa.me/${notification.additionalData.buyerPhone}`
           );

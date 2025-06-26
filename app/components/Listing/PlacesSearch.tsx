@@ -100,6 +100,7 @@ const PlacesSearch = ({
         const data = await response.json();
 
         if (data.status === "OK" && data.result) {
+          console.log("Place Details:", data);
           return {
             name: data.result.name,
             formatted_address: data.result.formatted_address,
