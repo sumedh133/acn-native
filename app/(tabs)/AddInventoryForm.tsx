@@ -456,11 +456,13 @@ const AddInventoryForm = () => {
         );
       case "Project Name":
         return (
+          <View>
           <PlacesSearch
             selectedPlace={selectedPlace}
             setSelectedPlace={setSelectedPlace}
             communityType={property.communityType}
           />
+          </View>
         );
 
       default:

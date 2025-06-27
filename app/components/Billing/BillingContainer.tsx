@@ -39,7 +39,19 @@ import { formatCost } from "../../helpers/common.js";
 import { useSelector } from "react-redux";
 import { RootState } from "@/store/store.js";
 import { Coupon, SubscriptionPlan } from "@/app/types.js";
-import { collection, doc, getDoc, onSnapshot, query, setDoc, where, addDoc, serverTimestamp, updateDoc, getDocs } from "firebase/firestore";
+import {
+  collection,
+  doc,
+  getDoc,
+  onSnapshot,
+  query,
+  setDoc,
+  where,
+  addDoc,
+  serverTimestamp,
+  updateDoc,
+  getDocs,
+} from "firebase/firestore";
 import { db } from "@/app/config/firebase";
 import {
   showErrorToast,
@@ -82,27 +94,27 @@ const iapProductIds = {
 const getErrorMessage = (error: any): string => {
   if (error instanceof PurchaseError) {
     switch (error.code) {
-      case 'E_USER_CANCELLED':
-        return 'Purchase was cancelled';
-      case 'E_ITEM_UNAVAILABLE':
-        return 'This item is not available for purchase';
-      case 'E_NETWORK_ERROR':
-        return 'Network error. Please check your connection and try again';
-      case 'E_SERVICE_ERROR':
-        return 'App Store service error. Please try again later';
-      case 'E_RECEIPT_FAILED':
-        return 'Receipt validation failed';
-      case 'E_ALREADY_OWNED':
-        return 'You already own this subscription';
-      case 'E_DEVELOPER_ERROR':
-        return 'Configuration error. Please contact support';
-      case 'E_NOT_PREPARED':
-        return 'Billing service is not prepared';
+      case "E_USER_CANCELLED":
+        return "Purchase was cancelled";
+      case "E_ITEM_UNAVAILABLE":
+        return "This item is not available for purchase";
+      case "E_NETWORK_ERROR":
+        return "Network error. Please check your connection and try again";
+      case "E_SERVICE_ERROR":
+        return "App Store service error. Please try again later";
+      case "E_RECEIPT_FAILED":
+        return "Receipt validation failed";
+      case "E_ALREADY_OWNED":
+        return "You already own this subscription";
+      case "E_DEVELOPER_ERROR":
+        return "Configuration error. Please contact support";
+      case "E_NOT_PREPARED":
+        return "Billing service is not prepared";
       default:
-        return error.message || 'Purchase failed. Please try again';
+        return error.message || "Purchase failed. Please try again";
     }
   }
-  return error.message || 'An unexpected error occurred';
+  return error.message || "An unexpected error occurred";
 };
 
 const BillingContainer: React.FC<BillingContainerProps> = ({
@@ -118,6 +130,7 @@ const BillingContainer: React.FC<BillingContainerProps> = ({
 
   const redirectUrl = "https://acnonline.in/billing";
   const [processing, setProcessing] = useState(false);
+  const [restoring, setRestoring] = useState(false); // New state for restore operations
   const scrollRef = useRef<ScrollView>(null);
 
   // did not exist before IAP, next 3 lines
@@ -159,6 +172,14 @@ const BillingContainer: React.FC<BillingContainerProps> = ({
   }, [planId, availablePlans]);
 
   useEffect(() => {
+    // For iOS, don't calculate discounts - use App Store pricing
+    if (Platform.OS === "ios") {
+      setDiscountAmount(0);
+      setTaxAmount(0);
+      setTotalAmount(originalAmount);
+      return;
+    }
+
     const tax = parseFloat(
       (
         (originalAmount - discountAmount) *
@@ -166,11 +187,9 @@ const BillingContainer: React.FC<BillingContainerProps> = ({
       ).toFixed(2)
     );
     setTaxAmount(tax);
-    // const newAmount = originalAmount - discountAmount + tax;
     let newAmount = Math.round(originalAmount - discountAmount + tax);
-    // if (discountAmount == 0) { newAmount += 1 }
     setTotalAmount(newAmount);
-  }, [discountAmount, originalAmount]);
+  }, [discountAmount, originalAmount, selectedPlan]);
 
   const businessName =
     useSelector((state: RootState) => state?.agent?.docData?.businessName) ||
@@ -194,6 +213,7 @@ const BillingContainer: React.FC<BillingContainerProps> = ({
         event_label: "page_view",
         user_type: userType,
         has_business_details: !!(businessName || gstNo),
+        platform: Platform.OS,
       });
     } catch (error) {
       console.error("Error logging page view:", error);
@@ -207,6 +227,9 @@ const BillingContainer: React.FC<BillingContainerProps> = ({
   const [paymentUrl, setPaymentUrl] = useState<string>("");
 
   useEffect(() => {
+    // Don't load coupons for iOS users
+    if (Platform.OS === "ios") return;
+
     const unsubscribe = onSnapshot(doc(db, "admin", "coupons"), (docSnap) => {
       if (docSnap.exists()) {
         const data = docSnap.data();
@@ -226,25 +249,48 @@ const BillingContainer: React.FC<BillingContainerProps> = ({
     return () => unsubscribe();
   }, []);
 
-  // did not exist before IAP
   useEffect(() => {
     if (Platform.OS === "ios") {
       const initializeIAP = async () => {
         try {
-          await initConnection();
-          setIsIAPInitialized(true);
+          console.log("🚀 Starting IAP initialization...");
+
+          // End any existing connection first
+          try {
+            await endConnection();
+            console.log("✅ Previous connection ended");
+          } catch (e) {
+            console.log("ℹ️ No existing connection to end");
+          }
+
+          // Wait a moment before reinitializing
+          await new Promise((resolve) => setTimeout(resolve, 500));
+
+          // Initialize new connection with timeout
+          console.log("🔌 Establishing new IAP connection...");
+          const initPromise = initConnection();
+          const timeoutPromise = new Promise((_, reject) =>
+            setTimeout(
+              () => reject(new Error("IAP initialization timeout")),
+              10000
+            )
+          );
+
+          await Promise.race([initPromise, timeoutPromise]);
+          console.log("✅ IAP connection established successfully");
 
           // Set up purchase listeners
+          console.log("👂 Setting up purchase listeners...");
           purchaseUpdateSubscription.current = purchaseUpdatedListener(
             async (purchase: Purchase) => {
-              console.log("Purchase updated:", purchase);
+              console.log("📱 Purchase updated:", purchase.transactionId);
               await handlePurchaseUpdate(purchase);
             }
           );
 
           purchaseErrorSubscription.current = purchaseErrorListener(
             (error: PurchaseError) => {
-              console.error("Purchase error listener:", error);
+              console.error("❌ Purchase error listener triggered:", error);
               const errorMessage = getErrorMessage(error);
               setIapError(errorMessage);
               showErrorToast(errorMessage);
@@ -252,279 +298,360 @@ const BillingContainer: React.FC<BillingContainerProps> = ({
             }
           );
 
-          // Fetch products
-          const products = await getProducts({
-            skus: [iapProductIds.premiumAnnual],
-          });
-          if (products.length > 0) {
-            setProduct(products[0]);
-          } else {
-            console.log("No products found");
-            setIapError("Product not available in App Store");
+          // Fetch products with enhanced retry logic
+          console.log("🛒 Fetching available products...");
+          let products;
+          let retryCount = 0;
+          const maxRetries = 3;
+
+          while (retryCount < maxRetries) {
+            try {
+              products = await getProducts({
+                skus: [iapProductIds.premiumAnnual],
+              });
+
+              if (products && products.length > 0) {
+                console.log(
+                  "✅ Products loaded successfully:",
+                  products[0].productId
+                );
+                setProduct(products[0]);
+                break;
+              } else {
+                throw new Error("No products returned from App Store");
+              }
+            } catch (error) {
+              retryCount++;
+              console.log(
+                `⚠️ Product fetch attempt ${retryCount} failed:`,
+                error.message
+              );
+
+              if (retryCount < maxRetries) {
+                console.log(`🔄 Retrying in ${retryCount * 1000}ms...`);
+                await new Promise((resolve) =>
+                  setTimeout(resolve, retryCount * 1000)
+                );
+              } else {
+                throw new Error(
+                  `Failed to fetch products after ${maxRetries} attempts`
+                );
+              }
+            }
           }
 
-          // Check for pending purchases
-          // await checkPendingPurchases();
-        } catch (error) {
-          console.error("IAP initialization error:", error);
-          setIapError("Failed to initialize in-app purchases");
-          showErrorToast("Unable to connect to App Store");
+          // Only set as initialized if everything succeeded
+          setIsIAPInitialized(true);
+          console.log("🎉 IAP initialization completed successfully");
+
+          // Clear any previous errors
+          setIapError(null);
+
+          // Schedule pending purchases check with proper initialization check
+          console.log("⏰ Scheduling pending purchases check...");
+          setTimeout(async () => {
+            console.log("🔍 Starting pending purchases check...");
+            await checkPendingPurchases();
+          }, 3000); // Increased delay to ensure stability
+        } catch (error: any) {
+          console.error("💥 IAP initialization failed:", error.message);
+          setIapError(`Initialization failed: ${error.message}`);
+          setIsIAPInitialized(false);
+
+          // Show user-friendly error based on error type
+          if (error.message.includes("timeout")) {
+            console.log(
+              "⏱️ IAP initialization timed out - App Store may be slow"
+            );
+          } else if (error.message.includes("No products")) {
+            console.log("🛒 Products not available in App Store");
+          } else {
+            console.log(
+              "🚫 IAP features will be limited due to initialization failure"
+            );
+          }
         }
       };
 
       initializeIAP();
 
       return () => {
+        console.log("🧹 Cleaning up IAP connections...");
         if (purchaseUpdateSubscription.current) {
           purchaseUpdateSubscription.current.remove();
+          console.log("✅ Purchase update listener removed");
         }
         if (purchaseErrorSubscription.current) {
           purchaseErrorSubscription.current.remove();
+          console.log("✅ Purchase error listener removed");
         }
-        endConnection();
+
+        // Only end connection if it was initialized
+        if (isIAPInitialized) {
+          endConnection()
+            .then(() => console.log("✅ IAP connection ended"))
+            .catch((e) =>
+              console.log("⚠️ Error ending connection:", e.message)
+            );
+        }
       };
     }
   }, []);
 
-  // Check for pending purchases on app start
   const checkPendingPurchases = async () => {
+    console.log(
+      "🔍 checkPendingPurchases called, isIAPInitialized:",
+      isIAPInitialized
+    );
+
+    if (!isIAPInitialized) {
+      console.log("⚠️ IAP not initialized, skipping pending purchases check");
+      return;
+    }
+
     try {
-      const purchases = await getAvailablePurchases();
+      console.log("📋 Checking for pending purchases...");
+      const purchases = await getAvailablePurchasesWithRetry(2, 500);
+
       if (purchases && purchases.length > 0) {
-        console.log("Found pending purchases:", purchases.length);
-        // Process any pending purchases
+        console.log(
+          `📦 Found ${purchases.length} pending purchase(s):`,
+          purchases.map((p) => p.transactionId)
+        );
+
+        // Process each pending purchase
         for (const purchase of purchases) {
-          await handlePurchaseUpdate(purchase as Purchase);
+          try {
+            console.log(
+              `🔄 Processing pending purchase: ${purchase.transactionId}`
+            );
+            await handlePurchaseUpdate(purchase as Purchase);
+            console.log(`✅ Successfully processed: ${purchase.transactionId}`);
+          } catch (error) {
+            console.error(
+              `❌ Error processing pending purchase ${purchase.transactionId}:`,
+              error
+            );
+          }
         }
+      } else {
+        console.log("✅ No pending purchases found");
       }
     } catch (error) {
-      console.error("Error checking pending purchases:", error);
+      console.error("💥 Error checking pending purchases:", error);
+      // Don't show error to user for background checks
     }
   };
 
-  // Direct save to Firebase (Implementation 1)
-  // const handlePurchaseUpdate = async (purchase: Purchase) => {
-  //   try {
-  //     setProcessing(true);
+  // Helper function to get available purchases with retry logic
+  const getAvailablePurchasesWithRetry = async (
+    maxRetries = 3,
+    delay = 1000
+  ) => {
+    console.log(
+      `🔄 Getting available purchases (max ${maxRetries} attempts)...`
+    );
 
-  //     // Log purchase attempt
-  //     logEvent(analytics, "iap_purchase_processing", {
-  //       event_category: "billing",
-  //       event_label: "payment",
-  //       product_id: purchase.productId,
-  //       transaction_id: purchase.transactionId,
-  //       user_type: userType,
-  //     });
+    for (let attempt = 1; attempt <= maxRetries; attempt++) {
+      try {
+        console.log(
+          `🎯 Attempt ${attempt}/${maxRetries} to get available purchases`
+        );
 
-  //     // Check if transaction already exists
-  //     const existingPurchaseQuery = query(
-  //       collection(db, "payments"),
-  //       where("transactionId", "==", purchase.transactionId)
-  //     );
-  //     const existingPurchase = await getDocs(existingPurchaseQuery);
+        // Small delay before each attempt (except first)
+        if (attempt > 1) {
+          console.log(`⏸️ Waiting ${delay}ms before retry...`);
+          await new Promise((resolve) => setTimeout(resolve, delay));
+        }
 
-  //     if (!existingPurchase.empty) {
-  //       console.log("Transaction already processed:", purchase.transactionId);
-  //       await finishTransaction({ purchase, isConsumable: false });
-  //       showSuccessToast("Purchase already processed!");
-  //       setProcessing(false);
-  //       return;
-  //     }
+        // Try to get purchases
+        const purchases = await getAvailablePurchases();
+        console.log(
+          `✅ Successfully retrieved ${
+            purchases?.length || 0
+          } purchases on attempt ${attempt}`
+        );
+        return purchases;
+      } catch (error: any) {
+        console.error(`❌ Attempt ${attempt} failed:`, error.message);
 
-  //     // Calculate subscription dates
-  //     const purchaseDate = new Date(purchase.transactionDate);
+        if (attempt === maxRetries) {
+          console.error("💥 All attempts failed, throwing error");
+          throw error; // Re-throw if this was the last attempt
+        }
 
-  //     // Prepare payment document
-  //     const paymentDoc = {
-  //       // User information
-  //       phonenumber: phoneNumber,
+        // If connection closed, try to re-establish
+        if (error.message?.includes("Connection has been closed")) {
+          console.log("🔌 Connection closed, attempting to re-establish...");
+          try {
+            await endConnection();
+            await new Promise((resolve) => setTimeout(resolve, 500));
+            await initConnection();
+            console.log("✅ Connection re-established");
+          } catch (reconnectError) {
+            console.error(
+              "💥 Failed to re-establish connection:",
+              reconnectError
+            );
+          }
+        }
+      }
+    }
+  };
 
-  //       // Platform and status
-  //       platform: "ios",
-  //       status: "completed",
+  // Helper function to ensure IAP connection is ready
+  const ensureIAPConnection = async () => {
+    try {
+      // First check if we can get products (quick connection test)
+      const products = await getProducts({
+        skus: [iapProductIds.premiumAnnual],
+      });
+      if (products && products.length > 0) {
+        console.log("Connection verified - products available");
+        return true;
+      }
+    } catch (error) {
+      console.log("Connection test failed, reinitializing...");
+    }
 
-  //       // Timestamps
-  //       createdAt: purchaseDate,
-  //       updatedAt: purchaseDate,
+    // If products check failed, try to reinitialize
+    try {
+      await endConnection();
+      await new Promise((resolve) => setTimeout(resolve, 500));
+      await initConnection();
+      setIsIAPInitialized(true);
+      console.log("IAP connection reinitialized");
+      return true;
+    } catch (error) {
+      console.error("Failed to reinitialize IAP:", error);
+      setIsIAPInitialized(false);
+      return false;
+    }
+  };
 
-  //       data: {
-  //         // Transaction information
-  //         transactionId: purchase.transactionId,
-  //         transactionReceipt: purchase.transactionReceipt,
-  //         originalTransactionId:
-  //           purchase.originalTransactionIdentifierIOS || purchase.transactionId,
-  //         transactionDate: purchase.transactionDate,
+  const restorePurchases = async () => {
+    if (Platform.OS !== "ios") return;
 
-  //         // Product information
-  //         productId: purchase.productId,
-  //         planId: selectedPlan?.id || planId,
+    console.log("🔄 Starting purchase restoration...");
+    setRestoring(true);
 
-  //         // Pricing information
-  //         amount: product?.price || totalAmount,
-  //         currency: product?.currency || "INR",
-  //         localizedPrice: product?.localizedPrice || formatCost(totalAmount),
-  //       },
+    try {
+      // Track restore attempt
+      logEvent(analytics, "restore_purchases_attempt", {
+        event_category: "billing",
+        event_label: "restore",
+        user_type: userType,
+        iap_initialized: isIAPInitialized,
+      });
 
-  //       platformData: {
-  //         paymentMethod: "in_app_purchase",
-  //         isTestPurchase: __DEV__,
-  //         environment: __DEV__ ? "sandbox" : "production",
-  //       },
-  //     };
+      // Check if IAP is initialized first
+      if (!isIAPInitialized) {
+        console.log("⚠️ IAP not initialized, attempting to initialize...");
+        const connectionReady = await ensureIAPConnection();
+        if (!connectionReady) {
+          throw new Error("Unable to establish stable connection to App Store");
+        }
+      }
 
-  //     // Save payment to Firestore
-  //     const paymentRef = await setDoc(doc(db, "payments", purchase.transactionId!), paymentDoc);
-  //     console.log("Payment saved with ID:", purchase.transactionId);
+      console.log("🔍 Getting available purchases for restoration...");
+      const purchases = await getAvailablePurchasesWithRetry(3, 1000);
 
-  //     // Update user subscription status
-  //     await updateUserSubscription(paymentDoc);
+      console.log(
+        "📋 Restore purchases result:",
+        purchases?.length || 0,
+        "purchases found"
+      );
 
-  //     // Finish the transaction
-  //     await finishTransaction({ purchase, isConsumable: false });
+      if (!purchases || purchases.length === 0) {
+        Alert.alert("Oops!", "No purchases found to restore.");
+        logEvent(analytics, "restore_purchases_none_found", {
+          event_category: "billing",
+          event_label: "restore",
+          user_type: userType,
+        });
+        return;
+      }
 
-  //     // Log successful purchase
-  //     logEvent(analytics, "iap_purchase_success", {
-  //       event_category: "billing",
-  //       event_label: "payment",
-  //       product_id: purchase.productId,
-  //       transaction_id: purchase.transactionId,
-  //       amount: product?.price,
-  //       payment_id: purchase.transactionId,
-  //       user_type: userType,
-  //     });
+      console.log(`🔄 Restoring ${purchases.length} purchase(s)...`);
+      let restoredCount = 0;
+      let failedCount = 0;
 
-  //     showSuccessToast("Purchase successful! Your subscription is now active.");
+      for (const purchase of purchases) {
+        try {
+          console.log(`🔄 Restoring purchase: ${purchase.transactionId}`);
+          await handlePurchaseUpdate(purchase as Purchase);
+          restoredCount++;
+          console.log(`✅ Successfully restored: ${purchase.transactionId}`);
+        } catch (error) {
+          console.error(
+            `❌ Failed to restore ${purchase.transactionId}:`,
+            error
+          );
+          failedCount++;
+        }
+      }
 
-  //     // Navigate back after a delay
-  //     setTimeout(() => {
-  //       router.back();
-  //     }, 2000);
-  //   } catch (error: any) {
-  //     console.error("Error processing purchase:", error);
+      // Show appropriate success/error messages
+      if (restoredCount > 0) {
+        const message = `Successfully restored ${restoredCount} purchase(s)`;
+        console.log(`🎉 ${message}`);
+        showSuccessToast(message);
 
-  //     // Log purchase failure
-  //     logEvent(analytics, "iap_purchase_failed", {
-  //       event_category: "billing",
-  //       event_label: "error",
-  //       error_message: error.message,
-  //       product_id: purchase.productId,
-  //       user_type: userType,
-  //     });
+        logEvent(analytics, "restore_purchases_success", {
+          event_category: "billing",
+          event_label: "restore",
+          restored_count: restoredCount,
+          failed_count: failedCount,
+          user_type: userType,
+        });
 
-  //     showErrorToast(
-  //       error.message ||
-  //         "Failed to process purchase. Please contact support if you were charged."
-  //     );
+        // Navigate back after successful restore
+        setTimeout(() => {
+          router.dismissAll();
+          router.push("/(pages)/Profile");
+        }, 2000);
+      } else {
+        const message =
+          "Purchases found but failed to restore. Please contact support.";
+        console.error(`💥 ${message}`);
+        showErrorToast(message);
 
-  //     // Don't finish the transaction if save failed
-  //     // This allows retry on next app launch
-  //   } finally {
-  //     setProcessing(false);
-  //   }
-  // };
+        logEvent(analytics, "restore_purchases_failed", {
+          event_category: "billing",
+          event_label: "restore",
+          total_purchases: purchases.length,
+          failed_count: failedCount,
+          user_type: userType,
+        });
+      }
+    } catch (error: any) {
+      console.error("💥 Restore purchases error:", error.message);
 
-  // const updateUserSubscription = async (
-  //     paymentData: any
-  //   ) => {
-  //     try {
-  //       // Track payment success before updating subscription
-  //       logEvent(analytics, "payment_success", {
-  //         event_category: "checkout",
-  //         event_label: "payment",
-  //         plan_id: planId,
-  //         transaction_id: paymentData.data.transactionId,
-  //         amount: paymentData.data.amount,
-  //         currency: "INR",
-  //         user_type: userType,
-  //       });
-  
-  //       const agentRef = doc(db, "agents", cpId);
-  //       const currentTransactionId = paymentData.data.transactionId;
-  
-  //       // Get current document to access existing payment history
-  //       const agentSnap = await getDoc(agentRef);
-  //       const agentData = agentSnap.data();
-  
-  //       const now = getUnixDateTime();
-  
-  //       let planExpiry = getUnixDateTime() + 31536000;
-  
-  //       const newPaymentEntry = {
-  //         paymentDate: now,
-  //         paymentAmount: paymentData.data.amount,
-  //         paymentId: currentTransactionId,
-  //         planId: planId,
-  //       };
-  
-  //       const existingPaymentHistory = agentData?.paymentHistory || [];
-  
-  //       let updatedPaymentHistory = [];
-  
-  //       if (Array.isArray(existingPaymentHistory)) {
-  //         updatedPaymentHistory = [...existingPaymentHistory, newPaymentEntry];
-  //       } else if (
-  //         existingPaymentHistory &&
-  //         typeof existingPaymentHistory === "object"
-  //       ) {
-  //         updatedPaymentHistory = [existingPaymentHistory, newPaymentEntry];
-  //       } else {
-  //         updatedPaymentHistory = [newPaymentEntry];
-  //       }
-  
-  //       let updateData: any = {
-  //         paymentHistory: updatedPaymentHistory,
-  //       };
-  
-  //       switch (planId) {
-  //         case "premium":
-  //           updateData = {
-  //             ...updateData,
-  //             userType: "premium",
-  //             trialUsed: true,
-  //             planExpiry: planExpiry,
-  //             monthlyCredits: 100,
-  //           };
-  //           break;
-  //         case "booster":
-  //           updateData = {
-  //             ...updateData,
-  //             boosterCredits: (agentData?.boosterCredits || 0) + 5,
-  //           };
-  //           break;
-  //         default:
-  //           console.log("Unknown plan ID:", planId);
-  //           return false;
-  //       }
-  
-  //       await updateDoc(agentRef, updateData);
-  //       console.log("Successfully updated user subscription");
-  
-  //       dispatch(updateAgentDocData(updateData));
-  
-  //       // Track subscription update success
-  //       logEvent(analytics, "subscription_updated", {
-  //         event_category: "checkout",
-  //         event_label: "subscription",
-  //         plan_id: planId,
-  //         user_type: userType,
-  //         credits_added: planId === "premium" ? 100 : 5,
-  //       });
-  
-  //       return true;
-  //     } catch (error) {
-  //       // Track error in subscription update
-  //       logEvent(analytics, "subscription_update_error", {
-  //         event_category: "checkout",
-  //         event_label: "error",
-  //         plan_id: planId,
-  //         error_message: error instanceof Error ? error.message : "Unknown error",
-  //         user_type: userType,
-  //       });
-  //       console.error("Error updating user subscription:", error);
-  //       return false;
-  //     }
-  //   };
+      let errorMessage = "Failed to restore purchases. Please try again.";
 
+      // Handle specific error cases with better messages
+      if (error.message?.includes("Connection has been closed")) {
+        errorMessage =
+          "App Store connection is unstable. Please try again in a moment.";
+      } else if (error.message?.includes("Unable to establish")) {
+        errorMessage =
+          "Unable to connect to App Store. Please check your internet connection and try again.";
+      } else if (error.message?.includes("timeout")) {
+        errorMessage = "Request timed out. Please try again.";
+      }
+
+      showErrorToast(errorMessage);
+      logEvent(analytics, "restore_purchases_error", {
+        event_category: "billing",
+        event_label: "error",
+        error_message: error.message,
+        user_type: userType,
+      });
+    } finally {
+      setRestoring(false);
+      console.log("🏁 Purchase restoration completed");
+    }
+  };
   const handlePurchaseUpdate = async (purchase: Purchase) => {
     try {
       setProcessing(true);
@@ -546,15 +673,15 @@ const BillingContainer: React.FC<BillingContainerProps> = ({
       // Prepare data for backend validation
       // Validate required fields
       if (!phoneNumber || !cpId) {
-        throw new Error('Missing user identification details');
+        throw new Error("Missing user identification details");
       }
 
       if (!purchase.transactionId || !purchase.transactionReceipt) {
-        throw new Error('Invalid purchase data');
+        throw new Error("Invalid purchase data");
       }
 
       if (!selectedPlan?.id && !planId) {
-        throw new Error('Plan details not found');
+        throw new Error("Plan details not found");
       }
 
       const validationData = {
@@ -570,25 +697,27 @@ const BillingContainer: React.FC<BillingContainerProps> = ({
         currency: product?.currency || "INR",
         localizedPrice: product?.localizedPrice || formatCost(totalAmount),
         isTestPurchase: __DEV__,
-        environment: __DEV__ ? "sandbox" : "production", 
+        environment: __DEV__ ? "sandbox" : "production",
         cpId: cpId,
       };
 
       // Additional validation of data structure
-      const requiredFields = Object.entries(validationData).filter(([_, value]) => 
-        value === undefined || value === null
+      const requiredFields = Object.entries(validationData).filter(
+        ([_, value]) => value === undefined || value === null
       );
 
       if (requiredFields.length > 0) {
-        throw new Error(`Missing required fields: ${requiredFields.map(([key]) => key).join(', ')}`);
+        throw new Error(
+          `Missing required fields: ${requiredFields
+            .map(([key]) => key)
+            .join(", ")}`
+        );
       }
 
       const validationRequest = JSON.stringify(validationData);
 
       if (!validationRequest) {
-        throw new Error(
-          `Error in parsing JSON: ${validationData}`
-        );
+        throw new Error(`Error in parsing JSON: ${validationData}`);
       }
 
       // Call backend for validation and processing
@@ -668,6 +797,14 @@ const BillingContainer: React.FC<BillingContainerProps> = ({
   };
 
   const initiatePayment = async () => {
+    // This function should only be called for non-iOS platforms
+    if (Platform.OS === "ios") {
+      console.error(
+        "PhonePe payment attempted on iOS - this should not happen"
+      );
+      return;
+    }
+
     setProcessing(true);
 
     try {
@@ -681,6 +818,7 @@ const BillingContainer: React.FC<BillingContainerProps> = ({
         coupon_code: matchedCoupon?.code || null,
         has_business_details: !!(businessName || gstNo),
         user_type: userType,
+        platform: Platform.OS,
       });
 
       const functions = getFunctions();
@@ -769,6 +907,13 @@ const BillingContainer: React.FC<BillingContainerProps> = ({
   };
 
   useEffect(() => {
+    // Don't apply coupons for iOS users
+    if (Platform.OS === "ios") {
+      setDiscountAmount(0);
+      setMatchedCoupon(null);
+      return;
+    }
+
     if (matchedCoupon) {
       const offPrice = Math.floor(
         originalAmount * (matchedCoupon.discount_percent / 100)
@@ -777,9 +922,12 @@ const BillingContainer: React.FC<BillingContainerProps> = ({
     } else {
       setDiscountAmount(0);
     }
-  }, [matchedCoupon]);
+  }, [matchedCoupon, originalAmount]);
 
   const applyCoupon = () => {
+    // This function should only be called for non-iOS platforms
+    if (Platform.OS === "ios") return;
+
     if (!allCoupons || allCoupons?.length === 0) {
       try {
         logEvent(analytics, "coupon_error", {
@@ -827,6 +975,9 @@ const BillingContainer: React.FC<BillingContainerProps> = ({
   };
 
   const removeCoupon = () => {
+    // This function should only be called for non-iOS platforms
+    if (Platform.OS === "ios") return;
+
     try {
       logEvent(analytics, "remove_coupon", {
         event_category: "billing",
@@ -850,14 +1001,26 @@ const BillingContainer: React.FC<BillingContainerProps> = ({
       return;
     }
 
-    if (!isIAPInitialized) {
-      Alert.alert("Error", "In-app purchases not available. Please try again.");
-      return;
-    }
-
     setProcessing(true);
     setIapError(null);
+
     try {
+      // Ensure connection is ready before attempting purchase
+      const connectionReady = await ensureIAPConnection();
+      if (!connectionReady) {
+        throw new Error("Unable to connect to App Store");
+      }
+
+      // Track IAP purchase attempt
+      logEvent(analytics, "iap_purchase_attempt", {
+        event_category: "billing",
+        event_label: "payment",
+        product_id: product.productId,
+        user_type: userType,
+      });
+
+      console.log("Initiating IAP purchase for:", product.productId);
+
       const purchase = await requestSubscription({
         sku: product.productId,
         andDangerouslyFinishTransactionAutomaticallyIOS: false,
@@ -865,15 +1028,35 @@ const BillingContainer: React.FC<BillingContainerProps> = ({
 
       // Purchase will be handled by purchaseUpdatedListener
       console.log("Purchase request initiated:", purchase);
-
     } catch (error: any) {
       console.error("IAP purchase error:", error);
       const errorMessage = getErrorMessage(error);
       setIapError(errorMessage);
 
+      // Log IAP error
+      logEvent(analytics, "iap_purchase_error", {
+        event_category: "billing",
+        event_label: "error",
+        error_code: error.code,
+        error_message: errorMessage,
+        user_type: userType,
+      });
+
       // Show user-friendly error message
       if (error.code === "E_USER_CANCELLED") {
         showInfoToast(errorMessage);
+      } else if (error.message?.includes("Connection has been closed")) {
+        Alert.alert(
+          "Connection Error",
+          "Connection to App Store was lost. Please try again in a moment.",
+          [
+            { text: "OK", style: "default" },
+            {
+              text: "Contact Support",
+              onPress: () => Linking.openURL("mailto:support@acnonline.in"),
+            },
+          ]
+        );
       } else {
         Alert.alert(
           "Purchase Failed",
@@ -891,6 +1074,24 @@ const BillingContainer: React.FC<BillingContainerProps> = ({
     } finally {
       setProcessing(false);
     }
+  };
+
+  // Helper function to get display price based on platform
+  const getDisplayPrice = () => {
+    if (Platform.OS === "ios" && product) {
+      return product.localizedPrice;
+    }
+    return formatCost(totalAmount);
+  };
+
+  // Helper function to determine if coupons should be shown
+  const shouldShowCoupons = () => {
+    return Platform.OS !== "ios" && planId !== "booster";
+  };
+
+  // Helper function to determine if GST details should be shown
+  const shouldShowGSTDetails = () => {
+    return Platform.OS !== "ios" && (businessName || gstNo);
   };
 
   return (
@@ -924,7 +1125,9 @@ const BillingContainer: React.FC<BillingContainerProps> = ({
                   </Text>
                 </Text>
                 <Text style={styles.costText}>
-                  {formatCost(originalAmount)}
+                  {Platform.OS === "ios" && product
+                    ? product.localizedPrice
+                    : formatCost(originalAmount)}
                   {"\n"}
                   <Text style={styles.subtext}>
                     {selectedPlan?.validityPeriod &&
@@ -965,7 +1168,8 @@ const BillingContainer: React.FC<BillingContainerProps> = ({
                 </Text>
               </View>
 
-              {!(businessName || gstNo) && (
+              {/* Only show GST prompt for non-iOS users */}
+              {Platform.OS !== "ios" && !(businessName || gstNo) && (
                 <Text style={styles.gstText}>
                   Have a GST?{" "}
                   <Text style={styles.linkText} onPress={onOpenBusinessModal}>
@@ -976,7 +1180,8 @@ const BillingContainer: React.FC<BillingContainerProps> = ({
               )}
             </View>
 
-            {(businessName || gstNo) && (
+            {/* Only show GST details for non-iOS users */}
+            {shouldShowGSTDetails() && (
               <View style={[styles.gstCard, { paddingVertical: 20, gap: 16 }]}>
                 <View style={styles.header}>
                   <Text
@@ -988,7 +1193,6 @@ const BillingContainer: React.FC<BillingContainerProps> = ({
                     style={styles.gstEditButton}
                     onPress={onOpenBusinessModal}
                   >
-                    {/* <Icon name="edit" size={20} color="#000000" /> */}
                     <Feather name="edit-3" size={20} color="black" />
                   </TouchableOpacity>
                 </View>
@@ -1010,8 +1214,8 @@ const BillingContainer: React.FC<BillingContainerProps> = ({
               </View>
             )}
 
-            {/* coupon container */}
-            {Platform.OS != "ios" && planId != "booster" && (
+            {/* coupon container - only for non-iOS users */}
+            {shouldShowCoupons() && (
               <View style={styles.couponContainer}>
                 <Text style={styles.heading}>Coupon code</Text>
                 <Text style={styles.couponSubtext}>
@@ -1065,10 +1269,9 @@ const BillingContainer: React.FC<BillingContainerProps> = ({
                     <View style={styles.rowBetween}>
                       <Text style={styles.label}>{selectedPlan?.product}</Text>
                       <Text style={styles.value}>
-                        {/* {matchedCoupon
-                          ? formatCost(originalAmount)
-                          : formatCost(originalAmount + 1)} */}
-                        {formatCost(originalAmount)}
+                        {Platform.OS === "ios" && product
+                          ? product.localizedPrice
+                          : formatCost(originalAmount)}
                       </Text>
                     </View>
                     {selectedPlan?.validityPeriod && (
@@ -1078,7 +1281,8 @@ const BillingContainer: React.FC<BillingContainerProps> = ({
                     )}
                   </View>
 
-                  {matchedCoupon && (
+                  {/* Only show coupon discount for non-iOS users */}
+                  {Platform.OS !== "ios" && matchedCoupon && (
                     <View>
                       <View style={styles.rowBetween}>
                         <Text style={styles.label}>{matchedCoupon.name}</Text>
@@ -1092,14 +1296,19 @@ const BillingContainer: React.FC<BillingContainerProps> = ({
                     </View>
                   )}
 
-                  <View>
-                    <View style={styles.rowBetween}>
-                      <Text style={styles.label}>
-                        GST {selectedPlan?.taxPercentage}%
-                      </Text>
-                      <Text style={styles.value}>{formatCost(taxAmount)}</Text>
+                  {/* Only show GST for non-iOS users */}
+                  {Platform.OS !== "ios" && (
+                    <View>
+                      <View style={styles.rowBetween}>
+                        <Text style={styles.label}>
+                          GST {selectedPlan?.taxPercentage}%
+                        </Text>
+                        <Text style={styles.value}>
+                          {formatCost(taxAmount)}
+                        </Text>
+                      </View>
                     </View>
-                  </View>
+                  )}
                 </View>
 
                 {/* Divider */}
@@ -1107,20 +1316,25 @@ const BillingContainer: React.FC<BillingContainerProps> = ({
 
                 {/* Total */}
                 <View style={styles.rowBetween}>
-                  <Text style={styles.totalLabel}>Total (INR)</Text>
-                  <Text style={styles.totalAmount}>
-                    {formatCost(totalAmount)}
+                  <Text style={styles.totalLabel}>
+                    Total (
+                    {Platform.OS === "ios" ? product?.currency || "USD" : "INR"}
+                    )
                   </Text>
+                  <Text style={styles.totalAmount}>{getDisplayPrice()}</Text>
                 </View>
 
                 <Text style={styles.taxInfo}>
-                  Total includes applicable taxes**
+                  {Platform.OS === "ios"
+                    ? "Price includes applicable taxes**"
+                    : "Total includes applicable taxes**"}
                 </Text>
               </View>
 
               {/* Bottom section */}
               <View style={styles.bottomSection}>
-                {matchedCoupon && (
+                {/* Only show savings for non-iOS users */}
+                {Platform.OS !== "ios" && matchedCoupon && (
                   <View style={styles.row}>
                     <FA5Icon
                       name="birthday-cake"
@@ -1140,32 +1354,50 @@ const BillingContainer: React.FC<BillingContainerProps> = ({
                     <Text style={styles.secureText}>Secure Payment</Text>
                   </View>
 
+                  {/* Show different payment method icons based on platform */}
                   <View style={styles.row}>
-                    <Image
-                      source={require("../../../assets/icons/billing/visa-icon.png")}
-                      style={styles.upiIcon}
-                    />
-                    <Image
-                      source={require("../../../assets/icons/billing/master-card-icon.png")}
-                      style={styles.upiIcon}
-                    />
-                    <Image
-                      source={require("../../../assets/icons/billing/credit-card-color-icon.png")}
-                      style={styles.upiIcon}
-                    />
-                    <Image
-                      source={require("../../../assets/icons/billing/upi-icon (3).png")}
-                      style={styles.upiIcon}
-                    />
-                    <Image
-                      source={require("../../../assets/icons/billing/rupay-logo-icon.png")}
-                      style={styles.upiIcon}
-                    />
+                    {Platform.OS === "ios" ? (
+                      <>
+                        <Image
+                          source={require("../../../assets/icons/billing/visa-icon.png")}
+                          style={styles.upiIcon}
+                        />
+                        <Image
+                          source={require("../../../assets/icons/billing/master-card-icon.png")}
+                          style={styles.upiIcon}
+                        />
+                        <Text style={styles.paymentMethodText}>App Store</Text>
+                      </>
+                    ) : (
+                      <>
+                        <Image
+                          source={require("../../../assets/icons/billing/visa-icon.png")}
+                          style={styles.upiIcon}
+                        />
+                        <Image
+                          source={require("../../../assets/icons/billing/master-card-icon.png")}
+                          style={styles.upiIcon}
+                        />
+                        <Image
+                          source={require("../../../assets/icons/billing/credit-card-color-icon.png")}
+                          style={styles.upiIcon}
+                        />
+                        <Image
+                          source={require("../../../assets/icons/billing/upi-icon (3).png")}
+                          style={styles.upiIcon}
+                        />
+                        <Image
+                          source={require("../../../assets/icons/billing/rupay-logo-icon.png")}
+                          style={styles.upiIcon}
+                        />
+                      </>
+                    )}
                   </View>
                 </View>
               </View>
             </View>
 
+            {/* Terms and conditions - always show for iOS */}
             {Platform.OS === "ios" && (
               <Text className="w-full px-[16px] my-[16px] items-center justify-center text-left font-lato font-medium text-[14px] leading-[150%] text-[#8A8A8A]">
                 By proceeding with the payment, you acknowledge and agree to our{" "}
@@ -1196,22 +1428,30 @@ const BillingContainer: React.FC<BillingContainerProps> = ({
               </Text>
             )}
 
+            {/* Main payment button */}
             <TouchableOpacity
-              style={styles.payButton}
+              style={[
+                styles.payButton,
+                Platform.OS === "ios" &&
+                  !isIAPInitialized &&
+                  styles.payButtonDisabled,
+              ]}
               onPress={
                 Platform.OS === "ios" ? initiateIAPPayment : initiatePayment
               }
-              disabled={processing}
+              disabled={
+                processing ||
+                restoring ||
+                (Platform.OS === "ios" && !isIAPInitialized)
+              }
             >
               {processing ? (
                 <Text style={styles.payText}>Processing...</Text>
+              ) : Platform.OS === "ios" && !isIAPInitialized ? (
+                <Text style={styles.payText}>Connecting to App Store...</Text>
               ) : (
                 <View style={styles.row}>
-                  <Text style={styles.payText}>
-                    {Platform.OS === "ios" && product
-                      ? product.localizedPrice
-                      : formatCost(totalAmount)}
-                  </Text>
+                  <Text style={styles.payText}>{getDisplayPrice()}</Text>
                   <FAIcon
                     name="arrow-right"
                     size={20}
@@ -1221,6 +1461,40 @@ const BillingContainer: React.FC<BillingContainerProps> = ({
                 </View>
               )}
             </TouchableOpacity>
+
+            {/* Restore purchases button - only for iOS */}
+            {Platform.OS === "ios" && (
+              <TouchableOpacity
+                style={[
+                  styles.restoreButton,
+                  !isIAPInitialized && styles.restoreButtonDisabled,
+                ]}
+                onPress={restorePurchases}
+                disabled={processing || restoring || !isIAPInitialized}
+              >
+                {restoring ? (
+                  <Text style={styles.restoreText}>Restoring...</Text>
+                ) : !isIAPInitialized ? (
+                  <Text style={[styles.restoreText, styles.disabledText]}>
+                    Connecting to App Store...
+                  </Text>
+                ) : (
+                  <Text style={styles.restoreText}>Restore Purchases</Text>
+                )}
+              </TouchableOpacity>
+            )}
+
+            {/* Show IAP status for iOS if there are issues */}
+            {Platform.OS === "ios" && !isIAPInitialized && (
+              <View style={styles.iapStatusContainer}>
+                <Text style={styles.iapStatusText}>
+                  ⚠️ Connecting to App Store...
+                </Text>
+                <Text style={styles.iapStatusSubtext}>
+                  Please wait a moment for the connection to establish
+                </Text>
+              </View>
+            )}
           </View>
         </View>
       </ScrollView>
@@ -1437,17 +1711,6 @@ const styles = StyleSheet.create({
     backgroundColor: "#FFFFFF",
     textAlignVertical: "center",
     fontSize: 17,
-    // ...Platform.select({
-    //   ios: {
-    //     shadowColor: "#000",
-    //     shadowOffset: { width: 0, height: 2 },
-    //     shadowOpacity: 0.8,
-    //     shadowRadius: 5,
-    //   },
-    //   android: {
-    //     elevation: 8, // Android shadow
-    //   },
-    // }),
   },
   applyBtn: {
     paddingHorizontal: 26,
@@ -1493,17 +1756,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
     paddingVertical: 10,
     backgroundColor: "#E3E3E3",
-    // ...Platform.select({
-    //   ios: {
-    //     shadowColor: "#000",
-    //     shadowOffset: { width: 0, height: 2 },
-    //     shadowOpacity: 0.8,
-    //     shadowRadius: 5,
-    //   },
-    //   android: {
-    //     elevation: 8, // Android shadow
-    //   },
-    // }),
   },
   couponCodeText: {
     // height: 45,
@@ -1619,6 +1871,9 @@ const styles = StyleSheet.create({
     fontSize: 20,
     fontWeight: "500",
   },
+  payButtonDisabled: {
+    backgroundColor: "#A0A0A0",
+  },
   paymentMethods: {
     flexDirection: "column",
     alignItems: "center",
@@ -1663,6 +1918,86 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     backgroundColor: "#E3E3E3",
     borderColor: "#CCCBCB",
+  },
+  paymentMethodText: {
+    fontSize: 14,
+    fontWeight: "500",
+    color: "#0A0B0A",
+  },
+  // New styles for restore purchases and error handling
+  restoreButton: {
+    marginTop: 10,
+    backgroundColor: "transparent",
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: "#153E3B",
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    width: "100%",
+    alignItems: "center",
+  },
+  restoreText: {
+    color: "#153E3B",
+    fontSize: 16,
+    fontWeight: "500",
+  },
+  restoreButtonDisabled: {
+    borderColor: "#A0A0A0",
+    backgroundColor: "#F5F5F5",
+  },
+  disabledText: {
+    color: "#A0A0A0",
+  },
+  iapStatusContainer: {
+    marginTop: 20,
+    backgroundColor: "#FFF3E0",
+    padding: 16,
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: "#FFB74D",
+    width: "100%",
+    alignItems: "center",
+    gap: 8,
+  },
+  iapStatusText: {
+    color: "#F57C00",
+    fontSize: 16,
+    fontWeight: "600",
+    textAlign: "center",
+  },
+  iapStatusSubtext: {
+    color: "#F57C00",
+    fontSize: 14,
+    fontWeight: "400",
+    textAlign: "center",
+  },
+  errorContainer: {
+    marginTop: 20,
+    backgroundColor: "#FFE6E6",
+    padding: 16,
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: "#FFB3B3",
+    width: "100%",
+    alignItems: "center",
+    gap: 10,
+  },
+  errorText: {
+    color: "#D32F2F",
+    fontSize: 14,
+    fontWeight: "500",
+    textAlign: "center",
+  },
+  contactSupportButton: {
+    backgroundColor: "#D32F2F",
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 6,
+  },
+  contactSupportText: {
+    color: "#FFFFFF",
+    fontSize: 14,
+    fontWeight: "500",
   },
 });
 
