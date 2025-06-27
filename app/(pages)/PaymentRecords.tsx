@@ -48,7 +48,7 @@ interface PaymentHistoryItem {
     responseCode: string;
     localizedPrice?: string;
   };
-  phonenumber: string;
+  phoneNumber: string;
   status: string;
   updatedAt: {
     nanoseconds: number;
@@ -71,7 +71,7 @@ const PaymentRecords: React.FC = () => {
   //   null;
 
   const phoneNumber = useSelector(
-    (state: RootState) => state?.agent?.docData?.phonenumber
+    (state: RootState) => state?.agent?.docData?.phoneNumber
   );
 
   const [paymentHistory, setPaymentHistory] =
@@ -84,7 +84,7 @@ const PaymentRecords: React.FC = () => {
       const querySnapshot = await getDocs(
         query(
           collection(db, "payments"),
-          where("phonenumber", "==", phoneNumber)
+          where("phoneNumber", "==", phoneNumber)
         )
       );
       let data: PaymentHistoryItem[] = [];

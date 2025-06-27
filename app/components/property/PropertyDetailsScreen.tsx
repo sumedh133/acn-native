@@ -63,7 +63,7 @@ const { width } = Dimensions.get("window");
 const StyledView = styled(View);
 const StyledText = styled(Text);
 interface AgentData {
-  phonenumber: string;
+  phoneNumber: string;
   [key: string]: any;
 }
 
@@ -153,7 +153,7 @@ export default function PropertyDetailsScreen() {
     (state: RootState) => state?.agent?.docData
   ) as AgentData;
   const phoneNumber = useSelector(
-    (state: RootState) => state?.agent?.docData?.phonenumber
+    (state: RootState) => state?.agent?.docData?.phoneNumber
   );
   const monthlyCredits = useSelector(
     (state: RootState) => state?.agent?.docData?.monthlyCredits
@@ -200,7 +200,7 @@ export default function PropertyDetailsScreen() {
 
       const newStatus = status;
       try {
-        await updateDoc(doc(db, "ACN123", id), {
+        await updateDoc(doc(db, "acnProperties", id), {
           status: newStatus,
           ageOfStatus: 0,
           dateOfStatusLastChecked: getUnixDateTime(),
@@ -643,7 +643,7 @@ export default function PropertyDetailsScreen() {
             </View>
           )}
         </View>
-        <Text style={styles.propertyName}>{property.nameOfTheProperty}</Text>
+        <Text style={styles.propertyName}>{property.propertyName}</Text>
 
         <View style={styles.locationInfo}>
           <View style={styles.infoItem}>
@@ -853,9 +853,16 @@ export default function PropertyDetailsScreen() {
             />
             <InfoRow
               label="Last Status Check"
-              value={timeAgo(
-                Date.now() / 1000 - property.dateOfStatusLastChecked
-              )}
+              value={
+                property.dateOfStatusLastChecked
+                  ? timeAgo(
+                      Math.max(
+                        0,
+                        Date.now() / 1000 - property.dateOfStatusLastChecked
+                      )
+                    )
+                  : "N/A"
+              }
             />
           </View>
         </View>

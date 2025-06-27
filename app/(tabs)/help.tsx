@@ -123,9 +123,9 @@ const HelpMobile: React.FC<HelpMobileProps> = () => {
   );
 
   const handleContactSupport = () => {
-    const phonenumber = "+917206498895";
-    Linking.openURL(`tel:${phonenumber}`);
-  }
+    const phoneNumber = "+917206498895";
+    Linking.openURL(`tel:${phoneNumber}`);
+  };
 
   const handleDelete = async () => {
     try {
@@ -136,7 +136,7 @@ const HelpMobile: React.FC<HelpMobileProps> = () => {
         user_type: userType,
       });
 
-      const agentRef = doc(db, "agents", agentData.cpId);
+      const agentRef = doc(db, "acnAgents", agentData.cpId);
       const agentSnapshot = await getDoc(agentRef);
 
       if (!agentSnapshot.exists()) {

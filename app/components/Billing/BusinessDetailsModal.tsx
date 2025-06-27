@@ -44,7 +44,9 @@ const BusinessDetailsModal: React.FC<BusinessDetailsModalProps> = ({
     useSelector((state: RootState) => state?.agent?.docData?.gstNo) || null;
   const cpId =
     useSelector((state: RootState) => state?.agent?.docData?.cpId) || null;
-  const userType = useSelector((state: RootState) => state?.agent?.docData?.userType) || "free";
+  const userType =
+    useSelector((state: RootState) => state?.agent?.docData?.userType) ||
+    "free";
 
   const [businessName, setBusinessName] = useState(bName || "");
   const [gstNo, setGstNo] = useState(gNum || "");
@@ -54,14 +56,14 @@ const BusinessDetailsModal: React.FC<BusinessDetailsModalProps> = ({
   useEffect(() => {
     if (isVisible) {
       try {
-        logEvent(analytics, 'view_business_details_modal', {
-          event_category: 'billing',
-          event_label: 'business_details',
+        logEvent(analytics, "view_business_details_modal", {
+          event_category: "billing",
+          event_label: "business_details",
           has_existing_details: !!(bName || gNum),
-          user_type: userType
+          user_type: userType,
         });
       } catch (error) {
-        console.error('Error logging modal view:', error);
+        console.error("Error logging modal view:", error);
       }
     }
   }, [isVisible, bName, gNum, userType]);
@@ -71,14 +73,14 @@ const BusinessDetailsModal: React.FC<BusinessDetailsModalProps> = ({
 
     if (!cpId) {
       try {
-        logEvent(analytics, 'business_details_error', {
-          event_category: 'billing',
-          event_label: 'error',
-          error_type: 'missing_cpid',
-          user_type: userType
+        logEvent(analytics, "business_details_error", {
+          event_category: "billing",
+          event_label: "error",
+          error_type: "missing_cpid",
+          user_type: userType,
         });
       } catch (error) {
-        console.error('Error logging submission error:', error);
+        console.error("Error logging submission error:", error);
       }
       showErrorToast("Unexpected Error Occured. Please try again later.");
       setSaving(false);
@@ -90,14 +92,14 @@ const BusinessDetailsModal: React.FC<BusinessDetailsModalProps> = ({
 
     if (!trimmedBusinessName && !trimmedGstNo) {
       try {
-        logEvent(analytics, 'business_details_error', {
-          event_category: 'billing',
-          event_label: 'error',
-          error_type: 'empty_fields',
-          user_type: userType
+        logEvent(analytics, "business_details_error", {
+          event_category: "billing",
+          event_label: "error",
+          error_type: "empty_fields",
+          user_type: userType,
         });
       } catch (error) {
-        console.error('Error logging validation error:', error);
+        console.error("Error logging validation error:", error);
       }
       showErrorToast("No data entered.");
       setSaving(false);
@@ -116,17 +118,17 @@ const BusinessDetailsModal: React.FC<BusinessDetailsModalProps> = ({
 
     if (Object.keys(updateDetails).length === 0) {
       try {
-        logEvent(analytics, 'business_details_error', {
-          event_category: 'billing',
-          event_label: 'error',
-          error_type: 'no_changes',
-          user_type: userType
+        logEvent(analytics, "business_details_error", {
+          event_category: "billing",
+          event_label: "error",
+          error_type: "no_changes",
+          user_type: userType,
         });
       } catch (error) {
-        console.error('Error logging no changes error:', error);
+        console.error("Error logging no changes error:", error);
       }
       showErrorToast(
-        "No changes detected. Please fill or change the details to submit.",
+        "No changes detected. Please fill or change the details to submit."
       );
       setSaving(false);
       return;
@@ -134,26 +136,26 @@ const BusinessDetailsModal: React.FC<BusinessDetailsModalProps> = ({
 
     try {
       // Track submission attempt
-      logEvent(analytics, 'business_details_submit', {
-        event_category: 'billing',
-        event_label: 'submit',
+      logEvent(analytics, "business_details_submit", {
+        event_category: "billing",
+        event_label: "submit",
         fields_updated: Object.keys(updateDetails),
         has_business_name: !!trimmedBusinessName,
         has_gst: !!trimmedGstNo,
-        user_type: userType
+        user_type: userType,
       });
 
-      const docRef = doc(db, "agents", cpId);
+      const docRef = doc(db, "acnAgents", cpId);
       await updateDoc(docRef, updateDetails);
 
       dispatch(updateAgentDocData(updateDetails));
 
       // Track successful update
-      logEvent(analytics, 'business_details_success', {
-        event_category: 'billing',
-        event_label: 'success',
+      logEvent(analytics, "business_details_success", {
+        event_category: "billing",
+        event_label: "success",
         fields_updated: Object.keys(updateDetails),
-        user_type: userType
+        user_type: userType,
       });
 
       showSuccessToast("Business details updated successfully");
@@ -166,12 +168,12 @@ const BusinessDetailsModal: React.FC<BusinessDetailsModalProps> = ({
       return;
     } catch (error) {
       // Track error
-      logEvent(analytics, 'business_details_error', {
-        event_category: 'billing',
-        event_label: 'error',
-        error_type: 'update_failed',
-        error_message: error instanceof Error ? error.message : 'Unknown error',
-        user_type: userType
+      logEvent(analytics, "business_details_error", {
+        event_category: "billing",
+        event_label: "error",
+        error_type: "update_failed",
+        error_message: error instanceof Error ? error.message : "Unknown error",
+        user_type: userType,
       });
       console.error(error);
       showErrorToast("Unexpected Error Occured. Please try again later.");

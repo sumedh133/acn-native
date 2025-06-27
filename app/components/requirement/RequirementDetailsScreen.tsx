@@ -42,16 +42,17 @@ export default function RequirementDetailsScreen() {
   const requirement = useSelector(selectRequirementStateData);
 
   const isConnectedToInternet = useSelector(
-    (state: RootState) => state.app.isConnectedToInternet,
+    (state: RootState) => state.app.isConnectedToInternet
   );
 
-  const userType = useSelector((state: RootState) => state.agent?.docData?.userType) || "free";
+  const userType =
+    useSelector((state: RootState) => state.agent?.docData?.userType) || "free";
 
   // If no requirement is provided, don't render anything
   if (!requirement) return null;
 
   const kam_phonenumber =
-    useSelector((state: RootState) => state?.kam?.kamDocData?.phonenumber) ||
+    useSelector((state: RootState) => state?.kam?.kamDocData?.phoneNumber) ||
     "";
 
   // Helper function to format budget display
@@ -85,34 +86,34 @@ export default function RequirementDetailsScreen() {
 
   // Handle WhatsApp button press
   const openWhatsapp = () => {
-    const phonenumber = kam_phonenumber;
+    const phoneNumber = kam_phonenumber;
     const reqId = requirement.requirementId;
 
-    if (phonenumber === "" || !reqId) {
+    if (phoneNumber === "" || !reqId) {
       showErrorToast("Some error occured! Please contact your kam.");
       return;
     }
 
     try {
-      logEvent(analytics, 'share_requirement_whatsapp', {
-        event_category: 'requirement',
-        event_label: 'share',
+      logEvent(analytics, "share_requirement_whatsapp", {
+        event_category: "requirement",
+        event_label: "share",
         requirement_id: reqId,
         requirement_type: requirement.assetType,
-        share_method: 'whatsapp',
-        user_type: userType
+        share_method: "whatsapp",
+        user_type: userType,
       });
     } catch (error) {
-      console.error('Error logging WhatsApp share:', error);
+      console.error("Error logging WhatsApp share:", error);
     }
 
     const message = encodeURIComponent(
-      `Hello, \nI want to submit a matching inventory for a requirement.\n\n*Requirement ID*: ${reqId}\n\nThe inventory details are as follows:\n`,
+      `Hello, \nI want to submit a matching inventory for a requirement.\n\n*Requirement ID*: ${reqId}\n\nThe inventory details are as follows:\n`
     );
 
-    const whatsappUrl = `https://wa.me/${phonenumber}?text=${message}`;
+    const whatsappUrl = `https://wa.me/${phoneNumber}?text=${message}`;
     Linking.openURL(whatsappUrl).catch((err) =>
-      console.error("Error opening WhatsApp:", err),
+      console.error("Error opening WhatsApp:", err)
     );
   };
 
@@ -121,16 +122,16 @@ export default function RequirementDetailsScreen() {
       setIsSubmitting(true);
 
       try {
-        logEvent(analytics, 'submit_matching_inventory', {
-          event_category: 'requirement',
-          event_label: 'submit',
+        logEvent(analytics, "submit_matching_inventory", {
+          event_category: "requirement",
+          event_label: "submit",
           requirement_id: requirement.requirementId,
           requirement_type: requirement.assetType,
-          submission_method: 'whatsapp',
-          user_type: userType
+          submission_method: "whatsapp",
+          user_type: userType,
         });
       } catch (error) {
-        console.error('Error logging inventory submission:', error);
+        console.error("Error logging inventory submission:", error);
       }
 
       // Call WhatsApp functionality
@@ -212,7 +213,7 @@ export default function RequirementDetailsScreen() {
                           day: "numeric",
                           month: "long",
                           year: "numeric",
-                        },
+                        }
                       )
                     : "-"
                 }

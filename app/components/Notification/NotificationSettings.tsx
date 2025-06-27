@@ -32,7 +32,7 @@ const NotificationSettings: React.FC = () => {
     const fetchSettings = async () => {
       if (!cpCode) return;
       setLoading(true);
-      const agentRef = doc(db, "agents", cpCode);
+      const agentRef = doc(db, "acnAgents", cpCode);
       const agentSnap = await getDoc(agentRef);
       let pref: NotificationPreference = "all";
       if (!agentSnap.exists()) {
@@ -53,7 +53,7 @@ const NotificationSettings: React.FC = () => {
 
   const updateSetting = async (pref: NotificationPreference) => {
     if (!cpCode) return;
-    const agentRef = doc(db, "agents", cpCode);
+    const agentRef = doc(db, "acnAgents", cpCode);
     await updateDoc(agentRef, { notificationPreference: pref });
   };
 

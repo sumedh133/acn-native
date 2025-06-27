@@ -46,7 +46,7 @@ export default async function submitRequirement(userRequirement, cpId) {
 
     const docRef = doc(db, "requirements", nextReqId);
     await setDoc(docRef, formData);
-    await updateDoc(doc(db, "agents", formData.agentCpid), {
+    await updateDoc(doc(db, "acnAgents", formData.agentCpid), {
       myRequirements: arrayUnion(nextReqId),
     });
     fetch(

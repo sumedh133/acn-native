@@ -55,7 +55,7 @@ const NotificationPage: React.FC<NotificationPageProps> = () => {
   const agentData = useSelector((state: RootState) => state?.agent?.docData);
   const userType = agentData?.userType || "free";
   const kamPhone = useSelector(
-    (state: RootState) => state?.kam?.kamDocData?.phonenumber
+    (state: RootState) => state?.kam?.kamDocData?.phoneNumber
   );
   const dispatch = useDispatch<ThunkDispatch<RootState, unknown, AnyAction>>();
   const {

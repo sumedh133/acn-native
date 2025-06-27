@@ -191,7 +191,7 @@ const PropertyCard = ({
 
           {/* Property Name */}
           <StyledText className="text-base font-bold text-black mt-2 mb-4">
-            {property.nameOfTheProperty}
+            {property.propertyName}
           </StyledText>
 
           {/* Tags section for Asset Type, Unit Type, and Facing */}

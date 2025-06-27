@@ -31,13 +31,13 @@ xi. Requirement Submitted
 ### a. Enquiry Sent -> `enquiry_buyer_notification`
 
 - `propertyId` – ID of the property enquired on
-- `nameOfTheProperty` - Name of the property enquired on
+- `propertyName` - Name of the property enquired on
 
 ### b. Enquiry Received -> `enquiry_seller_notification`
 
 - `propertyId` – ID of the property
 - `name` – Name of the user who enquired
-- `nameOfTheProperty` – Name of the property
+- `propertyName` – Name of the property
 - `image` – User image
 
 ### c. New Feature
@@ -58,13 +58,13 @@ xi. Requirement Submitted
 ### f. Inventory Became Live -> `listing_live_notification`
 
 - `propertyId` – ID of the property
-- `nameOfTheProperty` – Property name
+- `propertyName` – Property name
 - `cta` – View Details (redirect to property details page)
 
 ### g. Status Other Than Live -> `qc_notification`
 
 - `propertyId`
-- `nameOfTheProperty`
+- `propertyName`
 - `cta` – Call your KAM
 
 ### h. Purchased Credits -> `payment_notification`
@@ -73,7 +73,7 @@ xi. Requirement Submitted
 
 ### i. Listing Submit -> `add_inventory_notification`
 
-- `nameOfTheProperty` – Inventory name
+- `propertyName` – Inventory name
 
 ### j. Purchased Premium -> `payment_notification`
 

@@ -32,7 +32,7 @@ export const compulsoryFields: {
 } = {
   Apartment: [
     "communityType",
-    "nameOfTheProperty",
+    "propertyName",
     "subType",
     "sbua",
     "exactFloor",
@@ -42,7 +42,7 @@ export const compulsoryFields: {
   ],
   Villa: [
     "communityType",
-    "nameOfTheProperty",
+    "propertyName",
     "sbua",
     "structure",
     "facing",
@@ -51,14 +51,14 @@ export const compulsoryFields: {
   ],
   Plot: [
     "communityType",
-    "nameOfTheProperty",
+    "propertyName",
     "plotSize",
     "facing",
     "totalAskPrice",
   ],
   Villament: [
     "communityType",
-    "nameOfTheProperty",
+    "propertyName",
     "exactFloor",
     "sbua",
     "structure",
@@ -68,7 +68,7 @@ export const compulsoryFields: {
   ],
   "Row House": [
     "communityType",
-    "nameOfTheProperty",
+    "propertyName",
     "sbua",
     "structure",
     "facing",
@@ -77,7 +77,7 @@ export const compulsoryFields: {
   ],
   "Independent Building": [
     "communityType",
-    "nameOfTheProperty",
+    "propertyName",
     "sbua",
     "plotSize",
     "structure",

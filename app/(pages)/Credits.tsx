@@ -86,7 +86,10 @@ const useEnquiries = (): UseEnquiriesResult => {
           for (let i = 0; i < propertyIds.length; i += 30) {
             const batch = propertyIds.slice(i, i + 30);
             const properties = await getDocs(
-              query(collection(db, "ACN123"), where(documentId(), "in", batch))
+              query(
+                collection(db, "acnProperties"),
+                where(documentId(), "in", batch)
+              )
             );
             properties.docs.map((item) => {
               propertyDocs.set(item.id, item.data());
@@ -137,9 +140,9 @@ const Credits = () => {
   const monthlyCredits = useSelector(
     (state: RootState) => state?.agent?.docData?.monthlyCredits
   );
-  const boosterCredits = useSelector(
-    (state: RootState) => state?.agent?.docData?.boosterCredits
-  ) || 0;
+  const boosterCredits =
+    useSelector((state: RootState) => state?.agent?.docData?.boosterCredits) ||
+    0;
   const userType: string | null =
     useSelector((state: RootState) => state?.agent?.docData?.userType) || "";
 
@@ -152,7 +155,7 @@ const Credits = () => {
         event_category: "profile",
         event_label: "page_view",
         monthly_credits: monthlyCredits,
-        user_type: userType || "free"
+        user_type: userType || "free",
       });
     } catch (error) {
       console.error("Error logging page view:", error);
@@ -169,7 +172,7 @@ const Credits = () => {
         credit_amount: 5,
         event_category: "profile",
         event_label: "add_credits",
-        user_type: userType || "free"
+        user_type: userType || "free",
       });
     } catch (error) {
       console.error("Error logging analytics:", error);
@@ -186,7 +189,7 @@ const Credits = () => {
         event_category: "profile",
         event_label: "compare_plans",
         source: "credits_page",
-        user_type: userType || "free"
+        user_type: userType || "free",
       });
     } catch (error) {
       console.error("Error logging analytics:", error);
@@ -201,7 +204,7 @@ const Credits = () => {
         event_label: "view_more",
         source: "credits_page",
         enquiries_count: myEnquiries?.length || 0,
-        user_type: userType || "free"
+        user_type: userType || "free",
       });
     } catch (error) {
       console.error("Error logging analytics:", error);
@@ -219,7 +222,7 @@ const Credits = () => {
         event_label: "support",
         platform: Platform.OS,
         source: "credits_page",
-        user_type: userType || "free"
+        user_type: userType || "free",
       });
     } catch (error) {
       console.error("Error logging analytics:", error);
@@ -234,7 +237,7 @@ const Credits = () => {
         event_category: "profile",
         event_label: "enquiry_details",
         source: "credits_page",
-        property_name: enquiry.property?.nameOfTheProperty || "N/A",
+        property_name: enquiry.property?.propertyName || "N/A",
         enquiry_date: enquiry.added ? formatUnixDate(enquiry.added) : "N/A",
         user_type: userType || "free",
       });
@@ -303,17 +306,17 @@ const Credits = () => {
                 className=" text-lg text-[#433F3E] mb-2"
                 style={{ fontFamily: "Montserrat_700Bold" }}
               >
-                {Platform.OS === "ios"
+                {Platform.OS !== "android"
                   ? "Enquiry Booster Pack"
                   : "Need more enquiries?"}
               </Text>
               <Text className="font-medium text-sm text-[#433F3E] mb-4">
-                {Platform.OS === "ios"
+                {Platform.OS !== "android"
                   ? "Unlock agent contacts with 5 non-expiring credits"
                   : "Credits are needed to get agent's contact details on ACN Platform."}
               </Text>
 
-              {Platform.OS === "ios" ? null : (
+              {Platform.OS !== "android" ? null : (
                 <View className="flex-row justify-between items-center mb-4">
                   <View>
                     <Text
@@ -353,7 +356,7 @@ const Credits = () => {
                 </Text>
               </View>
 
-              {Platform.OS === "ios" ? (
+              {Platform.OS !== "android" ? (
                 <View className="mt-4">
                   <Text className="text-sm">
                     <Text className="font-bold">Note:</Text>{" "}
@@ -405,7 +408,7 @@ const Credits = () => {
                   >
                     <View className="flex-1">
                       <Text className="font-lato text-sm font-medium text-gray-900">
-                        {enquiry.property?.nameOfTheProperty ||
+                        {enquiry.property?.propertyName ||
                           "Property Name Not Available"}
                       </Text>
                       <Text className="font-lato text-xs text-gray-500 mt-1">

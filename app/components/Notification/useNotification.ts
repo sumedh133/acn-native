@@ -110,7 +110,7 @@ export default function useNotification() {
   const getToken = async () => {
     try {
       const token = await messaging().getToken();
-      const docRef = doc(db, "agents", cpId);
+      const docRef = doc(db, "acnAgents", cpId);
       await updateDoc(docRef, {
         fsmToken: arrayUnion(token),
       });

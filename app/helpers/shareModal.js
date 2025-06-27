@@ -52,7 +52,7 @@ const shortenUrl = async (longUrl) => {
 };
 
 export const createPropertyMessage = async (property, agentNumber) => {
-  const projectName = property.nameOfTheProperty || "Unnamed Project";
+  const projectName = property.propertyName || "Unnamed Project";
 
   const shortDriveLink = property.driveLink
     ? await shortenUrl(property.driveLink)

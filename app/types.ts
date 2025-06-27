@@ -26,7 +26,7 @@ export interface Property {
   landKhata?: string | null;
   mapLocation?: string | null;
   micromarket?: string | null;
-  nameOfTheProperty?: string | null;
+  propertyName?: string | null;
   ocReceived?: boolean | null;
   plotSize?: number | null;
   propertyId?: string | null;

@@ -53,7 +53,7 @@ const CheckoutScreen: React.FC = () => {
       cpId = null,
       userType = "free",
     } = {},
-    phonenumber: phoneNumber = null,
+    phoneNumber: phoneNumber = null,
   } = userData || {};
 
   // Component state
@@ -186,7 +186,7 @@ const CheckoutScreen: React.FC = () => {
         user_type: userType,
       });
 
-      const agentRef = doc(db, "agents", cpId);
+      const agentRef = doc(db, "acnAgents", cpId);
 
       // Get current document to access existing payment history
       const agentSnap = await getDoc(agentRef);

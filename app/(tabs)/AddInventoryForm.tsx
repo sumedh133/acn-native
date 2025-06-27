@@ -93,7 +93,7 @@ const initialState: ListingProperty = {
   landKhata: null,
   mapLocation: null,
   micromarket: null,
-  nameOfTheProperty: null,
+  propertyName: null,
   noOfBalconies: null,
   noOfBathrooms: null,
   ocReceived: false,
@@ -541,7 +541,7 @@ const AddInventoryForm = () => {
   };
 
   const fieldLabels: { [key in keyof ListingProperty]: string } = {
-    nameOfTheProperty:
+    propertyName:
       property.communityType === "Independent"
         ? "Nearby LandMark"
         : "Project Name",
@@ -693,7 +693,7 @@ const AddInventoryForm = () => {
 
   const getName = () => {
     if (property.communityType === "Gated") {
-      return property.nameOfTheProperty;
+      return property.propertyName;
     } else if (property.assetType === "Independent Building") {
       return `${property.assetType} in ${property.micromarket}`;
     } else {
@@ -856,7 +856,7 @@ const AddInventoryForm = () => {
 
       const floorNo = getFloor();
 
-      const nameOfTheProperty = getName();
+      const propertyName = getName();
 
       const currentStatus = getCurrentStatus();
 
@@ -883,7 +883,7 @@ const AddInventoryForm = () => {
         askPricePerSqft,
         totalAskPrice,
         floorNo,
-        nameOfTheProperty,
+        propertyName,
         currentStatus,
         unitType: unitType,
         kamStatus: "pending",
@@ -990,7 +990,7 @@ const AddInventoryForm = () => {
         user_type: userType,
       });
 
-      if (!property.assetType || !property.nameOfTheProperty) {
+      if (!property.assetType || !property.propertyName) {
         logEvent(analytics, "inventory_draft_error", {
           event_category: "inventory",
           event_label: "error",
@@ -1119,7 +1119,7 @@ const AddInventoryForm = () => {
     } else {
       setProperty((prev) => ({
         ...initialState,
-        nameOfTheProperty: prev.nameOfTheProperty,
+        propertyName: prev.propertyName,
         address: prev.address,
         mapLocation: prev.mapLocation,
         micromarket: prev.micromarket,
@@ -1145,7 +1145,7 @@ const AddInventoryForm = () => {
 
       setProperty((prevProperty) => ({
         ...prevProperty,
-        nameOfTheProperty: selectedPlace.name,
+        propertyName: selectedPlace.name,
         address: selectedPlace.address,
         mapLocation: selectedPlace.mapLocation,
         micromarket: mm[0],
@@ -1156,9 +1156,9 @@ const AddInventoryForm = () => {
         },
       }));
       setIsNew(false);
-    } else if (!selectedPlace && property.nameOfTheProperty && item && isNew) {
+    } else if (!selectedPlace && property.propertyName && item && isNew) {
       setSelectedPlace({
-        name: property?.nameOfTheProperty,
+        name: property?.propertyName,
         lat: property?._geoloc?.lat || null,
         lng: property?._geoloc?.lng || null,
         address: property?.address || null,
@@ -1168,7 +1168,7 @@ const AddInventoryForm = () => {
     } else {
       setProperty((prevProperty) => ({
         ...prevProperty,
-        nameOfTheProperty: null,
+        propertyName: null,
         address: null,
         mapLocation: null,
         micromarket: null,
@@ -1198,7 +1198,7 @@ const AddInventoryForm = () => {
         if (
           !saveAsDraftModalVisible &&
           property.assetType &&
-          property.nameOfTheProperty
+          property.propertyName
         ) {
           setSaveAsDraftModalVisible(true);
           return true; // Prevent default back behavior
@@ -1228,7 +1228,7 @@ const AddInventoryForm = () => {
           <View style={styles.headerLeft}>
             <TouchableOpacity
               onPress={() => {
-                if (property.assetType && property.nameOfTheProperty)
+                if (property.assetType && property.propertyName)
                   setSaveAsDraftModalVisible(true);
                 else router.back();
               }}

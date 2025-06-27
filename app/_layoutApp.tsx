@@ -143,7 +143,7 @@ export default function LayoutApp() {
   const userType = agentData?.userType || "free";
   const userName = agentData?.name || "";
   const userPhoneNumber = useSelector(
-    (state: RootState) => state.agent.phonenumber
+    (state: RootState) => state.agent.phoneNumber
   );
   const isAuthenticated = useSelector(
     (state: RootState) => state.auth.isAuthenticated

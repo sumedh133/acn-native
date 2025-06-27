@@ -40,38 +40,41 @@ const ShareModal: React.FC<ShareModalProps> = ({
   setProfileModalOpen,
 }) => {
   const dispatch = useDispatch();
-  const phoneNumber = useSelector((state: any) => state.agent.phonenumber);
-  const userType = useSelector((state: RootState) => state?.agent?.docData?.userType) || "free";
+  const phoneNumber = useSelector((state: any) => state.agent.phoneNumber);
+  const userType =
+    useSelector((state: RootState) => state?.agent?.docData?.userType) ||
+    "free";
 
   useEffect(() => {
     if (visible) {
       try {
-        logEvent(analytics, 'share_modal_show', {
-          event_category: 'modal',
-          event_label: 'share',
+        logEvent(analytics, "share_modal_show", {
+          event_category: "modal",
+          event_label: "share",
           property_id: property?.id,
-          user_type: userType
+          user_type: userType,
         });
       } catch (error) {
-        console.error('Error logging modal show:', error);
+        console.error("Error logging modal show:", error);
       }
     }
   }, [visible]);
 
   const handleCopy = async () => {
+    console.log("property", property);
     try {
       let details = await createPropertyMessage(
         property,
-        agentData?.phonenumber,
+        agentData?.phoneNumber
       );
       details = decodeURIComponent(details);
-      
-      logEvent(analytics, 'share_action', {
-        event_category: 'modal',
-        event_label: 'share',
-        action: 'copy',
+
+      logEvent(analytics, "share_action", {
+        event_category: "modal",
+        event_label: "share",
+        action: "copy",
         property_id: property?.id,
-        user_type: userType
+        user_type: userType,
       });
 
       showSuccessToast("Inventory details copied Successfully!", {
@@ -86,16 +89,16 @@ const ShareModal: React.FC<ShareModalProps> = ({
 
   const handleShare = () => {
     try {
-      logEvent(analytics, 'share_action', {
-        event_category: 'modal',
-        event_label: 'share',
-        action: 'whatsapp',
+      logEvent(analytics, "share_action", {
+        event_category: "modal",
+        event_label: "share",
+        action: "whatsapp",
         property_id: property?.id,
-        user_type: userType
+        user_type: userType,
       });
-      shareProperty(property, agentData?.phonenumber, phoneNumber);
+      shareProperty(property, agentData?.phoneNumber, phoneNumber);
     } catch (error) {
-      console.error('Error in share action:', error);
+      console.error("Error in share action:", error);
     }
   };
 

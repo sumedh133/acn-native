@@ -101,7 +101,7 @@ export const {
 export const selectKamState = (state: any) => state?.kam;
 export const selectKamName = (state: any) => state?.kam?.kamDocData?.name || "";
 export const selectKamNumber = (state: any) =>
-  state?.kam?.kamDocData?.phonenumber || "";
+  state?.kam?.kamDocData?.phoneNumber || "";
 export const selectKamModalVisible = (state: any) =>
   state?.kam?.kamModalVisible || false;
 

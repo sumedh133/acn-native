@@ -22,11 +22,11 @@ import { logEvent } from "@react-native-firebase/analytics";
 
 export const setAgentDataState = createAsyncThunk(
   "agent/setAgentDataState",
-  async (phonenumber: string, { rejectWithValue, dispatch }) => {
+  async (phoneNumber: string, { rejectWithValue, dispatch }) => {
     try {
       const q = query(
-        collection(db, "agents"),
-        where("phonenumber", "==", phonenumber)
+        collection(db, "acnAgents"),
+        where("phoneNumber", "==", phoneNumber)
       );
       const querySnapshot = await getDocs(q);
 
@@ -35,7 +35,7 @@ export const setAgentDataState = createAsyncThunk(
         return {
           docData: docSnap.data(),
           docId: docSnap.id,
-          phonenumber,
+          phoneNumber,
         };
       } else {
         dispatch(signOut());
@@ -51,7 +51,7 @@ export const listenToAgentChanges =
   (agentId: string): ThunkAction<void, RootState, unknown, AnyAction> =>
   (dispatch, getState) => {
     dispatch(clearAgentListener());
-    const docRef = doc(db, "agents", agentId);
+    const docRef = doc(db, "acnAgents", agentId);
 
     let previousVerificationStatus: boolean | undefined;
     let isInitialSnapshot = true;
@@ -70,7 +70,7 @@ export const listenToAgentChanges =
                 event_category: "auth",
                 event_label: "verification",
                 status: currentVerificationStatus ? "verified" : "unverified",
-                phone_number: newData.phonenumber,
+                phone_number: newData.phoneNumber,
                 user_type: newData.userType || "free",
               });
             } catch (error) {
@@ -94,7 +94,7 @@ export const listenToAgentChanges =
                 previous_status: previousVerificationStatus
                   ? "verified"
                   : "unverified",
-                phone_number: newData.phonenumber,
+                phone_number: newData.phoneNumber,
                 user_type: newData.userType || "free",
                 verified_at: newData.verifiedAt || null,
                 verified_by: newData.verifiedBy || null,
@@ -160,14 +160,14 @@ const agentSlice = createSlice({
   initialState: {
     loading: false,
     error: null as string | null,
-    phonenumber: null as string | null,
+    phoneNumber: null as string | null,
     docData: null as any,
     docId: null as string | null,
     isAgentInDb: false,
   },
   reducers: {
     setPhonenumber: (state, action) => {
-      state.phonenumber = action.payload;
+      state.phoneNumber = action.payload;
     },
     setUserDoc: (state, action) => {
       const { docData, docId } = action.payload;
@@ -193,7 +193,7 @@ const agentSlice = createSlice({
     resetAgentState: (state) => {
       state.loading = false;
       state.error = null;
-      state.phonenumber = null;
+      state.phoneNumber = null;
       state.docData = null;
       state.docId = null;
       state.isAgentInDb = false;

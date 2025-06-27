@@ -197,7 +197,7 @@ const BillingContainer: React.FC<BillingContainerProps> = ({
   const gstNo =
     useSelector((state: RootState) => state?.agent?.docData?.gstNo) || null;
   const phoneNumber =
-    useSelector((state: RootState) => state?.agent?.phonenumber) || null;
+    useSelector((state: RootState) => state?.agent?.phoneNumber) || null;
   const cpId =
     useSelector((state: RootState) => state?.agent?.docData?.cpId) || null;
 

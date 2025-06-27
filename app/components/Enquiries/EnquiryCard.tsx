@@ -126,7 +126,7 @@ const EnquiryCard: React.FC<CardProps> = ({ index, enquiry }) => {
             className=" text-black text-base"
             style={{ fontFamily: "Montserrat_700Bold" }}
           >
-            {enquiry?.property?.nameOfTheProperty || "N/A"}
+            {enquiry?.property?.propertyName || "N/A"}
           </Text>
         </View>
 

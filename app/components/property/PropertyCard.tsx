@@ -67,7 +67,7 @@ const PropertyCard: React.FC<PropertyCardProps> = ({ property }) => {
   const [isGeneratingEnquiry, setIsGeneratingEnquiry] = useState(false);
   const agentData = useSelector((state: RootState) => state.agent.docData);
   const phoneNumber = useSelector(
-    (state: RootState) => state?.agent?.docData?.phonenumber
+    (state: RootState) => state?.agent?.docData?.phoneNumber
   );
   const monthlyCredits = useSelector(
     (state: RootState) => state?.agent?.docData?.monthlyCredits
@@ -113,7 +113,7 @@ const PropertyCard: React.FC<PropertyCardProps> = ({ property }) => {
 
   // Get property name with first letter capitalized
   const getPropertyName = () => {
-    const name = property.nameOfTheProperty || "";
+    const name = property.propertyName || "";
     if (!name) return "Unnamed Property";
     return name.charAt(0).toUpperCase() + name.slice(1);
   };
@@ -157,7 +157,7 @@ const PropertyCard: React.FC<PropertyCardProps> = ({ property }) => {
     }
 
     setSelectedCPID(property.cpCode || "");
-    if ((monthlyCredits + boosterCredits) > 0) {
+    if (monthlyCredits + boosterCredits > 0) {
       setIsConfirmModelOpen(true);
       return;
     } else {
@@ -220,7 +220,7 @@ const PropertyCard: React.FC<PropertyCardProps> = ({ property }) => {
       return;
     }
 
-    if (!((monthlyCredits + boosterCredits) > 0)) {
+    if (!(monthlyCredits + boosterCredits > 0)) {
       showErrorToast(
         "You don't have enough credits. Please contact your account manager."
       );
@@ -312,7 +312,7 @@ const PropertyCard: React.FC<PropertyCardProps> = ({ property }) => {
   };
 
   // Function to open property details screen with routing
-  const openPropertyDetails = () => {
+  const openPropertyDetails = async () => {
     try {
       logEvent(analytics, "property_details_view", {
         event_category: "property",
@@ -450,9 +450,9 @@ const PropertyCard: React.FC<PropertyCardProps> = ({ property }) => {
           </View>
 
           {/* Buttons for Drive Details and Enquire Now */}
-          <View className="flex-row gap-3 mt-1">
+          <View className="flex-row gap-3">
             {/* Drive Details Button */}
-            <TouchableOpacity
+            {/* <TouchableOpacity
               className="flex-1 border border-[#153E3B] rounded-md py-2 flex-row justify-center items-center"
               onPress={handleOpenDriveDetails}
             >
@@ -463,7 +463,7 @@ const PropertyCard: React.FC<PropertyCardProps> = ({ property }) => {
               >
                 Details
               </Text>
-            </TouchableOpacity>
+            </TouchableOpacity> */}
 
             {/* Enquire Now Button */}
             <TouchableOpacity
