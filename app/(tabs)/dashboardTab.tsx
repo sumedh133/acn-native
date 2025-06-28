@@ -30,6 +30,7 @@ import {
   Enquiry,
   EnquiryWithProperty,
   ListingProperty,
+  IReview,
 } from "../types";
 import Dashboard from "../components/dashboard/Dashboard";
 import { RootState } from "@/store/store";
@@ -48,7 +49,7 @@ interface UseEnquiriesResult {
   myEnquiries: EnquiryWithProperty[];
   loading: boolean;
   error: string | null;
-  handleGiveReview: (enqId: string, review: {}) => void;
+  handleGiveReview: (enqId: string, reviews: IReview) => void;
 }
 
 interface UseListingResult {
@@ -85,7 +86,7 @@ const useEnquiries = (): UseEnquiriesResult => {
     try {
       // Create the query the same way as before
       const enquiriesQuery = query(
-        collection(db, "enquiries"),
+        collection(db, "acnEnquiries"),
         where("cpId", "==", cpId)
       );
 
@@ -95,7 +96,7 @@ const useEnquiries = (): UseEnquiriesResult => {
         async (snapshot) => {
           const enquiriesData: Enquiry[] = snapshot.docs.map((docSnap) => ({
             id: docSnap.id,
-            ...docSnap.data(),
+            ...(docSnap.data() as Enquiry),
           }));
 
           // Track enquiries data load
@@ -177,7 +178,7 @@ const useEnquiries = (): UseEnquiriesResult => {
     }
   }, [cpId, userType]);
 
-  const handleGiveReview = (enqId: string, review: {}) => {
+  const handleGiveReview = (enqId: string, reviews: IReview) => {
     try {
       logEvent(analytics, "enquiry_review_added", {
         event_category: "dashboard",
@@ -193,8 +194,8 @@ const useEnquiries = (): UseEnquiriesResult => {
       prev.map((enq) => {
         return enq.enquiryId === enqId
           ? enq?.reviews?.length
-            ? { ...enq, reviews: [...enq.reviews, review] }
-            : { ...enq, reviews: [review] }
+            ? { ...enq, reviews: [...enq.reviews, reviews] }
+            : { ...enq, reviews: [reviews] }
           : enq;
       })
     );
@@ -334,8 +335,8 @@ const useRequirements = () => {
 
     try {
       const q = query(
-        collection(db, "requirements"),
-        where("agentCpid", "==", cpId)
+        collection(db, "acnRequirements"),
+        where("cpId", "==", cpId)
       );
 
       // Set up real-time listener
@@ -444,7 +445,7 @@ const useListings = (): UseListingResult => {
 
     try {
       const q = query(
-        collection(db, "QC_Inventories"),
+        collection(db, "acnQCInventories"),
         where("cpId", "==", cpId),
         orderBy("propertyId", "desc")
       );

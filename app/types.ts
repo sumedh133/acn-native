@@ -1,47 +1,47 @@
 export interface GeoLocation {
-    lat: number;
-    long: number;
+  lat: number | null;
+  lng: number | null;
 }
 
 export interface Property {
-    id: string
-    propertyId: string
-    cpId: string
-    propertyName: string
-    _geoloc: GeoLocation
-    area: string
-    builerName: string
-    builderCategory: string
-    micromarket: string
-    mapLocation: string
-    assetType: string
-    unitType: string
-    subType: string | null | undefined
-    sbua: number
-    carpet: number | null
-    plotSize: number | null
-    buildingAge: number | null
-    floorNo: string
-    facing: string
-    tenanted: boolean | null
-    totalAskPrice: number
-    askPricePerSqft: number
-    status: string
-    currentStatus: string
-    builderName: string | null
-    handoverDate: number | null
-    buildingKhata: string | null
-    landKhata: string | null
-    ocReceived: boolean | null
-    photo: string[]
-    video: string[]
-    document: string[]
-    driveLink: string
-    dateOfInventoryAdded: number
-    dateOfStatusLastChecked: number
-    ageOfInventory: number
-    ageOfStatus: number
-    extraDetails: string
+  id: string;
+  propertyId: string | null;
+  cpId: string | null;
+  propertyName: string | null;
+  _geoloc: GeoLocation;
+  area: string | null;
+  builerName: string | null;
+  builderCategory: string | null;
+  micromarket: string | null;
+  mapLocation: string | null;
+  assetType: string | null;
+  unitType: string | null;
+  subType: string | null | undefined;
+  sbua: number | null;
+  carpet: number | null;
+  plotSize: number | null;
+  buildingAge: number | null;
+  floorNo: string | null;
+  facing: string | null;
+  tenanted: boolean | null;
+  totalAskPrice: number | null;
+  askPricePerSqft: number;
+  status: string | null;
+  currentStatus: string | null;
+  builderName: string | null;
+  handoverDate: number | null;
+  buildingKhata: string | null;
+  landKhata: string | null;
+  ocReceived: boolean | null;
+  photo: string[];
+  video: string[];
+  document: string[];
+  driveLink: string | null;
+  dateOfInventoryAdded: number;
+  dateOfStatusLastChecked: number;
+  ageOfInventory: number;
+  ageOfStatus: number;
+  extraDetails: string | null;
 }
 
 export interface Budget {
@@ -50,34 +50,40 @@ export interface Budget {
 }
 
 export interface Requirement {
-    requirementId: string
-    agentPhoneNumber: string
-    agentName: string
-    cpId: string
-    assetType: 'villa' | 'apartment' | 'plot' | 'commercial' | 'warehouse' | 'office'
-    configuration: '1 bhk' | '2 bhk' | '3 bhk' | '4 bhk' | '5+ bhk' | null
-    micromarket: string
-    budget: Budget
-    area: number
-    kamId: string
-    kamName: string
-    kamPhoneNumber: string
-    bedrooms: string
-    bathrooms: string
-    parking: string
-    propertyName: string
-    extraDetails: string
-    marketValue: string
-    requirementStatus: 'open' | 'close'
-    internalStatus: 'found' | 'not found' | 'pending'
-    added: number
-    lastModified: number
-    matchingProperties: string[]
+  requirementId: string;
+  agentPhoneNumber: string;
+  agentName: string;
+  cpId: string;
+  assetType:
+    | "villa"
+    | "apartment"
+    | "plot"
+    | "commercial"
+    | "warehouse"
+    | "office";
+  configuration: "1 bhk" | "2 bhk" | "3 bhk" | "4 bhk" | "5+ bhk" | null;
+  micromarket: string;
+  budget: Budget;
+  area: number;
+  kamId: string;
+  kamName: string;
+  kamPhoneNumber: string;
+  bedrooms: string;
+  bathrooms: string;
+  parking: string;
+  propertyName: string;
+  extraDetails: string;
+  marketValue: string;
+  requirementStatus: "open" | "close";
+  internalStatus: "found" | "not found" | "pending";
+  added: number;
+  lastModified: number;
+  matchingProperties: string[];
 }
 
 // ==================== ENQUIRY TYPES ====================
 
-interface IReview {
+export interface IReview {
   review: string;
   stars: number;
   timestamp: number;
@@ -165,6 +171,9 @@ export interface ListingProperty extends Property {
   carPark?: number | null;
   communityType?: string | null;
   cornerUnit?: boolean | null;
+  eKhata?: boolean | null;
+  exactFloor?: number | null;
+  exclusive?: boolean | null;
   furnishing?: string | null;
   balconyFacing?: string | null;
   kamId?: string | null;

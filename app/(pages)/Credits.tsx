@@ -64,7 +64,7 @@ const useEnquiries = (): UseEnquiriesResult => {
     try {
       // Create the query the same way as before
       const enquiriesQuery = query(
-        collection(db, "enquiries"),
+        collection(db, "acnEnquiries"),
         where("cpId", "==", cpId)
       );
 
@@ -73,8 +73,7 @@ const useEnquiries = (): UseEnquiriesResult => {
         enquiriesQuery,
         async (snapshot) => {
           const enquiriesData: Enquiry[] = snapshot.docs.map((docSnap) => ({
-            id: docSnap.id,
-            ...docSnap.data(),
+            ...(docSnap.data() as Enquiry),
           }));
 
           // Now fetch property details for each of myEnquiries - keeping your original logic

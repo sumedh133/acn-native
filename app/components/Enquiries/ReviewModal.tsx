@@ -121,7 +121,7 @@ const ReviewModal: React.FC<Props> = ({ isOpen, onClose, enqId }) => {
       });
 
       const q = query(
-        collection(db, "enquiries"),
+        collection(db, "acnEnquiries"),
         where("enquiryId", "==", enqId)
       );
 

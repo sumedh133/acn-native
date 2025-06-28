@@ -38,9 +38,9 @@ const requirementSlice = createSlice({
       state.requirementId = requirementId!;
       state.requirementDocData = action.payload;
     },
-    setRequirementStatus: (state, action: PayloadAction<string | null>) => {
+    setRequirementStatus: (state, action: PayloadAction<"open" | "close">) => {
       if (state.requirementDocData) {
-        state.requirementDocData.status = action.payload;
+        state.requirementDocData.requirementStatus = action.payload;
       }
     },
     resetRequirementState: (state) => {
@@ -72,7 +72,7 @@ export const {
 // Thunk action to set requirement data
 export const setRequirementDataThunk =
   (
-    requirement: Requirement,
+    requirement: Requirement
   ): ThunkAction<void, RootState, unknown, AnyAction> =>
   (dispatch, getState) => {
     dispatch(setRequirementData(requirement));

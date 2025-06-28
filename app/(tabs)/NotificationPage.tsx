@@ -23,7 +23,7 @@ import useNotification from "../components/Notification/useNotification";
 import Checkmark from "@/assets/icons/InAppNotifications/Checkmark";
 import DoubleCheck from "@/assets/icons/InAppNotifications/DoubleCheck";
 import { useRouter } from "expo-router";
-import { NotificationItem, Requirement } from "../types";
+import { NotificationItem, Property, Requirement } from "../types";
 import { setPropertyDataThunk } from "@/store/slices/propertySlice";
 import { setRequirementDataThunk } from "@/store/slices/requirementSlice";
 import { useDispatch } from "react-redux";
@@ -88,11 +88,11 @@ const NotificationPage: React.FC<NotificationPageProps> = () => {
 
   const fetchAndDispatchProperty = async (propertyId: string) => {
     try {
-      const propertyRef = doc(db, "properties", propertyId);
+      const propertyRef = doc(db, "acnProperties", propertyId);
       const propertySnap = await getDoc(propertyRef);
 
       if (propertySnap.exists()) {
-        const propertyData = propertySnap.data();
+        const propertyData = propertySnap.data() as Property;
         dispatch(setPropertyDataThunk(propertyData));
         router.push({
           pathname: "/components/property/PropertyDetailsScreen",

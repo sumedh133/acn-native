@@ -44,7 +44,7 @@ export default async function submitRequirement(userRequirement, cpId) {
       status: "Pending",
     };
 
-    const docRef = doc(db, "requirements", nextReqId);
+    const docRef = doc(db, "acnRequirements", nextReqId);
     await setDoc(docRef, formData);
     await updateDoc(doc(db, "acnAgents", formData.agentCpid), {
       myRequirements: arrayUnion(nextReqId),

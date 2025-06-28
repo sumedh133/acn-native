@@ -23,14 +23,14 @@ const EnquiryCard: React.FC<CardProps> = ({ index, enquiry }) => {
 
   useEffect(() => {
     try {
-      logEvent(analytics, 'enquiry_card_view', {
-        event_category: 'enquiries',
-        event_label: 'impression',
+      logEvent(analytics, "enquiry_card_view", {
+        event_category: "enquiries",
+        event_label: "impression",
         position_index: index,
-        user_type: userType
+        user_type: userType,
       });
     } catch (error) {
-      console.error('Error logging enquiry card view:', error);
+      console.error("Error logging enquiry card view:", error);
     }
   }, []);
 
@@ -38,26 +38,26 @@ const EnquiryCard: React.FC<CardProps> = ({ index, enquiry }) => {
     e.preventDefault();
     e.stopPropagation();
     try {
-      logEvent(analytics, 'review_modal_open', {
-        event_category: 'enquiries',
-        event_label: 'interaction',
-        user_type: userType
+      logEvent(analytics, "review_modal_open", {
+        event_category: "enquiries",
+        event_label: "interaction",
+        user_type: userType,
       });
     } catch (error) {
-      console.error('Error logging review modal open:', error);
+      console.error("Error logging review modal open:", error);
     }
     setIsReviewModalOpen(true);
   };
 
   const handleOpenPropertyDetails = () => {
     try {
-      logEvent(analytics, 'enquiry_property_details_view', {
-        event_category: 'enquiries',
-        event_label: 'navigation',
-        user_type: userType
+      logEvent(analytics, "enquiry_property_details_view", {
+        event_category: "enquiries",
+        event_label: "navigation",
+        user_type: userType,
       });
     } catch (error) {
-      console.error('Error logging property details view:', error);
+      console.error("Error logging property details view:", error);
     }
 
     if (enquiry?.property) {

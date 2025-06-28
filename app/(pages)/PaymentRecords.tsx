@@ -83,7 +83,7 @@ const PaymentRecords: React.FC = () => {
       setIsLoading(true);
       const querySnapshot = await getDocs(
         query(
-          collection(db, "payments"),
+          collection(db, "acnPayments"),
           where("phoneNumber", "==", phoneNumber)
         )
       );
@@ -170,7 +170,7 @@ const PaymentRecords: React.FC = () => {
         title: isPremiumPlan ? "ACN Premium Plan" : "Enquiry Booster Pack",
         amount:
           item?.platform === "ios"
-            ? item.data.localizedPrice
+            ? item.data.localizedPrice ?? ""
             : `₹${(paymentAmount / 100).toFixed(2)}`,
         date: dateString,
         status:

@@ -56,15 +56,19 @@ const API_URL = "https://uploadtodrive-ouurm6pska-uc.a.run.app";
 
 const initialState: ListingProperty = {
   _geoloc: {
-    lat: null,
-    lng: null,
+    lat: 0,
+    lng: 0,
   },
+  id: "",
   address: null,
   ageOfInventory: 0,
   ageOfStatus: 0,
   area: null,
-  askPricePerSqft: null,
+  askPricePerSqft: 0,
   assetType: null,
+  builerName: null,
+  builderCategory: null,
+  builderName: null,
   biappaApproved: false,
   bdaApproved: false,
   buildingAge: null,
@@ -75,8 +79,8 @@ const initialState: ListingProperty = {
   cornerUnit: false,
   cpId: null,
   currentStatus: null,
-  dateOfInventoryAdded: null,
-  dateOfStatusLastChecked: null,
+  dateOfInventoryAdded: 0,
+  dateOfStatusLastChecked: 0,
   driveLink: null,
   eKhata: false,
   exactFloor: null,
@@ -540,7 +544,7 @@ const AddInventoryForm = () => {
     setGrayed(true);
   };
 
-  const fieldLabels: { [key in keyof ListingProperty]: string } = {
+  const fieldLabels: { [K in keyof ListingProperty]?: string } = {
     propertyName:
       property.communityType === "Independent"
         ? "Nearby LandMark"
@@ -729,7 +733,7 @@ const AddInventoryForm = () => {
 
     if (crStatus) {
       return "Ready to move";
-    } else if (isUnderConstruction(handover)) {
+    } else if (handover && isUnderConstruction(handover.toString())) {
       return "Under Construction";
     } else {
       return "Unconfirmed";
@@ -743,7 +747,7 @@ const AddInventoryForm = () => {
       if (unit) {
         unit[0] += ".5";
       }
-      unitType = unit?.join(" ");
+      unitType = unit?.join(" ") || null;
     }
     return unitType;
   };
@@ -877,7 +881,7 @@ const AddInventoryForm = () => {
         return;
       }
 
-      const autoFields: ListingProperty = {
+      const autoFields: Partial<ListingProperty> = {
         propertyId: propId,
         dateOfInventoryAdded: getUnixDateTime(),
         dateOfStatusLastChecked: getUnixDateTime(),
@@ -934,7 +938,7 @@ const AddInventoryForm = () => {
       };
 
       console.log("dataToSave", dataToSave);
-      await setDoc(doc(db, "QC_Inventories", propId), dataToSave);
+      await setDoc(doc(db, "acnQCInventories", propId), dataToSave);
       console.log("Document successfully written with ID:", propId);
       showSuccessToast("Property sent for verification!");
       handleSetValue("propertyId", propId);
@@ -1017,7 +1021,7 @@ const AddInventoryForm = () => {
         return;
       }
 
-      const autoFields: ListingProperty = {
+      const autoFields: Partial<ListingProperty> = {
         propertyId: propId,
         lastModified: getUnixDateTime(),
         cpId: agentData.cpId,
@@ -1062,7 +1066,7 @@ const AddInventoryForm = () => {
       };
       console.log(property);
 
-      await setDoc(doc(db, "QC_Inventories", propId), dataToSave);
+      await setDoc(doc(db, "acnQCInventories", propId), dataToSave);
       showSuccessToast("Property saved as draft successfully!");
       handleSetValue("propertyId", propId);
       setSavingDraft(false);

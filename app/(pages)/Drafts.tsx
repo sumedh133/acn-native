@@ -43,7 +43,7 @@ const DraftsScreen: React.FC = () => {
   const deleteDraft = useCallback(
     async (id: string) => {
       try {
-        await deleteDoc(doc(db, "QC_Inventories", id));
+        await deleteDoc(doc(db, "acnQCInventories", id));
         setDrafts((prev) => prev?.filter((draft) => draft.propertyId !== id));
         logEvent(analytics, "draft_delete", {
           event_category: "drafts",
@@ -114,7 +114,7 @@ const DraftsScreen: React.FC = () => {
   const initialRender = async () => {
     const count = await getCountFromServer(
       query(
-        collection(db, "QC_Inventories"),
+        collection(db, "acnQCInventories"),
         where("cpId", "==", cpId),
         where("status", "==", "draft")
       )
@@ -123,14 +123,14 @@ const DraftsScreen: React.FC = () => {
       router.replace("/(tabs)/AddInventoryForm");
     const drafts = await getDocs(
       query(
-        collection(db, "QC_Inventories"),
+        collection(db, "acnQCInventories"),
         where("cpId", "==", cpId),
         where("status", "==", "draft")
       )
     );
     const stateDrafts: ListingProperty[] = [];
     drafts.docs.forEach((draft) => {
-      stateDrafts.push(draft.data());
+      stateDrafts.push(draft.data() as ListingProperty);
     });
     setDrafts(stateDrafts);
     setRendering(false);

@@ -136,7 +136,7 @@ export default function useNotification() {
   useEffect(() => {
     if (!cpId) return;
 
-    const docRef = doc(db, "Notifications", cpId);
+    const docRef = doc(db, "acnNotifications", cpId);
 
     const unsubscribe = onSnapshot(docRef, (docSnapshot) => {
       if (docSnapshot.exists()) {
@@ -171,7 +171,7 @@ export default function useNotification() {
   // Mark notification as read
   const markAsRead = async (notificationId: string) => {
     try {
-      const docRef = doc(db, "Notifications", cpId);
+      const docRef = doc(db, "acnNotifications", cpId);
       const updatedNotifications = notifications.map((notification) =>
         notification.notificationId === notificationId
           ? { ...notification, isRead: true }
@@ -187,7 +187,7 @@ export default function useNotification() {
   const markAsUnRead = async (notificationId: string) => {
     try {
       console.log(notificationId, "notificationId");
-      const docRef = doc(db, "Notifications", cpId);
+      const docRef = doc(db, "acnNotifications", cpId);
       const updatedNotifications = notifications.map((notification) =>
         notification.notificationId === notificationId
           ? { ...notification, isRead: false }
@@ -203,7 +203,7 @@ export default function useNotification() {
   // Mark all visible notifications as read
   const markAllVisibleAsRead = async () => {
     try {
-      const docRef = doc(db, "Notifications", cpId);
+      const docRef = doc(db, "acnNotifications", cpId);
       // Get the current notifications array
       const docSnap = await getDoc(docRef);
       if (!docSnap.exists()) return;
@@ -223,7 +223,7 @@ export default function useNotification() {
   const archiveNotification = async (notificationId: string) => {
     try {
       console.log(notificationId, "blablablabla");
-      const docRef = doc(db, "Notifications", cpId);
+      const docRef = doc(db, "acnNotifications", cpId);
       const updatedNotifications = notifications.map((notification) =>
         notification.notificationId === notificationId
           ? { ...notification, archived: true }
@@ -239,12 +239,12 @@ export default function useNotification() {
   const migrateNotifications = async () => {
     if (!cpId) return;
     try {
-      const notificationsDoc = await getDoc(doc(db, "Notifications", cpId));
+      const notificationsDoc = await getDoc(doc(db, "acnNotifications", cpId));
       if (notificationsDoc.exists()) {
         const notifications = notificationsDoc.data().notifications || [];
         for (const notif of notifications) {
           await setDoc(
-            doc(db, "Notifications", cpId, "items", notif.id),
+            doc(db, "acnNotifications", cpId, "items", notif.id),
             notif
           );
         }

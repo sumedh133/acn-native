@@ -108,7 +108,7 @@ const PropertyCard = ({
   const fetchMatchingEnquiryCount = async () => {
     const count = await getCountFromServer(
       query(
-        collection(db, "enquiries"),
+        collection(db, "acnEnquiries"),
         where("propertyId", "==", property.propertyId)
       )
     );

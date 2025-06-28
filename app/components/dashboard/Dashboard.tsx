@@ -275,13 +275,13 @@ export default function Dashboard({
       const newStatus = status;
 
       try {
-        const requirementsRef = collection(db, "requirements");
+        const requirementsRef = collection(db, "acnRequirements");
         const q = query(requirementsRef, where("requirementId", "==", id));
         const querySnapshot = await getDocs(q);
 
         if (!querySnapshot.empty) {
           const docRef = querySnapshot.docs[0].ref;
-          await updateDoc(docRef, { status: newStatus });
+          await updateDoc(docRef, { requirementStatus: newStatus });
 
           // Track successful status change
           logEvent(analytics, "requirement_status_update", {
@@ -465,7 +465,7 @@ export default function Dashboard({
               {enquiries.slice(0, batchSize).map((enquiry, index) => {
                 return (
                   <EnquiryCard
-                    key={enquiry.id}
+                    key={enquiry.enquiryId}
                     index={index}
                     enquiry={enquiry}
                   />

@@ -35,17 +35,19 @@ const ARPrimaryButton: React.FC<ARPrimaryButtonProps> = ({
 }) => {
   const handlePress = (event: GestureResponderEvent) => {
     try {
-      logEvent(analytics, 'primary_button_click', {
+      logEvent(analytics, "primary_button_click", {
         event_category: analyticsContext,
-        event_label: analyticsLabel || (typeof children === 'string' ? children : 'unknown'),
-        button_text: typeof children === 'string' ? children : 'unknown',
+        event_label:
+          analyticsLabel ||
+          (typeof children === "string" ? children : "unknown"),
+        button_text: typeof children === "string" ? children : "unknown",
         has_icon_first: !!IconFirst,
         has_icon_second: !!IconSecond,
         is_disabled: disabled,
-        ...analyticsData
+        ...analyticsData,
       });
     } catch (error) {
-      console.error('Error logging button click:', error);
+      console.error("Error logging button click:", error);
     }
 
     onPress?.(event);

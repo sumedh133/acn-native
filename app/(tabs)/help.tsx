@@ -99,7 +99,7 @@ const HelpMobile: React.FC<HelpMobileProps> = () => {
     (url: string) => {
       console.log("url", url);
       if (url.startsWith("/(tabs)")) {
-        router.push(url);
+        router.push(url as any);
         return;
       }
 
@@ -146,7 +146,7 @@ const HelpMobile: React.FC<HelpMobileProps> = () => {
       const agentToArchive = agentSnapshot.data();
 
       // Archive agent
-      await setDoc(doc(db, "archive_agents", agentData.cpId), {
+      await setDoc(doc(db, "acnArchiveAgents", agentData.cpId), {
         ...agentToArchive,
         archivedAt: serverTimestamp(),
         // verified: false,

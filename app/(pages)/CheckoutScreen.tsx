@@ -120,7 +120,7 @@ const CheckoutScreen: React.FC = () => {
 
     // Firebase listener for payment status
     const unsubscribe = onSnapshot(
-      doc(db, "payments", currentTransactionId),
+      doc(db, "acnPayments", currentTransactionId),
       (docSnapshot) => {
         if (docSnapshot.exists()) {
           const paymentData = docSnapshot.data();

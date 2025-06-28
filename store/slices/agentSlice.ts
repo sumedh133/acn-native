@@ -253,6 +253,6 @@ export const selectName = (state: RootState): string =>
   state?.agent?.docData?.name || "";
 
 export const selectMyKam = (state: RootState): any =>
-  state?.agent?.docData?.kam || null;
+  state?.agent?.docData?.kamId || null;
 
 export default agentSlice.reducer;

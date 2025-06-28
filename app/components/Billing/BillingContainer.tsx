@@ -151,7 +151,7 @@ const BillingContainer: React.FC<BillingContainerProps> = ({
     if (!db) return;
 
     const unsubscribe = onSnapshot(
-      doc(db, "admin", "subscriptionPlans"),
+      doc(db, "acn-admin", "subscriptionPlans"),
       (docSnap) => {
         if (docSnap.exists()) {
           const data = docSnap.data();
@@ -230,21 +230,26 @@ const BillingContainer: React.FC<BillingContainerProps> = ({
     // Don't load coupons for iOS users
     if (Platform.OS === "ios") return;
 
-    const unsubscribe = onSnapshot(doc(db, "admin", "coupons"), (docSnap) => {
-      if (docSnap.exists()) {
-        const data = docSnap.data();
+    const unsubscribe = onSnapshot(
+      doc(db, "acn-admin", "coupons"),
+      (docSnap) => {
+        if (docSnap.exists()) {
+          const data = docSnap.data();
 
-        if (data && Array.isArray(data.coupons)) {
-          setAllCoupons(data.coupons);
+          if (data && Array.isArray(data.coupons)) {
+            setAllCoupons(data.coupons);
+          } else {
+            console.error(
+              "Invalid or missing 'coupons' field in the document."
+            );
+            setAllCoupons([]);
+          }
         } else {
-          console.error("Invalid or missing 'coupons' field in the document.");
+          console.error("Document does not exist.");
           setAllCoupons([]);
         }
-      } else {
-        console.error("Document does not exist.");
-        setAllCoupons([]);
       }
-    });
+    );
 
     return () => unsubscribe();
   }, []);
@@ -324,7 +329,7 @@ const BillingContainer: React.FC<BillingContainerProps> = ({
               retryCount++;
               console.log(
                 `⚠️ Product fetch attempt ${retryCount} failed:`,
-                error.message
+                error instanceof Error ? error.message : String(error)
               );
 
               if (retryCount < maxRetries) {

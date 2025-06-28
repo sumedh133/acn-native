@@ -64,7 +64,7 @@ const Transaction = () => {
   useEffect(() => {
     const fetchPaymentDetails = async () => {
       try {
-        const docRef = doc(db, "payments", id as string);
+        const docRef = doc(db, "acnPayments", id as string);
         const docSnap = await getDoc(docRef);
         if (docSnap.exists()) {
           setPaymentDetails({
