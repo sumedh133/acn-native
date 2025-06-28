@@ -75,7 +75,7 @@ const RequirementCard = React.memo(({ requirement }: RequirementCardProps) => {
         event_label: 'view',
         requirement_id: requirement.requirementId,
         requirement_type: requirement.assetType,
-        requirement_location: requirement.location,
+        requirement_location: requirement.area,
         user_type: userType
       });
     } catch (error) {
@@ -112,10 +112,10 @@ const RequirementCard = React.memo(({ requirement }: RequirementCardProps) => {
             className="text-black text-base"
             style={{ fontFamily: "Montserrat_700Bold" }}
           >
-            {(requirement.propertyName || requirement.title || "")
+            {(requirement.propertyName || "")
               .charAt(0)
               .toUpperCase() +
-              (requirement.propertyName || requirement.title || "").slice(1)}
+              (requirement.propertyName || "").slice(1)}
           </Text>
         </View>
 
@@ -141,12 +141,12 @@ const RequirementCard = React.memo(({ requirement }: RequirementCardProps) => {
         </View>
 
         {/* Requirement Details */}
-        {requirement.requirementDetails && (
+        {requirement.extraDetails && (
           <Text
             className="text-neutral-600 text-sm font-medium mt-4 mb-0"
             numberOfLines={2}
           >
-            {requirement.requirementDetails}
+            {requirement.extraDetails}
           </Text>
         )}
       </TouchableOpacity>

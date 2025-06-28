@@ -26,7 +26,7 @@ import ShareModal from "@/app/modals/ShareModal";
 import { useSelector } from "react-redux";
 import { RootState } from "@/store/store";
 import { Enquiry, Property } from "@/app/types";
-import { doc, setDoc } from "firebase/firestore";
+import { doc, getDoc, setDoc } from "firebase/firestore";
 import { db } from "@/app/config/firebase";
 import { handleIdGeneration } from "@/app/helpers/nextId";
 import deductMonthlyCredit from "@/app/helpers/deductCredit";
@@ -156,7 +156,7 @@ const PropertyCard: React.FC<PropertyCardProps> = ({ property }) => {
       console.error("Error logging enquire click:", error);
     }
 
-    setSelectedCPID(property.cpCode || "");
+    setSelectedCPID(property.cpId || "");
     if (monthlyCredits + boosterCredits > 0) {
       setIsConfirmModelOpen(true);
       return;
@@ -185,17 +185,34 @@ const PropertyCard: React.FC<PropertyCardProps> = ({ property }) => {
   };
 
   const submitEnquiry = async (nextEnqId: string) => {
+    if (!property.cpId) {
+      showErrorToast("Error: Seller CPID is missing. Please try again.");
+      return;
+    }
+    const docRef = doc(db, "acnAgents", property.cpId);
+    const docSnap = await getDoc(docRef);
+    const sellerData = docSnap.data();
     const enq: Enquiry = {
       enquiryId: nextEnqId,
-      cpId: agentData?.cpId,
+      // buyer details
+      buyerCpId: agentData?.cpId,
+      buyerName: agentData?.name,
+      buyerNumber: phoneNumber,
+      // propterty details
       propertyId: property?.propertyId,
+      propertyName: property?.propertyName,
+      //seller details
+      sellerCpId: sellerData?.cpId,
+      sellerName: sellerData?.name,
+      sellerNumber: sellerData?.phoneNumber,
       status: "pending",
       added: getUnixDateTime(),
       lastModified: getUnixDateTime(),
+      reviews: [],
     } as Enquiry;
 
     try {
-      const enquiryDocRef = doc(db, "enquiries", nextEnqId);
+      const enquiryDocRef = doc(db, "acnEnquiries", nextEnqId);
       await setDoc(enquiryDocRef, enq);
       showSuccessToast("Enquiry submitted successfully!", {
         isInModal: true,
@@ -214,6 +231,7 @@ const PropertyCard: React.FC<PropertyCardProps> = ({ property }) => {
   };
 
   const onConfirmEnquiry = async () => {
+    console.log("onConfirmEnquiry called");
     if (!selectedCPID) {
       showErrorToast("Error: Seller CPID is missing. Please try again.");
       setIsConfirmModelOpen(false);

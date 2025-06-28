@@ -1,118 +1,43 @@
 {
   "project_info": {
-    "project_number": "727649873733",
-    "firebase_url": "https://acn-resale-inventories-dde03-default-rtdb.firebaseio.com",
-    "project_id": "acn-resale-inventories-dde03",
-    "storage_bucket": "acn-resale-inventories-dde03.firebasestorage.app"
+    "project_number": "695268023939",
+    "firebase_url": "https://iqol-crm-default-rtdb.firebaseio.com",
+    "project_id": "iqol-crm",
+    "storage_bucket": "iqol-crm.firebasestorage.app"
   },
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:727649873733:android:7ffa1b3e2f672775f3982c",
+        "mobilesdk_app_id": "1:695268023939:android:795aa4b353bd13821e05b6",
         "android_client_info": {
           "package_name": "com.acnonline.in"
         }
       },
       "oauth_client": [
         {
-          "client_id": "727649873733-2q1s8rr9obmp1br0mis1t73u93sroo63.apps.googleusercontent.com",
+          "client_id": "695268023939-tclmpo91a8ur4pee4nssep1qjhc5rp2u.apps.googleusercontent.com",
           "client_type": 1,
           "android_info": {
             "package_name": "com.acnonline.in",
-            "certificate_hash": "f2e8d67ec86ae47232ecf9d550a34c9a38bb23a2"
+            "certificate_hash": "5e8f16062ea3cd2c4a0d547876baa6f38cabf625"
           }
         },
         {
-          "client_id": "727649873733-4p8rlmrqijfn027m2h178763nqfa4cl2.apps.googleusercontent.com",
-          "client_type": 1,
-          "android_info": {
-            "package_name": "com.acnonline.in",
-            "certificate_hash": "d157efdefa93e6b669c63ab91a658dc68084a77d"
-          }
-        },
-        {
-          "client_id": "727649873733-jq7ug7suld3ni91c033hvua4jikpik2m.apps.googleusercontent.com",
-          "client_type": 1,
-          "android_info": {
-            "package_name": "com.acnonline.in",
-            "certificate_hash": "cb038e9bb15604fb14e06152c75d580a1ba7dd1b"
-          }
-        },
-        {
-          "client_id": "727649873733-tohu45quckroosjnucj74rnbus55caoe.apps.googleusercontent.com",
-          "client_type": 1,
-          "android_info": {
-            "package_name": "com.acnonline.in",
-            "certificate_hash": "4d1f87a37aa02b87cafe6a51740e564c83f20167"
-          }
-        },
-        {
-          "client_id": "727649873733-sqac3t605sqe65ec8drbccg8pshpm1da.apps.googleusercontent.com",
+          "client_id": "695268023939-5rosvsjk2da7bp2eq6joscup4cvmho7n.apps.googleusercontent.com",
           "client_type": 3
         }
       ],
       "api_key": [
         {
-          "current_key": "AIzaSyBwSY2Tv7XP_wdGzcLDuuafyqFiaGAFI4M"
+          "current_key": "AIzaSyBaqAjAzOenTYfAiOEig5USmVli8wYl2UA"
         }
       ],
       "services": {
         "appinvite_service": {
           "other_platform_oauth_client": [
             {
-              "client_id": "727649873733-h73j9mhjqmdcfncebplgdva664dasb9q.apps.googleusercontent.com",
+              "client_id": "695268023939-5rosvsjk2da7bp2eq6joscup4cvmho7n.apps.googleusercontent.com",
               "client_type": 3
-            },
-            {
-              "client_id": "727649873733-5tcr0a88oudn3fr44k737ufdhlu1n6os.apps.googleusercontent.com",
-              "client_type": 2,
-              "ios_info": {
-                "bundle_id": "com.acnonline.ios"
-              }
-            }
-          ]
-        }
-      }
-    },
-    {
-      "client_info": {
-        "mobilesdk_app_id": "1:727649873733:android:7a9856673939064ff3982c",
-        "android_client_info": {
-          "package_name": "com.anonymous.acnnative"
-        }
-      },
-      "oauth_client": [
-        {
-          "client_id": "727649873733-fe8bmclvvt64svd6qpisff35nl4hrsh3.apps.googleusercontent.com",
-          "client_type": 1,
-          "android_info": {
-            "package_name": "com.anonymous.acnnative",
-            "certificate_hash": "4d1f87a37aa02b87cafe6a51740e564c83f20167"
-          }
-        },
-        {
-          "client_id": "727649873733-sqac3t605sqe65ec8drbccg8pshpm1da.apps.googleusercontent.com",
-          "client_type": 3
-        }
-      ],
-      "api_key": [
-        {
-          "current_key": "AIzaSyBwSY2Tv7XP_wdGzcLDuuafyqFiaGAFI4M"
-        }
-      ],
-      "services": {
-        "appinvite_service": {
-          "other_platform_oauth_client": [
-            {
-              "client_id": "727649873733-h73j9mhjqmdcfncebplgdva664dasb9q.apps.googleusercontent.com",
-              "client_type": 3
-            },
-            {
-              "client_id": "727649873733-5tcr0a88oudn3fr44k737ufdhlu1n6os.apps.googleusercontent.com",
-              "client_type": 2,
-              "ios_info": {
-                "bundle_id": "com.acnonline.ios"
-              }
             }
           ]
         }

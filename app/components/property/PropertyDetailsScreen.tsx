@@ -22,6 +22,7 @@ import { handleIdGeneration } from "@/app/helpers/nextId";
 import {
   collection,
   doc,
+  getDoc,
   getDocs,
   query,
   setDoc,
@@ -174,7 +175,7 @@ export default function PropertyDetailsScreen() {
   const [localImages, setLocalImages] = useState<string[]>([]);
   const [isImageViewerVisible, setIsImageViewerVisible] = useState(false);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
-  const [selectedCPID, setSelectedCPID] = useState(property.cpCode);
+  const [selectedCPID, setSelectedCPID] = useState(property.cpId);
   const [isConfirmModelOpen, setIsConfirmModelOpen] = useState(false);
   const [isEnquiryCPModelOpen, setIsEnquiryCPModelOpen] = useState(false);
   const [isShareModalOpen, setIsShareModalOpen] = useState(false);
@@ -305,7 +306,7 @@ export default function PropertyDetailsScreen() {
       console.error("Error logging enquire click:", error);
     }
 
-    setSelectedCPID(property.cpCode || "");
+    setSelectedCPID(property.cpId || "");
     if (monthlyCredits + boosterCredits > 0) {
       setIsConfirmModelOpen(true);
       return;
@@ -319,39 +320,50 @@ export default function PropertyDetailsScreen() {
   };
 
   const submitEnquiry = async (nextEnqId: string) => {
-    const enq: Enquiry = {
-      enquiryId: nextEnqId,
-      cpId: agentData?.cpId,
-      propertyId: property?.propertyId,
-      status: "pending",
-      added: getUnixDateTime(),
-      lastModified: getUnixDateTime(),
-    } as Enquiry;
-
-    try {
-      const enquiryDocRef = doc(db, "enquiries", nextEnqId);
-      await setDoc(enquiryDocRef, enq);
-      showSuccessToast("Enquiry submitted successfully!", {
-        isInModal: true,
-      });
-    } catch (error) {
-      showErrorToast("Error submitting enquiry. Please try again.", {
-        isInModal: true,
-      });
-      console.error("Error in enquiry submission:", error);
-    }
-    await fetch(
-      `https://notification-server-acn.onrender.com/enquiries/${nextEnqId}`,
-      {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
+      if (!property.cpId) {
+        showErrorToast("Error: Seller CPID is missing. Please try again.");
+        return;
       }
-    ).catch((error) => {
-      console.error("Error:", error);
-    });
-  };
+      const docRef = doc(db, "acnAgents", property.cpId);
+      const docSnap = await getDoc(docRef);
+      const sellerData = docSnap.data();
+      const enq: Enquiry = {
+        enquiryId: nextEnqId,
+        // buyer details
+        buyerCpId: agentData?.cpId,
+        buyerName: agentData?.name,
+        buyerNumber: phoneNumber,
+        // propterty details
+        propertyId: property?.propertyId,
+        propertyName: property?.propertyName,
+        //seller details
+        sellerCpId: sellerData?.cpId,
+        sellerName: sellerData?.name,
+        sellerNumber: sellerData?.phoneNumber,
+        status: "pending",
+        added: getUnixDateTime(),
+        lastModified: getUnixDateTime(),
+        reviews: [],
+      } as Enquiry;
+  
+      try {
+        const enquiryDocRef = doc(db, "acnEnquiries", nextEnqId);
+        await setDoc(enquiryDocRef, enq);
+        showSuccessToast("Enquiry submitted successfully!", {
+          isInModal: true,
+        });
+      } catch (error) {
+        showErrorToast("Failed to submit enquiry. Please try again.", {
+          isInModal: true,
+        });
+        console.error("Error in enquiry submission:", error);
+      }
+      // axios.post(`https://notification-server-acn.onrender.com/${nextEnqId}`, {}, {
+      //   headers: {
+      //     'Content-Type': 'application/json'
+      //   }
+      // })
+    };
   const handleGoPremium = () => {
     setCreditLimitModalVisible(false);
     router.push({

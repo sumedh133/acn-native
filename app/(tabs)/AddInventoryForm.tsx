@@ -73,7 +73,7 @@ const initialState: ListingProperty = {
   carpet: null,
   communityType: null,
   cornerUnit: false,
-  cpCode: null,
+  cpId: null,
   currentStatus: null,
   dateOfInventoryAdded: null,
   dateOfStatusLastChecked: null,
@@ -457,11 +457,11 @@ const AddInventoryForm = () => {
       case "Project Name":
         return (
           <View>
-          <PlacesSearch
-            selectedPlace={selectedPlace}
-            setSelectedPlace={setSelectedPlace}
-            communityType={property.communityType}
-          />
+            <PlacesSearch
+              selectedPlace={selectedPlace}
+              setSelectedPlace={setSelectedPlace}
+              communityType={property.communityType}
+            />
           </View>
         );
 
@@ -625,7 +625,11 @@ const AddInventoryForm = () => {
         return false;
     }
 
-    if ((property["totalAskPrice"] === null || property["totalAskPrice"] === 0) && (property["askPricePerSqft"] === null || property["askPricePerSqft"] === 0 ) ) {
+    if (
+      (property["totalAskPrice"] === null || property["totalAskPrice"] === 0) &&
+      (property["askPricePerSqft"] === null ||
+        property["askPricePerSqft"] === 0)
+    ) {
       showErrorToast(`Missing field: Total Ask Price or Ask Price per Sqft`);
       return false;
     }
@@ -877,7 +881,7 @@ const AddInventoryForm = () => {
         propertyId: propId,
         dateOfInventoryAdded: getUnixDateTime(),
         dateOfStatusLastChecked: getUnixDateTime(),
-        cpCode: agentData.cpId,
+        cpId: agentData.cpId,
         kamId: agentData.kam,
         // area: selectedArea,
         askPricePerSqft,
@@ -1016,7 +1020,7 @@ const AddInventoryForm = () => {
       const autoFields: ListingProperty = {
         propertyId: propId,
         lastModified: getUnixDateTime(),
-        cpCode: agentData.cpId,
+        cpId: agentData.cpId,
         status: "draft",
       };
 

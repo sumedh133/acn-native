@@ -115,7 +115,7 @@ const DraftsScreen: React.FC = () => {
     const count = await getCountFromServer(
       query(
         collection(db, "QC_Inventories"),
-        where("cpCode", "==", cpId),
+        where("cpId", "==", cpId),
         where("status", "==", "draft")
       )
     );
@@ -124,7 +124,7 @@ const DraftsScreen: React.FC = () => {
     const drafts = await getDocs(
       query(
         collection(db, "QC_Inventories"),
-        where("cpCode", "==", cpId),
+        where("cpId", "==", cpId),
         where("status", "==", "draft")
       )
     );

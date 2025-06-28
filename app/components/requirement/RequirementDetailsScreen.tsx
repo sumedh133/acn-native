@@ -225,7 +225,7 @@ export default function RequirementDetailsScreen() {
               <Text style={styles.detailsTitle}>Requirement Details</Text>
               <View style={styles.detailsContent}>
                 <Text style={styles.detailsText}>
-                  {requirement.requirementDetails ||
+                  {requirement.extraDetails ||
                     "No additional details provided."}
                 </Text>
               </View>

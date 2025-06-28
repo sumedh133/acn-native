@@ -4,7 +4,7 @@
 
 - **`addedTime`** – Timestamp when the notification was added (used to auto-delete after 30 days)
 - **`body`** – Message body content to display
-- **`cpCode`** – Agent code to whom the notification should be shown
+- **`cpId`** – Agent code to whom the notification should be shown
 - **`cta`** – CTAs to be displayed (can also be dynamically set from slug + functionality)
 - **`image`** – Image to show (options: user image or ACN logo)
 - **`title`** – Title to be displayed on top
@@ -117,7 +117,7 @@ xi. Requirement Submitted
 
 ### f. Inventory Became Live
 
-- Triggered on update in `ACN123`
+- Triggered on update in `acnProperties`
 - _Best Practice:_ Cloud Function (to be integrated with QC Dashboard flow)
 
 ### g. Status Other Than Live

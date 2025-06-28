@@ -39,8 +39,8 @@ import { analytics } from "../config/firebase";
 import { logEvent } from "@react-native-firebase/analytics";
 
 const searchClient = algoliasearch(
-  "J150UQXDLH",
-  "146a46f31a26226786751f663e88ae33"
+  "YXMDFDHYEO",
+  "9394fe020e50445263e0171877e37a2a"
 );
 
 const MobileHits = React.memo(() => {
@@ -186,7 +186,7 @@ const MobileHits = React.memo(() => {
     }
   }, [isLastPage, isLoadingMore, showMore, items.length, userType]);
 
-  const keyExtractor = useCallback((item: Requirement) => item.requirementId || item.id || '', []);
+  const keyExtractor = useCallback((item: Requirement) => item.requirementId || '', []);
 
   const renderItem = useCallback(({ item, index }: { item: Requirement; index: number }) => {
     const handleRequirementView = () => {
@@ -194,7 +194,7 @@ const MobileHits = React.memo(() => {
         logEvent(analytics, 'requirement_card_interaction', {
           event_category: 'interaction',
           event_label: 'requirement_view',
-          requirement_id: item.requirementId || item.id,
+          requirement_id: item.requirementId || item.requirementId,
           list_position: index + 1,
           user_type: userType
         });
@@ -358,7 +358,7 @@ const RequirementsPage = () => {
     <View style={styles.container}>
       <InstantSearch
         searchClient={searchClient}
-        indexName="acn-agent-requirement"
+        indexName="requirements"
       >
         <Configure
           analytics={true}

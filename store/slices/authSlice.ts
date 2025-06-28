@@ -17,7 +17,7 @@ export const listenToVersionChanges =
     dispatch(clearVersionListener());
 
     const currentVersion = String(getState().auth.version || "");
-    const docRef = doc(db, "admin", "version");
+    const docRef = doc(db, "acn-admin", "version");
 
     const unsubscribe = onSnapshot(
       docRef,

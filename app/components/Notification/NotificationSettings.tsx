@@ -24,15 +24,15 @@ type NotificationPreference = "all" | "essential";
 
 const NotificationSettings: React.FC = () => {
   const navigation = useNavigation();
-  const cpCode = useSelector((state: RootState) => state?.agent?.docData?.cpId);
+  const cpId = useSelector((state: RootState) => state?.agent?.docData?.cpId);
   const [loading, setLoading] = useState(true);
   const [preference, setPreference] = useState<NotificationPreference>("all");
 
   useEffect(() => {
     const fetchSettings = async () => {
-      if (!cpCode) return;
+      if (!cpId) return;
       setLoading(true);
-      const agentRef = doc(db, "acnAgents", cpCode);
+      const agentRef = doc(db, "acnAgents", cpId);
       const agentSnap = await getDoc(agentRef);
       let pref: NotificationPreference = "all";
       if (!agentSnap.exists()) {
@@ -49,11 +49,11 @@ const NotificationSettings: React.FC = () => {
       setLoading(false);
     };
     fetchSettings();
-  }, [cpCode]);
+  }, [cpId]);
 
   const updateSetting = async (pref: NotificationPreference) => {
-    if (!cpCode) return;
-    const agentRef = doc(db, "acnAgents", cpCode);
+    if (!cpId) return;
+    const agentRef = doc(db, "acnAgents", cpId);
     await updateDoc(agentRef, { notificationPreference: pref });
   };
 

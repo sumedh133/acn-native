@@ -70,7 +70,9 @@ const useEnquiries = (): UseEnquiriesResult => {
   const [error, setError] = useState<string | null>(null);
 
   const cpId = useCpId();
-  const userType = useSelector((state: RootState) => state.agent.docData?.userType || "free");
+  const userType = useSelector(
+    (state: RootState) => state.agent.docData?.userType || "free"
+  );
 
   useEffect(() => {
     if (!cpId) {
@@ -102,7 +104,7 @@ const useEnquiries = (): UseEnquiriesResult => {
               event_category: "dashboard",
               event_label: "enquiries",
               enquiries_count: enquiriesData.length,
-              user_type: userType
+              user_type: userType,
             });
           } catch (error) {
             console.error("Error logging enquiries load:", error);
@@ -116,7 +118,11 @@ const useEnquiries = (): UseEnquiriesResult => {
           for (let i = 0; i < propertyIds.length; i += 30) {
             const batch = propertyIds.slice(i, i + 30);
             const properties = await getDocs(
-              query(collection(db, "ACN123"), where(documentId(), "in", batch), orderBy("propertyId", "desc"))
+              query(
+                collection(db, "acnProperties"),
+                where(documentId(), "in", batch),
+                orderBy("propertyId", "desc")
+              )
             );
             properties.docs.map((item) => {
               propertyDocs.set(item.id, item.data());
@@ -146,7 +152,7 @@ const useEnquiries = (): UseEnquiriesResult => {
           setError(err.message || "Error fetching enquiries");
           console.error("Fetch error:", err);
           setLoading(false);
-          
+
           // Track error
           try {
             logEvent(analytics, "dashboard_enquiries_error", {
@@ -154,7 +160,7 @@ const useEnquiries = (): UseEnquiriesResult => {
               event_label: "error",
               error_type: "fetch_enquiries",
               error_message: err.message || "Error fetching enquiries",
-              user_type: userType
+              user_type: userType,
             });
           } catch (error) {
             console.error("Error logging enquiries error:", error);
@@ -177,7 +183,7 @@ const useEnquiries = (): UseEnquiriesResult => {
         event_category: "dashboard",
         event_label: "review",
         enquiry_id: enqId,
-        user_type: userType
+        user_type: userType,
       });
     } catch (error) {
       console.error("Error logging review addition:", error);
@@ -203,7 +209,9 @@ const useProperties = (): UsePropertiesResult => {
   const [error, setError] = useState<string | null>(null);
 
   const cpId = useCpId();
-  const userType = useSelector((state: RootState) => state.agent.docData?.userType || "free");
+  const userType = useSelector(
+    (state: RootState) => state.agent.docData?.userType || "free"
+  );
 
   useEffect(() => {
     if (!cpId) {
@@ -215,7 +223,10 @@ const useProperties = (): UsePropertiesResult => {
 
     try {
       // Create query the same way as before
-      const q = query(collection(db, "ACN123"), where("cpCode", "==", cpId));
+      const q = query(
+        collection(db, "acnProperties"),
+        where("cpId", "==", cpId)
+      );
 
       // Set up real-time listener
       const unsubscribe = onSnapshot(
@@ -234,7 +245,7 @@ const useProperties = (): UsePropertiesResult => {
               event_category: "dashboard",
               event_label: "properties",
               properties_count: propertiesData.length,
-              user_type: userType
+              user_type: userType,
             });
           } catch (error) {
             console.error("Error logging properties load:", error);
@@ -255,7 +266,7 @@ const useProperties = (): UsePropertiesResult => {
               event_label: "error",
               error_type: "fetch_properties",
               error_message: err.message || "Error fetching properties",
-              user_type: userType
+              user_type: userType,
             });
           } catch (error) {
             console.error("Error logging properties error:", error);
@@ -283,7 +294,7 @@ const useProperties = (): UsePropertiesResult => {
         event_label: "status",
         property_id: propertyId,
         new_status: value,
-        user_type: userType
+        user_type: userType,
       });
 
       const newStatus = value;
@@ -309,7 +320,9 @@ const useRequirements = () => {
   const [error, setError] = useState<string | null>(null);
 
   const cpId = useCpId();
-  const userType = useSelector((state: RootState) => state.agent.docData?.userType || "free");
+  const userType = useSelector(
+    (state: RootState) => state.agent.docData?.userType || "free"
+  );
 
   useEffect(() => {
     if (!cpId) {
@@ -342,7 +355,7 @@ const useRequirements = () => {
               event_category: "dashboard",
               event_label: "requirements",
               requirements_count: requirementsData.length,
-              user_type: userType
+              user_type: userType,
             });
           } catch (error) {
             console.error("Error logging requirements load:", error);
@@ -363,7 +376,7 @@ const useRequirements = () => {
               event_label: "error",
               error_type: "fetch_requirements",
               error_message: err.message || "Error fetching requirements",
-              user_type: userType
+              user_type: userType,
             });
           } catch (error) {
             console.error("Error logging requirements error:", error);
@@ -391,7 +404,7 @@ const useRequirements = () => {
         event_label: "status",
         requirement_id: requirementsId,
         new_status: value,
-        user_type: userType
+        user_type: userType,
       });
 
       const newStatus = value;
@@ -417,7 +430,9 @@ const useListings = (): UseListingResult => {
   const [error, setError] = useState<string | null>(null);
 
   const cpId = useCpId();
-  const userType = useSelector((state: RootState) => state.agent.docData?.userType || "free");
+  const userType = useSelector(
+    (state: RootState) => state.agent.docData?.userType || "free"
+  );
 
   useEffect(() => {
     if (!cpId) {
@@ -430,7 +445,7 @@ const useListings = (): UseListingResult => {
     try {
       const q = query(
         collection(db, "QC_Inventories"),
-        where("cpCode", "==", cpId),
+        where("cpId", "==", cpId),
         orderBy("propertyId", "desc")
       );
 
@@ -452,7 +467,7 @@ const useListings = (): UseListingResult => {
               event_category: "dashboard",
               event_label: "listings",
               listings_count: listingData.length,
-              user_type: userType
+              user_type: userType,
             });
           } catch (error) {
             console.error("Error logging listings load:", error);
@@ -473,7 +488,7 @@ const useListings = (): UseListingResult => {
               event_label: "error",
               error_type: "fetch_listings",
               error_message: err.message || "Error fetching listings",
-              user_type: userType
+              user_type: userType,
             });
           } catch (error) {
             console.error("Error logging listings error:", error);
@@ -523,7 +538,9 @@ export default function DashboardTab() {
     (state: RootState) => state.app.isConnectedToInternet
   );
 
-  const userType = useSelector((state: RootState) => state.agent.docData?.userType || "free");
+  const userType = useSelector(
+    (state: RootState) => state.agent.docData?.userType || "free"
+  );
 
   // Track dashboard page view
   useEffect(() => {
@@ -535,12 +552,18 @@ export default function DashboardTab() {
         has_enquiries: myEnquiries.length > 0,
         has_properties: properties.length > 0,
         has_requirements: requirements.length > 0,
-        has_listings: myListings.length > 0
+        has_listings: myListings.length > 0,
       });
     } catch (error) {
       console.error("Error logging page view:", error);
     }
-  }, [userType, myEnquiries.length, properties.length, requirements.length, myListings.length]);
+  }, [
+    userType,
+    myEnquiries.length,
+    properties.length,
+    requirements.length,
+    myListings.length,
+  ]);
 
   if (!isConnectedToInternet) return <Offline />;
 
