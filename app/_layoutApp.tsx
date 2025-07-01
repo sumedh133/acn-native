@@ -504,6 +504,7 @@ export default function LayoutApp() {
         <Stack.Screen
           name="components/Notification/NotificationSettings"
           options={{ headerShown: false }}
+          initialParams={{ showFooter: false }}
         />
         <Stack.Screen
           name="components/Payments/transaction"
@@ -528,7 +529,11 @@ export default function LayoutApp() {
         />
         <Stack.Screen
           name="components/Notification/ArchivedNotifications"
-          options={{ headerShown: false }}
+          options={{
+            title: "Archived Notifications",
+            headerBackVisible: true,
+          }}
+          initialParams={{ showFooter: false }}
         />
       </Stack>
 
