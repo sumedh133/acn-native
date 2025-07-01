@@ -11,8 +11,13 @@ import {
   Modal,
   Pressable,
   Linking,
+  Animated,
 } from "react-native";
-import { GestureHandlerRootView } from "react-native-gesture-handler";
+import {
+  GestureHandlerRootView,
+  PanGestureHandler,
+  State,
+} from "react-native-gesture-handler";
 import { useSelector } from "react-redux";
 import { RootState } from "@/store/store";
 import { analytics } from "../config/firebase";
@@ -85,8 +90,8 @@ const NotificationPage: React.FC<NotificationPageProps> = () => {
 
   const filters = [
     { id: "all", label: "All" },
-    { id: "connects", label: "Connects" },
-    { id: "asks", label: "Asks" },
+    { id: "connects", label: "Enquiries" },
+    { id: "asks", label: "Requirements" },
     { id: "listing", label: "Listing" },
     { id: "billing", label: "Billing" },
   ] as const;
@@ -273,14 +278,6 @@ const NotificationPage: React.FC<NotificationPageProps> = () => {
   const handleArchiveNotification = useCallback(
     async (notification: NotificationItem) => {
       try {
-        console.log("=== NotificationPage.tsx - handleArchiveNotification ===");
-        console.log("Received notification for archiving:", notification);
-        console.log("notification.id:", notification.id);
-        console.log(
-          "notification.notificationId:",
-          notification.notificationId
-        );
-
         // Store the notification for potential undo
         setPendingArchiveNotification(notification);
         setShowUndoModal(true);
@@ -303,13 +300,7 @@ const NotificationPage: React.FC<NotificationPageProps> = () => {
   const handleUndoArchive = () => {
     // Restore the notification to the UI
     if (pendingArchiveNotification && restoreNotificationCallback) {
-      console.log("Restoring notification:", pendingArchiveNotification);
       restoreNotificationCallback(pendingArchiveNotification);
-    } else {
-      console.log("Cannot restore - missing notification or callback:", {
-        pendingArchiveNotification: !!pendingArchiveNotification,
-        restoreNotificationCallback: !!restoreNotificationCallback,
-      });
     }
 
     // Log undo action
@@ -352,23 +343,12 @@ const NotificationPage: React.FC<NotificationPageProps> = () => {
     if (!pendingArchiveNotification) return;
 
     try {
-      console.log("=== NotificationPage.tsx - handleFinalArchive ===");
-      console.log(
-        "Pending notification to archive:",
-        pendingArchiveNotification
-      );
-
       const idToArchive =
         pendingArchiveNotification.notificationId ||
         pendingArchiveNotification.id;
-      console.log(
-        "ID being sent to archiveNotification function:",
-        idToArchive
-      );
 
       // Remove from local UI state first
       if (finalArchiveCallback) {
-        console.log("Calling final archive callback to remove from UI");
         finalArchiveCallback(pendingArchiveNotification);
       }
 
@@ -397,13 +377,6 @@ const NotificationPage: React.FC<NotificationPageProps> = () => {
     async (notification: NotificationItem) => {
       try {
         const notificationId = notification.notificationId || notification.id;
-        console.log("=== NotificationPage.tsx - handleToggleRead ===");
-        console.log(
-          "Toggling read status for notification:",
-          notification.title
-        );
-        console.log("Current isRead status:", notification.isRead);
-        console.log("notification ID:", notificationId);
 
         if (notification.isRead) {
           // Mark as unread
@@ -449,6 +422,36 @@ const NotificationPage: React.FC<NotificationPageProps> = () => {
     }
   }, [userType]);
 
+  // --- Modal drag-to-dismiss setup ---
+  const translateY = React.useRef(new Animated.Value(0)).current;
+  // Prevent the sheet from being dragged above its initial position
+  const clampedTranslateY = translateY.interpolate({
+    inputRange: [-100, 0, 1000],
+    outputRange: [0, 0, 1000],
+    extrapolate: "clamp",
+  });
+
+  const handleModalGestureEvent = Animated.event(
+    [{ nativeEvent: { translationY: translateY } }],
+    { useNativeDriver: true }
+  );
+
+  const handleModalGestureStateChange = (event: any) => {
+    if (event.nativeEvent.state === State.END) {
+      const { translationY, velocityY } = event.nativeEvent;
+      const shouldClose = translationY > 100 || velocityY > 800;
+      if (shouldClose) {
+        setShowFilters(false);
+        translateY.setValue(0);
+      } else {
+        Animated.spring(translateY, {
+          toValue: 0,
+          useNativeDriver: true,
+        }).start();
+      }
+    }
+  };
+
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
       <View style={styles.container}>
@@ -493,43 +496,61 @@ const NotificationPage: React.FC<NotificationPageProps> = () => {
 
         {/* Filter Modal */}
         <Modal
-          animationType="slide"
-          transparent={true}
+          animationType="fade"
+          transparent
           visible={showFilters}
           onRequestClose={() => setShowFilters(false)}
         >
-          <Pressable
-            style={styles.modalOverlay}
-            onPress={() => setShowFilters(false)}
+          <GestureHandlerRootView
+            style={{ flex: 1, backgroundColor: "rgba(0,0,0,0.4)" }}
           >
-            <View style={styles.modalContent}>
-              {/* Drag indicator */}
-              <View style={styles.dragIndicator} />
-              {filters.map((filter) => (
-                <TouchableOpacity
-                  key={filter.id}
-                  style={styles.filterOption}
-                  onPress={() => {
-                    setActiveFilter(filter.id);
-                    setShowFilters(false);
-                  }}
+            <View style={{ flex: 1, justifyContent: "flex-end" }}>
+              {/* Overlay */}
+              <Pressable
+                style={{ flex: 1 }}
+                onPress={() => setShowFilters(false)}
+              />
+
+              {/* Bottom Sheet */}
+              <PanGestureHandler
+                onGestureEvent={handleModalGestureEvent}
+                onHandlerStateChange={handleModalGestureStateChange}
+              >
+                <Animated.View
+                  style={[
+                    styles.modalContent,
+                    { transform: [{ translateY: clampedTranslateY }] },
+                  ]}
                 >
-                  <Text
-                    style={[
-                      styles.filterOptionText,
-                      activeFilter === filter.id &&
-                        styles.activeFilterOptionText,
-                    ]}
-                  >
-                    {filter.label}
-                  </Text>
-                  {activeFilter === filter.id && (
-                    <Checkmark width={20} height={21} color="#153E3B" />
-                  )}
-                </TouchableOpacity>
-              ))}
+                  {/* Drag indicator */}
+                  <View style={styles.dragIndicator} />
+                  {filters.map((filter) => (
+                    <TouchableOpacity
+                      key={filter.id}
+                      style={styles.filterOption}
+                      onPress={() => {
+                        setActiveFilter(filter.id);
+                        setShowFilters(false);
+                      }}
+                    >
+                      <Text
+                        style={[
+                          styles.filterOptionText,
+                          activeFilter === filter.id &&
+                            styles.activeFilterOptionText,
+                        ]}
+                      >
+                        {filter.label}
+                      </Text>
+                      {activeFilter === filter.id && (
+                        <Checkmark width={20} height={21} color="#153E3B" />
+                      )}
+                    </TouchableOpacity>
+                  ))}
+                </Animated.View>
+              </PanGestureHandler>
             </View>
-          </Pressable>
+          </GestureHandlerRootView>
         </Modal>
 
         {/* Undo Archive Modal */}
