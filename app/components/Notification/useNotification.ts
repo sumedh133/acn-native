@@ -398,6 +398,59 @@ export default function useNotification() {
     }
   };
 
+  const getArchivedNotifications = async () => {
+    const docRef = doc(db, "acnNotifications", cpId);
+    const docSnap = await getDoc(docRef);
+    if (!docSnap.exists()) return;
+    const notifications: NotificationItem[] =
+      docSnap.data().notifications || [];
+    return notifications.filter((n) => n.archived);
+  };
+
+  const getArchivedNotificationsCount = async () => {
+    const docRef = doc(db, "acnNotifications", cpId);
+    const docSnap = await getDoc(docRef);
+    if (!docSnap.exists()) return;
+    const notifications: NotificationItem[] =
+      docSnap.data().notifications || [];
+    return notifications.filter((n) => n.archived).length;
+  };
+
+  const unarchiveNotification = async (notificationId: string) => {
+    try {
+      console.log("=== useNotification.ts - unarchiveNotification ===");
+      console.log("Unarchiving notification with ID:", notificationId);
+
+      const docRef = doc(db, "acnNotifications", cpId);
+
+      // Get the current complete notifications array from database (including archived ones)
+      const docSnap = await getDoc(docRef);
+      if (!docSnap.exists()) {
+        console.error("No notifications document found");
+        return;
+      }
+
+      const allNotifications: NotificationItem[] =
+        docSnap.data().notifications || [];
+
+      // Update only the specific notification - check both id and notificationId fields
+      const updatedNotifications = allNotifications.map((notification) => {
+        const matches =
+          notification.id === notificationId ||
+          notification.notificationId === notificationId;
+        if (matches) {
+          return { ...notification, archived: false };
+        }
+        return notification;
+      });
+
+      await updateDoc(docRef, { notifications: updatedNotifications });
+      console.log("Database update completed for unarchive");
+    } catch (error) {
+      console.error("Error unarchiving notification:", error);
+    }
+  };
+
   // Optionally return any functions you might want to expose
   return {
     refreshToken: getToken,
@@ -412,5 +465,8 @@ export default function useNotification() {
     archiveNotification,
     migrateNotifications,
     isLoading,
+    getArchivedNotifications,
+    getArchivedNotificationsCount,
+    unarchiveNotification,
   };
 }

@@ -526,6 +526,10 @@ export default function LayoutApp() {
           }}
           initialParams={{ showFooter: false }}
         />
+        <Stack.Screen
+          name="components/Notification/ArchivedNotifications"
+          options={{ headerShown: false }}
+        />
       </Stack>
 
       <Toast config={toastConfig} />
