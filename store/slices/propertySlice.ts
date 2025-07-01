@@ -6,6 +6,9 @@ import {
 } from "@reduxjs/toolkit";
 import { RootState } from "../store";
 import { Property } from "@/app/types";
+import { db } from "@/app/config/firebase";
+import { doc, onSnapshot } from "firebase/firestore";
+import { setPropertyListener, clearPropertyListener } from "./listenerSlice";
 
 // Define the property state interface
 interface PropertyState {
@@ -74,6 +77,21 @@ export const setPropertyDataThunk =
     const { propertyId: currentPropertyId } = getState().property;
 
     dispatch(setPropertyData(property));
+  };
+
+// Thunk action to listen to property changes
+export const listenToPropertyChanges =
+  (propertyId: string): ThunkAction<void, RootState, unknown, AnyAction> =>
+  (dispatch, getState) => {
+    dispatch(clearPropertyListener());
+    const docRef = doc(db, "acnProperties", propertyId);
+    const unsubscribe = onSnapshot(docRef, (docSnap) => {
+      if (docSnap.exists()) {
+        dispatch(setPropertyData(docSnap.data() as Property));
+      }
+    });
+    dispatch(setPropertyListener(unsubscribe));
+    return unsubscribe;
   };
 
 // Export selector to get property state

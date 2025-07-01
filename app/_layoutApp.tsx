@@ -63,6 +63,8 @@ import {
 import useNotification from "./components/Notification/useNotification";
 import SessionTracker from "./services/SessionTracker";
 import Offline from "./components/Offline";
+import { listenToAgentChanges } from "@/store/slices/agentSlice";
+import { setAgentListener } from "@/store/slices/listenerSlice";
 
 // Custom header component to apply the desired styling
 const CustomHeader = ({
@@ -139,7 +141,9 @@ export default function LayoutApp() {
     (state: RootState) => state.app.isConnectedToInternet
   );
 
-  const { docData: agentData } = useSelector((state: RootState) => state.agent);
+  const { docData: agentData, docId: agentDocId } = useSelector(
+    (state: RootState) => state.agent
+  );
   const userType = agentData?.userType || "free";
   const userName = agentData?.name || "";
   const userPhoneNumber = useSelector(
@@ -147,6 +151,9 @@ export default function LayoutApp() {
   );
   const isAuthenticated = useSelector(
     (state: RootState) => state.auth.isAuthenticated
+  );
+  const unsubscribeAgentListener = useSelector(
+    (state: RootState) => state.listeners.unsubscribeAgentListener
   );
 
   // Initialize session tracking only for authenticated users
@@ -230,6 +237,16 @@ export default function LayoutApp() {
       dispatch(setKamDataState(myKamId));
     }
   }, [myKamId, dispatch]);
+
+  // Attach real-time listener for agent document BEFORE potential early returns to keep hook order stable
+  useEffect(() => {
+    if (isAuthenticated && agentDocId && !unsubscribeAgentListener) {
+      const unsubscribe = dispatch(listenToAgentChanges(agentDocId));
+      if (typeof unsubscribe === "function") {
+        dispatch(setAgentListener(unsubscribe));
+      }
+    }
+  }, [isAuthenticated, agentDocId, unsubscribeAgentListener]);
 
   const onLayoutRootView = useCallback(async () => {
     if (fontsLoaded) {

@@ -45,7 +45,10 @@ import { LinearGradient } from "react-native-linear-gradient";
 import { styled } from "nativewind";
 import ShareIconInsidePropertyDetails from "@/assets/icons/svg/PropertiesPage/SHareIconPropertyDetailsModal";
 import DriveIcon from "@/assets/icons/svg/PropertiesPage/DriveIcon";
-import { selectPropertyStateData } from "@/store/slices/propertySlice";
+import {
+  selectPropertyStateData,
+  listenToPropertyChanges,
+} from "@/store/slices/propertySlice";
 import Offline from "../Offline";
 import { getUnixDateTime } from "@/app/helpers/getUnixDateTime";
 import ArrowLeftIcon from "@/assets/icons/svg/Common/ArrowLeftIcon";
@@ -320,50 +323,50 @@ export default function PropertyDetailsScreen() {
   };
 
   const submitEnquiry = async (nextEnqId: string) => {
-      if (!property.cpId) {
-        showErrorToast("Error: Seller CPID is missing. Please try again.");
-        return;
-      }
-      const docRef = doc(db, "acnAgents", property.cpId);
-      const docSnap = await getDoc(docRef);
-      const sellerData = docSnap.data();
-      const enq: Enquiry = {
-        enquiryId: nextEnqId,
-        // buyer details
-        buyerCpId: agentData?.cpId,
-        buyerName: agentData?.name,
-        buyerNumber: phoneNumber,
-        // propterty details
-        propertyId: property?.propertyId,
-        propertyName: property?.propertyName,
-        //seller details
-        sellerCpId: sellerData?.cpId,
-        sellerName: sellerData?.name,
-        sellerNumber: sellerData?.phoneNumber,
-        status: "pending",
-        added: getUnixDateTime(),
-        lastModified: getUnixDateTime(),
-        reviews: [],
-      } as Enquiry;
-  
-      try {
-        const enquiryDocRef = doc(db, "acnEnquiries", nextEnqId);
-        await setDoc(enquiryDocRef, enq);
-        showSuccessToast("Enquiry submitted successfully!", {
-          isInModal: true,
-        });
-      } catch (error) {
-        showErrorToast("Failed to submit enquiry. Please try again.", {
-          isInModal: true,
-        });
-        console.error("Error in enquiry submission:", error);
-      }
-      // axios.post(`https://notification-server-acn.onrender.com/${nextEnqId}`, {}, {
-      //   headers: {
-      //     'Content-Type': 'application/json'
-      //   }
-      // })
-    };
+    if (!property.cpId) {
+      showErrorToast("Error: Seller CPID is missing. Please try again.");
+      return;
+    }
+    const docRef = doc(db, "acnAgents", property.cpId);
+    const docSnap = await getDoc(docRef);
+    const sellerData = docSnap.data();
+    const enq: Enquiry = {
+      enquiryId: nextEnqId,
+      // buyer details
+      buyerCpId: agentData?.cpId,
+      buyerName: agentData?.name,
+      buyerNumber: phoneNumber,
+      // propterty details
+      propertyId: property?.propertyId,
+      propertyName: property?.propertyName,
+      //seller details
+      sellerCpId: sellerData?.cpId,
+      sellerName: sellerData?.name,
+      sellerNumber: sellerData?.phoneNumber,
+      status: "pending",
+      added: getUnixDateTime(),
+      lastModified: getUnixDateTime(),
+      reviews: [],
+    } as Enquiry;
+
+    try {
+      const enquiryDocRef = doc(db, "acnEnquiries", nextEnqId);
+      await setDoc(enquiryDocRef, enq);
+      showSuccessToast("Enquiry submitted successfully!", {
+        isInModal: true,
+      });
+    } catch (error) {
+      showErrorToast("Failed to submit enquiry. Please try again.", {
+        isInModal: true,
+      });
+      console.error("Error in enquiry submission:", error);
+    }
+    // axios.post(`https://notification-server-acn.onrender.com/${nextEnqId}`, {}, {
+    //   headers: {
+    //     'Content-Type': 'application/json'
+    //   }
+    // })
+  };
   const handleGoPremium = () => {
     setCreditLimitModalVisible(false);
     router.push({
@@ -621,6 +624,18 @@ export default function PropertyDetailsScreen() {
     currentImageIndex,
     userType,
   ]);
+
+  // Set up firestore listener for live updates
+  useEffect(() => {
+    if (property?.propertyId) {
+      const unsubscribe = dispatch(
+        listenToPropertyChanges(property.propertyId)
+      );
+      return () => {
+        if (typeof unsubscribe === "function") unsubscribe();
+      };
+    }
+  }, [property?.propertyId]);
 
   if (!isConnectedToInternet) return <Offline />;
 

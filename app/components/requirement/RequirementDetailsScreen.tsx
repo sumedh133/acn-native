@@ -14,6 +14,9 @@ import { Ionicons } from "@expo/vector-icons";
 import { router, useLocalSearchParams } from "expo-router";
 import { analytics } from "@/app/config/firebase";
 import { logEvent } from "@react-native-firebase/analytics";
+import { useDispatch } from "react-redux";
+import { ThunkDispatch } from "redux-thunk";
+import { AnyAction } from "redux";
 
 // Import components and utilities
 import PrimaryButton from "../../../components/ui/PrimaryButton";
@@ -21,7 +24,10 @@ import { useSelector } from "react-redux";
 import { RootState } from "@/store/store";
 import { showErrorToast } from "@/utils/toastUtils";
 import CloseIcon from "@/assets/icons/svg/CloseIcon";
-import { selectRequirementStateData } from "@/store/slices/requirementSlice";
+import {
+  selectRequirementStateData,
+  listenToRequirementChanges,
+} from "@/store/slices/requirementSlice";
 import { SafeAreaView } from "react-native-safe-area-context";
 import Offline from "../Offline";
 
@@ -40,6 +46,7 @@ export default function RequirementDetailsScreen() {
 
   // Get the requirement data from Redux store
   const requirement = useSelector(selectRequirementStateData);
+  const dispatch = useDispatch<ThunkDispatch<RootState, unknown, AnyAction>>();
 
   const isConnectedToInternet = useSelector(
     (state: RootState) => state.app.isConnectedToInternet
@@ -150,6 +157,17 @@ export default function RequirementDetailsScreen() {
       <Text style={styles.infoValue}>{value || "-"}</Text>
     </View>
   );
+
+  useEffect(() => {
+    if (requirement?.requirementId) {
+      const unsubscribe = dispatch(
+        listenToRequirementChanges(requirement.requirementId)
+      );
+      return () => {
+        if (typeof unsubscribe === "function") unsubscribe();
+      };
+    }
+  }, [requirement?.requirementId]);
 
   if (!isConnectedToInternet) return <Offline />;
 
