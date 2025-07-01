@@ -41,7 +41,7 @@ export default function BlacklistedPage() {
         phone_number: phoneNumber,
       });
     } catch (error) {
-      console.error("Error logging blacklisted page view:", error);
+      console.error("Error logging blackListed page view:", error);
     }
   }, [userType, phoneNumber]);
 
@@ -79,14 +79,14 @@ export default function BlacklistedPage() {
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>OOPS! You've been blacklisted</Text>
+      <Text style={styles.title}>OOPS! You've been blackListed</Text>
       <View style={styles.card}>
         <Text style={styles.status}>
           <AntDesign name="closecircleo" size={20} color="#DC3545" /> You have
-          been blacklisted
+          been blackListed
         </Text>
         <Text style={styles.message}>
-          Your account has been blacklisted due to misuse or non-compliance with
+          Your account has been blackListed due to misuse or non-compliance with
           our agent guidelines. Contact{" "}
           <Text
             style={{ textDecorationLine: "underline" }}

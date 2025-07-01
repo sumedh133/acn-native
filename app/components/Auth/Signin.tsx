@@ -154,15 +154,15 @@ export default function SignUp() {
       dispatch(listenToAgentChanges(result.docId));
       const agentData = result.docData;
 
-      if (agentData?.blacklisted) {
+      if (agentData?.blackListed) {
         logEvent(analytics, "signin_blacklisted", {
           event_category: "auth",
           event_label: "signin_error",
-          error_type: "blacklisted",
+          error_type: "blackListed",
           phone_number: phoneNumber,
           user_type: userType,
         });
-        showErrorToast("Your account is blacklisted. Please contact support.");
+        showErrorToast("Your account is blackListed. Please contact support.");
         router.push("/components/Auth/BlacklistedPage");
         return;
       }
@@ -204,7 +204,7 @@ export default function SignUp() {
         const newAgent = {
           phoneNumber: phonenumber,
           admin: false,
-          blacklisted: false,
+          blackListed: false,
           verified: false,
           added: getUnixDateTime(),
           lastModified: getUnixDateTime(),

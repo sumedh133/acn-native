@@ -110,6 +110,8 @@ export const listenToAgentChanges =
           // Update previous status for next comparison
           previousVerificationStatus = currentVerificationStatus;
 
+          // Keep updating state; logout will be handled in UI layer when blacklist flag is detected
+
           dispatch(
             setUserDoc({
               docData: newData,
@@ -247,7 +249,9 @@ export const selectAdmin = (state: RootState): boolean =>
   state?.agent?.docData?.admin || false;
 
 export const selectBlacklisted = (state: RootState): boolean =>
-  state?.agent?.docData?.blacklisted || false;
+  state?.agent?.docData?.blacklisted ||
+  state?.agent?.docData?.blackListed ||
+  false;
 
 export const selectName = (state: RootState): string =>
   state?.agent?.docData?.name || "";

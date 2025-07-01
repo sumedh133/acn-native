@@ -65,6 +65,8 @@ import SessionTracker from "./services/SessionTracker";
 import Offline from "./components/Offline";
 import { listenToAgentChanges } from "@/store/slices/agentSlice";
 import { setAgentListener } from "@/store/slices/listenerSlice";
+import { selectBlacklisted } from "@/store/slices/agentSlice";
+import { logOut } from "@/store/slices/authSlice";
 
 // Custom header component to apply the desired styling
 const CustomHeader = ({
@@ -232,11 +234,31 @@ export default function LayoutApp() {
   const router = useRouter();
 
   const myKamId = useSelector(selectMyKam);
+  const isBlacklisted = useSelector(selectBlacklisted);
   useEffect(() => {
     if (myKamId) {
       dispatch(setKamDataState(myKamId));
     }
   }, [myKamId, dispatch]);
+
+  // Logout and redirect to BlacklistedPage if the user gets blackListed while already logged in
+  useEffect(() => {
+    console.log(isBlacklisted, "isBlacklisted");
+    if (isBlacklisted && isAuthenticated) {
+      (async () => {
+        try {
+          // Ensure complete sign-out
+          await dispatch(logOut());
+          setTimeout(() => {
+            router.dismissAll();
+            router.replace("/");
+          }, 300);
+        } catch (error) {
+          console.error("Error during logout:", error);
+        }
+      })();
+    }
+  }, [isBlacklisted]);
 
   // Attach real-time listener for agent document BEFORE potential early returns to keep hook order stable
   useEffect(() => {

@@ -73,18 +73,12 @@ export default function TabOneScreen() {
     }
   }, [isAuthenticated, userPhoneNumber]);
 
-  // user name as a custom param and can add more details to log for the user.
-  try {
-    const userName = useSelector(
-      (state: RootState) => state.agent.docData.name
-    );
-    const customParams = { user_name: userName };
-    useEffect(() => {
-      if (userName) {
-        setUserProperties(analytics, customParams);
-      }
-    }, [isAuthenticated, customParams]);
-  } catch {}
+  // Track user name as a custom analytics property
+  useEffect(() => {
+    if (userName) {
+      setUserProperties(analytics, { user_name: userName });
+    }
+  }, [isAuthenticated, userName]);
 
   // useEffect(() => {
   //   // Function to request permission and get the token
