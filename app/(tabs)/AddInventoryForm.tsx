@@ -886,7 +886,7 @@ const AddInventoryForm = () => {
         dateOfInventoryAdded: getUnixDateTime(),
         dateOfStatusLastChecked: getUnixDateTime(),
         cpId: agentData.cpId,
-        kamId: agentData.kam,
+        kamId: agentData.kamId,
         // area: selectedArea,
         askPricePerSqft,
         totalAskPrice,

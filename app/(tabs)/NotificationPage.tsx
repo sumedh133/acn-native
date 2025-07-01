@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useCallback } from "react";
 import {
   View,
   Text,
@@ -12,6 +12,7 @@ import {
   Pressable,
   Linking,
 } from "react-native";
+import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { useSelector } from "react-redux";
 import { RootState } from "@/store/store";
 import { analytics } from "../config/firebase";
@@ -33,6 +34,8 @@ import { ThunkDispatch } from "@reduxjs/toolkit";
 import { AnyAction } from "redux";
 import MarkasRead from "@/assets/icons/Notification/MarkasRead.svg";
 import { getUnixDateTime } from "../helpers/getUnixDateTime";
+import { showSuccessToast } from "@/utils/toastUtils";
+import UndoArchiveModal from "../components/Notification/UndoArchiveModal";
 
 const { width } = Dimensions.get("window");
 
@@ -64,9 +67,20 @@ const NotificationPage: React.FC<NotificationPageProps> = () => {
     setActiveFilter,
     notifications,
     markAllVisibleAsRead,
+    archiveNotification,
     isLoading,
+    markAsRead,
+    markAsUnRead,
   } = useNotification();
   const [showFilters, setShowFilters] = useState(false);
+  const [showUndoModal, setShowUndoModal] = useState(false);
+  const [pendingArchiveNotification, setPendingArchiveNotification] =
+    useState<NotificationItem | null>(null);
+  const [restoreNotificationCallback, setRestoreNotificationCallback] =
+    useState<((notification: NotificationItem) => void) | null>(null);
+  const [finalArchiveCallback, setFinalArchiveCallback] = useState<
+    ((notification: NotificationItem) => void) | null
+  >(null);
   const router = useRouter();
 
   const filters = [
@@ -255,6 +269,172 @@ const NotificationPage: React.FC<NotificationPageProps> = () => {
     }
   };
 
+  // Handle archive notification - show undo modal instead of immediate archive
+  const handleArchiveNotification = useCallback(
+    async (notification: NotificationItem) => {
+      try {
+        console.log("=== NotificationPage.tsx - handleArchiveNotification ===");
+        console.log("Received notification for archiving:", notification);
+        console.log("notification.id:", notification.id);
+        console.log(
+          "notification.notificationId:",
+          notification.notificationId
+        );
+
+        // Store the notification for potential undo
+        setPendingArchiveNotification(notification);
+        setShowUndoModal(true);
+
+        // Log archive initiation
+        logEvent(analytics, "notification_archive_initiated", {
+          event_category: "notifications",
+          event_label: "swipe_archive",
+          notification_type: notification.type,
+          user_type: userType,
+        });
+      } catch (error) {
+        console.error("Error initiating archive:", error);
+      }
+    },
+    [userType]
+  );
+
+  // Handle undo archive
+  const handleUndoArchive = () => {
+    // Restore the notification to the UI
+    if (pendingArchiveNotification && restoreNotificationCallback) {
+      console.log("Restoring notification:", pendingArchiveNotification);
+      restoreNotificationCallback(pendingArchiveNotification);
+    } else {
+      console.log("Cannot restore - missing notification or callback:", {
+        pendingArchiveNotification: !!pendingArchiveNotification,
+        restoreNotificationCallback: !!restoreNotificationCallback,
+      });
+    }
+
+    // Log undo action
+    if (pendingArchiveNotification) {
+      logEvent(analytics, "notification_archive_undone", {
+        event_category: "notifications",
+        event_label: "undo_archive",
+        notification_type: pendingArchiveNotification.type,
+        user_type: userType,
+      });
+    }
+
+    setShowUndoModal(false);
+    setPendingArchiveNotification(null);
+    showSuccessToast("Archive undone");
+  };
+
+  // Handle setting the restore callback from Notifications component
+  const handleSetRestoreCallback = useCallback(
+    (callback: (notification: NotificationItem) => void) => {
+      console.log("Setting restore callback from Notifications component");
+      setRestoreNotificationCallback(() => callback);
+    },
+    []
+  );
+
+  // Handle setting the final archive callback from Notifications component
+  const handleSetFinalArchiveCallback = useCallback(
+    (callback: (notification: NotificationItem) => void) => {
+      console.log(
+        "Setting final archive callback from Notifications component"
+      );
+      setFinalArchiveCallback(() => callback);
+    },
+    []
+  );
+
+  // Handle final archive (when undo modal dismisses)
+  const handleFinalArchive = async () => {
+    if (!pendingArchiveNotification) return;
+
+    try {
+      console.log("=== NotificationPage.tsx - handleFinalArchive ===");
+      console.log(
+        "Pending notification to archive:",
+        pendingArchiveNotification
+      );
+
+      const idToArchive =
+        pendingArchiveNotification.notificationId ||
+        pendingArchiveNotification.id;
+      console.log(
+        "ID being sent to archiveNotification function:",
+        idToArchive
+      );
+
+      // Remove from local UI state first
+      if (finalArchiveCallback) {
+        console.log("Calling final archive callback to remove from UI");
+        finalArchiveCallback(pendingArchiveNotification);
+      }
+
+      // Then archive in database
+      const result = await archiveNotification(idToArchive);
+
+      // Log final archive action
+      logEvent(analytics, "notification_archived", {
+        event_category: "notifications",
+        event_label: "archive_confirmed",
+        notification_type: pendingArchiveNotification.type,
+        user_type: userType,
+      });
+
+      setShowUndoModal(false);
+      setPendingArchiveNotification(null);
+    } catch (error) {
+      console.error("Error archiving notification:", error);
+      setShowUndoModal(false);
+      setPendingArchiveNotification(null);
+    }
+  };
+
+  // Handle toggle read/unread
+  const handleToggleRead = useCallback(
+    async (notification: NotificationItem) => {
+      try {
+        const notificationId = notification.notificationId || notification.id;
+        console.log("=== NotificationPage.tsx - handleToggleRead ===");
+        console.log(
+          "Toggling read status for notification:",
+          notification.title
+        );
+        console.log("Current isRead status:", notification.isRead);
+        console.log("notification ID:", notificationId);
+
+        if (notification.isRead) {
+          // Mark as unread
+          await markAsUnRead(notificationId);
+          showSuccessToast("Marked as unread");
+
+          logEvent(analytics, "notification_marked_unread", {
+            event_category: "notifications",
+            event_label: "swipe_unread",
+            notification_type: notification.type,
+            user_type: userType,
+          });
+        } else {
+          // Mark as read
+          await markAsRead(notificationId);
+          showSuccessToast("Marked as read");
+
+          logEvent(analytics, "notification_marked_read", {
+            event_category: "notifications",
+            event_label: "swipe_read",
+            notification_type: notification.type,
+            user_type: userType,
+          });
+        }
+      } catch (error) {
+        console.error("Error toggling read status:", error);
+      }
+    },
+    [markAsRead, markAsUnRead, userType]
+  );
+
   // Track page view
   useEffect(() => {
     try {
@@ -270,82 +450,97 @@ const NotificationPage: React.FC<NotificationPageProps> = () => {
   }, [userType]);
 
   return (
-    <View style={styles.container}>
-      <StatusBar barStyle="dark-content" backgroundColor="#FFFFFF" />
-      <View style={styles.header}>
-        <View style={styles.headerContent}>
-          <Text style={styles.headerTitle}>Notifications</Text>
-          {unreadCount > 0 && (
-            <View style={styles.notificationIcon}>
-              <Text style={styles.notificationText}>{unreadCount}</Text>
-            </View>
-          )}
-          <TouchableOpacity onPress={() => setShowFilters(true)} className="">
-            <FilterIcon />
-          </TouchableOpacity>
+    <GestureHandlerRootView style={{ flex: 1 }}>
+      <View style={styles.container}>
+        <StatusBar barStyle="dark-content" backgroundColor="#FFFFFF" />
+        <View style={styles.header}>
+          <View style={styles.headerContent}>
+            <Text style={styles.headerTitle}>Notifications</Text>
+            {unreadCount > 0 && (
+              <View style={styles.notificationIcon}>
+                <Text style={styles.notificationText}>{unreadCount}</Text>
+              </View>
+            )}
+            <TouchableOpacity onPress={() => setShowFilters(true)} className="">
+              <FilterIcon />
+            </TouchableOpacity>
+          </View>
+          <View style={styles.headerContent}>
+            <TouchableOpacity onPress={markAllVisibleAsRead}>
+              <MarkasRead width={24} height={24} />
+            </TouchableOpacity>
+            <TouchableOpacity
+              onPress={() =>
+                router.push("/components/Notification/NotificationSettings")
+              }
+            >
+              <SettingsIcon />
+            </TouchableOpacity>
+          </View>
         </View>
-        <View style={styles.headerContent}>
-          <TouchableOpacity onPress={markAllVisibleAsRead}>
-            <MarkasRead width={24} height={24} />
-          </TouchableOpacity>
-          <TouchableOpacity
-            onPress={() =>
-              router.push("/components/Notification/NotificationSettings")
-            }
-          >
-            <SettingsIcon />
-          </TouchableOpacity>
-        </View>
-      </View>
 
-      <View style={styles.notificationsContainer}>
-        <Notifications
-          notifications={filteredNotifications}
-          onCtaPress={onCTAPress}
-          isLoading={isLoading}
+        <View style={styles.notificationsContainer}>
+          <Notifications
+            notifications={filteredNotifications}
+            onCtaPress={onCTAPress}
+            onArchive={handleArchiveNotification}
+            onToggleRead={handleToggleRead}
+            onRestoreNotification={handleSetRestoreCallback}
+            onFinalArchive={handleSetFinalArchiveCallback}
+            isLoading={isLoading}
+          />
+        </View>
+
+        {/* Filter Modal */}
+        <Modal
+          animationType="slide"
+          transparent={true}
+          visible={showFilters}
+          onRequestClose={() => setShowFilters(false)}
+        >
+          <Pressable
+            style={styles.modalOverlay}
+            onPress={() => setShowFilters(false)}
+          >
+            <View style={styles.modalContent}>
+              {/* Drag indicator */}
+              <View style={styles.dragIndicator} />
+              {filters.map((filter) => (
+                <TouchableOpacity
+                  key={filter.id}
+                  style={styles.filterOption}
+                  onPress={() => {
+                    setActiveFilter(filter.id);
+                    setShowFilters(false);
+                  }}
+                >
+                  <Text
+                    style={[
+                      styles.filterOptionText,
+                      activeFilter === filter.id &&
+                        styles.activeFilterOptionText,
+                    ]}
+                  >
+                    {filter.label}
+                  </Text>
+                  {activeFilter === filter.id && (
+                    <Checkmark width={20} height={21} color="#153E3B" />
+                  )}
+                </TouchableOpacity>
+              ))}
+            </View>
+          </Pressable>
+        </Modal>
+
+        {/* Undo Archive Modal */}
+        <UndoArchiveModal
+          visible={showUndoModal}
+          notification={pendingArchiveNotification}
+          onUndo={handleUndoArchive}
+          onDismiss={handleFinalArchive}
         />
       </View>
-
-      {/* Filter Modal */}
-      <Modal
-        animationType="slide"
-        transparent={true}
-        visible={showFilters}
-        onRequestClose={() => setShowFilters(false)}
-      >
-        <Pressable
-          style={styles.modalOverlay}
-          onPress={() => setShowFilters(false)}
-        >
-          <View style={styles.modalContent}>
-            {/* Drag indicator */}
-            <View style={styles.dragIndicator} />
-            {filters.map((filter) => (
-              <TouchableOpacity
-                key={filter.id}
-                style={styles.filterOption}
-                onPress={() => {
-                  setActiveFilter(filter.id);
-                  setShowFilters(false);
-                }}
-              >
-                <Text
-                  style={[
-                    styles.filterOptionText,
-                    activeFilter === filter.id && styles.activeFilterOptionText,
-                  ]}
-                >
-                  {filter.label}
-                </Text>
-                {activeFilter === filter.id && (
-                  <Checkmark width={20} height={21} color="#153E3B" />
-                )}
-              </TouchableOpacity>
-            ))}
-          </View>
-        </Pressable>
-      </Modal>
-    </View>
+    </GestureHandlerRootView>
   );
 };
 

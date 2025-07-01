@@ -27,8 +27,9 @@ export type NotificationFilter =
   | "billing";
 
 export default function useNotification() {
-  const cpId =
-    useSelector((state: RootState) => state?.agent?.docData?.cpId) || null;
+  // const cpId =
+  //   useSelector((state: RootState) => state?.agent?.docData?.cpId) || null;
+  const cpId = "INT055";
   const userType =
     useSelector((state: RootState) => state?.agent?.docData?.userType) ||
     "free";
@@ -171,13 +172,24 @@ export default function useNotification() {
   // Mark notification as read
   const markAsRead = async (notificationId: string) => {
     try {
+      console.log("=== useNotification.ts - markAsRead ===");
+      console.log("Marking notification as read, ID:", notificationId);
+
       const docRef = doc(db, "acnNotifications", cpId);
-      const updatedNotifications = notifications.map((notification) =>
+
+      // Get the current complete notifications array from database
+      const docSnap = await getDoc(docRef);
+      if (!docSnap.exists()) return;
+      const allNotifications: NotificationItem[] =
+        docSnap.data().notifications || [];
+
+      const updatedNotifications = allNotifications.map((notification) =>
+        notification.id === notificationId ||
         notification.notificationId === notificationId
           ? { ...notification, isRead: true }
           : notification
       );
-      console.log(updatedNotifications, "updatedNotifications");
+      console.log("Database update completed for markAsRead");
       await updateDoc(docRef, { notifications: updatedNotifications });
     } catch (error) {
       console.error("Error marking notification as read:", error);
@@ -186,17 +198,27 @@ export default function useNotification() {
 
   const markAsUnRead = async (notificationId: string) => {
     try {
-      console.log(notificationId, "notificationId");
+      console.log("=== useNotification.ts - markAsUnRead ===");
+      console.log("Marking notification as unread, ID:", notificationId);
+
       const docRef = doc(db, "acnNotifications", cpId);
-      const updatedNotifications = notifications.map((notification) =>
+
+      // Get the current complete notifications array from database
+      const docSnap = await getDoc(docRef);
+      if (!docSnap.exists()) return;
+      const allNotifications: NotificationItem[] =
+        docSnap.data().notifications || [];
+
+      const updatedNotifications = allNotifications.map((notification) =>
+        notification.id === notificationId ||
         notification.notificationId === notificationId
           ? { ...notification, isRead: false }
           : notification
       );
-      console.log(updatedNotifications, "updatedNotifications");
+      console.log("Database update completed for markAsUnRead");
       await updateDoc(docRef, { notifications: updatedNotifications });
     } catch (error) {
-      console.error("Error marking notification as read:", error);
+      console.error("Error marking notification as unread:", error);
     }
   };
 
@@ -219,17 +241,136 @@ export default function useNotification() {
     }
   };
 
+  // Debug function to inspect notifications in database
+  const debugNotificationsInDB = async () => {
+    try {
+      const docRef = doc(db, "acnNotifications", cpId);
+      const docSnap = await getDoc(docRef);
+      if (!docSnap.exists()) {
+        console.log("No notifications document found");
+        return;
+      }
+
+      const allNotifications: NotificationItem[] =
+        docSnap.data().notifications || [];
+      console.log("=== DATABASE DEBUG ===");
+      console.log("Total notifications in DB:", allNotifications.length);
+
+      allNotifications.forEach((notif, index) => {
+        console.log(`Notification ${index}:`, {
+          id: notif.id,
+          notificationId: notif.notificationId,
+          title: notif.title,
+          archived: notif.archived,
+          type: notif.type,
+        });
+      });
+
+      // Check for duplicate IDs
+      const ids = allNotifications.map((n) => n.id).filter(Boolean);
+      const notificationIds = allNotifications
+        .map((n) => n.notificationId)
+        .filter(Boolean);
+      const duplicateIds = ids.filter(
+        (item, index) => ids.indexOf(item) !== index
+      );
+      const duplicateNotificationIds = notificationIds.filter(
+        (item, index) => notificationIds.indexOf(item) !== index
+      );
+
+      if (duplicateIds.length > 0) {
+        console.warn("Duplicate IDs found:", duplicateIds);
+      }
+      if (duplicateNotificationIds.length > 0) {
+        console.warn(
+          "Duplicate notificationIds found:",
+          duplicateNotificationIds
+        );
+      }
+    } catch (error) {
+      console.error("Error debugging notifications:", error);
+    }
+  };
+
   // Mark notification as archived
   const archiveNotification = async (notificationId: string) => {
     try {
-      console.log(notificationId, "blablablabla");
+      console.log("=== useNotification.ts - archiveNotification ===");
+      console.log("Archiving notification with ID:", notificationId);
+
+      // First debug the current state
+      await debugNotificationsInDB();
+
       const docRef = doc(db, "acnNotifications", cpId);
-      const updatedNotifications = notifications.map((notification) =>
-        notification.notificationId === notificationId
-          ? { ...notification, archived: true }
-          : notification
+
+      // Get the current complete notifications array from database (including archived ones)
+      const docSnap = await getDoc(docRef);
+      if (!docSnap.exists()) {
+        console.error("No notifications document found");
+        return;
+      }
+
+      const allNotifications: NotificationItem[] =
+        docSnap.data().notifications || [];
+      console.log("Total notifications in DB:", allNotifications.length);
+
+      // Find matching notifications (there should be only one)
+      const matchingNotifications = allNotifications.filter(
+        (notification) =>
+          notification.id === notificationId ||
+          notification.notificationId === notificationId
       );
+
+      console.log(
+        "Matching notifications found:",
+        matchingNotifications.length
+      );
+      matchingNotifications.forEach((notif, index) => {
+        console.log(`Match ${index}:`, {
+          id: notif.id,
+          notificationId: notif.notificationId,
+          title: notif.title,
+          archived: notif.archived,
+        });
+      });
+
+      if (matchingNotifications.length === 0) {
+        console.error("No matching notification found for ID:", notificationId);
+        return;
+      }
+
+      if (matchingNotifications.length > 1) {
+        console.warn(
+          "Multiple matching notifications found! This could cause issues."
+        );
+      }
+
+      // Update only the specific notification - check both id and notificationId fields
+      const updatedNotifications = allNotifications.map((notification) => {
+        const matches =
+          notification.id === notificationId ||
+          notification.notificationId === notificationId;
+        if (matches) {
+          console.log("Found matching notification to archive:", {
+            id: notification.id,
+            notificationId: notification.notificationId,
+            title: notification.title,
+          });
+          return { ...notification, archived: true };
+        }
+        return notification;
+      });
+
+      const newArchivedCount = updatedNotifications.filter(
+        (n) => n.archived
+      ).length;
+      const oldArchivedCount = allNotifications.filter(
+        (n) => n.archived
+      ).length;
+      console.log(`Archived count: ${oldArchivedCount} -> ${newArchivedCount}`);
+
       await updateDoc(docRef, { notifications: updatedNotifications });
+      console.log("Database update completed");
     } catch (error) {
       console.error("Error archiving notification:", error);
     }
@@ -266,10 +407,10 @@ export default function useNotification() {
     activeFilter,
     setActiveFilter,
     markAsRead,
+    markAsUnRead,
     markAllVisibleAsRead,
     archiveNotification,
     migrateNotifications,
-    markAsUnRead,
     isLoading,
   };
 }

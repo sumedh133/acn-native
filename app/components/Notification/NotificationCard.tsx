@@ -255,11 +255,11 @@ const NotificationCard: React.FC<NotificationCardProps> = ({
       ]}
     >
       <View style={styles.avatarContainer}>
-        {!notification.isRead ? (
+        {/* {!notification.isRead ? (
           <View style={styles.unreadDot} />
         ) : (
           <View style={{ width: 10, height: 10 }} />
-        )}
+        )} */}
         {renderAvatar()}
       </View>
       <View style={styles.contentContainer}>
@@ -313,7 +313,7 @@ const styles = StyleSheet.create({
   container: {
     flexDirection: "row",
     gap: 12,
-    paddingLeft: 24,
+    paddingLeft: 12,
     paddingTop: 24,
     alignItems: "flex-start",
   },
