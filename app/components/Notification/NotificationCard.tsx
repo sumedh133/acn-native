@@ -59,7 +59,7 @@ const ctaIconMap: Record<string, React.ReactNode> = {
       // style={{ marginRight: 6 }}
     />
   ),
-  "Message on Whatsapp": (
+  "Message on WhatsApp": (
     <MaterialCommunityIcons
       name="whatsapp"
       size={16}
