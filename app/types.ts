@@ -204,7 +204,12 @@ export interface NotificationItem {
   type: string;
   propertyId?: string;
   archived?: boolean;
-  [key: string]: any;
+  isRead?: boolean;
+  icon?: string;
+  notificationId: string;
+  meta?: {
+    [key: string]: any;
+  } | null;
 }
 
 export interface SubscriptionPlan {

@@ -21,7 +21,11 @@ import EmailInvoiceIcon from "@/assets/icons/billing/emailInvoice.svg";
 import DownloadPDFIcon from "@/assets/icons/billing/downloadPDF.svg";
 import ContactSupportIcon from "@/assets/icons/billing/contactSupport.svg";
 import RetryPaymentIcon from "@/assets/icons/billing/retryPayment.svg";
-import { showErrorToast, showInfoToast, showSuccessToast } from "@/utils/toastUtils";
+import {
+  showErrorToast,
+  showInfoToast,
+  showSuccessToast,
+} from "@/utils/toastUtils";
 
 interface PaymentDetails {
   id: string;

@@ -27,9 +27,9 @@ export type NotificationFilter =
   | "billing";
 
 export default function useNotification() {
-  // const cpId =
-  //   useSelector((state: RootState) => state?.agent?.docData?.cpId) || null;
-  const cpId = "INT055";
+  const cpId =
+    useSelector((state: RootState) => state?.agent?.docData?.cpId) || null;
+  // const cpId = "CPB555";
   const userType =
     useSelector((state: RootState) => state?.agent?.docData?.userType) ||
     "free";
@@ -111,6 +111,7 @@ export default function useNotification() {
   const getToken = async () => {
     try {
       const token = await messaging().getToken();
+      console.log("FCM Token:", token);
       const docRef = doc(db, "acnAgents", cpId);
       await updateDoc(docRef, {
         fsmToken: arrayUnion(token),

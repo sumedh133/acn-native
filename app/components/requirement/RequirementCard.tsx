@@ -19,14 +19,15 @@ interface RequirementCardProps {
 const RequirementCard = React.memo(({ requirement }: RequirementCardProps) => {
   const router = useRouter();
   const dispatch = useDispatch<ThunkDispatch<RootState, unknown, AnyAction>>();
-  const userType = useSelector((state: RootState) => state.agent?.docData?.userType) || "free";
+  const userType =
+    useSelector((state: RootState) => state.agent?.docData?.userType) || "free";
 
   // Format budget display
   const formatBudget = (budget: Budget) => {
     if (!budget) return "N/A";
 
-    const from = budget?.from ? budget?.from * 100 : 0;
-    const to = budget?.to ? budget?.to * 100 : 0;
+    const from = budget?.from;
+    const to = budget?.to;
 
     if (budget.from === 0) {
       return formatCost2(to);
@@ -70,16 +71,16 @@ const RequirementCard = React.memo(({ requirement }: RequirementCardProps) => {
     dispatch(setRequirementDataThunk(requirement));
 
     try {
-      logEvent(analytics, 'view_requirement_details', {
-        event_category: 'requirement',
-        event_label: 'view',
+      logEvent(analytics, "view_requirement_details", {
+        event_category: "requirement",
+        event_label: "view",
         requirement_id: requirement.requirementId,
         requirement_type: requirement.assetType,
         requirement_location: requirement.area,
-        user_type: userType
+        user_type: userType,
       });
     } catch (error) {
-      console.error('Error logging requirement view:', error);
+      console.error("Error logging requirement view:", error);
     }
 
     // Navigate to requirement details screen
@@ -112,9 +113,7 @@ const RequirementCard = React.memo(({ requirement }: RequirementCardProps) => {
             className="text-black text-base"
             style={{ fontFamily: "Montserrat_700Bold" }}
           >
-            {(requirement.propertyName || "")
-              .charAt(0)
-              .toUpperCase() +
+            {(requirement.propertyName || "").charAt(0).toUpperCase() +
               (requirement.propertyName || "").slice(1)}
           </Text>
         </View>

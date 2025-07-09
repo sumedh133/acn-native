@@ -15,6 +15,14 @@
       },
       "oauth_client": [
         {
+          "client_id": "695268023939-rjr6p3j34hgrpc1g46orshk70dvueb9p.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.acnonline.in",
+            "certificate_hash": "8d21f3f79058b5f75e497c66225af26313563c41"
+          }
+        },
+        {
           "client_id": "695268023939-tclmpo91a8ur4pee4nssep1qjhc5rp2u.apps.googleusercontent.com",
           "client_type": 1,
           "android_info": {
@@ -38,6 +46,13 @@
             {
               "client_id": "695268023939-5rosvsjk2da7bp2eq6joscup4cvmho7n.apps.googleusercontent.com",
               "client_type": 3
+            },
+            {
+              "client_id": "695268023939-focjbihtpjbp9qstr3cme8kd0pocm9ql.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.acnonline.in"
+              }
             }
           ]
         }

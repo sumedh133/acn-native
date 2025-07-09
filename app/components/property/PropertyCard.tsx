@@ -42,7 +42,7 @@ import axios from "axios";
 import CreditLimitModal from "@/app/modals/CreditLimitModal";
 import { analytics } from "@/app/config/firebase";
 import { logEvent } from "@react-native-firebase/analytics";
-import { toCapitalizedWords } from "@/app/helpers/common";
+import { formatCost2, toCapitalizedWords } from "@/app/helpers/common";
 
 interface PropertyCardProps {
   property: Property;
@@ -288,7 +288,7 @@ const PropertyCard: React.FC<PropertyCardProps> = ({ property }) => {
         setIsEnquiryCPModelOpen(true);
       }
       await fetch(
-        `https://notification-server-acn-zdgg.onrender.com/enquiries/${nextEnqId}`,
+        `https://acn-notification-server.onrender.com/enquiry/${nextEnqId}`,
         {
           method: "POST",
           headers: {
@@ -435,7 +435,7 @@ const PropertyCard: React.FC<PropertyCardProps> = ({ property }) => {
                 Total Ask Price:
               </Text>
               <Text className="text-sm font-semibold text-gray-900">
-                {formatPrice()}
+                {formatCost2(property.totalAskPrice)}
               </Text>
             </View>
 

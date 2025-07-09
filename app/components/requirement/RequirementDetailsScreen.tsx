@@ -30,6 +30,7 @@ import {
 } from "@/store/slices/requirementSlice";
 import { SafeAreaView } from "react-native-safe-area-context";
 import Offline from "../Offline";
+import { formatCost2 } from "@/app/helpers/common";
 
 // Helper function to capitalize words
 const toCapitalizedWords = (str: string): string => {
@@ -69,18 +70,18 @@ export default function RequirementDetailsScreen() {
     }
 
     if (typeof requirement.budget === "number") {
-      return `₹${requirement.budget} Cr`;
+      return formatCost2(requirement.budget);
     }
 
     if (requirement.budget && typeof requirement.budget === "object") {
-      const from = requirement.budget.from || 0;
-      const to = requirement.budget.to || 0;
+      const from = formatCost2(requirement.budget.from) || 0;
+      const to = formatCost2(requirement.budget.to) || 0;
 
       if (from === 0) {
-        return `₹${to} Cr`;
+        return `${to}`;
       }
 
-      return `₹${from} Cr - ₹${to} Cr`;
+      return `${from} - ${to}`;
     }
 
     return "-";
@@ -159,14 +160,18 @@ export default function RequirementDetailsScreen() {
   );
 
   useEffect(() => {
+    let unsubscribe: (() => void) | undefined;
     if (requirement?.requirementId) {
-      const unsubscribe = dispatch(
+      const result = dispatch(
         listenToRequirementChanges(requirement.requirementId)
       );
-      return () => {
-        if (typeof unsubscribe === "function") unsubscribe();
-      };
+      if (typeof result === "function") {
+        unsubscribe = result;
+      }
     }
+    return () => {
+      if (typeof unsubscribe === "function") unsubscribe();
+    };
   }, [requirement?.requirementId]);
 
   if (!isConnectedToInternet) return <Offline />;

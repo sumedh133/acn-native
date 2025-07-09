@@ -14,6 +14,7 @@ import {
 import { useRouter } from "expo-router";
 import { parsePhoneNumberFromString } from "libphonenumber-js";
 import {
+  handleNewAgentThunk,
   listenToAgentChanges,
   setAgentDataState,
   setPhonenumber,
@@ -45,6 +46,7 @@ export default function SignUp() {
   const [isSendingOTP, setIsSendingOTP] = useState(false);
 
   const [errorMessage, setErrorMessage] = useState("");
+  const [currentForm, setCurrentForm] = useState("");
   const { loading, phoneNumber, isAgentInDb } = useSelector(
     (state: RootState) => state.agent
   );
@@ -183,57 +185,62 @@ export default function SignUp() {
       // Proceed with Firebase phone sign-in
       await signInWithPhoneNumber();
     } catch (error) {
-      await handleNewAgent();
+      await handleNewAgentThunk(
+        phonenumber,
+        setAddingNewAgent,
+        setCurrentForm,
+        setErrorMessage
+      );
     }
 
     dispatch(setPhonenumber(phonenumber) as AnyAction);
   };
 
-  const handleNewAgent = async () => {
-    if (phoneNumber && isPhoneValid && !isAgentInDb && !addingNewAgent) {
-      setAddingNewAgent(true);
-      try {
-        logEvent(analytics, "new_agent_registration", {
-          event_category: "auth",
-          event_label: "registration",
-          phone_number: phonenumber,
-          user_type: "new",
-        });
+  // const handleNewAgent = async () => {
+  //   if (phoneNumber && isPhoneValid && !isAgentInDb && !addingNewAgent) {
+  //     setAddingNewAgent(true);
+  //     try {
+  //       logEvent(analytics, "new_agent_registration", {
+  //         event_category: "auth",
+  //         event_label: "registration",
+  //         phone_number: phonenumber,
+  //         user_type: "new",
+  //       });
 
-        // Prepare the new agent data
-        const newAgent = {
-          phoneNumber: phonenumber,
-          admin: false,
-          blackListed: false,
-          verified: false,
-          added: getUnixDateTime(),
-          lastModified: getUnixDateTime(),
-        };
+  //       // Prepare the new agent data
+  //       const newAgent = {
+  //         phoneNumber: phonenumber,
+  //         admin: false,
+  //         blackListed: false,
+  //         verified: false,
+  //         added: getUnixDateTime(),
+  //         lastModified: getUnixDateTime(),
+  //       };
 
-        await addDoc(collection(db, "acnAgents"), newAgent);
+  //       await addDoc(collection(db, "acnAgents"), newAgent);
 
-        setAddingNewAgent(false);
-        router.push("/components/Auth/VerificationPage");
-      } catch (error) {
-        console.error("Error adding new user:", error);
-        setErrorMessage(
-          "There was an error adding the agent. Please try again."
-        );
-        setAddingNewAgent(false);
+  //       setAddingNewAgent(false);
+  //       router.push("/components/Auth/VerificationPage");
+  //     } catch (error) {
+  //       console.error("Error adding new user:", error);
+  //       setErrorMessage(
+  //         "There was an error adding the agent. Please try again."
+  //       );
+  //       setAddingNewAgent(false);
 
-        logEvent(analytics, "new_agent_error", {
-          event_category: "auth",
-          event_label: "registration_error",
-          error_type: "db_error",
-          phone_number: phonenumber,
-          user_type: "new",
-        });
-      } finally {
-        router.push("/components/Auth/VerificationPage");
-        setAddingNewAgent(false);
-      }
-    }
-  };
+  //       logEvent(analytics, "new_agent_error", {
+  //         event_category: "auth",
+  //         event_label: "registration_error",
+  //         error_type: "db_error",
+  //         phone_number: phonenumber,
+  //         user_type: "new",
+  //       });
+  //     } finally {
+  //       router.push("/components/Auth/VerificationPage");
+  //       setAddingNewAgent(false);
+  //     }
+  //   }
+  // };
 
   const signInWithPhoneNumber = async () => {
     setIsSendingOTP(true);

@@ -123,7 +123,7 @@ const HelpMobile: React.FC<HelpMobileProps> = () => {
   );
 
   const handleContactSupport = () => {
-    const phoneNumber = "+917206498895";
+    const phoneNumber = "+919415006092";
     Linking.openURL(`tel:${phoneNumber}`);
   };
 

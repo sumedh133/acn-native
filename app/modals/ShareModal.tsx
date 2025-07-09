@@ -51,7 +51,7 @@ const ShareModal: React.FC<ShareModalProps> = ({
         logEvent(analytics, "share_modal_show", {
           event_category: "modal",
           event_label: "share",
-          property_id: property?.id,
+          property_id: property?.propertyId,
           user_type: userType,
         });
       } catch (error) {
@@ -73,7 +73,7 @@ const ShareModal: React.FC<ShareModalProps> = ({
         event_category: "modal",
         event_label: "share",
         action: "copy",
-        property_id: property?.id,
+        property_id: property?.propertyId,
         user_type: userType,
       });
 
@@ -87,16 +87,16 @@ const ShareModal: React.FC<ShareModalProps> = ({
     }
   };
 
-  const handleShare = () => {
+  const handleShare = async () => {
     try {
       logEvent(analytics, "share_action", {
         event_category: "modal",
         event_label: "share",
         action: "whatsapp",
-        property_id: property?.id,
+        property_id: property?.propertyId,
         user_type: userType,
       });
-      shareProperty(property, agentData?.phoneNumber, phoneNumber);
+      await shareProperty(property, agentData?.phoneNumber, phoneNumber);
     } catch (error) {
       console.error("Error in share action:", error);
     }

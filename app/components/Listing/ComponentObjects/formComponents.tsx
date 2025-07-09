@@ -39,6 +39,7 @@ export const compulsoryFields: {
     "facing",
     "unitType",
     "totalAskPrice",
+    "handoverDate",
   ],
   Villa: [
     "communityType",
@@ -48,6 +49,7 @@ export const compulsoryFields: {
     "facing",
     "unitType",
     "totalAskPrice",
+    "handoverDate",
   ],
   Plot: [
     "communityType",
@@ -55,6 +57,7 @@ export const compulsoryFields: {
     "plotSize",
     "facing",
     "totalAskPrice",
+    "handoverDate",
   ],
   Villament: [
     "communityType",
@@ -65,6 +68,7 @@ export const compulsoryFields: {
     "facing",
     "unitType",
     "totalAskPrice",
+    "handoverDate",
   ],
   "Row House": [
     "communityType",
@@ -74,6 +78,7 @@ export const compulsoryFields: {
     "facing",
     "unitType",
     "totalAskPrice",
+    "handoverDate",
   ],
   "Independent Building": [
     "communityType",
@@ -83,5 +88,6 @@ export const compulsoryFields: {
     "structure",
     "facing",
     "totalAskPrice",
+    "handoverDate",
   ],
 };

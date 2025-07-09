@@ -65,6 +65,8 @@ const NotificationPage: React.FC<NotificationPageProps> = () => {
   const kamPhone = useSelector(
     (state: RootState) => state?.kam?.kamDocData?.phoneNumber
   );
+  const kam = useSelector((state: RootState) => state?.kam?.kamDocData);
+  console.log("kam", kam);
   const dispatch = useDispatch<ThunkDispatch<RootState, unknown, AnyAction>>();
   const {
     unreadCount,
@@ -135,11 +137,20 @@ const NotificationPage: React.FC<NotificationPageProps> = () => {
       console.error("Error logging CTA click:", error);
     }
 
+    // Mark notification as read when CTA is pressed
+    try {
+      await markAsRead(notification.notificationId || notification.id);
+    } catch (error) {
+      console.error("Error marking notification as read:", error);
+    }
+
     switch (notification.type) {
       case "enquiry_buyer_notification":
-        // Handle enquiry sent notification
-        if (notification.propertyId) {
-          fetchAndDispatchProperty(notification.propertyId);
+        if (action === "Call Agent" || action === "Call Agents") {
+          // Linking.openURL(`tel:${notification.additionalData.buyerPhone}`);
+          Linking.openURL(`tel:${notification.meta?.sellerNumber}`);
+        } else if (action.toLocaleLowerCase() === "message on whatsapp") {
+          Linking.openURL(`https://wa.me/${notification.meta?.sellerNumber}`);
         }
         break;
 
@@ -147,11 +158,9 @@ const NotificationPage: React.FC<NotificationPageProps> = () => {
         // Handle enquiry received notification
         if (action === "Call Agent" || action === "Call Agents") {
           // Linking.openURL(`tel:${notification.additionalData.buyerPhone}`);
-          Linking.openURL(`tel:${kamPhone}`);
+          Linking.openURL(`tel:${notification.meta?.buyerNumber}`);
         } else if (action === "Message Agent" || action === "Message Agents") {
-          Linking.openURL(
-            `https://wa.me/${notification.additionalData.buyerPhone}`
-          );
+          Linking.openURL(`https://wa.me/${notification.meta?.buyerNumber}`);
         }
         break;
 
@@ -183,7 +192,7 @@ const NotificationPage: React.FC<NotificationPageProps> = () => {
         // Handle de-listed notification
         if (action === "Call your KAM") {
           Linking.openURL(`tel:${kamPhone}`);
-        } else if (action === "Go to Dashboard") {
+        } else if (action === "Dashboard") {
           router.push("/(tabs)/dashboardTab");
         }
         break;
@@ -197,8 +206,12 @@ const NotificationPage: React.FC<NotificationPageProps> = () => {
 
       case "qc_notification":
         // Handle status other than live notification
-        if (action === "Call your KAM") {
-          router.push("/modals/KamModal");
+        if (action.toLocaleLowerCase() === "call kam") {
+          console.log("kamPhone", kamPhone);
+          Linking.openURL(`tel:${kamPhone}`);
+        }
+        if (action.toLocaleLowerCase() === "dashboard") {
+          router.push("/(tabs)/dashboardTab");
         }
         break;
 
@@ -224,13 +237,13 @@ const NotificationPage: React.FC<NotificationPageProps> = () => {
 
       case "add_requirement_notification":
         // Handle requirement posted notification
-        if (notification.requirementId) {
+        if (notification.meta?.requirementId) {
           const fetchAndDispatchRequirement = async () => {
             try {
               const requirementRef = doc(
                 db,
                 "requirements",
-                notification.requirementId as string
+                notification.meta?.requirementId as string
               );
               const requirementSnap = await getDoc(requirementRef);
 

@@ -210,7 +210,7 @@ const NotificationCard: React.FC<NotificationCardProps> = ({
   // Avatar: initials or logo
   const renderAvatar = () => {
     if (notification.icon === "initials") {
-      const initials = notification.additionalData.buyerName
+      const initials = notification.meta?.buyerName
         .split(" ")
         .map((n: string) => n[0])
         .join("")

@@ -59,6 +59,7 @@ import { analytics } from "@/app/config/firebase";
 import { logEvent } from "@react-native-firebase/analytics";
 import {
   camelCaseToCapitalizedWords,
+  formatCost2,
   toCapitalizedWords,
 } from "@/app/helpers/common";
 
@@ -430,7 +431,7 @@ export default function PropertyDetailsScreen() {
         setIsEnquiryCPModelOpen(true);
       }
       await fetch(
-        `https://notification-server-acn-zdgg.onrender.com/enquiries/${nextEnqId}`,
+        `https://acn-notification-server.onrender.com/enquiry/${nextEnqId}`,
         {
           method: "POST",
           headers: {
@@ -630,7 +631,7 @@ export default function PropertyDetailsScreen() {
     if (property?.propertyId) {
       const unsubscribe = dispatch(
         listenToPropertyChanges(property.propertyId)
-      );
+      ) as (() => void) | undefined;
       return () => {
         if (typeof unsubscribe === "function") unsubscribe();
       };
@@ -688,7 +689,14 @@ export default function PropertyDetailsScreen() {
           <View style={styles.infoItem}>
             <HandOverIcon />
             <Text style={styles.infoText}>
-              {property.handoverDate || "Pending"}
+                {property.handoverDate
+                  ? (() => {
+                    const date = new Date(property.handoverDate * 1000);
+                    const month = (date.getMonth() + 1).toString().padStart(2, "0");
+                    const year = date.getFullYear();
+                    return `${month}/${year}`;
+                  })()
+                  : "Pending"}
             </Text>
           </View>
           <View style={styles.infoItem}>
@@ -771,7 +779,7 @@ export default function PropertyDetailsScreen() {
               label="Total Ask Price"
               value={
                 property.totalAskPrice
-                  ? formatCost(property.totalAskPrice)
+                  ? formatCost2(property.totalAskPrice)
                   : null
               }
             />

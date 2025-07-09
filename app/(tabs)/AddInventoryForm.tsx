@@ -572,6 +572,17 @@ const AddInventoryForm = () => {
     switch (assetType) {
       case "Apartment":
         for (let elem of compulsoryFields[assetType]) {
+          if (elem === "handoverDate") {
+            // If handoverDate is empty, set it to "NA"
+            if (property.currentStatus === false) {
+              const friendlyName = fieldLabels[elem] || elem;
+              showErrorToast(`Missing field: ${friendlyName}`);
+              return false;
+            } else {
+              property.handoverDate = 0;
+              continue;
+            }
+          }
           if (property[elem] === null || property[elem] === "") {
             const friendlyName = fieldLabels[elem] || elem;
             showErrorToast(`Missing field: ${friendlyName}`);
@@ -581,6 +592,17 @@ const AddInventoryForm = () => {
         break;
       case "Villa":
         for (let elem of compulsoryFields[assetType]) {
+          if (elem === "handoverDate") {
+            // If handoverDate is empty, set it to "NA"
+            if (property.currentStatus === false) {
+              const friendlyName = fieldLabels[elem] || elem;
+              showErrorToast(`Missing field: ${friendlyName}`);
+              return false;
+            } else {
+              property.handoverDate = 0;
+              continue;
+            }
+          }
           if (property[elem] === null || property[elem] === "") {
             const friendlyName = fieldLabels[elem] || elem;
             showErrorToast(`Missing field: ${friendlyName}`);
@@ -590,6 +612,17 @@ const AddInventoryForm = () => {
         break;
       case "Plot":
         for (let elem of compulsoryFields[assetType]) {
+          if (elem === "handoverDate") {
+            // If handoverDate is empty, set it to "NA"
+            if (property.currentStatus === false) {
+              const friendlyName = fieldLabels[elem] || elem;
+              showErrorToast(`Missing field: ${friendlyName}`);
+              return false;
+            } else {
+              property.handoverDate = 0;
+              continue;
+            }
+          }
           if (property[elem] === null || property[elem] === "") {
             const friendlyName = fieldLabels[elem] || elem;
             showErrorToast(`Missing field: ${friendlyName}`);
@@ -599,6 +632,17 @@ const AddInventoryForm = () => {
         break;
       case "Row House":
         for (let elem of compulsoryFields[assetType]) {
+          if (elem === "handoverDate") {
+            // If handoverDate is empty, set it to "NA"
+            if (property.currentStatus === false) {
+              const friendlyName = fieldLabels[elem] || elem;
+              showErrorToast(`Missing field: ${friendlyName}`);
+              return false;
+            } else {
+              property.handoverDate = 0;
+              continue;
+            }
+          }
           if (property[elem] === null || property[elem] === "") {
             const friendlyName = fieldLabels[elem] || elem;
             showErrorToast(`Missing field: ${friendlyName}`);
@@ -608,6 +652,17 @@ const AddInventoryForm = () => {
         break;
       case "Villament":
         for (let elem of compulsoryFields[assetType]) {
+          if (elem === "handoverDate") {
+            // If handoverDate is empty, set it to "NA"
+            if (property.currentStatus === false) {
+              const friendlyName = fieldLabels[elem] || elem;
+              showErrorToast(`Missing field: ${friendlyName}`);
+              return false;
+            } else {
+              property.handoverDate = 0;
+              continue;
+            }
+          }
           if (property[elem] === null || property[elem] === "") {
             const friendlyName = fieldLabels[elem] || elem;
             showErrorToast(`Missing field: ${friendlyName}`);
@@ -618,6 +673,17 @@ const AddInventoryForm = () => {
       case "Independent Building":
         // Check if any required field is null or empty
         for (let elem of compulsoryFields[assetType]) {
+          if (elem === "handoverDate") {
+            // If handoverDate is empty, set it to "NA"
+            if (property.currentStatus === false) {
+              const friendlyName = fieldLabels[elem] || elem;
+              showErrorToast(`Missing field: ${friendlyName}`);
+              return false;
+            } else {
+              property.handoverDate = 0;
+              continue;
+            }
+          }
           if (property[elem] === null || property[elem] === "") {
             const friendlyName = fieldLabels[elem] || elem;
             showErrorToast(`Missing field: ${friendlyName}`);
@@ -959,8 +1025,11 @@ const AddInventoryForm = () => {
         user_type: userType,
       });
       fetch(
-        `https://notification-server-acn.onrender.com/addinventory/${property.propertyId}`,
+        `https://acn-notification-server.onrender.com/add-inventory`,
         {
+          body: JSON.stringify({
+            dataToSave,
+          }),
           method: "POST",
           headers: {
             "Content-Type": "application/json",
