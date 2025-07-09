@@ -743,7 +743,7 @@ const AddInventoryForm = () => {
       throw new Error(`ask price is empty`);
     }
 
-    return { askPricePerSqft, totalAskPrice: totalAskPrice / 100000 };
+    return { askPricePerSqft, totalAskPrice: totalAskPrice };
   };
 
   const getFloor = () => {

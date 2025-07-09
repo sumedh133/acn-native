@@ -87,7 +87,7 @@ const useEnquiries = (): UseEnquiriesResult => {
       // Create the query the same way as before
       const enquiriesQuery = query(
         collection(db, "acnEnquiries"),
-        where("cpId", "==", cpId)
+        where("buyerCpId", "==", cpId)
       );
 
       // Set up real-time listener for enquiries

@@ -367,6 +367,7 @@ export default function PropertyDetailsScreen() {
     //     'Content-Type': 'application/json'
     //   }
     // })
+    return enq;
   };
   const handleGoPremium = () => {
     setCreditLimitModalVisible(false);
@@ -416,9 +417,9 @@ export default function PropertyDetailsScreen() {
         dispatch,
         boosterCredits
       );
-
+      let enq: Enquiry | undefined; 
       if (typeof nextEnqId === "string") {
-        await submitEnquiry(nextEnqId);
+        enq = await submitEnquiry(nextEnqId);
       }
 
       // ✅ Close the confirmation modal
@@ -433,6 +434,9 @@ export default function PropertyDetailsScreen() {
       await fetch(
         `https://acn-notification-server.onrender.com/notification/enquiry/${nextEnqId}`,
         {
+          body: JSON.stringify({
+            enq,
+          }),
           method: "POST",
           headers: {
             "Content-Type": "application/json",

@@ -12,6 +12,7 @@ import {
   Pressable,
   Linking,
   Animated,
+  Platform,
 } from "react-native";
 import {
   GestureHandlerRootView,
@@ -27,7 +28,6 @@ import SettingsIcon from "@/assets/icons/InAppNotifications/Settings";
 import Notifications from "../components/Notification/Notifications";
 import useNotification from "../components/Notification/useNotification";
 import Checkmark from "@/assets/icons/InAppNotifications/Checkmark";
-import DoubleCheck from "@/assets/icons/InAppNotifications/DoubleCheck";
 import { useRouter } from "expo-router";
 import { NotificationItem, Property, Requirement } from "../types";
 import { setPropertyDataThunk } from "@/store/slices/propertySlice";
@@ -66,7 +66,6 @@ const NotificationPage: React.FC<NotificationPageProps> = () => {
     (state: RootState) => state?.kam?.kamDocData?.phoneNumber
   );
   const kam = useSelector((state: RootState) => state?.kam?.kamDocData);
-  console.log("kam", kam);
   const dispatch = useDispatch<ThunkDispatch<RootState, unknown, AnyAction>>();
   const {
     unreadCount,
@@ -146,7 +145,10 @@ const NotificationPage: React.FC<NotificationPageProps> = () => {
 
     switch (notification.type) {
       case "enquiry_buyer_notification":
-        if (action === "Call Agent" || action === "Call Agents") {
+        if (
+          action.toLocaleLowerCase() === "call agent" ||
+          action.toLocaleLowerCase() === "call agents"
+        ) {
           // Linking.openURL(`tel:${notification.additionalData.buyerPhone}`);
           Linking.openURL(`tel:${notification.meta?.sellerNumber}`);
         } else if (action.toLocaleLowerCase() === "message on whatsapp") {
@@ -162,10 +164,7 @@ const NotificationPage: React.FC<NotificationPageProps> = () => {
         ) {
           // Linking.openURL(`tel:${notification.additionalData.buyerPhone}`);
           Linking.openURL(`tel:${notification.meta?.buyerNumber}`);
-        } else if (
-          action.toLocaleLowerCase() === "message agent" ||
-          action.toLocaleLowerCase() === "message agents"
-        ) {
+        } else if (action.toLocaleLowerCase() === "message on whatsapp") {
           Linking.openURL(`https://wa.me/${notification.meta?.buyerNumber}`);
         }
         break;
@@ -179,8 +178,8 @@ const NotificationPage: React.FC<NotificationPageProps> = () => {
           try {
             const propertyRef = doc(
               db,
-              "properties",
-              notification.propertyId as string
+              "acnProperties",
+              notification.meta?.propertyId as string
             );
             const propertySnap = await getDoc(propertyRef);
 
@@ -197,11 +196,17 @@ const NotificationPage: React.FC<NotificationPageProps> = () => {
         }
         break;
 
-      case "delistied_notification":
+      case "delisted_notification":
         // Handle de-listed notification
-        if (action.toLocaleLowerCase() === "call kam") {
+        if (
+          action.toLocaleLowerCase() === "call kam" ||
+          action.toLocaleLowerCase() === "contact kam"
+        ) {
           Linking.openURL(`tel:${kamPhone}`);
-        } else if (action.toLocaleLowerCase() === "dashboard") {
+        } else if (
+          action.toLocaleLowerCase() === "dashboard" ||
+          action.toLocaleLowerCase() === "view dashboard"
+        ) {
           router.push("/(tabs)/dashboardTab");
         }
         break;
@@ -210,9 +215,9 @@ const NotificationPage: React.FC<NotificationPageProps> = () => {
         // Handle inventory became live notification
         if (
           action.toLocaleLowerCase() === "view details" &&
-          notification.propertyId
+          notification.meta?.propertyId
         ) {
-          fetchAndDispatchProperty(notification.propertyId);
+          fetchAndDispatchProperty(notification.meta?.propertyId);
         }
         break;
 
@@ -291,6 +296,34 @@ const NotificationPage: React.FC<NotificationPageProps> = () => {
         } else if (action.toLocaleLowerCase() === "add new inventories") {
           router.push("/(tabs)/AddInventoryForm");
         }
+        break;
+      case "feature_notification":
+        // Handle feature notification
+        if (action.toLocaleLowerCase() === "learn more") {
+          Linking.openURL(`tel:${kamPhone}`);
+        }
+        break;
+      case "rating_notification":
+        // Handle rating notification
+        if (action.toLocaleLowerCase() === "rate now") {
+          Linking.openURL(
+            Platform.OS === "ios"
+              ? `https://apps.apple.com/in/app/acn-online/id6754492309`
+              : `https://play.google.com/store/apps/details?id=com.acnonline.in`
+          );
+        }
+        break;
+      case "zone_notification":
+        // Handle zone notification
+        if (action.toLocaleLowerCase() === "view inventory") {
+          router.push("/(tabs)/properties");
+        } else if (action.toLocaleLowerCase() === "view requirements") {
+          router.push("/(tabs)/AddInventoryForm");
+        } else if (action.toLocaleLowerCase() === "join webinar") {
+          Linking.openURL(`https://meet.google.com/nqc-fupa-zng`);
+        }
+        break;
+      case "":
         break;
 
       default:
