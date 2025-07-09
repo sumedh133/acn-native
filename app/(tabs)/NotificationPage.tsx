@@ -156,17 +156,26 @@ const NotificationPage: React.FC<NotificationPageProps> = () => {
 
       case "enquiry_seller_notification":
         // Handle enquiry received notification
-        if (action === "Call Agent" || action === "Call Agents") {
+        if (
+          action.toLocaleLowerCase() === "call agent" ||
+          action.toLocaleLowerCase() === "call agents"
+        ) {
           // Linking.openURL(`tel:${notification.additionalData.buyerPhone}`);
           Linking.openURL(`tel:${notification.meta?.buyerNumber}`);
-        } else if (action === "Message Agent" || action === "Message Agents") {
+        } else if (
+          action.toLocaleLowerCase() === "message agent" ||
+          action.toLocaleLowerCase() === "message agents"
+        ) {
           Linking.openURL(`https://wa.me/${notification.meta?.buyerNumber}`);
         }
         break;
 
       case "delisting_notification":
         // Handle going to be de-listed notification
-        if (action === "Available" || action === "Sold") {
+        if (
+          action.toLocaleLowerCase() === "available" ||
+          action.toLocaleLowerCase() === "sold"
+        ) {
           try {
             const propertyRef = doc(
               db,
@@ -190,16 +199,19 @@ const NotificationPage: React.FC<NotificationPageProps> = () => {
 
       case "delistied_notification":
         // Handle de-listed notification
-        if (action === "Call your KAM") {
+        if (action.toLocaleLowerCase() === "call your kam") {
           Linking.openURL(`tel:${kamPhone}`);
-        } else if (action === "Dashboard") {
+        } else if (action.toLocaleLowerCase() === "dashboard") {
           router.push("/(tabs)/dashboardTab");
         }
         break;
 
       case "listing_live_notification":
         // Handle inventory became live notification
-        if (action === "View Details" && notification.propertyId) {
+        if (
+          action.toLocaleLowerCase() === "view details" &&
+          notification.propertyId
+        ) {
           fetchAndDispatchProperty(notification.propertyId);
         }
         break;
@@ -217,11 +229,11 @@ const NotificationPage: React.FC<NotificationPageProps> = () => {
 
       case "payment_notification":
         // Handle purchased credits notification
-        if (action === "View Credits") {
+        if (action.toLocaleLowerCase() === "view credits") {
           router.push("/(pages)/Credits");
-        } else if (action === "Properties") {
+        } else if (action.toLocaleLowerCase() === "properties") {
           router.push("/(tabs)/properties");
-        } else if (action === "Add New Inventory") {
+        } else if (action.toLocaleLowerCase() === "add new inventory") {
           router.push("/(tabs)/AddInventoryForm");
         }
         break;
@@ -265,18 +277,18 @@ const NotificationPage: React.FC<NotificationPageProps> = () => {
 
       case "trial_ended_notification":
         // Handle free trial ended notification
-        if (action === "Get Premium") {
+        if (action.toLocaleLowerCase() === "get premium") {
           router.push("/(pages)/ComparePlans");
-        } else if (action === "Compare Plans") {
+        } else if (action.toLocaleLowerCase() === "compare plans") {
           router.push("/(pages)/ComparePlans");
         }
         break;
 
       case "trial_notification":
         // Handle trial expires in X days notification
-        if (action === "Properties") {
+        if (action.toLocaleLowerCase() === "properties") {
           router.push("/(tabs)/properties");
-        } else if (action === "Add New Inventories") {
+        } else if (action.toLocaleLowerCase() === "add new inventories") {
           router.push("/(tabs)/AddInventoryForm");
         }
         break;
