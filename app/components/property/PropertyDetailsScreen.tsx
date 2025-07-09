@@ -431,7 +431,7 @@ export default function PropertyDetailsScreen() {
         setIsEnquiryCPModelOpen(true);
       }
       await fetch(
-        `https://acn-notification-server.onrender.com/enquiry/${nextEnqId}`,
+        `https://acn-notification-server.onrender.com/notification/enquiry/${nextEnqId}`,
         {
           method: "POST",
           headers: {
@@ -932,6 +932,7 @@ export default function PropertyDetailsScreen() {
         generatingEnquiry={false}
         visible={isEnquiryCPModelOpen}
         selectedCPID={selectedCPID || ""}
+        property={property}
       />
       <CreditLimitModal
         isVisible={creditLimitModalVisible}

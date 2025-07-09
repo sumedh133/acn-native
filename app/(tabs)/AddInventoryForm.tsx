@@ -1025,7 +1025,7 @@ const AddInventoryForm = () => {
         user_type: userType,
       });
       fetch(
-        `https://acn-notification-server.onrender.com/add-inventory`,
+        `https://acn-notification-server.onrender.com/notification/add-inventory`,
         {
           body: JSON.stringify({
             dataToSave,

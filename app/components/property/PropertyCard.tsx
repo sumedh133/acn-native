@@ -288,7 +288,7 @@ const PropertyCard: React.FC<PropertyCardProps> = ({ property }) => {
         setIsEnquiryCPModelOpen(true);
       }
       await fetch(
-        `https://acn-notification-server.onrender.com/enquiry/${nextEnqId}`,
+        `https://acn-notification-server.onrender.com/notification/enquiry/${nextEnqId}`,
         {
           method: "POST",
           headers: {
@@ -506,6 +506,7 @@ const PropertyCard: React.FC<PropertyCardProps> = ({ property }) => {
         generatingEnquiry={false}
         visible={isEnquiryCPModelOpen}
         selectedCPID={selectedCPID}
+        property={property}
       />
 
       <ConfirmModal

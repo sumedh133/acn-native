@@ -199,7 +199,7 @@ const NotificationPage: React.FC<NotificationPageProps> = () => {
 
       case "delistied_notification":
         // Handle de-listed notification
-        if (action.toLocaleLowerCase() === "call your kam") {
+        if (action.toLocaleLowerCase() === "call kam") {
           Linking.openURL(`tel:${kamPhone}`);
         } else if (action.toLocaleLowerCase() === "dashboard") {
           router.push("/(tabs)/dashboardTab");

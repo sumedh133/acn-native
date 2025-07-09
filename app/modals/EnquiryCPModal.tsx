@@ -25,6 +25,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { logEvent } from "@react-native-firebase/analytics";
 import { useSelector } from "react-redux";
 import { RootState } from "@/store/store";
+import { Property } from "../types";
 
 // Define the AgentData interface separately
 interface AgentData {
@@ -38,6 +39,7 @@ type EnquiryCPModalProps = {
   generatingEnquiry?: boolean;
   visible: boolean;
   selectedCPID: string;
+  property: Property;
 };
 
 const EnquiryCPModal: React.FC<EnquiryCPModalProps> = ({
@@ -45,11 +47,13 @@ const EnquiryCPModal: React.FC<EnquiryCPModalProps> = ({
   generatingEnquiry,
   visible,
   selectedCPID,
+  property,
 }) => {
   const [agentData, setAgentData] = useState<AgentData | null>(null);
   const userType =
     useSelector((state: RootState) => state?.agent?.docData?.userType) ||
     "free";
+  const user = useSelector((state: RootState) => state?.agent?.docData);
 
   useEffect(() => {
     if (visible) {
@@ -104,7 +108,14 @@ const EnquiryCPModal: React.FC<EnquiryCPModalProps> = ({
     }
 
     if (agentData != null) {
-      Linking.openURL(`whatsapp://send?phone=${agentData.phoneNumber}`);
+      const message = `Hi ${agentData?.name},
+
+I see you've enquired on ACN about my property  ${property?.propertyName} (ID: ${property?.propertyId}). 
+Let me know which details you need.
+
+${user?.name}  
+${user?.phoneNumber}`;
+      Linking.openURL(`https://wa.me/${agentData.phoneNumber}?text=${message}`);
     }
   };
 

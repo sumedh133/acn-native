@@ -49,15 +49,18 @@ export default async function submitRequirement(userRequirement, cpId) {
     await updateDoc(doc(db, "acnAgents", formData.agentCpid), {
       myRequirements: arrayUnion(nextReqId),
     });
-    fetch(`https://acn-notification-server.onrender.com/add-requirement`, {
-      body: JSON.stringify({
-        formData,
-      }),
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-    });
+    fetch(
+      `https://acn-notification-server.onrender.com/notification/add-requirement`,
+      {
+        body: JSON.stringify({
+          formData,
+        }),
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+      }
+    );
   } catch (error) {
     return error;
   }
