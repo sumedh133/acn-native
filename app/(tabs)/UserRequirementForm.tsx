@@ -244,8 +244,8 @@ const UserRequirementForm = () => {
         area: area ? parseFloat(area) : 0,
         configuration: configuration as any,
         budget: {
-          from: budgetFrom ? budgetFrom : undefined,
-          to: budgetTo ? budgetTo : undefined,
+          from: budgetFrom ? budgetFrom : 0,
+          to: budgetTo ? budgetTo : 0,
         },
         marketValue: marketValue === true ? "Market Value" : "",
       };
