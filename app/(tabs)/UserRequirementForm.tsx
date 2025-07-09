@@ -60,8 +60,8 @@ const UserRequirementForm = () => {
   const [assetType, setAssetType] = useState("");
   const [area, setArea] = useState<string>("");
   const [configuration, setConfiguration] = useState("");
-  const [budgetFrom, setBudgetFrom] = useState<string>("");
-  const [budgetTo, setBudgetTo] = useState<string>("");
+  const [budgetFrom, setBudgetFrom] = useState<number>(0);
+  const [budgetTo, setBudgetTo] = useState<number>(0);
   const [marketValue, setMarketValue] = useState(false);
   const [isRendered, setIsRendered] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -146,8 +146,8 @@ const UserRequirementForm = () => {
     setMarketValue(!marketValue);
     if (!marketValue) {
       // If enabling market value, clear budget fields
-      setBudgetFrom("");
-      setBudgetTo("");
+      setBudgetFrom(0);
+      setBudgetTo(0);
     }
   };
 
@@ -168,8 +168,8 @@ const UserRequirementForm = () => {
     setAssetType("");
     setArea("");
     setConfiguration("");
-    setBudgetFrom("");
-    setBudgetTo("");
+    setBudgetFrom(0);
+    setBudgetTo(0);
     setMarketValue(false); // Reset to default value
 
     // Clear errors
@@ -186,15 +186,15 @@ const UserRequirementForm = () => {
       return true;
     }
 
-    if (budgetTo === "") {
+    if (budgetTo === 0) {
       return false; // Max budget (budgetTo) is required
     }
 
-    if (budgetFrom === "") {
+    if (budgetFrom === 0) {
       return true; // Min budget (budgetFrom) can be skipped
     }
 
-    return parseFloat(budgetTo) >= parseFloat(budgetFrom); // Validate range
+    return budgetTo >= budgetFrom; // Validate range
   };
 
   const handleSubmit = async () => {
@@ -244,8 +244,8 @@ const UserRequirementForm = () => {
         area: area ? parseFloat(area) : 0,
         configuration: configuration as any,
         budget: {
-          from: budgetFrom ? parseFloat(budgetFrom) : undefined,
-          to: budgetTo ? parseFloat(budgetTo) : undefined,
+          from: budgetFrom ? budgetFrom : undefined,
+          to: budgetTo ? budgetTo : undefined,
         },
         marketValue: marketValue === true ? "Market Value" : "",
       };
@@ -302,6 +302,32 @@ const UserRequirementForm = () => {
     } finally {
       setSaving(false);
     }
+  };
+
+  const getPriceInWords = (numericPrice: number): string => {
+    if (isNaN(numericPrice)) return "";
+
+    if (numericPrice >= 10000000) {
+      return `${(numericPrice / 10000000).toFixed(2)} Cr`;
+    } else if (numericPrice >= 100000) {
+      return `${(numericPrice / 100000).toFixed(2)} Lakh`;
+    } else if (numericPrice >= 1000) {
+      return `${(numericPrice / 1000).toFixed(2)} K`;
+    }
+    return numberToWords(numericPrice);
+  };
+
+  // Simple function to convert number to words (simplified for demonstration)
+  const numberToWords = (num: number): string => {
+    // This is a simplified implementation
+    if (num >= 10000000) {
+      return `${Math.floor(num / 10000000)} Crore ${Math.floor(
+        (num % 10000000) / 100000
+      )} Lakh Rupees only`;
+    } else if (num >= 100000) {
+      return `${Math.floor(num / 100000)} Lakh Rupees only`;
+    }
+    return `${num} Rupees only`;
   };
 
   // Track field changes
@@ -495,82 +521,88 @@ const UserRequirementForm = () => {
             {/* Budget */}
             <View style={styles.inputGroup}>
               <Text style={styles.inputLabel}>
-                Budget (Cr) <Text style={styles.required}>*</Text>
+                Budget <Text style={styles.required}>*</Text>
               </Text>
               <View style={styles.rowContainer}>
-                {/* Budget From */}
-                <TextInput
-                  placeholder="From"
-                  value={budgetFrom}
-                  onChangeText={(text) => {
-                    // Allow only numbers and decimals
-                    const numericValue = text.replace(/[^0-9.]/g, "");
-                    // Handle multiple decimal points
-                    const parts = numericValue.split(".");
-                    if (parts.length > 2) {
-                      setBudgetFrom(`${parts[0]}.${parts[1]}`);
-                    } else if (parts.length > 1) {
-                      // Limit to 2 decimal places
-                      parts[1] = parts[1].slice(0, 2);
-                      setBudgetFrom(`${parts[0]}.${parts[1]}`);
-                    } else {
-                      setBudgetFrom(numericValue);
-                    }
-                    handleFieldChange("budgetFrom", text);
-                    setError((prev) => ({
-                      ...prev,
-                      budget: "",
-                    }));
-                  }}
-                  onFocus={() => handleFocus("budgetFrom")}
-                  onBlur={() => handleBlur("budgetFrom")}
-                  keyboardType="decimal-pad"
-                  editable={!marketValue}
-                  style={[
-                    styles.textInput,
-                    styles.budgetInput,
-                    focusedFields["budgetFrom"] && styles.focusedInput,
-                    marketValue && styles.disabledInput,
-                  ]}
-                />
+                <View style={{ flexDirection: "column", gap: 8, width: "45%" }}>
+                  {/* Budget From */}
+                  <TextInput
+                    placeholder="From"
+                    value={budgetFrom === 0 ? "" : budgetFrom.toString()}
+                    onChangeText={(text) => {
+                      // Allow only numbers and decimals
+                      const numericValue = text.replace(/[^0-9.]/g, "");
+                      // Handle multiple decimal points
+                      const parts = numericValue.split(".");
+                      if (parts.length > 2) {
+                        setBudgetFrom(parseFloat(`${parts[0]}.${parts[1]}`));
+                      } else if (parts.length > 1) {
+                        // Limit to 2 decimal places
+                        parts[1] = parts[1].slice(0, 2);
+                        setBudgetFrom(parseFloat(`${parts[0]}.${parts[1]}`));
+                      } else {
+                        setBudgetFrom(parseFloat(numericValue) || 0);
+                      }
+                      handleFieldChange("budgetFrom", text);
+                      setError((prev) => ({
+                        ...prev,
+                        budget: "",
+                      }));
+                    }}
+                    onFocus={() => handleFocus("budgetFrom")}
+                    onBlur={() => handleBlur("budgetFrom")}
+                    keyboardType="decimal-pad"
+                    editable={!marketValue}
+                    style={[
+                      styles.textInput,
+                      styles.budgetInput,
+                      focusedFields["budgetFrom"] && styles.focusedInput,
+                      marketValue && styles.disabledInput,
+                    ]}
+                  />
+                  <Text>{getPriceInWords(budgetFrom)}</Text>
+                </View>
 
                 <Text style={styles.toText}>To</Text>
 
                 {/* Budget To */}
-                <TextInput
-                  placeholder="To"
-                  value={budgetTo}
-                  onChangeText={(text) => {
-                    // Allow only numbers and decimals
-                    const numericValue = text.replace(/[^0-9.]/g, "");
-                    // Handle multiple decimal points
-                    const parts = numericValue.split(".");
-                    if (parts.length > 2) {
-                      setBudgetTo(`${parts[0]}.${parts[1]}`);
-                    } else if (parts.length > 1) {
-                      // Limit to 2 decimal places
-                      parts[1] = parts[1].slice(0, 2);
-                      setBudgetTo(`${parts[0]}.${parts[1]}`);
-                    } else {
-                      setBudgetTo(numericValue);
-                    }
-                    handleFieldChange("budgetTo", text);
-                    setError((prev) => ({
-                      ...prev,
-                      budget: "",
-                    }));
-                  }}
-                  onFocus={() => handleFocus("budgetTo")}
-                  onBlur={() => handleBlur("budgetTo")}
-                  keyboardType="decimal-pad"
-                  editable={!marketValue}
-                  style={[
-                    styles.textInput,
-                    styles.budgetInput,
-                    focusedFields["budgetTo"] && styles.focusedInput,
-                    marketValue && styles.disabledInput,
-                  ]}
-                />
+                <View style={{ flexDirection: "column", gap: 8, width: "45%" }}>
+                  <TextInput
+                    placeholder="To"
+                    value={budgetTo === 0 ? "" : budgetTo.toString()}
+                    onChangeText={(text) => {
+                      // Allow only numbers and decimals
+                      const numericValue = text.replace(/[^0-9.]/g, "");
+                      // Handle multiple decimal points
+                      const parts = numericValue.split(".");
+                      if (parts.length > 2) {
+                        setBudgetTo(parseFloat(`${parts[0]}.${parts[1]}`));
+                      } else if (parts.length > 1) {
+                        // Limit to 2 decimal places
+                        parts[1] = parts[1].slice(0, 2);
+                        setBudgetTo(parseFloat(`${parts[0]}.${parts[1]}`));
+                      } else {
+                        setBudgetTo(parseFloat(numericValue) || 0);
+                      }
+                      handleFieldChange("budgetTo", text);
+                      setError((prev) => ({
+                        ...prev,
+                        budget: "",
+                      }));
+                    }}
+                    onFocus={() => handleFocus("budgetTo")}
+                    onBlur={() => handleBlur("budgetTo")}
+                    keyboardType="decimal-pad"
+                    editable={!marketValue}
+                    style={[
+                      styles.textInput,
+                      styles.budgetInput,
+                      focusedFields["budgetTo"] && styles.focusedInput,
+                      marketValue && styles.disabledInput,
+                    ]}
+                  />
+                  <Text>{getPriceInWords(budgetTo)}</Text>
+                </View>
               </View>
               {error.budget && (
                 <Text style={styles.errorText}>{error.budget}</Text>
@@ -708,6 +740,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
+    width: "100%",
   },
   halfWidth: {
     width: "48%",
