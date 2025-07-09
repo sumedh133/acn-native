@@ -22,6 +22,7 @@ import { handleIdGeneration } from "@/app/helpers/nextId";
 import {
   collection,
   doc,
+  getDoc,
   getDocs,
   query,
   setDoc,
@@ -44,7 +45,10 @@ import { LinearGradient } from "react-native-linear-gradient";
 import { styled } from "nativewind";
 import ShareIconInsidePropertyDetails from "@/assets/icons/svg/PropertiesPage/SHareIconPropertyDetailsModal";
 import DriveIcon from "@/assets/icons/svg/PropertiesPage/DriveIcon";
-import { selectPropertyStateData } from "@/store/slices/propertySlice";
+import {
+  selectPropertyStateData,
+  listenToPropertyChanges,
+} from "@/store/slices/propertySlice";
 import Offline from "../Offline";
 import { getUnixDateTime } from "@/app/helpers/getUnixDateTime";
 import ArrowLeftIcon from "@/assets/icons/svg/Common/ArrowLeftIcon";
@@ -55,6 +59,7 @@ import { analytics } from "@/app/config/firebase";
 import { logEvent } from "@react-native-firebase/analytics";
 import {
   camelCaseToCapitalizedWords,
+  formatCost2,
   toCapitalizedWords,
 } from "@/app/helpers/common";
 
@@ -63,7 +68,7 @@ const { width } = Dimensions.get("window");
 const StyledView = styled(View);
 const StyledText = styled(Text);
 interface AgentData {
-  phonenumber: string;
+  phoneNumber: string;
   [key: string]: any;
 }
 
@@ -153,7 +158,7 @@ export default function PropertyDetailsScreen() {
     (state: RootState) => state?.agent?.docData
   ) as AgentData;
   const phoneNumber = useSelector(
-    (state: RootState) => state?.agent?.docData?.phonenumber
+    (state: RootState) => state?.agent?.docData?.phoneNumber
   );
   const monthlyCredits = useSelector(
     (state: RootState) => state?.agent?.docData?.monthlyCredits
@@ -174,7 +179,7 @@ export default function PropertyDetailsScreen() {
   const [localImages, setLocalImages] = useState<string[]>([]);
   const [isImageViewerVisible, setIsImageViewerVisible] = useState(false);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
-  const [selectedCPID, setSelectedCPID] = useState(property.cpCode);
+  const [selectedCPID, setSelectedCPID] = useState(property.cpId);
   const [isConfirmModelOpen, setIsConfirmModelOpen] = useState(false);
   const [isEnquiryCPModelOpen, setIsEnquiryCPModelOpen] = useState(false);
   const [isShareModalOpen, setIsShareModalOpen] = useState(false);
@@ -200,7 +205,7 @@ export default function PropertyDetailsScreen() {
 
       const newStatus = status;
       try {
-        await updateDoc(doc(db, "ACN123", id), {
+        await updateDoc(doc(db, "acnProperties", id), {
           status: newStatus,
           ageOfStatus: 0,
           dateOfStatusLastChecked: getUnixDateTime(),
@@ -305,7 +310,7 @@ export default function PropertyDetailsScreen() {
       console.error("Error logging enquire click:", error);
     }
 
-    setSelectedCPID(property.cpCode || "");
+    setSelectedCPID(property.cpId || "");
     if (monthlyCredits + boosterCredits > 0) {
       setIsConfirmModelOpen(true);
       return;
@@ -319,38 +324,50 @@ export default function PropertyDetailsScreen() {
   };
 
   const submitEnquiry = async (nextEnqId: string) => {
+    if (!property.cpId) {
+      showErrorToast("Error: Seller CPID is missing. Please try again.");
+      return;
+    }
+    const docRef = doc(db, "acnAgents", property.cpId);
+    const docSnap = await getDoc(docRef);
+    const sellerData = docSnap.data();
     const enq: Enquiry = {
       enquiryId: nextEnqId,
-      cpId: agentData?.cpId,
+      // buyer details
+      buyerCpId: agentData?.cpId,
+      buyerName: agentData?.name,
+      buyerNumber: phoneNumber,
+      // propterty details
       propertyId: property?.propertyId,
+      propertyName: property?.propertyName,
+      //seller details
+      sellerCpId: sellerData?.cpId,
+      sellerName: sellerData?.name,
+      sellerNumber: sellerData?.phoneNumber,
       status: "pending",
       added: getUnixDateTime(),
       lastModified: getUnixDateTime(),
+      reviews: [],
     } as Enquiry;
 
     try {
-      const enquiryDocRef = doc(db, "enquiries", nextEnqId);
+      const enquiryDocRef = doc(db, "acnEnquiries", nextEnqId);
       await setDoc(enquiryDocRef, enq);
       showSuccessToast("Enquiry submitted successfully!", {
         isInModal: true,
       });
     } catch (error) {
-      showErrorToast("Error submitting enquiry. Please try again.", {
+      showErrorToast("Failed to submit enquiry. Please try again.", {
         isInModal: true,
       });
       console.error("Error in enquiry submission:", error);
     }
-    await fetch(
-      `https://notification-server-acn.onrender.com/enquiries/${nextEnqId}`,
-      {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-      }
-    ).catch((error) => {
-      console.error("Error:", error);
-    });
+    // axios.post(`https://notification-server-acn.onrender.com/${nextEnqId}`, {}, {
+    //   headers: {
+    //     'Content-Type': 'application/json'
+    //   }
+    // })
+    return enq;
   };
   const handleGoPremium = () => {
     setCreditLimitModalVisible(false);
@@ -400,9 +417,9 @@ export default function PropertyDetailsScreen() {
         dispatch,
         boosterCredits
       );
-
+      let enq: Enquiry | undefined; 
       if (typeof nextEnqId === "string") {
-        await submitEnquiry(nextEnqId);
+        enq = await submitEnquiry(nextEnqId);
       }
 
       // ✅ Close the confirmation modal
@@ -415,8 +432,11 @@ export default function PropertyDetailsScreen() {
         setIsEnquiryCPModelOpen(true);
       }
       await fetch(
-        `https://notification-server-acn-zdgg.onrender.com/enquiries/${nextEnqId}`,
+        `https://acn-notification-server.onrender.com/notification/enquiry/${nextEnqId}`,
         {
+          body: JSON.stringify({
+            enq,
+          }),
           method: "POST",
           headers: {
             "Content-Type": "application/json",
@@ -610,6 +630,18 @@ export default function PropertyDetailsScreen() {
     userType,
   ]);
 
+  // Set up firestore listener for live updates
+  useEffect(() => {
+    if (property?.propertyId) {
+      const unsubscribe = dispatch(
+        listenToPropertyChanges(property.propertyId)
+      ) as (() => void) | undefined;
+      return () => {
+        if (typeof unsubscribe === "function") unsubscribe();
+      };
+    }
+  }, [property?.propertyId]);
+
   if (!isConnectedToInternet) return <Offline />;
 
   return (
@@ -643,7 +675,7 @@ export default function PropertyDetailsScreen() {
             </View>
           )}
         </View>
-        <Text style={styles.propertyName}>{property.nameOfTheProperty}</Text>
+        <Text style={styles.propertyName}>{property.propertyName}</Text>
 
         <View style={styles.locationInfo}>
           <View style={styles.infoItem}>
@@ -661,7 +693,14 @@ export default function PropertyDetailsScreen() {
           <View style={styles.infoItem}>
             <HandOverIcon />
             <Text style={styles.infoText}>
-              {property.handoverDate || "Pending"}
+                {property.handoverDate
+                  ? (() => {
+                    const date = new Date(property.handoverDate * 1000);
+                    const month = (date.getMonth() + 1).toString().padStart(2, "0");
+                    const year = date.getFullYear();
+                    return `${month}/${year}`;
+                  })()
+                  : "Pending"}
             </Text>
           </View>
           <View style={styles.infoItem}>
@@ -744,7 +783,7 @@ export default function PropertyDetailsScreen() {
               label="Total Ask Price"
               value={
                 property.totalAskPrice
-                  ? formatCost(property.totalAskPrice)
+                  ? formatCost2(property.totalAskPrice)
                   : null
               }
             />
@@ -853,9 +892,16 @@ export default function PropertyDetailsScreen() {
             />
             <InfoRow
               label="Last Status Check"
-              value={timeAgo(
-                Date.now() / 1000 - property.dateOfStatusLastChecked
-              )}
+              value={
+                property.dateOfStatusLastChecked
+                  ? timeAgo(
+                      Math.max(
+                        0,
+                        Date.now() / 1000 - property.dateOfStatusLastChecked
+                      )
+                    )
+                  : "N/A"
+              }
             />
           </View>
         </View>
@@ -890,6 +936,7 @@ export default function PropertyDetailsScreen() {
         generatingEnquiry={false}
         visible={isEnquiryCPModelOpen}
         selectedCPID={selectedCPID || ""}
+        property={property}
       />
       <CreditLimitModal
         isVisible={creditLimitModalVisible}

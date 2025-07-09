@@ -39,46 +39,48 @@ const ProfileModal: React.FC<ProfileModalProps> = ({ visible, setVisible }) => {
 
   const name: string | null =
     useSelector((state: RootState) => state?.agent?.docData?.name) || "";
-  const phonenumber: string | null =
-    useSelector((state: RootState) => state?.agent?.docData?.phonenumber) || "";
-  const userType = useSelector((state: RootState) => state?.agent?.docData?.userType) || "free";
+  const phoneNumber: string | null =
+    useSelector((state: RootState) => state?.agent?.docData?.phoneNumber) || "";
+  const userType =
+    useSelector((state: RootState) => state?.agent?.docData?.userType) ||
+    "free";
   const initials = getInitials(name);
   const avatarColor = getRandomColor(initials);
 
   useEffect(() => {
     if (visible) {
       try {
-        logEvent(analytics, 'profile_modal_show', {
-          event_category: 'modal',
-          event_label: 'profile',
-          user_type: userType
+        logEvent(analytics, "profile_modal_show", {
+          event_category: "modal",
+          event_label: "profile",
+          user_type: userType,
         });
       } catch (error) {
-        console.error('Error logging modal show:', error);
+        console.error("Error logging modal show:", error);
       }
     }
   }, [visible]);
 
   const handleClose = () => {
     try {
-      logEvent(analytics, 'profile_modal_close', {
-        event_category: 'modal',
-        event_label: 'profile',
-        user_type: userType
+      logEvent(analytics, "profile_modal_close", {
+        event_category: "modal",
+        event_label: "profile",
+        user_type: userType,
       });
     } catch (error) {
-      console.error('Error logging modal close:', error);
+      console.error("Error logging modal close:", error);
     }
     setVisible(false);
   };
 
   const handleLogOut = async () => {
     try {
-      logEvent(analytics, 'profile_action', {
-        event_category: 'modal',
-        event_label: 'profile',
-        action: 'logout',
-        user_type: userType
+      logEvent(analytics, "profile_action", {
+        event_category: "modal",
+        event_label: "profile",
+        action: "logout",
+        user_type: userType,
       });
 
       await dispatch(logOut());
@@ -106,10 +108,7 @@ const ProfileModal: React.FC<ProfileModalProps> = ({ visible, setVisible }) => {
           <TouchableWithoutFeedback>
             <View style={styles.container}>
               {/* ❌ Close Button */}
-              <TouchableOpacity
-                style={styles.closeIcon}
-                onPress={handleClose}
-              >
+              <TouchableOpacity style={styles.closeIcon} onPress={handleClose}>
                 <CloseIcon />
               </TouchableOpacity>
 
@@ -135,7 +134,7 @@ const ProfileModal: React.FC<ProfileModalProps> = ({ visible, setVisible }) => {
                   <View style={styles.infoRow}>
                     {/* <MaterialIcons name="call" size={20} color="#726C6C" /> */}
                     <Ionicons name="call-outline" size={24} color="black" />
-                    <Text style={styles.infoText}>{phonenumber?.slice(3)}</Text>
+                    <Text style={styles.infoText}>{phoneNumber?.slice(3)}</Text>
                   </View>
                 </View>
               </View>

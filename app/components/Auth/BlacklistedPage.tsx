@@ -19,8 +19,12 @@ import { logEvent } from "@react-native-firebase/analytics";
 
 export default function BlacklistedPage() {
   const router = useRouter();
-  const userType = useSelector((state: RootState) => state?.agent?.docData?.userType) || "free";
-  const phonenumber = useSelector((state: RootState) => state?.agent?.phonenumber);
+  const userType =
+    useSelector((state: RootState) => state?.agent?.docData?.userType) ||
+    "free";
+  const phoneNumber = useSelector(
+    (state: RootState) => state?.agent?.phoneNumber
+  );
 
   const { width } = useWindowDimensions();
 
@@ -30,28 +34,28 @@ export default function BlacklistedPage() {
 
   useEffect(() => {
     try {
-      logEvent(analytics, 'view_blacklisted_page', {
-        event_category: 'auth',
-        event_label: 'blacklisted_view',
+      logEvent(analytics, "view_blacklisted_page", {
+        event_category: "auth",
+        event_label: "blacklisted_view",
         user_type: userType,
-        phone_number: phonenumber
+        phone_number: phoneNumber,
       });
     } catch (error) {
-      console.error('Error logging blacklisted page view:', error);
+      console.error("Error logging blackListed page view:", error);
     }
-  }, [userType, phonenumber]);
+  }, [userType, phoneNumber]);
 
   const handleBack = () => {
     try {
-      logEvent(analytics, 'blacklisted_back_click', {
-        event_category: 'auth',
-        event_label: 'blacklisted_interaction',
-        action: 'back',
+      logEvent(analytics, "blacklisted_back_click", {
+        event_category: "auth",
+        event_label: "blacklisted_interaction",
+        action: "back",
         user_type: userType,
-        phone_number: phonenumber
+        phone_number: phoneNumber,
       });
     } catch (error) {
-      console.error('Error logging back click:', error);
+      console.error("Error logging back click:", error);
     }
     dispatch(logOut());
     router.back();
@@ -59,15 +63,15 @@ export default function BlacklistedPage() {
 
   const handleSupportClick = () => {
     try {
-      logEvent(analytics, 'blacklisted_support_click', {
-        event_category: 'auth',
-        event_label: 'blacklisted_interaction',
-        action: 'support_call',
+      logEvent(analytics, "blacklisted_support_click", {
+        event_category: "auth",
+        event_label: "blacklisted_interaction",
+        action: "support_call",
         user_type: userType,
-        phone_number: phonenumber
+        phone_number: phoneNumber,
       });
     } catch (error) {
-      console.error('Error logging support click:', error);
+      console.error("Error logging support click:", error);
     }
     const url = `tel:${9415006092}`;
     Linking.openURL(url);
@@ -75,14 +79,14 @@ export default function BlacklistedPage() {
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>OOPS! You've been blacklisted</Text>
+      <Text style={styles.title}>OOPS! You've been blackListed</Text>
       <View style={styles.card}>
         <Text style={styles.status}>
           <AntDesign name="closecircleo" size={20} color="#DC3545" /> You have
-          been blacklisted
+          been blackListed
         </Text>
         <Text style={styles.message}>
-          Your account has been blacklisted due to misuse or non-compliance with
+          Your account has been blackListed due to misuse or non-compliance with
           our agent guidelines. Contact{" "}
           <Text
             style={{ textDecorationLine: "underline" }}

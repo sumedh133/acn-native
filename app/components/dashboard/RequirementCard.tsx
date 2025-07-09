@@ -39,7 +39,7 @@ const RequirementCard = ({
         event_label: 'impression',
         requirement_id: requirement.requirementId,
         requirement_type: requirement.assetType,
-        requirement_status: requirement.status,
+        requirement_status: requirement.requirementStatus,
         position_index: index,
         user_type: userType
       });
@@ -56,7 +56,7 @@ const RequirementCard = ({
         event_label: 'navigation',
         requirement_id: requirement.requirementId,
         requirement_type: requirement.assetType,
-        requirement_status: requirement.status,
+        requirement_status: requirement.requirementStatus,
         budget_range: requirement.marketValue === "Market Value" 
           ? "market_price" 
           : `${requirement.budget?.from}-${requirement.budget?.to}`,
@@ -133,9 +133,9 @@ const RequirementCard = ({
         </StyledView>
 
         {/* Requirement details if available */}
-        {requirement.requirementDetails && (
+        {requirement.extraDetails && (
           <StyledText className="text-base text-gray-700 mt-2">
-            {requirement.requirementDetails}
+            {requirement.extraDetails}
           </StyledText>
         )}
       </StyledView>
@@ -149,10 +149,10 @@ const RequirementCard = ({
 
           <StyledView className="relative">
             <DashboardDropdown
-              value={requirement.status}
+              value={requirement.requirementStatus}
               options={[
-                { label: "Open", value: "Pending" },
-                { label: "Closed", value: "Closed" },
+                { label: "Open", value: "open" },
+                { label: "Closed", value: "close" },
               ]}
               setValue={(val) =>
                 onStatusChange(requirement.requirementId || "", val)

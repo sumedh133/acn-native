@@ -1,45 +1,47 @@
-export interface Property {
-  _geoloc?: {
-    lat: number | null;
-    lng: number | null;
-  };
-  ageOfInventory?: number | null;
-  ageOfStatus?: number | null;
-  area?: string | null;
-  askPricePerSqft?: number | null;
-  assetType?: string | null;
-  buildingAge?: string | null;
-  buildingKhata?: string | null;
-  carpet?: number | null;
-  cpCode?: string | null;
-  currentStatus?: string | null;
-  dateOfInventoryAdded?: number | null;
-  dateOfStatusLastChecked?: number | null;
-  driveLink?: string | null;
-  eKhata?: boolean | null;
-  exclusive?: boolean | null;
-  extraDetails?: string | null;
-  facing?: string | null;
-  floorNo?: string | null;
-  exactFloor?: number | null;
-  handoverDate?: string | null;
-  landKhata?: string | null;
-  mapLocation?: string | null;
-  micromarket?: string | null;
-  nameOfTheProperty?: string | null;
-  ocReceived?: boolean | null;
-  plotSize?: number | null;
-  propertyId?: string | null;
-  sbua?: number | null;
-  status?: string | null;
-  tenanted?: boolean | null;
-  totalAskPrice?: number | null;
-  unitType?: string | null;
-  photo?: string[];
-  video?: string[];
-  document?: string[];
+export interface GeoLocation {
+  lat: number | null;
+  lng: number | null;
+}
 
-  objectID?: string;
+export interface Property {
+  id: string;
+  propertyId: string | null;
+  cpId: string | null;
+  propertyName: string | null;
+  _geoloc: GeoLocation;
+  area: string | null;
+  builerName: string | null;
+  builderCategory: string | null;
+  micromarket: string | null;
+  mapLocation: string | null;
+  assetType: string | null;
+  unitType: string | null;
+  subType: string | null | undefined;
+  sbua: number | null;
+  carpet: number | null;
+  plotSize: number | null;
+  buildingAge: number | null;
+  floorNo: string | null;
+  facing: string | null;
+  tenanted: boolean | null;
+  totalAskPrice: number | null;
+  askPricePerSqft: number;
+  status: string | null;
+  currentStatus: string | null;
+  builderName: string | null;
+  handoverDate: number | null;
+  buildingKhata: string | null;
+  landKhata: string | null;
+  ocReceived: boolean | null;
+  photo: string[];
+  video: string[];
+  document: string[];
+  driveLink: string | null;
+  dateOfInventoryAdded: number;
+  dateOfStatusLastChecked: number;
+  ageOfInventory: number;
+  ageOfStatus: number;
+  extraDetails: string | null;
 }
 
 export interface Budget {
@@ -48,30 +50,63 @@ export interface Budget {
 }
 
 export interface Requirement {
-  id?: string;
-  added?: number;
-  agentCpid?: string;
-  area?: number;
-  assetType?: string;
+  requirementId: string;
+  agentPhoneNumber: string;
+  agentName: string;
+  cpId: string;
+  assetType:
+    | "villa"
+    | "apartment"
+    | "plot"
+    | "commercial"
+    | "warehouse"
+    | "office";
+  configuration: "1 bhk" | "2 bhk" | "3 bhk" | "4 bhk" | "5+ bhk" | null;
+  micromarket: string;
   budget: Budget;
-  configuration?: string;
-  lastModified?: number;
-  marketValue?: string;
-  propertyName?: string;
-  requirementDetails?: string;
-  requirementId?: string;
-  [key: string]: any;
+  area: number;
+  kamId: string;
+  kamName: string;
+  kamPhoneNumber: string;
+  bedrooms: string;
+  bathrooms: string;
+  parking: string;
+  propertyName: string;
+  extraDetails: string;
+  marketValue: string;
+  requirementStatus: "open" | "close";
+  internalStatus: "found" | "not found" | "pending";
+  added: number;
+  lastModified: number;
+  matchingProperties: string[];
+}
+
+// ==================== ENQUIRY TYPES ====================
+
+export interface IReview {
+  review: string;
+  stars: number;
+  timestamp: number;
 }
 
 export interface Enquiry {
-  id: string;
-  added?: number;
-  cpId?: string;
-  enquiryId?: string;
-  lastModified?: number;
-  propertyId?: string;
-  status?: string;
-  [key: string]: any; // for additional dynamic fields
+  enquiryId: string;
+  // property details
+  propertyId: string;
+  propertyName: string;
+  // buyer agent details
+  buyerCpId: string;
+  buyerName: string;
+  buyerNumber: string;
+  // seller agent details
+  sellerCpId: string;
+  sellerName: string;
+  sellerNumber: string;
+  // enquiry details
+  status: "site visit done" | "pending" | "not interested" | "interested";
+  added: number;
+  lastModified: number;
+  reviews: IReview[];
 }
 
 export interface EnquiryWithProperty extends Enquiry {
@@ -136,6 +171,9 @@ export interface ListingProperty extends Property {
   carPark?: number | null;
   communityType?: string | null;
   cornerUnit?: boolean | null;
+  eKhata?: boolean | null;
+  exactFloor?: number | null;
+  exclusive?: boolean | null;
   furnishing?: string | null;
   balconyFacing?: string | null;
   kamId?: string | null;
@@ -146,7 +184,7 @@ export interface ListingProperty extends Property {
   rentalIncome?: number | null;
   stage?: string | null; //stage
   structure?: number | null;
-  subType?: string | null;
+  subType: string | null | undefined;
   uds?: number | null;
   unitNo?: string | null;
   lastModified?: number | null;
@@ -166,7 +204,12 @@ export interface NotificationItem {
   type: string;
   propertyId?: string;
   archived?: boolean;
-  [key: string]: any;
+  isRead?: boolean;
+  icon?: string;
+  notificationId: string;
+  meta?: {
+    [key: string]: any;
+  } | null;
 }
 
 export interface SubscriptionPlan {

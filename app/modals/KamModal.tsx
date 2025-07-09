@@ -16,6 +16,7 @@ import {
   selectKamModalVisible,
   selectKamName,
   selectKamNumber,
+  selectKamState,
   setKamDataState,
   setKamModalVisible,
 } from "@/store/slices/kamSlice";
@@ -34,6 +35,8 @@ const KamManager = () => {
   const myKamId = useSelector(selectMyKam);
   const kamName = useSelector(selectKamName);
   const kamNumber = useSelector(selectKamNumber);
+  const kam = useSelector(selectKamState);
+  
   const visible = useSelector(selectKamModalVisible);
   const userType = useSelector((state: RootState) => state?.agent?.docData?.userType) || "free";
   const initials = getInitials(kamName);

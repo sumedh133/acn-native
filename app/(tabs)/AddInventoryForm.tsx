@@ -56,15 +56,19 @@ const API_URL = "https://uploadtodrive-ouurm6pska-uc.a.run.app";
 
 const initialState: ListingProperty = {
   _geoloc: {
-    lat: null,
-    lng: null,
+    lat: 0,
+    lng: 0,
   },
+  id: "",
   address: null,
   ageOfInventory: 0,
   ageOfStatus: 0,
   area: null,
-  askPricePerSqft: null,
+  askPricePerSqft: 0,
   assetType: null,
+  builerName: null,
+  builderCategory: null,
+  builderName: null,
   biappaApproved: false,
   bdaApproved: false,
   buildingAge: null,
@@ -73,10 +77,10 @@ const initialState: ListingProperty = {
   carpet: null,
   communityType: null,
   cornerUnit: false,
-  cpCode: null,
+  cpId: null,
   currentStatus: null,
-  dateOfInventoryAdded: null,
-  dateOfStatusLastChecked: null,
+  dateOfInventoryAdded: 0,
+  dateOfStatusLastChecked: 0,
   driveLink: null,
   eKhata: false,
   exactFloor: null,
@@ -93,7 +97,7 @@ const initialState: ListingProperty = {
   landKhata: null,
   mapLocation: null,
   micromarket: null,
-  nameOfTheProperty: null,
+  propertyName: null,
   noOfBalconies: null,
   noOfBathrooms: null,
   ocReceived: false,
@@ -456,11 +460,13 @@ const AddInventoryForm = () => {
         );
       case "Project Name":
         return (
-          <PlacesSearch
-            selectedPlace={selectedPlace}
-            setSelectedPlace={setSelectedPlace}
-            communityType={property.communityType}
-          />
+          <View>
+            <PlacesSearch
+              selectedPlace={selectedPlace}
+              setSelectedPlace={setSelectedPlace}
+              communityType={property.communityType}
+            />
+          </View>
         );
 
       default:
@@ -538,8 +544,8 @@ const AddInventoryForm = () => {
     setGrayed(true);
   };
 
-  const fieldLabels: { [key in keyof ListingProperty]: string } = {
-    nameOfTheProperty:
+  const fieldLabels: { [K in keyof ListingProperty]?: string } = {
+    propertyName:
       property.communityType === "Independent"
         ? "Nearby LandMark"
         : "Project Name",
@@ -566,6 +572,17 @@ const AddInventoryForm = () => {
     switch (assetType) {
       case "Apartment":
         for (let elem of compulsoryFields[assetType]) {
+          if (elem === "handoverDate") {
+            // If handoverDate is empty, set it to "NA"
+            if (property.currentStatus === false) {
+              const friendlyName = fieldLabels[elem] || elem;
+              showErrorToast(`Missing field: ${friendlyName}`);
+              return false;
+            } else {
+              property.handoverDate = 0;
+              continue;
+            }
+          }
           if (property[elem] === null || property[elem] === "") {
             const friendlyName = fieldLabels[elem] || elem;
             showErrorToast(`Missing field: ${friendlyName}`);
@@ -575,6 +592,17 @@ const AddInventoryForm = () => {
         break;
       case "Villa":
         for (let elem of compulsoryFields[assetType]) {
+          if (elem === "handoverDate") {
+            // If handoverDate is empty, set it to "NA"
+            if (property.currentStatus === false) {
+              const friendlyName = fieldLabels[elem] || elem;
+              showErrorToast(`Missing field: ${friendlyName}`);
+              return false;
+            } else {
+              property.handoverDate = 0;
+              continue;
+            }
+          }
           if (property[elem] === null || property[elem] === "") {
             const friendlyName = fieldLabels[elem] || elem;
             showErrorToast(`Missing field: ${friendlyName}`);
@@ -584,6 +612,17 @@ const AddInventoryForm = () => {
         break;
       case "Plot":
         for (let elem of compulsoryFields[assetType]) {
+          if (elem === "handoverDate") {
+            // If handoverDate is empty, set it to "NA"
+            if (property.currentStatus === false) {
+              const friendlyName = fieldLabels[elem] || elem;
+              showErrorToast(`Missing field: ${friendlyName}`);
+              return false;
+            } else {
+              property.handoverDate = 0;
+              continue;
+            }
+          }
           if (property[elem] === null || property[elem] === "") {
             const friendlyName = fieldLabels[elem] || elem;
             showErrorToast(`Missing field: ${friendlyName}`);
@@ -593,6 +632,17 @@ const AddInventoryForm = () => {
         break;
       case "Row House":
         for (let elem of compulsoryFields[assetType]) {
+          if (elem === "handoverDate") {
+            // If handoverDate is empty, set it to "NA"
+            if (property.currentStatus === false) {
+              const friendlyName = fieldLabels[elem] || elem;
+              showErrorToast(`Missing field: ${friendlyName}`);
+              return false;
+            } else {
+              property.handoverDate = 0;
+              continue;
+            }
+          }
           if (property[elem] === null || property[elem] === "") {
             const friendlyName = fieldLabels[elem] || elem;
             showErrorToast(`Missing field: ${friendlyName}`);
@@ -602,6 +652,17 @@ const AddInventoryForm = () => {
         break;
       case "Villament":
         for (let elem of compulsoryFields[assetType]) {
+          if (elem === "handoverDate") {
+            // If handoverDate is empty, set it to "NA"
+            if (property.currentStatus === false) {
+              const friendlyName = fieldLabels[elem] || elem;
+              showErrorToast(`Missing field: ${friendlyName}`);
+              return false;
+            } else {
+              property.handoverDate = 0;
+              continue;
+            }
+          }
           if (property[elem] === null || property[elem] === "") {
             const friendlyName = fieldLabels[elem] || elem;
             showErrorToast(`Missing field: ${friendlyName}`);
@@ -612,6 +673,17 @@ const AddInventoryForm = () => {
       case "Independent Building":
         // Check if any required field is null or empty
         for (let elem of compulsoryFields[assetType]) {
+          if (elem === "handoverDate") {
+            // If handoverDate is empty, set it to "NA"
+            if (property.currentStatus === false) {
+              const friendlyName = fieldLabels[elem] || elem;
+              showErrorToast(`Missing field: ${friendlyName}`);
+              return false;
+            } else {
+              property.handoverDate = 0;
+              continue;
+            }
+          }
           if (property[elem] === null || property[elem] === "") {
             const friendlyName = fieldLabels[elem] || elem;
             showErrorToast(`Missing field: ${friendlyName}`);
@@ -623,7 +695,11 @@ const AddInventoryForm = () => {
         return false;
     }
 
-    if ((property["totalAskPrice"] === null || property["totalAskPrice"] === 0) && (property["askPricePerSqft"] === null || property["askPricePerSqft"] === 0 ) ) {
+    if (
+      (property["totalAskPrice"] === null || property["totalAskPrice"] === 0) &&
+      (property["askPricePerSqft"] === null ||
+        property["askPricePerSqft"] === 0)
+    ) {
       showErrorToast(`Missing field: Total Ask Price or Ask Price per Sqft`);
       return false;
     }
@@ -667,7 +743,7 @@ const AddInventoryForm = () => {
       throw new Error(`ask price is empty`);
     }
 
-    return { askPricePerSqft, totalAskPrice: totalAskPrice / 100000 };
+    return { askPricePerSqft, totalAskPrice: totalAskPrice };
   };
 
   const getFloor = () => {
@@ -691,7 +767,7 @@ const AddInventoryForm = () => {
 
   const getName = () => {
     if (property.communityType === "Gated") {
-      return property.nameOfTheProperty;
+      return property.propertyName;
     } else if (property.assetType === "Independent Building") {
       return `${property.assetType} in ${property.micromarket}`;
     } else {
@@ -723,7 +799,7 @@ const AddInventoryForm = () => {
 
     if (crStatus) {
       return "Ready to move";
-    } else if (isUnderConstruction(handover)) {
+    } else if (handover && isUnderConstruction(handover.toString())) {
       return "Under Construction";
     } else {
       return "Unconfirmed";
@@ -737,7 +813,7 @@ const AddInventoryForm = () => {
       if (unit) {
         unit[0] += ".5";
       }
-      unitType = unit?.join(" ");
+      unitType = unit?.join(" ") || null;
     }
     return unitType;
   };
@@ -854,7 +930,7 @@ const AddInventoryForm = () => {
 
       const floorNo = getFloor();
 
-      const nameOfTheProperty = getName();
+      const propertyName = getName();
 
       const currentStatus = getCurrentStatus();
 
@@ -871,17 +947,17 @@ const AddInventoryForm = () => {
         return;
       }
 
-      const autoFields: ListingProperty = {
+      const autoFields: Partial<ListingProperty> = {
         propertyId: propId,
         dateOfInventoryAdded: getUnixDateTime(),
         dateOfStatusLastChecked: getUnixDateTime(),
-        cpCode: agentData.cpId,
-        kamId: agentData.kam,
+        cpId: agentData.cpId,
+        kamId: agentData.kamId,
         // area: selectedArea,
         askPricePerSqft,
         totalAskPrice,
         floorNo,
-        nameOfTheProperty,
+        propertyName,
         currentStatus,
         unitType: unitType,
         kamStatus: "pending",
@@ -928,7 +1004,7 @@ const AddInventoryForm = () => {
       };
 
       console.log("dataToSave", dataToSave);
-      await setDoc(doc(db, "QC_Inventories", propId), dataToSave);
+      await setDoc(doc(db, "acnQCInventories", propId), dataToSave);
       console.log("Document successfully written with ID:", propId);
       showSuccessToast("Property sent for verification!");
       handleSetValue("propertyId", propId);
@@ -949,8 +1025,11 @@ const AddInventoryForm = () => {
         user_type: userType,
       });
       fetch(
-        `https://notification-server-acn.onrender.com/addinventory/${property.propertyId}`,
+        `https://acn-notification-server.onrender.com/notification/add-inventory`,
         {
+          body: JSON.stringify({
+            dataToSave,
+          }),
           method: "POST",
           headers: {
             "Content-Type": "application/json",
@@ -988,7 +1067,7 @@ const AddInventoryForm = () => {
         user_type: userType,
       });
 
-      if (!property.assetType || !property.nameOfTheProperty) {
+      if (!property.assetType || !property.propertyName) {
         logEvent(analytics, "inventory_draft_error", {
           event_category: "inventory",
           event_label: "error",
@@ -1011,10 +1090,10 @@ const AddInventoryForm = () => {
         return;
       }
 
-      const autoFields: ListingProperty = {
+      const autoFields: Partial<ListingProperty> = {
         propertyId: propId,
         lastModified: getUnixDateTime(),
-        cpCode: agentData.cpId,
+        cpId: agentData.cpId,
         status: "draft",
       };
 
@@ -1056,7 +1135,7 @@ const AddInventoryForm = () => {
       };
       console.log(property);
 
-      await setDoc(doc(db, "QC_Inventories", propId), dataToSave);
+      await setDoc(doc(db, "acnQCInventories", propId), dataToSave);
       showSuccessToast("Property saved as draft successfully!");
       handleSetValue("propertyId", propId);
       setSavingDraft(false);
@@ -1117,7 +1196,7 @@ const AddInventoryForm = () => {
     } else {
       setProperty((prev) => ({
         ...initialState,
-        nameOfTheProperty: prev.nameOfTheProperty,
+        propertyName: prev.propertyName,
         address: prev.address,
         mapLocation: prev.mapLocation,
         micromarket: prev.micromarket,
@@ -1143,7 +1222,7 @@ const AddInventoryForm = () => {
 
       setProperty((prevProperty) => ({
         ...prevProperty,
-        nameOfTheProperty: selectedPlace.name,
+        propertyName: selectedPlace.name,
         address: selectedPlace.address,
         mapLocation: selectedPlace.mapLocation,
         micromarket: mm[0],
@@ -1154,9 +1233,9 @@ const AddInventoryForm = () => {
         },
       }));
       setIsNew(false);
-    } else if (!selectedPlace && property.nameOfTheProperty && item && isNew) {
+    } else if (!selectedPlace && property.propertyName && item && isNew) {
       setSelectedPlace({
-        name: property?.nameOfTheProperty,
+        name: property?.propertyName,
         lat: property?._geoloc?.lat || null,
         lng: property?._geoloc?.lng || null,
         address: property?.address || null,
@@ -1166,7 +1245,7 @@ const AddInventoryForm = () => {
     } else {
       setProperty((prevProperty) => ({
         ...prevProperty,
-        nameOfTheProperty: null,
+        propertyName: null,
         address: null,
         mapLocation: null,
         micromarket: null,
@@ -1196,7 +1275,7 @@ const AddInventoryForm = () => {
         if (
           !saveAsDraftModalVisible &&
           property.assetType &&
-          property.nameOfTheProperty
+          property.propertyName
         ) {
           setSaveAsDraftModalVisible(true);
           return true; // Prevent default back behavior
@@ -1226,7 +1305,7 @@ const AddInventoryForm = () => {
           <View style={styles.headerLeft}>
             <TouchableOpacity
               onPress={() => {
-                if (property.assetType && property.nameOfTheProperty)
+                if (property.assetType && property.propertyName)
                   setSaveAsDraftModalVisible(true);
                 else router.back();
               }}

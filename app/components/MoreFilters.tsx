@@ -59,7 +59,9 @@ const MoreFilters = ({
   setSelectedLandmark,
 }: MoreFiltersProps) => {
   const { items, refine } = useCurrentRefinements();
-  const userType = useSelector((state: RootState) => state?.agent?.docData?.userType) || "free";
+  const userType =
+    useSelector((state: RootState) => state?.agent?.docData?.userType) ||
+    "free";
   const [selectedLocationFilter, setSelectedLocationFilter] =
     useState("micromarket");
   const [landmarkSearch, setLandmarkSearch] = useState("");
@@ -68,16 +70,16 @@ const MoreFilters = ({
   useEffect(() => {
     if (isOpen) {
       try {
-        logEvent(analytics, 'more_filters_view', {
-          event_category: 'filters',
-          event_label: 'modal_view',
+        logEvent(analytics, "more_filters_view", {
+          event_category: "filters",
+          event_label: "modal_view",
           current_refinements: items.length,
           location_filter: selectedLocationFilter,
           has_landmark: !!selectedLandmark,
-          user_type: userType
+          user_type: userType,
         });
       } catch (error) {
-        console.error('Error logging more filters view:', error);
+        console.error("Error logging more filters view:", error);
       }
     }
   }, [isOpen]);
@@ -167,7 +169,7 @@ const MoreFilters = ({
     { title: "Configuration", attribute: "unitType", type: "dropdown" },
     { title: "SBUA (sqft)", attribute: "sbua", type: "range" },
     {
-      title: "Total Ask Price (Lacs)",
+      title: "Total Ask Price",
       attribute: "totalAskPrice",
       type: "range",
     },
@@ -235,36 +237,36 @@ const MoreFilters = ({
 
     const handleSearch = (query: string) => {
       try {
-        logEvent(analytics, 'filter_search', {
-          event_category: 'filters',
-          event_label: 'search',
+        logEvent(analytics, "filter_search", {
+          event_category: "filters",
+          event_label: "search",
           filter_type: attribute,
           search_query: query,
-          results_count: items.filter(item => 
+          results_count: items.filter((item) =>
             item.label.toLowerCase().includes(query.toLowerCase())
           ).length,
-          user_type: userType
+          user_type: userType,
         });
       } catch (error) {
-        console.error('Error logging filter search:', error);
+        console.error("Error logging filter search:", error);
       }
       setSearchQuery(query);
     };
 
     const handleRefine = (value: string) => {
       try {
-        const item = items.find(i => i.value === value);
-        logEvent(analytics, 'filter_refinement', {
-          event_category: 'filters',
-          event_label: 'refinement',
+        const item = items.find((i) => i.value === value);
+        logEvent(analytics, "filter_refinement", {
+          event_category: "filters",
+          event_label: "refinement",
           filter_type: attribute,
           value: value,
           label: item?.label,
-          action: item?.isRefined ? 'remove' : 'add',
-          user_type: userType
+          action: item?.isRefined ? "remove" : "add",
+          user_type: userType,
         });
       } catch (error) {
-        console.error('Error logging refinement:', error);
+        console.error("Error logging refinement:", error);
       }
       refine(value);
     };
@@ -318,39 +320,39 @@ const MoreFilters = ({
 
   const handleLocationFilterChange = (filterType: string) => {
     try {
-      logEvent(analytics, 'location_filter_change', {
-        event_category: 'filters',
-        event_label: 'location',
+      logEvent(analytics, "location_filter_change", {
+        event_category: "filters",
+        event_label: "location",
         previous_filter: selectedLocationFilter,
         new_filter: filterType,
-        user_type: userType
+        user_type: userType,
       });
     } catch (error) {
-      console.error('Error logging location filter change:', error);
+      console.error("Error logging location filter change:", error);
     }
 
-    if (filterType === 'landmark') {
-      setSelectedLocationFilter('landmark');
-      clearAttributeFilter('micromarket');
+    if (filterType === "landmark") {
+      setSelectedLocationFilter("landmark");
+      clearAttributeFilter("micromarket");
     } else {
-      setSelectedLocationFilter('micromarket');
+      setSelectedLocationFilter("micromarket");
       setSelectedLandmark?.(null);
     }
   };
 
   const handleShowResults = () => {
     try {
-      logEvent(analytics, 'apply_more_filters', {
-        event_category: 'filters',
-        event_label: 'apply',
+      logEvent(analytics, "apply_more_filters", {
+        event_category: "filters",
+        event_label: "apply",
         total_filters: items.length,
-        filter_types: items.map(item => item.attribute),
+        filter_types: items.map((item) => item.attribute),
         location_filter: selectedLocationFilter,
         has_landmark: !!selectedLandmark,
-        user_type: userType
+        user_type: userType,
       });
     } catch (error) {
-      console.error('Error logging filter application:', error);
+      console.error("Error logging filter application:", error);
     }
     handleToggle();
   };
@@ -363,15 +365,15 @@ const MoreFilters = ({
       transparent={true}
       onRequestClose={() => {
         try {
-          logEvent(analytics, 'more_filters_close', {
-            event_category: 'filters',
-            event_label: 'modal_close',
-            close_method: 'back_button',
+          logEvent(analytics, "more_filters_close", {
+            event_category: "filters",
+            event_label: "modal_close",
+            close_method: "back_button",
             applied_filters: items.length,
-            user_type: userType
+            user_type: userType,
           });
         } catch (error) {
-          console.error('Error logging modal close:', error);
+          console.error("Error logging modal close:", error);
         }
         handleToggle();
       }}

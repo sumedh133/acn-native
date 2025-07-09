@@ -59,15 +59,7 @@ const ctaIconMap: Record<string, React.ReactNode> = {
       // style={{ marginRight: 6 }}
     />
   ),
-  "Message Agent": (
-    <MaterialCommunityIcons
-      name="whatsapp"
-      size={16}
-      color="#153E3B"
-      // style={{ marginRight: 6 }}
-    />
-  ),
-  "Message Agents": (
+  "Message on Whatsapp": (
     <MaterialCommunityIcons
       name="whatsapp"
       size={16}
@@ -210,7 +202,7 @@ const NotificationCard: React.FC<NotificationCardProps> = ({
   // Avatar: initials or logo
   const renderAvatar = () => {
     if (notification.icon === "initials") {
-      const initials = notification.additionalData.buyerName
+      const initials = notification.meta?.buyerName
         .split(" ")
         .map((n: string) => n[0])
         .join("")
@@ -255,11 +247,11 @@ const NotificationCard: React.FC<NotificationCardProps> = ({
       ]}
     >
       <View style={styles.avatarContainer}>
-        {!notification.isRead ? (
+        {/* {!notification.isRead ? (
           <View style={styles.unreadDot} />
         ) : (
           <View style={{ width: 10, height: 10 }} />
-        )}
+        )} */}
         {renderAvatar()}
       </View>
       <View style={styles.contentContainer}>
@@ -313,7 +305,7 @@ const styles = StyleSheet.create({
   container: {
     flexDirection: "row",
     gap: 12,
-    paddingLeft: 24,
+    paddingLeft: 12,
     paddingTop: 24,
     alignItems: "flex-start",
   },

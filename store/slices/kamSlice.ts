@@ -15,7 +15,7 @@ export const setKamDataState =
     dispatch(resetError());
 
     try {
-      const q = query(collection(db, "kam"), where("kamId", "==", kamId));
+      const q = query(collection(db, "acnKam"), where("kamId", "==", kamId));
       const querySnapshot = await getDocs(q);
 
       if (!querySnapshot.empty) {
@@ -98,10 +98,10 @@ export const {
   resetError,
 } = kamSlice.actions;
 
-export const selectKamState = (state: any) => state?.kam;
+export const selectKamState = (state: any) => state?.kamId;
 export const selectKamName = (state: any) => state?.kam?.kamDocData?.name || "";
 export const selectKamNumber = (state: any) =>
-  state?.kam?.kamDocData?.phonenumber || "";
+  state?.kam?.kamDocData?.phoneNumber || "";
 export const selectKamModalVisible = (state: any) =>
   state?.kam?.kamModalVisible || false;
 

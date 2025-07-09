@@ -35,13 +35,13 @@ const UserRequirementForm = () => {
   // Track page view
   useEffect(() => {
     try {
-      logEvent(analytics, 'requirement_form_view', {
-        event_category: 'form',
-        event_label: 'page_view',
-        user_type: userType
+      logEvent(analytics, "requirement_form_view", {
+        event_category: "form",
+        event_label: "page_view",
+        user_type: userType,
       });
     } catch (error) {
-      console.error('Error logging form view:', error);
+      console.error("Error logging form view:", error);
     }
   }, [userType]);
 
@@ -60,8 +60,8 @@ const UserRequirementForm = () => {
   const [assetType, setAssetType] = useState("");
   const [area, setArea] = useState<string>("");
   const [configuration, setConfiguration] = useState("");
-  const [budgetFrom, setBudgetFrom] = useState<string>("");
-  const [budgetTo, setBudgetTo] = useState<string>("");
+  const [budgetFrom, setBudgetFrom] = useState<number>(0);
+  const [budgetTo, setBudgetTo] = useState<number>(0);
   const [marketValue, setMarketValue] = useState(false);
   const [isRendered, setIsRendered] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -134,42 +134,42 @@ const UserRequirementForm = () => {
 
   const handleMarketValueCheckbox = () => {
     try {
-      logEvent(analytics, 'requirement_form_market_value', {
-        event_category: 'form',
-        event_label: 'market_value_toggle',
+      logEvent(analytics, "requirement_form_market_value", {
+        event_category: "form",
+        event_label: "market_value_toggle",
         new_state: !marketValue,
-        user_type: userType
+        user_type: userType,
       });
     } catch (error) {
-      console.error('Error logging market value toggle:', error);
+      console.error("Error logging market value toggle:", error);
     }
     setMarketValue(!marketValue);
     if (!marketValue) {
       // If enabling market value, clear budget fields
-      setBudgetFrom("");
-      setBudgetTo("");
+      setBudgetFrom(0);
+      setBudgetTo(0);
     }
   };
 
   const clearForm = () => {
     try {
-      logEvent(analytics, 'requirement_form_clear', {
-        event_category: 'form',
-        event_label: 'clear',
-        user_type: userType
+      logEvent(analytics, "requirement_form_clear", {
+        event_category: "form",
+        event_label: "clear",
+        user_type: userType,
       });
     } catch (error) {
-      console.error('Error logging form clear:', error);
+      console.error("Error logging form clear:", error);
     }
-    
+
     // Reset form fields
     setPropertyName("");
     setRequirementDetails("");
     setAssetType("");
     setArea("");
     setConfiguration("");
-    setBudgetFrom("");
-    setBudgetTo("");
+    setBudgetFrom(0);
+    setBudgetTo(0);
     setMarketValue(false); // Reset to default value
 
     // Clear errors
@@ -186,15 +186,15 @@ const UserRequirementForm = () => {
       return true;
     }
 
-    if (budgetTo === "") {
+    if (budgetTo === 0) {
       return false; // Max budget (budgetTo) is required
     }
 
-    if (budgetFrom === "") {
+    if (budgetFrom === 0) {
       return true; // Min budget (budgetFrom) can be skipped
     }
 
-    return parseFloat(budgetTo) >= parseFloat(budgetFrom); // Validate range
+    return budgetTo >= budgetFrom; // Validate range
   };
 
   const handleSubmit = async () => {
@@ -222,14 +222,14 @@ const UserRequirementForm = () => {
     // Track validation errors if any
     if (Object.keys(newErrors).length !== 0) {
       try {
-        logEvent(analytics, 'requirement_form_validation_error', {
-          event_category: 'form',
-          event_label: 'validation_error',
+        logEvent(analytics, "requirement_form_validation_error", {
+          event_category: "form",
+          event_label: "validation_error",
           error_fields: Object.keys(newErrors),
-          user_type: userType
+          user_type: userType,
         });
       } catch (error) {
-        console.error('Error logging validation errors:', error);
+        console.error("Error logging validation errors:", error);
       }
       return;
     }
@@ -237,46 +237,46 @@ const UserRequirementForm = () => {
     setSaving(true);
 
     try {
-      const userRequirement: Requirement = {
+      const userRequirement: Partial<Requirement> = {
         propertyName,
-        requirementDetails,
-        assetType,
-        area: area ? parseFloat(area) : undefined,
-        configuration,
+        extraDetails: requirementDetails,
+        assetType: assetType as any,
+        area: area ? parseFloat(area) : 0,
+        configuration: configuration as any,
         budget: {
-          from: budgetFrom ? parseFloat(budgetFrom) : undefined,
-          to: budgetTo ? parseFloat(budgetTo) : undefined,
+          from: budgetFrom ? budgetFrom : 0,
+          to: budgetTo ? budgetTo : 0,
         },
         marketValue: marketValue === true ? "Market Value" : "",
       };
 
       // Track form submission attempt
       try {
-        logEvent(analytics, 'requirement_form_submit', {
-          event_category: 'form',
-          event_label: 'submit',
+        logEvent(analytics, "requirement_form_submit", {
+          event_category: "form",
+          event_label: "submit",
           asset_type: assetType,
           has_configuration: !!configuration,
           has_area: !!area,
-          budget_type: marketValue ? 'market_value' : 'specified',
+          budget_type: marketValue ? "market_value" : "specified",
           has_details: !!requirementDetails,
-          user_type: userType
+          user_type: userType,
         });
       } catch (error) {
-        console.error('Error logging form submission:', error);
+        console.error("Error logging form submission:", error);
       }
 
       await submitRequirement(userRequirement, cpId);
-      
+
       // Track successful submission
       try {
-        logEvent(analytics, 'requirement_form_submit_success', {
-          event_category: 'form',
-          event_label: 'submit_success',
-          user_type: userType
+        logEvent(analytics, "requirement_form_submit_success", {
+          event_category: "form",
+          event_label: "submit_success",
+          user_type: userType,
         });
       } catch (error) {
-        console.error('Error logging submission success:', error);
+        console.error("Error logging submission success:", error);
       }
 
       clearForm();
@@ -284,14 +284,15 @@ const UserRequirementForm = () => {
     } catch (error) {
       // Track submission error
       try {
-        logEvent(analytics, 'requirement_form_submit_error', {
-          event_category: 'form',
-          event_label: 'submit_error',
-          error_message: error instanceof Error ? error.message : 'Unknown error',
-          user_type: userType
+        logEvent(analytics, "requirement_form_submit_error", {
+          event_category: "form",
+          event_label: "submit_error",
+          error_message:
+            error instanceof Error ? error.message : "Unknown error",
+          user_type: userType,
         });
       } catch (analyticsError) {
-        console.error('Error logging submission error:', analyticsError);
+        console.error("Error logging submission error:", analyticsError);
       }
 
       showErrorToast(
@@ -303,18 +304,44 @@ const UserRequirementForm = () => {
     }
   };
 
+  const getPriceInWords = (numericPrice: number): string => {
+    if (isNaN(numericPrice)) return "";
+
+    if (numericPrice >= 10000000) {
+      return `${(numericPrice / 10000000).toFixed(2)} Cr`;
+    } else if (numericPrice >= 100000) {
+      return `${(numericPrice / 100000).toFixed(2)} Lakh`;
+    } else if (numericPrice >= 1000) {
+      return `${(numericPrice / 1000).toFixed(2)} K`;
+    }
+    return numberToWords(numericPrice);
+  };
+
+  // Simple function to convert number to words (simplified for demonstration)
+  const numberToWords = (num: number): string => {
+    // This is a simplified implementation
+    if (num >= 10000000) {
+      return `${Math.floor(num / 10000000)} Crore ${Math.floor(
+        (num % 10000000) / 100000
+      )} Lakh Rupees only`;
+    } else if (num >= 100000) {
+      return `${Math.floor(num / 100000)} Lakh Rupees only`;
+    }
+    return `${num} Rupees only`;
+  };
+
   // Track field changes
   const handleFieldChange = (fieldName: string, value: string) => {
     try {
-      logEvent(analytics, 'requirement_form_field_change', {
-        event_category: 'form',
-        event_label: 'field_change',
+      logEvent(analytics, "requirement_form_field_change", {
+        event_category: "form",
+        event_label: "field_change",
         field_name: fieldName,
         has_value: !!value,
-        user_type: userType
+        user_type: userType,
       });
     } catch (error) {
-      console.error('Error logging field change:', error);
+      console.error("Error logging field change:", error);
     }
   };
 
@@ -328,13 +355,13 @@ const UserRequirementForm = () => {
 
   if (!isConnectedToInternet) {
     try {
-      logEvent(analytics, 'requirement_form_offline', {
-        event_category: 'error',
-        event_label: 'offline',
-        user_type: userType
+      logEvent(analytics, "requirement_form_offline", {
+        event_category: "error",
+        event_label: "offline",
+        user_type: userType,
       });
     } catch (error) {
-      console.error('Error logging offline state:', error);
+      console.error("Error logging offline state:", error);
     }
     return <Offline />;
   }
@@ -365,7 +392,7 @@ const UserRequirementForm = () => {
               value={propertyName}
               onChangeText={(text) => {
                 setPropertyName(text);
-                handleFieldChange('propertyName', text);
+                handleFieldChange("propertyName", text);
                 setError((prev) => ({
                   ...prev,
                   propertyName: undefined,
@@ -474,7 +501,7 @@ const UserRequirementForm = () => {
                     } else {
                       setArea(numericValue);
                     }
-                    handleFieldChange('area', text);
+                    handleFieldChange("area", text);
                   }}
                   onFocus={() => handleFocus("area")}
                   onBlur={() => handleBlur("area")}
@@ -494,82 +521,88 @@ const UserRequirementForm = () => {
             {/* Budget */}
             <View style={styles.inputGroup}>
               <Text style={styles.inputLabel}>
-                Budget (Cr) <Text style={styles.required}>*</Text>
+                Budget <Text style={styles.required}>*</Text>
               </Text>
               <View style={styles.rowContainer}>
-                {/* Budget From */}
-                <TextInput
-                  placeholder="From"
-                  value={budgetFrom}
-                  onChangeText={(text) => {
-                    // Allow only numbers and decimals
-                    const numericValue = text.replace(/[^0-9.]/g, "");
-                    // Handle multiple decimal points
-                    const parts = numericValue.split(".");
-                    if (parts.length > 2) {
-                      setBudgetFrom(`${parts[0]}.${parts[1]}`);
-                    } else if (parts.length > 1) {
-                      // Limit to 2 decimal places
-                      parts[1] = parts[1].slice(0, 2);
-                      setBudgetFrom(`${parts[0]}.${parts[1]}`);
-                    } else {
-                      setBudgetFrom(numericValue);
-                    }
-                    handleFieldChange('budgetFrom', text);
-                    setError((prev) => ({
-                      ...prev,
-                      budget: "",
-                    }));
-                  }}
-                  onFocus={() => handleFocus("budgetFrom")}
-                  onBlur={() => handleBlur("budgetFrom")}
-                  keyboardType="decimal-pad"
-                  editable={!marketValue}
-                  style={[
-                    styles.textInput,
-                    styles.budgetInput,
-                    focusedFields["budgetFrom"] && styles.focusedInput,
-                    marketValue && styles.disabledInput,
-                  ]}
-                />
+                <View style={{ flexDirection: "column", gap: 8, width: "45%" }}>
+                  {/* Budget From */}
+                  <TextInput
+                    placeholder="From"
+                    value={budgetFrom === 0 ? "" : budgetFrom.toString()}
+                    onChangeText={(text) => {
+                      // Allow only numbers and decimals
+                      const numericValue = text.replace(/[^0-9.]/g, "");
+                      // Handle multiple decimal points
+                      const parts = numericValue.split(".");
+                      if (parts.length > 2) {
+                        setBudgetFrom(parseFloat(`${parts[0]}.${parts[1]}`));
+                      } else if (parts.length > 1) {
+                        // Limit to 2 decimal places
+                        parts[1] = parts[1].slice(0, 2);
+                        setBudgetFrom(parseFloat(`${parts[0]}.${parts[1]}`));
+                      } else {
+                        setBudgetFrom(parseFloat(numericValue) || 0);
+                      }
+                      handleFieldChange("budgetFrom", text);
+                      setError((prev) => ({
+                        ...prev,
+                        budget: "",
+                      }));
+                    }}
+                    onFocus={() => handleFocus("budgetFrom")}
+                    onBlur={() => handleBlur("budgetFrom")}
+                    keyboardType="decimal-pad"
+                    editable={!marketValue}
+                    style={[
+                      styles.textInput,
+                      styles.budgetInput,
+                      focusedFields["budgetFrom"] && styles.focusedInput,
+                      marketValue && styles.disabledInput,
+                    ]}
+                  />
+                  <Text>{getPriceInWords(budgetFrom)}</Text>
+                </View>
 
                 <Text style={styles.toText}>To</Text>
 
                 {/* Budget To */}
-                <TextInput
-                  placeholder="To"
-                  value={budgetTo}
-                  onChangeText={(text) => {
-                    // Allow only numbers and decimals
-                    const numericValue = text.replace(/[^0-9.]/g, "");
-                    // Handle multiple decimal points
-                    const parts = numericValue.split(".");
-                    if (parts.length > 2) {
-                      setBudgetTo(`${parts[0]}.${parts[1]}`);
-                    } else if (parts.length > 1) {
-                      // Limit to 2 decimal places
-                      parts[1] = parts[1].slice(0, 2);
-                      setBudgetTo(`${parts[0]}.${parts[1]}`);
-                    } else {
-                      setBudgetTo(numericValue);
-                    }
-                    handleFieldChange('budgetTo', text);
-                    setError((prev) => ({
-                      ...prev,
-                      budget: "",
-                    }));
-                  }}
-                  onFocus={() => handleFocus("budgetTo")}
-                  onBlur={() => handleBlur("budgetTo")}
-                  keyboardType="decimal-pad"
-                  editable={!marketValue}
-                  style={[
-                    styles.textInput,
-                    styles.budgetInput,
-                    focusedFields["budgetTo"] && styles.focusedInput,
-                    marketValue && styles.disabledInput,
-                  ]}
-                />
+                <View style={{ flexDirection: "column", gap: 8, width: "45%" }}>
+                  <TextInput
+                    placeholder="To"
+                    value={budgetTo === 0 ? "" : budgetTo.toString()}
+                    onChangeText={(text) => {
+                      // Allow only numbers and decimals
+                      const numericValue = text.replace(/[^0-9.]/g, "");
+                      // Handle multiple decimal points
+                      const parts = numericValue.split(".");
+                      if (parts.length > 2) {
+                        setBudgetTo(parseFloat(`${parts[0]}.${parts[1]}`));
+                      } else if (parts.length > 1) {
+                        // Limit to 2 decimal places
+                        parts[1] = parts[1].slice(0, 2);
+                        setBudgetTo(parseFloat(`${parts[0]}.${parts[1]}`));
+                      } else {
+                        setBudgetTo(parseFloat(numericValue) || 0);
+                      }
+                      handleFieldChange("budgetTo", text);
+                      setError((prev) => ({
+                        ...prev,
+                        budget: "",
+                      }));
+                    }}
+                    onFocus={() => handleFocus("budgetTo")}
+                    onBlur={() => handleBlur("budgetTo")}
+                    keyboardType="decimal-pad"
+                    editable={!marketValue}
+                    style={[
+                      styles.textInput,
+                      styles.budgetInput,
+                      focusedFields["budgetTo"] && styles.focusedInput,
+                      marketValue && styles.disabledInput,
+                    ]}
+                  />
+                  <Text>{getPriceInWords(budgetTo)}</Text>
+                </View>
               </View>
               {error.budget && (
                 <Text style={styles.errorText}>{error.budget}</Text>
@@ -707,6 +740,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
+    width: "100%",
   },
   halfWidth: {
     width: "48%",

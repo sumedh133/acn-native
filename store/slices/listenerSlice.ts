@@ -4,11 +4,15 @@ import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 type ListenerState = {
   unsubscribeAgentListener: null | (() => void);
   unsubscribeVersionListener: null | (() => void);
+  unsubscribePropertyListener: null | (() => void);
+  unsubscribeRequirementListener: null | (() => void);
 };
 
 const initialState: ListenerState = {
   unsubscribeAgentListener: null,
   unsubscribeVersionListener: null,
+  unsubscribePropertyListener: null,
+  unsubscribeRequirementListener: null,
 };
 
 const listenerSlice = createSlice({
@@ -33,6 +37,24 @@ const listenerSlice = createSlice({
         state.unsubscribeVersionListener = null;
       }
     },
+    setPropertyListener: (state, action: PayloadAction<() => void>) => {
+      state.unsubscribePropertyListener = action.payload;
+    },
+    clearPropertyListener: (state) => {
+      if (state.unsubscribePropertyListener) {
+        state.unsubscribePropertyListener();
+        state.unsubscribePropertyListener = null;
+      }
+    },
+    setRequirementListener: (state, action: PayloadAction<() => void>) => {
+      state.unsubscribeRequirementListener = action.payload;
+    },
+    clearRequirementListener: (state) => {
+      if (state.unsubscribeRequirementListener) {
+        state.unsubscribeRequirementListener();
+        state.unsubscribeRequirementListener = null;
+      }
+    },
   },
 });
 
@@ -41,6 +63,10 @@ export const {
   clearAgentListener,
   setVersionListener,
   clearVersionListener,
+  setPropertyListener,
+  clearPropertyListener,
+  setRequirementListener,
+  clearRequirementListener,
 } = listenerSlice.actions;
 
 export default listenerSlice.reducer;

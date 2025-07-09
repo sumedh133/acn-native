@@ -26,7 +26,7 @@ import ShareModal from "@/app/modals/ShareModal";
 import { useSelector } from "react-redux";
 import { RootState } from "@/store/store";
 import { Enquiry, Property } from "@/app/types";
-import { doc, setDoc } from "firebase/firestore";
+import { doc, getDoc, setDoc } from "firebase/firestore";
 import { db } from "@/app/config/firebase";
 import { handleIdGeneration } from "@/app/helpers/nextId";
 import deductMonthlyCredit from "@/app/helpers/deductCredit";
@@ -42,7 +42,7 @@ import axios from "axios";
 import CreditLimitModal from "@/app/modals/CreditLimitModal";
 import { analytics } from "@/app/config/firebase";
 import { logEvent } from "@react-native-firebase/analytics";
-import { toCapitalizedWords } from "@/app/helpers/common";
+import { formatCost2, toCapitalizedWords } from "@/app/helpers/common";
 
 interface PropertyCardProps {
   property: Property;
@@ -67,7 +67,7 @@ const PropertyCard: React.FC<PropertyCardProps> = ({ property }) => {
   const [isGeneratingEnquiry, setIsGeneratingEnquiry] = useState(false);
   const agentData = useSelector((state: RootState) => state.agent.docData);
   const phoneNumber = useSelector(
-    (state: RootState) => state?.agent?.docData?.phonenumber
+    (state: RootState) => state?.agent?.docData?.phoneNumber
   );
   const monthlyCredits = useSelector(
     (state: RootState) => state?.agent?.docData?.monthlyCredits
@@ -113,7 +113,7 @@ const PropertyCard: React.FC<PropertyCardProps> = ({ property }) => {
 
   // Get property name with first letter capitalized
   const getPropertyName = () => {
-    const name = property.nameOfTheProperty || "";
+    const name = property.propertyName || "";
     if (!name) return "Unnamed Property";
     return name.charAt(0).toUpperCase() + name.slice(1);
   };
@@ -156,8 +156,8 @@ const PropertyCard: React.FC<PropertyCardProps> = ({ property }) => {
       console.error("Error logging enquire click:", error);
     }
 
-    setSelectedCPID(property.cpCode || "");
-    if ((monthlyCredits + boosterCredits) > 0) {
+    setSelectedCPID(property.cpId || "");
+    if (monthlyCredits + boosterCredits > 0) {
       setIsConfirmModelOpen(true);
       return;
     } else {
@@ -185,17 +185,34 @@ const PropertyCard: React.FC<PropertyCardProps> = ({ property }) => {
   };
 
   const submitEnquiry = async (nextEnqId: string) => {
+    if (!property.cpId) {
+      showErrorToast("Error: Seller CPID is missing. Please try again.");
+      return;
+    }
+    const docRef = doc(db, "acnAgents", property.cpId);
+    const docSnap = await getDoc(docRef);
+    const sellerData = docSnap.data();
     const enq: Enquiry = {
       enquiryId: nextEnqId,
-      cpId: agentData?.cpId,
+      // buyer details
+      buyerCpId: agentData?.cpId,
+      buyerName: agentData?.name,
+      buyerNumber: phoneNumber,
+      // propterty details
       propertyId: property?.propertyId,
+      propertyName: property?.propertyName,
+      //seller details
+      sellerCpId: sellerData?.cpId,
+      sellerName: sellerData?.name,
+      sellerNumber: sellerData?.phoneNumber,
       status: "pending",
       added: getUnixDateTime(),
       lastModified: getUnixDateTime(),
+      reviews: [],
     } as Enquiry;
 
     try {
-      const enquiryDocRef = doc(db, "enquiries", nextEnqId);
+      const enquiryDocRef = doc(db, "acnEnquiries", nextEnqId);
       await setDoc(enquiryDocRef, enq);
       showSuccessToast("Enquiry submitted successfully!", {
         isInModal: true,
@@ -211,16 +228,18 @@ const PropertyCard: React.FC<PropertyCardProps> = ({ property }) => {
     //     'Content-Type': 'application/json'
     //   }
     // })
+    return enq;
   };
 
   const onConfirmEnquiry = async () => {
+    console.log("onConfirmEnquiry called");
     if (!selectedCPID) {
       showErrorToast("Error: Seller CPID is missing. Please try again.");
       setIsConfirmModelOpen(false);
       return;
     }
 
-    if (!((monthlyCredits + boosterCredits) > 0)) {
+    if (!(monthlyCredits + boosterCredits > 0)) {
       showErrorToast(
         "You don't have enough credits. Please contact your account manager."
       );
@@ -255,9 +274,10 @@ const PropertyCard: React.FC<PropertyCardProps> = ({ property }) => {
         dispatch,
         boosterCredits
       );
+      let enq: Enquiry | undefined;
 
       if (typeof nextEnqId === "string") {
-        await submitEnquiry(nextEnqId);
+        enq = await submitEnquiry(nextEnqId);
       }
 
       // ✅ Close the confirmation modal
@@ -270,8 +290,11 @@ const PropertyCard: React.FC<PropertyCardProps> = ({ property }) => {
         setIsEnquiryCPModelOpen(true);
       }
       await fetch(
-        `https://notification-server-acn-zdgg.onrender.com/enquiries/${nextEnqId}`,
+        `https://acn-notification-server.onrender.com/notification/enquiry/${nextEnqId}`,
         {
+          body: JSON.stringify({
+            enq,
+          }),
           method: "POST",
           headers: {
             "Content-Type": "application/json",
@@ -312,7 +335,7 @@ const PropertyCard: React.FC<PropertyCardProps> = ({ property }) => {
   };
 
   // Function to open property details screen with routing
-  const openPropertyDetails = () => {
+  const openPropertyDetails = async () => {
     try {
       logEvent(analytics, "property_details_view", {
         event_category: "property",
@@ -417,7 +440,7 @@ const PropertyCard: React.FC<PropertyCardProps> = ({ property }) => {
                 Total Ask Price:
               </Text>
               <Text className="text-sm font-semibold text-gray-900">
-                {formatPrice()}
+                {formatCost2(property.totalAskPrice)}
               </Text>
             </View>
 
@@ -450,9 +473,9 @@ const PropertyCard: React.FC<PropertyCardProps> = ({ property }) => {
           </View>
 
           {/* Buttons for Drive Details and Enquire Now */}
-          <View className="flex-row gap-3 mt-1">
+          <View className="flex-row gap-3">
             {/* Drive Details Button */}
-            <TouchableOpacity
+            {/* <TouchableOpacity
               className="flex-1 border border-[#153E3B] rounded-md py-2 flex-row justify-center items-center"
               onPress={handleOpenDriveDetails}
             >
@@ -463,7 +486,7 @@ const PropertyCard: React.FC<PropertyCardProps> = ({ property }) => {
               >
                 Details
               </Text>
-            </TouchableOpacity>
+            </TouchableOpacity> */}
 
             {/* Enquire Now Button */}
             <TouchableOpacity
@@ -488,6 +511,7 @@ const PropertyCard: React.FC<PropertyCardProps> = ({ property }) => {
         generatingEnquiry={false}
         visible={isEnquiryCPModelOpen}
         selectedCPID={selectedCPID}
+        property={property}
       />
 
       <ConfirmModal

@@ -42,11 +42,11 @@ import { logEvent } from "@react-native-firebase/analytics";
 
 // Initialize Algolia search client
 const searchClient = algoliasearch(
-  "IX7SWC1B42",
-  "72106b08028d186542a82eafa570fc88"
+  "1F93ZRBESW",
+  "b9023694178852d83995620a6c9ba933"
 );
 
-const indexName = "propertyId";
+const indexName = "properties";
 
 // SearchRefresher component that accesses the refresh method
 function SearchRefresher({

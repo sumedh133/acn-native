@@ -32,7 +32,7 @@ export default async function submitIssue(issueReport, cpId) {
       ...issueReport,
     };
 
-    const docRef = doc(db, "issues", nextIssueId);
+    const docRef = doc(db, "acnIssues", nextIssueId);
     await setDoc(docRef, formData);
 
   } catch (error) {

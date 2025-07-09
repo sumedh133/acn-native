@@ -30,6 +30,7 @@ import {
   Enquiry,
   EnquiryWithProperty,
   ListingProperty,
+  IReview,
 } from "../types";
 import Dashboard from "../components/dashboard/Dashboard";
 import { RootState } from "@/store/store";
@@ -48,7 +49,7 @@ interface UseEnquiriesResult {
   myEnquiries: EnquiryWithProperty[];
   loading: boolean;
   error: string | null;
-  handleGiveReview: (enqId: string, review: {}) => void;
+  handleGiveReview: (enqId: string, reviews: IReview) => void;
 }
 
 interface UseListingResult {
@@ -70,7 +71,9 @@ const useEnquiries = (): UseEnquiriesResult => {
   const [error, setError] = useState<string | null>(null);
 
   const cpId = useCpId();
-  const userType = useSelector((state: RootState) => state.agent.docData?.userType || "free");
+  const userType = useSelector(
+    (state: RootState) => state.agent.docData?.userType || "free"
+  );
 
   useEffect(() => {
     if (!cpId) {
@@ -83,8 +86,8 @@ const useEnquiries = (): UseEnquiriesResult => {
     try {
       // Create the query the same way as before
       const enquiriesQuery = query(
-        collection(db, "enquiries"),
-        where("cpId", "==", cpId)
+        collection(db, "acnEnquiries"),
+        where("buyerCpId", "==", cpId)
       );
 
       // Set up real-time listener for enquiries
@@ -93,7 +96,7 @@ const useEnquiries = (): UseEnquiriesResult => {
         async (snapshot) => {
           const enquiriesData: Enquiry[] = snapshot.docs.map((docSnap) => ({
             id: docSnap.id,
-            ...docSnap.data(),
+            ...(docSnap.data() as Enquiry),
           }));
 
           // Track enquiries data load
@@ -102,7 +105,7 @@ const useEnquiries = (): UseEnquiriesResult => {
               event_category: "dashboard",
               event_label: "enquiries",
               enquiries_count: enquiriesData.length,
-              user_type: userType
+              user_type: userType,
             });
           } catch (error) {
             console.error("Error logging enquiries load:", error);
@@ -116,7 +119,11 @@ const useEnquiries = (): UseEnquiriesResult => {
           for (let i = 0; i < propertyIds.length; i += 30) {
             const batch = propertyIds.slice(i, i + 30);
             const properties = await getDocs(
-              query(collection(db, "ACN123"), where(documentId(), "in", batch), orderBy("propertyId", "desc"))
+              query(
+                collection(db, "acnProperties"),
+                where(documentId(), "in", batch),
+                orderBy("propertyId", "desc")
+              )
             );
             properties.docs.map((item) => {
               propertyDocs.set(item.id, item.data());
@@ -146,7 +153,7 @@ const useEnquiries = (): UseEnquiriesResult => {
           setError(err.message || "Error fetching enquiries");
           console.error("Fetch error:", err);
           setLoading(false);
-          
+
           // Track error
           try {
             logEvent(analytics, "dashboard_enquiries_error", {
@@ -154,7 +161,7 @@ const useEnquiries = (): UseEnquiriesResult => {
               event_label: "error",
               error_type: "fetch_enquiries",
               error_message: err.message || "Error fetching enquiries",
-              user_type: userType
+              user_type: userType,
             });
           } catch (error) {
             console.error("Error logging enquiries error:", error);
@@ -171,13 +178,13 @@ const useEnquiries = (): UseEnquiriesResult => {
     }
   }, [cpId, userType]);
 
-  const handleGiveReview = (enqId: string, review: {}) => {
+  const handleGiveReview = (enqId: string, reviews: IReview) => {
     try {
       logEvent(analytics, "enquiry_review_added", {
         event_category: "dashboard",
         event_label: "review",
         enquiry_id: enqId,
-        user_type: userType
+        user_type: userType,
       });
     } catch (error) {
       console.error("Error logging review addition:", error);
@@ -187,8 +194,8 @@ const useEnquiries = (): UseEnquiriesResult => {
       prev.map((enq) => {
         return enq.enquiryId === enqId
           ? enq?.reviews?.length
-            ? { ...enq, reviews: [...enq.reviews, review] }
-            : { ...enq, reviews: [review] }
+            ? { ...enq, reviews: [...enq.reviews, reviews] }
+            : { ...enq, reviews: [reviews] }
           : enq;
       })
     );
@@ -203,7 +210,9 @@ const useProperties = (): UsePropertiesResult => {
   const [error, setError] = useState<string | null>(null);
 
   const cpId = useCpId();
-  const userType = useSelector((state: RootState) => state.agent.docData?.userType || "free");
+  const userType = useSelector(
+    (state: RootState) => state.agent.docData?.userType || "free"
+  );
 
   useEffect(() => {
     if (!cpId) {
@@ -215,7 +224,10 @@ const useProperties = (): UsePropertiesResult => {
 
     try {
       // Create query the same way as before
-      const q = query(collection(db, "ACN123"), where("cpCode", "==", cpId));
+      const q = query(
+        collection(db, "acnProperties"),
+        where("cpId", "==", cpId)
+      );
 
       // Set up real-time listener
       const unsubscribe = onSnapshot(
@@ -234,7 +246,7 @@ const useProperties = (): UsePropertiesResult => {
               event_category: "dashboard",
               event_label: "properties",
               properties_count: propertiesData.length,
-              user_type: userType
+              user_type: userType,
             });
           } catch (error) {
             console.error("Error logging properties load:", error);
@@ -255,7 +267,7 @@ const useProperties = (): UsePropertiesResult => {
               event_label: "error",
               error_type: "fetch_properties",
               error_message: err.message || "Error fetching properties",
-              user_type: userType
+              user_type: userType,
             });
           } catch (error) {
             console.error("Error logging properties error:", error);
@@ -283,7 +295,7 @@ const useProperties = (): UsePropertiesResult => {
         event_label: "status",
         property_id: propertyId,
         new_status: value,
-        user_type: userType
+        user_type: userType,
       });
 
       const newStatus = value;
@@ -309,7 +321,9 @@ const useRequirements = () => {
   const [error, setError] = useState<string | null>(null);
 
   const cpId = useCpId();
-  const userType = useSelector((state: RootState) => state.agent.docData?.userType || "free");
+  const userType = useSelector(
+    (state: RootState) => state.agent.docData?.userType || "free"
+  );
 
   useEffect(() => {
     if (!cpId) {
@@ -321,8 +335,8 @@ const useRequirements = () => {
 
     try {
       const q = query(
-        collection(db, "requirements"),
-        where("agentCpid", "==", cpId)
+        collection(db, "acnRequirements"),
+        where("cpId", "==", cpId)
       );
 
       // Set up real-time listener
@@ -342,7 +356,7 @@ const useRequirements = () => {
               event_category: "dashboard",
               event_label: "requirements",
               requirements_count: requirementsData.length,
-              user_type: userType
+              user_type: userType,
             });
           } catch (error) {
             console.error("Error logging requirements load:", error);
@@ -363,7 +377,7 @@ const useRequirements = () => {
               event_label: "error",
               error_type: "fetch_requirements",
               error_message: err.message || "Error fetching requirements",
-              user_type: userType
+              user_type: userType,
             });
           } catch (error) {
             console.error("Error logging requirements error:", error);
@@ -391,7 +405,7 @@ const useRequirements = () => {
         event_label: "status",
         requirement_id: requirementsId,
         new_status: value,
-        user_type: userType
+        user_type: userType,
       });
 
       const newStatus = value;
@@ -417,7 +431,9 @@ const useListings = (): UseListingResult => {
   const [error, setError] = useState<string | null>(null);
 
   const cpId = useCpId();
-  const userType = useSelector((state: RootState) => state.agent.docData?.userType || "free");
+  const userType = useSelector(
+    (state: RootState) => state.agent.docData?.userType || "free"
+  );
 
   useEffect(() => {
     if (!cpId) {
@@ -429,8 +445,8 @@ const useListings = (): UseListingResult => {
 
     try {
       const q = query(
-        collection(db, "QC_Inventories"),
-        where("cpCode", "==", cpId),
+        collection(db, "acnQCInventories"),
+        where("cpId", "==", cpId),
         orderBy("propertyId", "desc")
       );
 
@@ -452,7 +468,7 @@ const useListings = (): UseListingResult => {
               event_category: "dashboard",
               event_label: "listings",
               listings_count: listingData.length,
-              user_type: userType
+              user_type: userType,
             });
           } catch (error) {
             console.error("Error logging listings load:", error);
@@ -473,7 +489,7 @@ const useListings = (): UseListingResult => {
               event_label: "error",
               error_type: "fetch_listings",
               error_message: err.message || "Error fetching listings",
-              user_type: userType
+              user_type: userType,
             });
           } catch (error) {
             console.error("Error logging listings error:", error);
@@ -523,7 +539,9 @@ export default function DashboardTab() {
     (state: RootState) => state.app.isConnectedToInternet
   );
 
-  const userType = useSelector((state: RootState) => state.agent.docData?.userType || "free");
+  const userType = useSelector(
+    (state: RootState) => state.agent.docData?.userType || "free"
+  );
 
   // Track dashboard page view
   useEffect(() => {
@@ -535,12 +553,18 @@ export default function DashboardTab() {
         has_enquiries: myEnquiries.length > 0,
         has_properties: properties.length > 0,
         has_requirements: requirements.length > 0,
-        has_listings: myListings.length > 0
+        has_listings: myListings.length > 0,
       });
     } catch (error) {
       console.error("Error logging page view:", error);
     }
-  }, [userType, myEnquiries.length, properties.length, requirements.length, myListings.length]);
+  }, [
+    userType,
+    myEnquiries.length,
+    properties.length,
+    requirements.length,
+    myListings.length,
+  ]);
 
   if (!isConnectedToInternet) return <Offline />;
 

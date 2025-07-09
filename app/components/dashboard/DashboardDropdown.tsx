@@ -7,7 +7,6 @@ import {
   LayoutChangeEvent,
   DimensionValue,
 } from "react-native";
-import ArrowDownIcon from "../../assets/icons/arrow-down.svg";
 import { Ionicons } from "@expo/vector-icons";
 import { styled } from "nativewind";
 import { setPropertyStatus } from "@/store/slices/propertySlice";

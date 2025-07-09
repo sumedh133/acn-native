@@ -14,6 +14,9 @@ import { Ionicons } from "@expo/vector-icons";
 import { router, useLocalSearchParams } from "expo-router";
 import { analytics } from "@/app/config/firebase";
 import { logEvent } from "@react-native-firebase/analytics";
+import { useDispatch } from "react-redux";
+import { ThunkDispatch } from "redux-thunk";
+import { AnyAction } from "redux";
 
 // Import components and utilities
 import PrimaryButton from "../../../components/ui/PrimaryButton";
@@ -21,9 +24,13 @@ import { useSelector } from "react-redux";
 import { RootState } from "@/store/store";
 import { showErrorToast } from "@/utils/toastUtils";
 import CloseIcon from "@/assets/icons/svg/CloseIcon";
-import { selectRequirementStateData } from "@/store/slices/requirementSlice";
+import {
+  selectRequirementStateData,
+  listenToRequirementChanges,
+} from "@/store/slices/requirementSlice";
 import { SafeAreaView } from "react-native-safe-area-context";
 import Offline from "../Offline";
+import { formatCost2 } from "@/app/helpers/common";
 
 // Helper function to capitalize words
 const toCapitalizedWords = (str: string): string => {
@@ -40,18 +47,20 @@ export default function RequirementDetailsScreen() {
 
   // Get the requirement data from Redux store
   const requirement = useSelector(selectRequirementStateData);
+  const dispatch = useDispatch<ThunkDispatch<RootState, unknown, AnyAction>>();
 
   const isConnectedToInternet = useSelector(
-    (state: RootState) => state.app.isConnectedToInternet,
+    (state: RootState) => state.app.isConnectedToInternet
   );
 
-  const userType = useSelector((state: RootState) => state.agent?.docData?.userType) || "free";
+  const userType =
+    useSelector((state: RootState) => state.agent?.docData?.userType) || "free";
 
   // If no requirement is provided, don't render anything
   if (!requirement) return null;
 
   const kam_phonenumber =
-    useSelector((state: RootState) => state?.kam?.kamDocData?.phonenumber) ||
+    useSelector((state: RootState) => state?.kam?.kamDocData?.phoneNumber) ||
     "";
 
   // Helper function to format budget display
@@ -61,18 +70,18 @@ export default function RequirementDetailsScreen() {
     }
 
     if (typeof requirement.budget === "number") {
-      return `₹${requirement.budget} Cr`;
+      return formatCost2(requirement.budget);
     }
 
     if (requirement.budget && typeof requirement.budget === "object") {
-      const from = requirement.budget.from || 0;
-      const to = requirement.budget.to || 0;
+      const from = formatCost2(requirement.budget.from) || 0;
+      const to = formatCost2(requirement.budget.to) || 0;
 
       if (from === 0) {
-        return `₹${to} Cr`;
+        return `${to}`;
       }
 
-      return `₹${from} Cr - ₹${to} Cr`;
+      return `${from} - ${to}`;
     }
 
     return "-";
@@ -85,34 +94,34 @@ export default function RequirementDetailsScreen() {
 
   // Handle WhatsApp button press
   const openWhatsapp = () => {
-    const phonenumber = kam_phonenumber;
+    const phoneNumber = kam_phonenumber;
     const reqId = requirement.requirementId;
 
-    if (phonenumber === "" || !reqId) {
+    if (phoneNumber === "" || !reqId) {
       showErrorToast("Some error occured! Please contact your kam.");
       return;
     }
 
     try {
-      logEvent(analytics, 'share_requirement_whatsapp', {
-        event_category: 'requirement',
-        event_label: 'share',
+      logEvent(analytics, "share_requirement_whatsapp", {
+        event_category: "requirement",
+        event_label: "share",
         requirement_id: reqId,
         requirement_type: requirement.assetType,
-        share_method: 'whatsapp',
-        user_type: userType
+        share_method: "whatsapp",
+        user_type: userType,
       });
     } catch (error) {
-      console.error('Error logging WhatsApp share:', error);
+      console.error("Error logging WhatsApp share:", error);
     }
 
     const message = encodeURIComponent(
-      `Hello, \nI want to submit a matching inventory for a requirement.\n\n*Requirement ID*: ${reqId}\n\nThe inventory details are as follows:\n`,
+      `Hello, \nI want to submit a matching inventory for a requirement.\n\n*Requirement ID*: ${reqId}\n\nThe inventory details are as follows:\n`
     );
 
-    const whatsappUrl = `https://wa.me/${phonenumber}?text=${message}`;
+    const whatsappUrl = `https://wa.me/${phoneNumber}?text=${message}`;
     Linking.openURL(whatsappUrl).catch((err) =>
-      console.error("Error opening WhatsApp:", err),
+      console.error("Error opening WhatsApp:", err)
     );
   };
 
@@ -121,16 +130,16 @@ export default function RequirementDetailsScreen() {
       setIsSubmitting(true);
 
       try {
-        logEvent(analytics, 'submit_matching_inventory', {
-          event_category: 'requirement',
-          event_label: 'submit',
+        logEvent(analytics, "submit_matching_inventory", {
+          event_category: "requirement",
+          event_label: "submit",
           requirement_id: requirement.requirementId,
           requirement_type: requirement.assetType,
-          submission_method: 'whatsapp',
-          user_type: userType
+          submission_method: "whatsapp",
+          user_type: userType,
         });
       } catch (error) {
-        console.error('Error logging inventory submission:', error);
+        console.error("Error logging inventory submission:", error);
       }
 
       // Call WhatsApp functionality
@@ -149,6 +158,21 @@ export default function RequirementDetailsScreen() {
       <Text style={styles.infoValue}>{value || "-"}</Text>
     </View>
   );
+
+  useEffect(() => {
+    let unsubscribe: (() => void) | undefined;
+    if (requirement?.requirementId) {
+      const result = dispatch(
+        listenToRequirementChanges(requirement.requirementId)
+      );
+      if (typeof result === "function") {
+        unsubscribe = result;
+      }
+    }
+    return () => {
+      if (typeof unsubscribe === "function") unsubscribe();
+    };
+  }, [requirement?.requirementId]);
 
   if (!isConnectedToInternet) return <Offline />;
 
@@ -212,7 +236,7 @@ export default function RequirementDetailsScreen() {
                           day: "numeric",
                           month: "long",
                           year: "numeric",
-                        },
+                        }
                       )
                     : "-"
                 }
@@ -224,7 +248,7 @@ export default function RequirementDetailsScreen() {
               <Text style={styles.detailsTitle}>Requirement Details</Text>
               <View style={styles.detailsContent}>
                 <Text style={styles.detailsText}>
-                  {requirement.requirementDetails ||
+                  {requirement.extraDetails ||
                     "No additional details provided."}
                 </Text>
               </View>

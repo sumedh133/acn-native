@@ -6,6 +6,12 @@ import {
 } from "@reduxjs/toolkit";
 import { RootState } from "../store";
 import { Requirement } from "@/app/types";
+import { db } from "@/app/config/firebase";
+import { doc, onSnapshot } from "firebase/firestore";
+import {
+  setRequirementListener,
+  clearRequirementListener,
+} from "./listenerSlice";
 
 // Define the requirement state interface
 interface RequirementState {
@@ -38,9 +44,9 @@ const requirementSlice = createSlice({
       state.requirementId = requirementId!;
       state.requirementDocData = action.payload;
     },
-    setRequirementStatus: (state, action: PayloadAction<string | null>) => {
+    setRequirementStatus: (state, action: PayloadAction<"open" | "close">) => {
       if (state.requirementDocData) {
-        state.requirementDocData.status = action.payload;
+        state.requirementDocData.requirementStatus = action.payload;
       }
     },
     resetRequirementState: (state) => {
@@ -72,10 +78,25 @@ export const {
 // Thunk action to set requirement data
 export const setRequirementDataThunk =
   (
-    requirement: Requirement,
+    requirement: Requirement
   ): ThunkAction<void, RootState, unknown, AnyAction> =>
   (dispatch, getState) => {
     dispatch(setRequirementData(requirement));
+  };
+
+// Thunk action to listen to requirement changes
+export const listenToRequirementChanges =
+  (requirementId: string): ThunkAction<void, RootState, unknown, AnyAction> =>
+  (dispatch, getState) => {
+    dispatch(clearRequirementListener());
+    const docRef = doc(db, "requirements", requirementId);
+    const unsubscribe = onSnapshot(docRef, (docSnap) => {
+      if (docSnap.exists()) {
+        dispatch(setRequirementData(docSnap.data() as Requirement));
+      }
+    });
+    dispatch(setRequirementListener(unsubscribe));
+    return unsubscribe;
   };
 
 // Export selector to get requirement state
