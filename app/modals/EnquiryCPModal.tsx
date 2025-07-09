@@ -110,10 +110,15 @@ const EnquiryCPModal: React.FC<EnquiryCPModalProps> = ({
     if (agentData != null) {
       const message = `Hi ${agentData?.name},
 
-I see you've enquired on ACN about my property  ${property?.propertyName} (ID: ${property?.propertyId}). 
-Let me know which details you need.
+I came across your property on ACN and I'm interested in ${property?.propertyName} (ID: ${property?.propertyId}). 
+Could you please share:
+ 
+- Current pricing  
+- When can the site visit happen?  
+- Any other key details  
 
-${user?.name}  
+Thanks,
+${user?.name}
 ${user?.phoneNumber}`;
       Linking.openURL(`https://wa.me/${agentData.phoneNumber}?text=${message}`);
     }
