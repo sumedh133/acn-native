@@ -26,7 +26,7 @@ const VersionChecker = () => {
   const [versionData, setVersionData] = useState<VersionData | null>(null);
 
   // Get version directly from build.gradle versionName
-  const currentVersion = "2.0.1"; // This should match android/app/build.gradle versionName
+  const currentVersion = "2.1.0"; // This should match android/app/build.gradle versionName
 
   useEffect(() => {
     const docRef = doc(db, "acn-admin", "version");
