@@ -120,11 +120,10 @@ const Legal = () => {
   };
 
   // Called on layout of each heading to record its y-offset
-  const onHeadingLayout =
-    (slug: string) => (event: NativeSyntheticEvent<LayoutChangeEvent>) => {
-      const { y } = event.nativeEvent.layout;
-      setHeadingPositions((prev) => ({ ...prev, [slug]: y }));
-    };
+  const onHeadingLayout = (slug: string) => (event: LayoutChangeEvent) => {
+    const { y } = event.nativeEvent.layout;
+    setHeadingPositions((prev) => ({ ...prev, [slug]: y }));
+  };
 
   /**
    * Parses the full markdown content line-by-line.

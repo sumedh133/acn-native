@@ -53,7 +53,7 @@ const CheckoutScreen: React.FC = () => {
       cpId = null,
       userType = "free",
     } = {},
-    phonenumber: phoneNumber = null,
+    phoneNumber: phoneNumber = null,
   } = userData || {};
 
   // Component state
@@ -120,7 +120,7 @@ const CheckoutScreen: React.FC = () => {
 
     // Firebase listener for payment status
     const unsubscribe = onSnapshot(
-      doc(db, "payments", currentTransactionId),
+      doc(db, "acnPayments", currentTransactionId),
       (docSnapshot) => {
         if (docSnapshot.exists()) {
           const paymentData = docSnapshot.data();
@@ -186,7 +186,7 @@ const CheckoutScreen: React.FC = () => {
         user_type: userType,
       });
 
-      const agentRef = doc(db, "agents", cpId);
+      const agentRef = doc(db, "acnAgents", cpId);
 
       // Get current document to access existing payment history
       const agentSnap = await getDoc(agentRef);

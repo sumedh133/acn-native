@@ -16,16 +16,25 @@ import { useSelector } from "react-redux";
  * @param {Function} dispatch - Redux dispatch function to update state.
  * @returns {Promise<void>} - Resolves when the operation completes.
  */
-const deductMonthlyCredit = async (phoneNumber, currentCredits, dispatch, boosterCredits) => {
+const deductMonthlyCredit = async (
+  phoneNumber,
+  currentCredits,
+  dispatch,
+  boosterCredits
+) => {
   if (!phoneNumber) {
-    const errorMessage = "Phone number is required. Please try logging in again.";
+    const errorMessage =
+      "Phone number is required. Please try logging in again.";
     console.error(errorMessage);
     throw new Error(errorMessage);
   }
 
   // const boosterCredits = useSelector((state) => state?.agent?.docData?.boosterCredits) || 0;
 
-  if ((typeof currentCredits !== "number" || currentCredits <= 0) && boosterCredits <= 0) {
+  if (
+    (typeof currentCredits !== "number" || currentCredits <= 0) &&
+    boosterCredits <= 0
+  ) {
     const errorMessage = `Invalid credit value. Cannot deduct.`;
     console.error(errorMessage);
     throw new Error(errorMessage);
@@ -37,15 +46,14 @@ const deductMonthlyCredit = async (phoneNumber, currentCredits, dispatch, booste
   if (currentCredits <= 0) {
     // If no monthly credits left, deduct from booster credits
     finalBoosterCredit = Math.max(0, boosterCredits - 1);
-  }
-  else {
+  } else {
     // If monthly credits left, deduct from monthly credits
     finalCredit = Math.max(0, currentCredits - 1);
   }
 
   try {
-    const agentsCollection = collection(db, "agents");
-    const q = query(agentsCollection, where("phonenumber", "==", phoneNumber));
+    const agentsCollection = collection(db, "acnAgents");
+    const q = query(agentsCollection, where("phoneNumber", "==", phoneNumber));
     const querySnapshot = await getDocs(q);
 
     if (querySnapshot.empty) {
@@ -56,9 +64,17 @@ const deductMonthlyCredit = async (phoneNumber, currentCredits, dispatch, booste
 
     const docRef = querySnapshot.docs[0].ref;
 
-    await updateDoc(docRef, { monthlyCredits: finalCredit, boosterCredits: finalBoosterCredit });
+    await updateDoc(docRef, {
+      monthlyCredits: finalCredit,
+      boosterCredits: finalBoosterCredit,
+    });
 
-    dispatch(setMonthlyCredit({ monthlyCredits: finalCredit, boosterCredits: finalBoosterCredit }));
+    dispatch(
+      setMonthlyCredit({
+        monthlyCredits: finalCredit,
+        boosterCredits: finalBoosterCredit,
+      })
+    );
   } catch (error) {
     console.error("Error deducting credits:", error.message || error);
     throw error;

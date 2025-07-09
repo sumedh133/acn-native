@@ -34,48 +34,50 @@ const ConfirmModal: React.FC<ConfirmModalProps> = ({
   onModalHide,
   visible,
 }) => {
-  const userType = useSelector((state: RootState) => state?.agent?.docData?.userType) || "free";
+  const userType =
+    useSelector((state: RootState) => state?.agent?.docData?.userType) ||
+    "free";
 
   const handleConfirm = () => {
     try {
-      logEvent(analytics, 'confirm_modal_action', {
-        event_category: 'modal',
-        event_label: 'confirm',
+      logEvent(analytics, "confirm_modal_action", {
+        event_category: "modal",
+        event_label: "confirm",
         modal_title: title,
-        action: 'confirm',
-        user_type: userType
+        action: "confirm",
+        user_type: userType,
       });
     } catch (error) {
-      console.error('Error logging confirm action:', error);
+      console.error("Error logging confirm action:", error);
     }
     onConfirm();
   };
 
   const handleCancel = () => {
     try {
-      logEvent(analytics, 'confirm_modal_action', {
-        event_category: 'modal',
-        event_label: 'cancel',
+      logEvent(analytics, "confirm_modal_action", {
+        event_category: "modal",
+        event_label: "cancel",
         modal_title: title,
-        action: 'cancel',
-        user_type: userType
+        action: "cancel",
+        user_type: userType,
       });
     } catch (error) {
-      console.error('Error logging cancel action:', error);
+      console.error("Error logging cancel action:", error);
     }
     onCancel();
   };
 
   const handleModalHide = () => {
     try {
-      logEvent(analytics, 'confirm_modal_hide', {
-        event_category: 'modal',
-        event_label: 'hide',
+      logEvent(analytics, "confirm_modal_hide", {
+        event_category: "modal",
+        event_label: "hide",
         modal_title: title,
-        user_type: userType
+        user_type: userType,
       });
     } catch (error) {
-      console.error('Error logging modal hide:', error);
+      console.error("Error logging modal hide:", error);
     }
     onModalHide();
   };
@@ -84,14 +86,14 @@ const ConfirmModal: React.FC<ConfirmModalProps> = ({
   React.useEffect(() => {
     if (visible) {
       try {
-        logEvent(analytics, 'confirm_modal_show', {
-          event_category: 'modal',
-          event_label: 'show',
+        logEvent(analytics, "confirm_modal_show", {
+          event_category: "modal",
+          event_label: "show",
           modal_title: title,
-          user_type: userType
+          user_type: userType,
         });
       } catch (error) {
-        console.error('Error logging modal show:', error);
+        console.error("Error logging modal show:", error);
       }
     }
   }, [visible]);

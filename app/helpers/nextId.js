@@ -40,7 +40,7 @@ const generateNextId = (data) => {
  */
 const handleIdGeneration = async (type, retries = 3) => {
   try {
-    const docRef = doc(db, "admin", type);
+    const docRef = doc(db, "acn-admin", type);
 
     return await runTransaction(db, async (transaction) => {
       const docSnap = await transaction.get(docRef);

@@ -30,7 +30,7 @@ export default function TabOneScreen() {
   const userName = agentData?.name || "";
 
   const userPhoneNumber = useSelector(
-    (state: RootState) => state.agent.phonenumber
+    (state: RootState) => state.agent.phoneNumber
   );
 
   // Get authentication status from Redux
@@ -47,7 +47,7 @@ export default function TabOneScreen() {
     const trackAppLaunch = async () => {
       try {
         if (!analytics) {
-          console.warn('Firebase Analytics not initialized');
+          console.warn("Firebase Analytics not initialized");
           return;
         }
 
@@ -55,10 +55,9 @@ export default function TabOneScreen() {
         await logEvent(analytics, "app_launch", {
           event_category: "app",
           event_label: "launch",
-          user_id: userPhoneNumber || "anonymous",  // For user-level aggregation
-          timestamp: new Date().toISOString()       // For time-based analysis
+          user_id: userPhoneNumber || "anonymous", // For user-level aggregation
+          timestamp: new Date().toISOString(), // For time-based analysis
         });
-
       } catch (error) {
         console.error("Error logging app launch:", error);
       }
@@ -74,18 +73,12 @@ export default function TabOneScreen() {
     }
   }, [isAuthenticated, userPhoneNumber]);
 
-  // user name as a custom param and can add more details to log for the user.
-  try {
-    const userName = useSelector(
-      (state: RootState) => state.agent.docData.name
-    );
-    const customParams = { user_name: userName };
-    useEffect(() => {
-      if (userName) {
-        setUserProperties(analytics, customParams);
-      }
-    }, [isAuthenticated, customParams]);
-  } catch {}
+  // Track user name as a custom analytics property
+  useEffect(() => {
+    if (userName) {
+      setUserProperties(analytics, { user_name: userName });
+    }
+  }, [isAuthenticated, userName]);
 
   // useEffect(() => {
   //   // Function to request permission and get the token

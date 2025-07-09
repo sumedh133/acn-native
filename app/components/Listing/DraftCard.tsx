@@ -45,7 +45,7 @@ const DraftCard = ({
       onPress={() => pressCard(item)}
     >
       <View style={styles.propertyInfo}>
-        <Text style={styles.propertyName}>{item.nameOfTheProperty}</Text>
+        <Text style={styles.propertyName}>{item.propertyName}</Text>
         <Text style={styles.propertyDetails}>{cardSubText}</Text>
         <Text style={styles.propertyDetails}>
           {item.sbua} {item.sbua && "|"} {item.furnishing}

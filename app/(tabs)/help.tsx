@@ -99,7 +99,7 @@ const HelpMobile: React.FC<HelpMobileProps> = () => {
     (url: string) => {
       console.log("url", url);
       if (url.startsWith("/(tabs)")) {
-        router.push(url);
+        router.push(url as any);
         return;
       }
 
@@ -123,9 +123,9 @@ const HelpMobile: React.FC<HelpMobileProps> = () => {
   );
 
   const handleContactSupport = () => {
-    const phonenumber = "+917206498895";
-    Linking.openURL(`tel:${phonenumber}`);
-  }
+    const phoneNumber = "+919415006092";
+    Linking.openURL(`tel:${phoneNumber}`);
+  };
 
   const handleDelete = async () => {
     try {
@@ -136,7 +136,7 @@ const HelpMobile: React.FC<HelpMobileProps> = () => {
         user_type: userType,
       });
 
-      const agentRef = doc(db, "agents", agentData.cpId);
+      const agentRef = doc(db, "acnAgents", agentData.cpId);
       const agentSnapshot = await getDoc(agentRef);
 
       if (!agentSnapshot.exists()) {
@@ -146,24 +146,24 @@ const HelpMobile: React.FC<HelpMobileProps> = () => {
       const agentToArchive = agentSnapshot.data();
 
       // Archive agent
-      await setDoc(doc(db, "archive_agents", agentData.cpId), {
+      await setDoc(doc(db, "acnArchiveAgents", agentData.cpId), {
         ...agentToArchive,
         archivedAt: serverTimestamp(),
         // verified: false,
       });
 
-      // 3. Update references in ACN123 collection for enquiries
+      // 3. Update references in acnProperties collection for enquiries
       // First, get all enquiries for this agent
       const enquiriesQuery = query(
-        collection(db, "ACN123"),
-        where("cpCode", "==", agentData.cpId)
+        collection(db, "acnProperties"),
+        where("cpId", "==", agentData.cpId)
       );
 
       const enquiriesSnapshot = await getDocs(enquiriesQuery);
 
       // Update each enquiry to mark it as delisted
       const updatePromises = enquiriesSnapshot.docs.map((enquiryDoc) => {
-        return updateDoc(doc(db, "ACN123", enquiryDoc.id), {
+        return updateDoc(doc(db, "acnProperties", enquiryDoc.id), {
           status: "inactive",
           deletedAt: serverTimestamp(),
         });

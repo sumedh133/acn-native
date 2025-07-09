@@ -19,7 +19,7 @@ const shortenUrl = async (longUrl) => {
   const shortenerServices = [
     async (url) => {
       const response = await axios.get(
-        `https://api.shrtco.de/v2/shorten?url=${encodeURIComponent(url)}`,
+        `https://api.shrtco.de/v2/shorten?url=${encodeURIComponent(url)}`
       );
       return response.data.result.full_short_link;
     },
@@ -29,7 +29,7 @@ const shortenUrl = async (longUrl) => {
         null,
         {
           params: { url: url },
-        },
+        }
       );
       return response.data;
     },
@@ -52,7 +52,7 @@ const shortenUrl = async (longUrl) => {
 };
 
 export const createPropertyMessage = async (property, agentNumber) => {
-  const projectName = property.nameOfTheProperty || "Unnamed Project";
+  const projectName = property.propertyName || "Unnamed Project";
 
   const shortDriveLink = property.driveLink
     ? await shortenUrl(property.driveLink)
@@ -75,11 +75,14 @@ ${appendDetail("Asset Type", property.assetType)}
 ${appendDetail("Configuration", property.unitType)}
 ${appendDetail("SBUA", property.sbua)}
 ${appendDetail("Facing", property.facing)}
-${appendDetail("Total Ask Price", property.totalAskPrice ? `${formatCost2(property.totalAskPrice)}` : null)}
+${appendDetail(
+  "Total Ask Price",
+  property.totalAskPrice ? `${formatCost2(property.totalAskPrice)}` : null
+)}
 ${appendDetail("Photos/Videos", shortDriveLink)}
 ${appendDetail("Location", shortMapLocation)}
 
-For more details, please contact me at ${agentNumber}`,
+For more details, please contact me at ${agentNumber}`
   );
 
   return message;

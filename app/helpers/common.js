@@ -77,6 +77,10 @@ export function formatCost(price) {
 }
 
 export function formatCost2(cost) {
+  return helper(cost / 100000);
+}
+
+export function helper(cost) {
   if (cost >= 100) {
     return `₹${(cost / 100).toFixed(2)} Cr`;
   } else {

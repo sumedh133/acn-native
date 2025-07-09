@@ -63,6 +63,14 @@ import {
 import useNotification from "./components/Notification/useNotification";
 import SessionTracker from "./services/SessionTracker";
 import Offline from "./components/Offline";
+import { listenToAgentChanges } from "@/store/slices/agentSlice";
+import { setAgentListener } from "@/store/slices/listenerSlice";
+import { selectBlacklisted } from "@/store/slices/agentSlice";
+import { logOut } from "@/store/slices/authSlice";
+import Maintenance from "./maintainance";
+import VersionChecker from "./VersionChecker";
+import { doc, onSnapshot } from "firebase/firestore";
+import { db } from "@/app/config/firebase";
 
 // Custom header component to apply the desired styling
 const CustomHeader = ({
@@ -113,6 +121,7 @@ const CustomHeader = ({
 
 export default function LayoutApp() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [isMaintenanceMode, setIsMaintenanceMode] = useState(false);
 
   const [showOnboarding, setShowOnboarding] = useState(false);
   const colorScheme = useColorScheme();
@@ -139,14 +148,19 @@ export default function LayoutApp() {
     (state: RootState) => state.app.isConnectedToInternet
   );
 
-  const { docData: agentData } = useSelector((state: RootState) => state.agent);
+  const { docData: agentData, docId: agentDocId } = useSelector(
+    (state: RootState) => state.agent
+  );
   const userType = agentData?.userType || "free";
   const userName = agentData?.name || "";
   const userPhoneNumber = useSelector(
-    (state: RootState) => state.agent.phonenumber
+    (state: RootState) => state.agent.phoneNumber
   );
   const isAuthenticated = useSelector(
     (state: RootState) => state.auth.isAuthenticated
+  );
+  const unsubscribeAgentListener = useSelector(
+    (state: RootState) => state.listeners.unsubscribeAgentListener
   );
 
   // Initialize session tracking only for authenticated users
@@ -160,6 +174,21 @@ export default function LayoutApp() {
       };
     }
   }, [isAuthenticated, userType, userPhoneNumber, userName]);
+
+  // Listen for maintenance mode changes
+  useEffect(() => {
+    const docRef = doc(db, "acn-admin", "admin");
+    const unsubscribe = onSnapshot(docRef, (doc) => {
+      if (doc.exists()) {
+        const data = doc.data();
+        setIsMaintenanceMode(data?.maintainance === true);
+      } else {
+        setIsMaintenanceMode(false);
+      }
+    });
+
+    return () => unsubscribe();
+  }, []);
 
   const calculateDaysLeft = (trialStartedAt: number): number => {
     try {
@@ -225,11 +254,41 @@ export default function LayoutApp() {
   const router = useRouter();
 
   const myKamId = useSelector(selectMyKam);
+  const isBlacklisted = useSelector(selectBlacklisted);
   useEffect(() => {
     if (myKamId) {
       dispatch(setKamDataState(myKamId));
     }
   }, [myKamId, dispatch]);
+
+  // Logout and redirect to BlacklistedPage if the user gets blackListed while already logged in
+  useEffect(() => {
+    console.log(isBlacklisted, "isBlacklisted");
+    if (isBlacklisted && isAuthenticated) {
+      (async () => {
+        try {
+          // Ensure complete sign-out
+          await dispatch(logOut());
+          setTimeout(() => {
+            router.dismissAll();
+            router.replace("/");
+          }, 300);
+        } catch (error) {
+          console.error("Error during logout:", error);
+        }
+      })();
+    }
+  }, [isBlacklisted]);
+
+  // Attach real-time listener for agent document BEFORE potential early returns to keep hook order stable
+  useEffect(() => {
+    if (isAuthenticated && agentDocId && !unsubscribeAgentListener) {
+      const unsubscribe = dispatch(listenToAgentChanges(agentDocId));
+      if (typeof unsubscribe === "function") {
+        dispatch(setAgentListener(unsubscribe));
+      }
+    }
+  }, [isAuthenticated, agentDocId, unsubscribeAgentListener]);
 
   const onLayoutRootView = useCallback(async () => {
     if (fontsLoaded) {
@@ -255,7 +314,13 @@ export default function LayoutApp() {
 
   useEffect(() => {
     // Show onboarding modal if the user has not completed onboarding
-    if (agentData && agentData?.onboardingComplete === undefined) {
+    if (
+      agentData &&
+      agentData?.onboardingComplete === undefined &&
+      agentData?.userType !== "premium" &&
+      agentData?.userType !== "trial" &&
+      agentData?.trialUsed !== true
+    ) {
       setShowOnboarding(true);
     } else if (
       agentData &&
@@ -305,6 +370,11 @@ export default function LayoutApp() {
     return null;
   }
 
+  // Maintenance mode wrapper - blocks everything when active
+  if (isMaintenanceMode) {
+    return <Maintenance />;
+  }
+
   const handleDismiss = () => {
     // You might want to store this preference in AsyncStorage
     setTrialData((prev) => ({ ...prev, showNotification: false }));
@@ -318,6 +388,7 @@ export default function LayoutApp() {
 
   return (
     <View style={{ flex: 1 }} onLayout={onLayoutRootView}>
+      <VersionChecker />
       {showOnboarding && isAuthenticated && (
         <OnboardingFlow
           visible={showOnboarding}
@@ -504,6 +575,7 @@ export default function LayoutApp() {
         <Stack.Screen
           name="components/Notification/NotificationSettings"
           options={{ headerShown: false }}
+          initialParams={{ showFooter: false }}
         />
         <Stack.Screen
           name="components/Payments/transaction"
@@ -524,6 +596,11 @@ export default function LayoutApp() {
             title: "Report an Issue or Misuse",
             headerBackVisible: true,
           }}
+          initialParams={{ showFooter: false }}
+        />
+        <Stack.Screen
+          name="components/Notification/ArchivedNotifications"
+          options={{ headerShown: false }}
           initialParams={{ showFooter: false }}
         />
       </Stack>

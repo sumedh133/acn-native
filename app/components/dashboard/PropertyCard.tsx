@@ -44,22 +44,24 @@ const PropertyCard = ({
   const [isShareModalOpen, setIsShareModalOpen] = useState(false);
   const [matchingEnquiriesCount, setMatchingEnquiriesCount] = useState("-");
   const dispatch = useDispatch<ThunkDispatch<RootState, unknown, AnyAction>>();
-  const userType = useSelector((state: RootState) => state?.agent?.docData?.userType) || "free";
+  const userType =
+    useSelector((state: RootState) => state?.agent?.docData?.userType) ||
+    "free";
 
   // Handle share button press
   const handleSharePress = (e: any) => {
     e.stopPropagation(); // Prevent opening property details
     try {
-      logEvent(analytics, 'property_share_modal_open', {
-        event_category: 'dashboard',
-        event_label: 'interaction',
+      logEvent(analytics, "property_share_modal_open", {
+        event_category: "dashboard",
+        event_label: "interaction",
         property_id: property.propertyId,
         property_type: property.assetType,
         is_listing: isListing,
-        user_type: userType
+        user_type: userType,
       });
     } catch (error) {
-      console.error('Error logging share modal open:', error);
+      console.error("Error logging share modal open:", error);
     }
     setIsShareModalOpen(true);
   };
@@ -79,18 +81,18 @@ const PropertyCard = ({
   // Handler for navigating to property details
   const handleNavigateToPropertyDetails = () => {
     try {
-      logEvent(analytics, 'property_details_view', {
-        event_category: 'dashboard',
-        event_label: 'navigation',
+      logEvent(analytics, "property_details_view", {
+        event_category: "dashboard",
+        event_label: "navigation",
         property_id: property.propertyId,
         property_type: property.assetType,
         property_status: property.status,
         is_listing: isListing,
         enquiries_count: matchingEnquiriesCount,
-        user_type: userType
+        user_type: userType,
       });
     } catch (error) {
-      console.error('Error logging property details view:', error);
+      console.error("Error logging property details view:", error);
     }
 
     // Set the property data in Redux
@@ -108,7 +110,7 @@ const PropertyCard = ({
   const fetchMatchingEnquiryCount = async () => {
     const count = await getCountFromServer(
       query(
-        collection(db, "enquiries"),
+        collection(db, "acnEnquiries"),
         where("propertyId", "==", property.propertyId)
       )
     );
@@ -121,18 +123,18 @@ const PropertyCard = ({
 
   useEffect(() => {
     try {
-      logEvent(analytics, 'property_card_view', {
-        event_category: 'dashboard',
-        event_label: 'impression',
+      logEvent(analytics, "property_card_view", {
+        event_category: "dashboard",
+        event_label: "impression",
         property_id: property.propertyId,
         property_type: property.assetType,
         property_status: property.status,
         is_listing: isListing,
         position_index: index,
-        user_type: userType
+        user_type: userType,
       });
     } catch (error) {
-      console.error('Error logging property card view:', error);
+      console.error("Error logging property card view:", error);
     }
   }, []);
 
@@ -191,7 +193,7 @@ const PropertyCard = ({
 
           {/* Property Name */}
           <StyledText className="text-base font-bold text-black mt-2 mb-4">
-            {property.nameOfTheProperty}
+            {property.propertyName}
           </StyledText>
 
           {/* Tags section for Asset Type, Unit Type, and Facing */}

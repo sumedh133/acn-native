@@ -11,8 +11,8 @@ import { logEvent } from "@react-native-firebase/analytics";
 const UserDetailsCard = ({ userType }: { userType: string | null }) => {
   const name: string | null =
     useSelector((state: RootState) => state?.agent?.docData?.name) || "";
-  const phonenumber: string | null =
-    useSelector((state: RootState) => state?.agent?.docData?.phonenumber) || "";
+  const phoneNumber: string | null =
+    useSelector((state: RootState) => state?.agent?.docData?.phoneNumber) || "";
   const initials = getInitials(name);
   const avatarColor = getRandomColor(initials);
 
@@ -22,13 +22,13 @@ const UserDetailsCard = ({ userType }: { userType: string | null }) => {
         event_category: "profile",
         event_label: "view",
         has_name: !!name,
-        has_phone: !!phonenumber,
+        has_phone: !!phoneNumber,
         user_type: userType || "free",
       });
     } catch (error) {
       console.error("Error logging user details view:", error);
     }
-  }, [name, phonenumber, userType]);
+  }, [name, phoneNumber, userType]);
 
   return (
     <View style={styles.card}>
@@ -57,7 +57,7 @@ const UserDetailsCard = ({ userType }: { userType: string | null }) => {
             <Text
               style={{ fontFamily: "Montserrat_500Medium", color: "#5A5555" }}
             >
-              {"+91-" + phonenumber?.slice(3)}
+              {"+91-" + phoneNumber?.slice(3)}
             </Text>
           </View>
           <View style={styles.memberContainer}>

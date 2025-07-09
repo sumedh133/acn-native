@@ -29,7 +29,7 @@ export default function OTPage() {
 
   const { width } = useWindowDimensions();
 
-  const { phonenumber } = useSelector((state: RootState) => state.agent);
+  const { phoneNumber } = useSelector((state: RootState) => state.agent);
   const [errorMessage, setErrorMessage] = useState("");
   const [otp, setOtp] = useState<String>("");
   const [resendTimer, setResendTimer] = useState(30);
@@ -75,13 +75,13 @@ export default function OTPage() {
       logEvent(analytics, "view_otp_page", {
         event_category: "auth",
         event_label: "otp_view",
-        phone_number: phonenumber,
+        phone_number: phoneNumber,
         user_type: userType,
       });
     } catch (error) {
       console.error("Error logging OTP page view:", error);
     }
-  }, [phonenumber, userType]);
+  }, [phoneNumber, userType]);
 
   const handleVerify = async () => {
     setErrorMessage("");
@@ -95,7 +95,7 @@ export default function OTPage() {
           event_category: "auth",
           event_label: "otp_error",
           error_type: "invalid_length",
-          phone_number: phonenumber,
+          phone_number: phoneNumber,
           user_type: userType,
         });
       } catch (error) {
@@ -108,7 +108,7 @@ export default function OTPage() {
       logEvent(analytics, "otp_verification_attempt", {
         event_category: "auth",
         event_label: "otp_verification",
-        phone_number: phonenumber,
+        phone_number: phoneNumber,
         user_type: userType,
       });
 
@@ -123,7 +123,7 @@ export default function OTPage() {
         logEvent(analytics, "otp_verification_success", {
           event_category: "auth",
           event_label: "otp_success",
-          phone_number: phonenumber,
+          phone_number: phoneNumber,
           user_type: userType,
         });
         dispatch(signIn());
@@ -137,7 +137,7 @@ export default function OTPage() {
           event_category: "auth",
           event_label: "otp_error",
           error_type: "sign_in_failed",
-          phone_number: phonenumber,
+          phone_number: phoneNumber,
           user_type: userType,
         });
       }
@@ -149,7 +149,7 @@ export default function OTPage() {
         event_label: "otp_error",
         error_type: "invalid_otp",
         error_message: error.message,
-        phone_number: phonenumber,
+        phone_number: phoneNumber,
         user_type: userType,
       });
     }
@@ -162,7 +162,7 @@ export default function OTPage() {
       logEvent(analytics, "otp_resend_attempt", {
         event_category: "auth",
         event_label: "otp_resend",
-        phone_number: phonenumber,
+        phone_number: phoneNumber,
         user_type: userType,
       });
 
@@ -170,7 +170,7 @@ export default function OTPage() {
       setCanResend(false);
 
       const confirmation = await auth().signInWithPhoneNumber(
-        phonenumber || "",
+        phoneNumber || "",
         true
       );
       showInfoToast("OTP resent successfully!");
@@ -178,7 +178,7 @@ export default function OTPage() {
       logEvent(analytics, "otp_resend_success", {
         event_category: "auth",
         event_label: "otp_resend",
-        phone_number: phonenumber,
+        phone_number: phoneNumber,
         user_type: userType,
       });
     } catch (error: any) {
@@ -191,7 +191,7 @@ export default function OTPage() {
         event_label: "otp_error",
         error_type: "resend_failed",
         error_message: error.message,
-        phone_number: phonenumber,
+        phone_number: phoneNumber,
         user_type: userType,
       });
     }
@@ -203,7 +203,7 @@ export default function OTPage() {
         event_category: "auth",
         event_label: "otp_navigation",
         action: "back",
-        phone_number: phonenumber,
+        phone_number: phoneNumber,
         user_type: userType,
       });
     } catch (error) {
@@ -220,7 +220,7 @@ export default function OTPage() {
         OTP sent to{" "}
         <Text style={styles.phone}>
           {" "}
-          {phonenumber?.slice(0, 3)} {phonenumber?.slice(3)}
+          {phoneNumber?.slice(0, 3)} {phoneNumber?.slice(3)}
         </Text>
       </Text>
       <TouchableOpacity

@@ -3,23 +3,23 @@
 <plist version="1.0">
 <dict>
 	<key>CLIENT_ID</key>
-	<string>727649873733-nb35on5kmhqilkt88c79the00hr770cd.apps.googleusercontent.com</string>
+	<string>695268023939-focjbihtpjbp9qstr3cme8kd0pocm9ql.apps.googleusercontent.com</string>
 	<key>REVERSED_CLIENT_ID</key>
-	<string>com.googleusercontent.apps.727649873733-nb35on5kmhqilkt88c79the00hr770cd</string>
+	<string>com.googleusercontent.apps.695268023939-focjbihtpjbp9qstr3cme8kd0pocm9ql</string>
 	<key>ANDROID_CLIENT_ID</key>
-	<string>727649873733-2q1s8rr9obmp1br0mis1t73u93sroo63.apps.googleusercontent.com</string>
+	<string>695268023939-rjr6p3j34hgrpc1g46orshk70dvueb9p.apps.googleusercontent.com</string>
 	<key>API_KEY</key>
-	<string>AIzaSyDT0k3uDaTaeEAZVzFZM8ZOODPmLYk5VbY</string>
+	<string>AIzaSyBsvCNQ637iucXCaIvvy6ij0ih6Xg83nIk</string>
 	<key>GCM_SENDER_ID</key>
-	<string>727649873733</string>
+	<string>695268023939</string>
 	<key>PLIST_VERSION</key>
 	<string>1</string>
 	<key>BUNDLE_ID</key>
 	<string>com.acnonline.in</string>
 	<key>PROJECT_ID</key>
-	<string>acn-resale-inventories-dde03</string>
+	<string>iqol-crm</string>
 	<key>STORAGE_BUCKET</key>
-	<string>acn-resale-inventories-dde03.firebasestorage.app</string>
+	<string>iqol-crm.firebasestorage.app</string>
 	<key>IS_ADS_ENABLED</key>
 	<false></false>
 	<key>IS_ANALYTICS_ENABLED</key>
@@ -31,9 +31,9 @@
 	<key>IS_SIGNIN_ENABLED</key>
 	<true></true>
 	<key>GOOGLE_APP_ID</key>
-	<string>1:727649873733:ios:a2a73ebb5cae4ed1f3982c</string>
+	<string>1:695268023939:ios:a4ac7cf3440983941e05b6</string>
 	<key>DATABASE_URL</key>
-	<string>https://acn-resale-inventories-dde03-default-rtdb.firebaseio.com</string>
+	<string>https://iqol-crm-default-rtdb.firebaseio.com</string>
 	<key>LSApplicationQueriesSchemes</key>
 	<array>
 		<string>itms-apps</string>

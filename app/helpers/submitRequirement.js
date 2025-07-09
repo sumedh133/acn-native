@@ -44,14 +44,17 @@ export default async function submitRequirement(userRequirement, cpId) {
       status: "Pending",
     };
 
-    const docRef = doc(db, "requirements", nextReqId);
+    const docRef = doc(db, "acnRequirements", nextReqId);
     await setDoc(docRef, formData);
-    await updateDoc(doc(db, "agents", formData.agentCpid), {
+    await updateDoc(doc(db, "acnAgents", formData.agentCpid), {
       myRequirements: arrayUnion(nextReqId),
     });
     fetch(
-      `https://notification-server-acn.onrender.com/addedrequirements/${formData.requirementId}`,
+      `https://acn-notification-server.onrender.com/notification/add-requirement`,
       {
+        body: JSON.stringify({
+          formData,
+        }),
         method: "POST",
         headers: {
           "Content-Type": "application/json",

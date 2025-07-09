@@ -80,7 +80,7 @@ import AddRequirementsIcon from "@/assets/icons/svg/Footer/AddRequirementsIcon";
 import AddInventoryIcon from "@/assets/icons/svg/Footer/AddInventoryIcon";
 import { propertyUserStatus } from "@/app/constants/PropertyConstants";
 import { getUnixDateTime } from "@/app/helpers/getUnixDateTime";
-import { RouteProp, useRoute } from '@react-navigation/native';
+import { RouteProp, useRoute } from "@react-navigation/native";
 import { analytics } from "@/app/config/firebase";
 import { logEvent } from "@react-native-firebase/analytics";
 
@@ -113,11 +113,10 @@ export default function Dashboard({
   myListing,
   loading,
 }: DashboardProps) {
-
   const route = useRoute<DashboardRouteProp>();
-  const tab = route.params?.tab || 'inventories';
+  const tab = route.params?.tab || "inventories";
 
-  const [activeTab, setActiveTab] = useState(tab || "inventories" );
+  const [activeTab, setActiveTab] = useState(tab || "inventories");
   const [properties, setProperties] = useState<Property[] | []>([]);
   const [requirements, setRequirements] = useState<Requirement[] | []>([]);
   const [enquiries, setEnquiries] = useState<EnquiryWithProperty[] | []>([]);
@@ -138,7 +137,9 @@ export default function Dashboard({
   const initalLoad = useRef(true);
 
   const kam_number = useSelector(selectKamNumber);
-  const userType = useSelector((state: RootState) => state?.agent?.docData?.userType) || "free";
+  const userType =
+    useSelector((state: RootState) => state?.agent?.docData?.userType) ||
+    "free";
 
   const renderMore = () => {
     if (isBatchSizePendingLock.current) return;
@@ -175,17 +176,17 @@ export default function Dashboard({
   // Track initial dashboard view and tab parameter
   useEffect(() => {
     try {
-      logEvent(analytics, 'view_dashboard', {
-        event_category: 'dashboard',
-        event_label: 'page_view',
+      logEvent(analytics, "view_dashboard", {
+        event_category: "dashboard",
+        event_label: "page_view",
         initial_tab: tab,
         user_type: userType,
         inventory_count: myProperties.length + myListing.length,
         requirements_count: myRequirements.length,
-        enquiries_count: myEnquiries.length
+        enquiries_count: myEnquiries.length,
       });
     } catch (error) {
-      console.error('Error logging dashboard view:', error);
+      console.error("Error logging dashboard view:", error);
     }
   }, []);
 
@@ -193,15 +194,15 @@ export default function Dashboard({
   useEffect(() => {
     if (!initalLoad.current && monthFilter) {
       try {
-        logEvent(analytics, 'dashboard_filter_change', {
-          event_category: 'dashboard',
-          event_label: 'filter',
+        logEvent(analytics, "dashboard_filter_change", {
+          event_category: "dashboard",
+          event_label: "filter",
           filter_value: monthFilter,
           active_tab: activeTab,
-          user_type: userType
+          user_type: userType,
         });
       } catch (error) {
-        console.error('Error logging filter change:', error);
+        console.error("Error logging filter change:", error);
       }
     }
   }, [monthFilter]);
@@ -210,19 +211,20 @@ export default function Dashboard({
   useEffect(() => {
     if (!initalLoad.current) {
       try {
-        logEvent(analytics, 'dashboard_tab_change', {
-          event_category: 'dashboard',
-          event_label: 'navigation',
+        logEvent(analytics, "dashboard_tab_change", {
+          event_category: "dashboard",
+          event_label: "navigation",
           tab: activeTab,
           user_type: userType,
-          filtered_items_count: activeTab === 'inventories' 
-            ? properties.length + listings.length 
-            : activeTab === 'requirements' 
-              ? requirements.length 
-              : enquiries.length
+          filtered_items_count:
+            activeTab === "inventories"
+              ? properties.length + listings.length
+              : activeTab === "requirements"
+              ? requirements.length
+              : enquiries.length,
         });
       } catch (error) {
-        console.error('Error logging tab change:', error);
+        console.error("Error logging tab change:", error);
       }
     }
   }, [activeTab]);
@@ -232,33 +234,34 @@ export default function Dashboard({
     async (id: string, status: string) => {
       const newStatus = status;
       try {
-        await updateDoc(doc(db, "ACN123", id), {
+        await updateDoc(doc(db, "acnProperties", id), {
           status: newStatus,
           ageOfStatus: 0,
           dateOfStatusLastChecked: getUnixDateTime(),
         });
-        
+
         // Track successful status change
-        logEvent(analytics, 'inventory_status_update', {
-          event_category: 'dashboard',
-          event_label: 'status_change',
+        logEvent(analytics, "inventory_status_update", {
+          event_category: "dashboard",
+          event_label: "status_change",
           property_id: id,
           new_status: newStatus,
-          user_type: userType
+          user_type: userType,
         });
-        
+
         showSuccessToast("Inventory status updated Successfully!");
       } catch (error) {
         // Track failed status change
-        logEvent(analytics, 'inventory_status_update_error', {
-          event_category: 'dashboard',
-          event_label: 'error',
+        logEvent(analytics, "inventory_status_update_error", {
+          event_category: "dashboard",
+          event_label: "error",
           property_id: id,
           attempted_status: newStatus,
-          error_message: error instanceof Error ? error.message : 'Unknown error',
-          user_type: userType
+          error_message:
+            error instanceof Error ? error.message : "Unknown error",
+          user_type: userType,
         });
-        
+
         showErrorToast("Error updating Inventory status!");
         console.error("Error updating status in Firestore:", error);
       }
@@ -272,35 +275,36 @@ export default function Dashboard({
       const newStatus = status;
 
       try {
-        const requirementsRef = collection(db, "requirements");
+        const requirementsRef = collection(db, "acnRequirements");
         const q = query(requirementsRef, where("requirementId", "==", id));
         const querySnapshot = await getDocs(q);
 
         if (!querySnapshot.empty) {
           const docRef = querySnapshot.docs[0].ref;
-          await updateDoc(docRef, { status: newStatus });
-          
+          await updateDoc(docRef, { requirementStatus: newStatus });
+
           // Track successful status change
-          logEvent(analytics, 'requirement_status_update', {
-            event_category: 'dashboard',
-            event_label: 'status_change',
+          logEvent(analytics, "requirement_status_update", {
+            event_category: "dashboard",
+            event_label: "status_change",
             requirement_id: id,
             new_status: newStatus,
-            user_type: userType
+            user_type: userType,
           });
         }
         showSuccessToast("Requirement status updated Successfully!");
       } catch (error) {
         // Track failed status change
-        logEvent(analytics, 'requirement_status_update_error', {
-          event_category: 'dashboard',
-          event_label: 'error',
+        logEvent(analytics, "requirement_status_update_error", {
+          event_category: "dashboard",
+          event_label: "error",
           requirement_id: id,
           attempted_status: newStatus,
-          error_message: error instanceof Error ? error.message : 'Unknown error',
-          user_type: userType
+          error_message:
+            error instanceof Error ? error.message : "Unknown error",
+          user_type: userType,
         });
-        
+
         showErrorToast("Error updating Requirement status!");
       }
     },
@@ -311,16 +315,16 @@ export default function Dashboard({
   const handlePropertyTabChange = (slug: string): void => {
     if (slug === propertiesTab) return;
     try {
-      logEvent(analytics, 'inventory_tab_change', {
-        event_category: 'dashboard',
-        event_label: 'navigation',
+      logEvent(analytics, "inventory_tab_change", {
+        event_category: "dashboard",
+        event_label: "navigation",
         previous_tab: propertiesTab,
         new_tab: slug,
         items_count: propertyCounts[slug] || 0,
-        user_type: userType
+        user_type: userType,
       });
     } catch (error) {
-      console.error('Error logging property tab change:', error);
+      console.error("Error logging property tab change:", error);
     }
     setPropertiesTab(slug);
   };
@@ -329,16 +333,16 @@ export default function Dashboard({
   useEffect(() => {
     if (renderingNewBatch) {
       try {
-        logEvent(analytics, 'dashboard_load_more', {
-          event_category: 'dashboard',
-          event_label: 'pagination',
+        logEvent(analytics, "dashboard_load_more", {
+          event_category: "dashboard",
+          event_label: "pagination",
           active_tab: activeTab,
           properties_tab: propertiesTab,
           batch_size: batchSize,
-          user_type: userType
+          user_type: userType,
         });
       } catch (error) {
-        console.error('Error logging load more:', error);
+        console.error("Error logging load more:", error);
       }
     }
   }, [renderingNewBatch]);
@@ -376,39 +380,37 @@ export default function Dashboard({
                 })}
               </View>
             )
+          ) : // Other tabs logic - check filtered listings instead of myProperties
+          listings.filter((listing) => listing.status === propertiesTab)
+              .length === 0 || bufferring ? (
+            <EmptyTabContent
+              text="No Inventory"
+              sub_text={propertyUserStatus?.[propertiesTab]?.emptySubText}
+              loading={loading?.listingLoading || bufferring}
+            />
           ) : (
-            // Other tabs logic - check filtered listings instead of myProperties
-            listings.filter((listing) => listing.status === propertiesTab).length === 0 || 
-            bufferring ? (
-              <EmptyTabContent
-                text="No Inventory"
-                sub_text={propertyUserStatus?.[propertiesTab]?.emptySubText}
-                loading={loading?.listingLoading || bufferring}
-              />
-            ) : (
-              <View className="mx-3 mb-3">
-                {listings
-                  .filter((listing) => listing.status === propertiesTab)
-                  .slice(0, batchSize)
-                  .map((listing, index) => {
-                    return (
-                      <PropertyCard
-                        key={listing.propertyId}
-                        property={listing}
-                        onStatusChange={() => {}}
-                        index={index}
-                        totalCount={Math.min(
-                          batchSize,
-                          listings.filter(
-                            (listing) => listing.status === propertiesTab
-                          ).length
-                        )}
-                        isListing={true}
-                      />
-                    );
-                  })}
-              </View>
-            )
+            <View className="mx-3 mb-3">
+              {listings
+                .filter((listing) => listing.status === propertiesTab)
+                .slice(0, batchSize)
+                .map((listing, index) => {
+                  return (
+                    <PropertyCard
+                      key={listing.propertyId}
+                      property={listing}
+                      onStatusChange={() => {}}
+                      index={index}
+                      totalCount={Math.min(
+                        batchSize,
+                        listings.filter(
+                          (listing) => listing.status === propertiesTab
+                        ).length
+                      )}
+                      isListing={true}
+                    />
+                  );
+                })}
+            </View>
           )}
         </>
       );
@@ -463,7 +465,7 @@ export default function Dashboard({
               {enquiries.slice(0, batchSize).map((enquiry, index) => {
                 return (
                   <EnquiryCard
-                    key={enquiry.id}
+                    key={enquiry.enquiryId}
                     index={index}
                     enquiry={enquiry}
                   />
