@@ -316,10 +316,10 @@ export default function LayoutApp() {
     // Show onboarding modal if the user has not completed onboarding
     if (
       agentData &&
-      agentData?.onboardingComplete === undefined &&
-      agentData?.userType !== "premium" &&
-      agentData?.userType !== "trial" &&
-      agentData?.trialUsed !== true
+      agentData?.userType.toLowerCase() !== "premium" &&
+      agentData?.userType.toLowerCase() !== "trial" &&
+      agentData?.trialUsed !== true &&
+      agentData?.userType.toLowerCase() === "basic"
     ) {
       setShowOnboarding(true);
     } else if (
