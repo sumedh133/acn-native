@@ -59,7 +59,7 @@ const ctaIconMap: Record<string, React.ReactNode> = {
       // style={{ marginRight: 6 }}
     />
   ),
-  "Message on WhatsApp": (
+  "Message Agent": (
     <MaterialCommunityIcons
       name="whatsapp"
       size={16}
@@ -308,6 +308,7 @@ const styles = StyleSheet.create({
     paddingLeft: 12,
     paddingTop: 24,
     alignItems: "flex-start",
+    width: "100%",
   },
   avatarContainer: {
     flexDirection: "row",
@@ -361,7 +362,7 @@ const styles = StyleSheet.create({
     // flexWrap: "wrap",
     gap: 8,
     paddingVertical: 4,
-    // marginTop: 8,
+    // marginTop: 8,,
   },
   ctaButton: {
     flexDirection: "row",

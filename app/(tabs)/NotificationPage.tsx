@@ -151,7 +151,7 @@ const NotificationPage: React.FC<NotificationPageProps> = () => {
         ) {
           // Linking.openURL(`tel:${notification.additionalData.buyerPhone}`);
           Linking.openURL(`tel:${notification.meta?.sellerNumber}`);
-        } else if (action.toLocaleLowerCase() === "message on whatsapp") {
+        } else if (action.toLocaleLowerCase() === "message agent") {
           const message = `Hi ${notification.meta?.sellerName},
 
 I came across your property on ACN and I'm interested in ${notification.meta?.propertyName} (ID: ${notification.meta?.propertyId}). Could you please share:
@@ -178,7 +178,7 @@ ${notification.meta?.buyerName}`;
         ) {
           // Linking.openURL(`tel:${notification.additionalData.buyerPhone}`);
           Linking.openURL(`tel:${notification.meta?.buyerNumber}`);
-        } else if (action.toLocaleLowerCase() === "message on whatsapp") {
+        } else if (action.toLocaleLowerCase() === "message agent") {
           const message = `Hi ${notification.meta?.buyerName},
 
 I see you’ve enquired on ACN about my property  ${notification.meta?.propertyName} (ID: ${notification.meta?.propertyId}). 
