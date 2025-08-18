@@ -165,6 +165,8 @@ export interface IdGenerationResult {
 }
 
 export interface ListingProperty extends Property {
+  agentName: string | null;
+  agentPhoneNumber: string | null;
   address?: string | null;
   biappaApproved?: boolean | null;
   bdaApproved?: boolean | null;
