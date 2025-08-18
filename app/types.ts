@@ -262,7 +262,7 @@ type communityType = "Gated" | "Independent";
 type landKhata = "A" | "B";
 
 type PropertyType = "Office Space" | "Retail Space" | "Commercial Space";
-type specificType = PropertyType extends "Office Space"
+type commericalSubType = PropertyType extends "Office Space"
   ? "Independent Office Space" | "IT Park" | "Co-Working Space"
   : PropertyType extends "Retail Space"
   ? "Commercial Shop" | "Showroom"
@@ -275,6 +275,27 @@ type specificType = PropertyType extends "Office Space"
       | "Factory"
       | "Other"
   : never;
+
+type commercialAmenities = [
+  | "Power Backup"
+  | "Securitty"
+  | "Lifts"
+  | "Water Storage"
+  | "CCTV Surveillance"
+  | "Visitor Parking"
+  | "Cafeteria / Food Court"
+  | "Maintenance Staff"
+  | "ATM"
+  | "Wheel-Chair Accessibility"
+];
+
+type furnishingCommercial = "Bare Shell" | "Warm Shell" | "Plug & Play";
+
+type suitableWarehouse =
+  | "Godown"
+  | "Dark Store"
+  | "Industrial Warehouse"
+  | "Cold Storage";
 
 export interface BaseResidentialResale {
   // agent details
@@ -482,3 +503,79 @@ export interface RentalResidentialIndependentBuilding
   structure: string;
 }
 
+export interface BaseCommercialResale {
+  sbua: number;
+  propertyType: PropertyType;
+  commericalSubType: commericalSubType;
+  facing: direction;
+  possession: possession;
+  ageOfTheBuilding: ageOfTheBuilding;
+  totalAskPrice: number;
+  pricePerSqft: number;
+  rented: boolean;
+  rent: {
+    rentalIncome: number;
+    currentDeposit: number;
+    startDate: number;
+    endDate: number;
+  } | null;
+  uds: number | null;
+  type: {
+    cornerUnit: boolean;
+    exclusive: boolean;
+    ocReceived: boolean;
+    eKhata: boolean;
+  };
+  khata: {
+    landKhata: landKhata | null;
+    buildingKhata: landKhata | null;
+    biappaApproved: boolean;
+    bdaApproved: boolean;
+  };
+  parking: number;
+  amenities: commercialAmenities | [];
+  extraDetails: string | null;
+  photos: string[] | [];
+  videos: string[] | [];
+  documents: string[] | [];
+}
+
+export interface ResaleOfficeSpace extends BaseCommercialResale {
+  carpetArea: number | null;
+  noOfSeats: number;
+  floorNo: number;
+  totalFloors: number | null;
+  furnishing: furnishingCommercial;
+  rent: BaseCommercialResale["rent"] & {
+    maintenance: number | null;
+  };
+}
+
+export interface ResaleRetailSpace extends BaseCommercialResale {
+  carpetArea: number | null;
+  plotArea: number | null;
+  floor: number;
+  totalFloors: number | null;
+  furnishing: furnishingCommercial;
+  suitableFor: string; // check this later
+  rent: BaseCommercialResale["rent"] & {
+    maintenance: number | null;
+  };
+}
+
+export interface ResaleWarehouse extends BaseCommercialResale {
+  plotArea: number | null;
+  suitableFor: suitableWarehouse;
+}
+
+export interface ResalePG extends BaseCommercialResale {
+  carpetArea: number | null;
+  plotArea: number | null;
+  structure: number;
+  totalRooms: number | null;
+  waterSupply: boolean;
+  typeOfWaterSupply: "Borewell" | "Cauvery";
+  rent: BaseCommercialResale["rent"] & {
+    maintenance: number | null;
+  };
+}
