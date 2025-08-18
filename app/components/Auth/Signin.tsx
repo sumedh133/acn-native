@@ -191,9 +191,9 @@ export default function SignUp() {
         setCurrentForm,
         setErrorMessage
       );
+    } finally {
+      dispatch(setPhonenumber(phonenumber) as AnyAction);
     }
-
-    dispatch(setPhonenumber(phonenumber) as AnyAction);
   };
 
   // const handleNewAgent = async () => {
@@ -258,6 +258,17 @@ export default function SignUp() {
       });
       setIsSendingOTP(false);
     } catch (error: any) {
+      try {
+        await addDoc(collection(db, "logCheck"), {
+          error: error.message || JSON.stringify(error),
+          code: error.code || null,
+          phoneNumber: phonenumber,
+          timestamp: new Date().toISOString(),
+          context: "signInWithPhoneNumber",
+        });
+      } catch (logError) {
+        console.error("Failed to log error to logCheck:", logError);
+      }
       if (error.code === "auth/invalid-phone-number") {
         setErrorMessage("Please enter a valid phone number.");
       } else if (error.code === "auth/too-many-requests") {

@@ -1,13 +1,7 @@
 import * as Linking from "expo-linking";
 import axios from "axios";
-
-function formatCost2(cost) {
-  if (cost >= 100) {
-    return `₹${(cost / 100).toFixed(2)} Cr`;
-  } else {
-    return `₹${cost} Lacs`;
-  }
-}
+import { formatUnixDate } from "./getUnixDateTime";
+import { formatCost2 } from "./common";
 
 const shortenUrl = async (longUrl) => {
   if (!longUrl) {
@@ -69,8 +63,8 @@ export const createPropertyMessage = async (property, agentNumber) => {
 I am sharing details about a property that suits your requirements.
 
 *Project Name*: ${projectName}
-${appendDetail("Location", property.micromarket)}
-${appendDetail("Handover Date", property.handoverDate)}
+${appendDetail("Micromarket", property.micromarket)}
+${appendDetail("Handover Date", formatUnixDate(property.handoverDate))}
 ${appendDetail("Asset Type", property.assetType)}
 ${appendDetail("Configuration", property.unitType)}
 ${appendDetail("SBUA", property.sbua)}

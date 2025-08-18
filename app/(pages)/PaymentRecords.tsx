@@ -14,14 +14,7 @@ import { useSelector } from "react-redux";
 import { RootState } from "@/store/store";
 import { logEvent } from "@react-native-firebase/analytics";
 import { analytics, db } from "../config/firebase";
-import {
-  doc,
-  getDoc,
-  getDocs,
-  query,
-  collection,
-  where,
-} from "firebase/firestore";
+import { getDocs, query, collection, where } from "firebase/firestore";
 import { router } from "expo-router";
 
 interface PaymentHistoryItem {
@@ -32,9 +25,6 @@ interface PaymentHistoryItem {
   };
   data: {
     amount: number;
-    feesContext: {
-      amount: number;
-    };
     merchantId: string;
     merchantTransactionId: string;
     paymentInstrument: {
@@ -87,7 +77,7 @@ const PaymentRecords: React.FC = () => {
           where("phoneNumber", "==", phoneNumber)
         )
       );
-      let data: PaymentHistoryItem[] = [];
+      let data: any[] = [];
       if (!querySnapshot.empty) {
         data = querySnapshot.docs.map((doc) => ({
           ...(doc.data() as PaymentHistoryItem),
@@ -134,51 +124,53 @@ const PaymentRecords: React.FC = () => {
       return dateB.getTime() - dateA.getTime(); // Sort descending (newest first)
     });
 
-    return sortedPaymentHistory.map((item) => {
-      const isPremiumPlan = item.data.amount === 24900 ? false : true;
-      const paymentAmount = item.data.amount;
-      const paymentId = item.id;
+    return sortedPaymentHistory
+      .filter((item) => item.data && typeof item.data.amount === "number") // Filter out items without valid data
+      .map((item) => {
+        const paymentAmount = item.data.amount;
+        const isPremiumPlan = paymentAmount === 24900 ? false : true;
+        const paymentId = item.id;
 
-      let dateString = "";
-      const timestamp = item.updatedAt;
+        let dateString = "";
+        const timestamp = item.updatedAt;
 
-      if (timestamp?.seconds) {
-        const date = new Date(timestamp.seconds * 1000);
-        const monthNames = [
-          "January",
-          "February",
-          "March",
-          "April",
-          "May",
-          "June",
-          "July",
-          "August",
-          "September",
-          "October",
-          "November",
-          "December",
-        ];
-        dateString = `${
-          monthNames[date.getMonth()]
-        } ${date.getDate()} • ${date.getHours()}:${String(
-          date.getMinutes()
-        ).padStart(2, "0")} ${date.getHours() >= 12 ? "PM" : "AM"}`;
-      }
+        if (timestamp?.seconds) {
+          const date = new Date(timestamp.seconds * 1000);
+          const monthNames = [
+            "January",
+            "February",
+            "March",
+            "April",
+            "May",
+            "June",
+            "July",
+            "August",
+            "September",
+            "October",
+            "November",
+            "December",
+          ];
+          dateString = `${
+            monthNames[date.getMonth()]
+          } ${date.getDate()} • ${date.getHours()}:${String(
+            date.getMinutes()
+          ).padStart(2, "0")} ${date.getHours() >= 12 ? "PM" : "AM"}`;
+        }
 
-      return {
-        id: paymentId,
-        title: isPremiumPlan ? "ACN Premium Plan" : "Enquiry Booster Pack",
-        amount:
-          item?.platform === "ios"
-            ? item.data.localizedPrice ?? ""
-            : `₹${(paymentAmount / 100).toFixed(2)}`,
-        date: dateString,
-        status:
-          item.status === "PAYMENT_SUCCESS" || item.status === "completed"
-            ? "Paid Successfully"
-            : "Payment Failed",
-      };
-    });
+        return {
+          id: paymentId,
+          title: isPremiumPlan ? "ACN Premium Plan" : "Enquiry Booster Pack",
+          amount:
+            item?.platform === "ios"
+              ? item.data?.localizedPrice ?? ""
+              : `₹${(paymentAmount / 100).toFixed(2)}`,
+          date: dateString,
+          status:
+            item.status === "PAYMENT_SUCCESS" || item.status === "completed"
+              ? "Paid Successfully"
+              : "Payment Failed",
+        };
+      });
   }, [paymentHistory]);
 
   const handlePaymentItemClick = (item: FormattedPaymentRecord) => {
@@ -216,7 +208,7 @@ const PaymentRecords: React.FC = () => {
         <Text style={styles.paymentDate}>{item.date}</Text>
       </View>
       <View style={styles.paymentStatusContainer}>
-        <Text style={styles.paymentAmount}>{item.amount}</Text>
+        {/* <Text style={styles.paymentAmount}>{item.amount}</Text> */}
         <Text style={styles.paymentStatus}>{item.status}</Text>
       </View>
     </TouchableOpacity>
