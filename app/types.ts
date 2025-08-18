@@ -262,7 +262,7 @@ type communityType = "Gated" | "Independent";
 type landKhata = "A" | "B";
 
 type PropertyType = "Office Space" | "Retail Space" | "Commercial Space";
-type commericalSubType = PropertyType extends "Office Space"
+type commercialSubType = PropertyType extends "Office Space"
   ? "Independent Office Space" | "IT Park" | "Co-Working Space"
   : PropertyType extends "Retail Space"
   ? "Commercial Shop" | "Showroom"
@@ -504,12 +504,48 @@ export interface RentalResidentialIndependentBuilding
 }
 
 export interface BaseCommercialResale {
+  // agent details
+  cpId: string;
+  agentName: string;
+  agentPhoneNumber: string;
+
+  // kam details
+  kamId: string;
+  kamName: string;
+
+  added: number;
+  assetType: string;
+  communityType: communityType;
+
+  // available hold sold
+  dateOfLastChecked: number;
+  lastModified: number;
+  status: string;
+
+  // qc flow
+  kamStatus: string;
+  dataStatus: string;
+  stage: string;
+  // from places API
+  name: string;
+  micromarket: string;
+  area: string;
+  zone: string;
+
+  //area
   sbua: number;
+  uds: number | null;
+
+  // commerical
   propertyType: PropertyType;
-  commericalSubType: commericalSubType;
+  commercialSubType: commercialSubType;
+
+  // basic details
   facing: direction;
   possession: possession;
   ageOfTheBuilding: ageOfTheBuilding;
+
+  // financials
   totalAskPrice: number;
   pricePerSqft: number;
   rented: boolean;
@@ -519,19 +555,23 @@ export interface BaseCommercialResale {
     startDate: number;
     endDate: number;
   } | null;
-  uds: number | null;
+
   type: {
     cornerUnit: boolean;
     exclusive: boolean;
     ocReceived: boolean;
     eKhata: boolean;
   };
+
+  // legal
   khata: {
     landKhata: landKhata | null;
     buildingKhata: landKhata | null;
     biappaApproved: boolean;
     bdaApproved: boolean;
   };
+
+  // common details
   parking: number;
   amenities: commercialAmenities | [];
   extraDetails: string | null;
@@ -578,4 +618,90 @@ export interface ResalePG extends BaseCommercialResale {
   rent: BaseCommercialResale["rent"] & {
     maintenance: number | null;
   };
+}
+
+export interface BaseCommercialRental {
+  // agent details
+  cpId: string;
+  agentName: string;
+  agentPhoneNumber: string;
+
+  // kam details
+  kamId: string;
+  kamName: string;
+
+  added: number;
+  assetType: string;
+  communityType: communityType;
+
+  // available hold sold
+  dateOfLastChecked: number;
+  lastModified: number;
+  status: string;
+
+  // qc flow
+  kamStatus: string;
+  dataStatus: string;
+  stage: string;
+  
+  // from places API
+  name: string;
+  micromarket: string;
+  area: string;
+  zone: string;
+
+  // commercial property Details
+  propertyType: PropertyType;
+  commercialSubType: commercialSubType;
+
+  // area
+  sbua: number;
+
+  // common field
+  facing: direction;
+  availableFrom: number | null;
+  amenities: commercialAmenities | [];
+  ageOfTheBuilding: ageOfTheBuilding;
+  extraDetails: string | null;
+
+  // // financials
+  rent: {
+    rent: number;
+    deposit: number;
+    maintenance: maintenance;
+    maintenanceAmount: number;
+    commissionType: commissionType;
+  };
+}
+
+export interface RentalCommercialOfficeSpace extends BaseCommercialRental {
+  carpetArea: number | null;
+  noOfSeats: number;
+  floorNo: number;
+  totalFloors: number | null;
+  furnishing: furnishingCommercial;
+}
+
+export interface RentalCommercialRetailSpace extends BaseCommercialRental {
+  carpetArea: number | null;
+  plotArea: number | null;
+  floor: number;
+  totalFloors: number | null;
+  furnishing: furnishingCommercial;
+  suitableFor: string; // check this later
+}
+
+export interface RentalCommercialWarehouse extends BaseCommercialRental {
+  carpetArea: number | null;
+  plotArea: number | null;
+  suitableFor: suitableWarehouse;
+}
+
+export interface RentalCommercialPG extends BaseCommercialRental {
+  carpetArea: number | null;
+  plotArea: number | null;
+  structure: number;
+  totalRooms: number | null;
+  waterSupply: boolean;
+  typeOfWaterSupply: "Borewell" | "Cauvery";
 }
