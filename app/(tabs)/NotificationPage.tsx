@@ -151,8 +151,22 @@ const NotificationPage: React.FC<NotificationPageProps> = () => {
         ) {
           // Linking.openURL(`tel:${notification.additionalData.buyerPhone}`);
           Linking.openURL(`tel:${notification.meta?.sellerNumber}`);
-        } else if (action.toLocaleLowerCase() === "message on whatsapp") {
-          Linking.openURL(`https://wa.me/${notification.meta?.sellerNumber}`);
+        } else if (action.toLocaleLowerCase() === "message agent") {
+          const message = `Hi ${notification.meta?.sellerName},
+
+I came across your property on ACN and I'm interested in ${notification.meta?.propertyName} (ID: ${notification.meta?.propertyId}). Could you please share:
+
+- Current pricing
+- When can the site visit happen?
+- Any other key details  
+
+Thanks,
+${notification.meta?.buyerName}`;
+          Linking.openURL(
+            `https://wa.me/${
+              notification.meta?.sellerNumber
+            }?text=${encodeURIComponent(message)}`
+          );
         }
         break;
 
@@ -164,8 +178,19 @@ const NotificationPage: React.FC<NotificationPageProps> = () => {
         ) {
           // Linking.openURL(`tel:${notification.additionalData.buyerPhone}`);
           Linking.openURL(`tel:${notification.meta?.buyerNumber}`);
-        } else if (action.toLocaleLowerCase() === "message on whatsapp") {
-          Linking.openURL(`https://wa.me/${notification.meta?.buyerNumber}`);
+        } else if (action.toLocaleLowerCase() === "message agent") {
+          const message = `Hi ${notification.meta?.buyerName},
+
+I see you’ve enquired on ACN about my property  ${notification.meta?.propertyName} (ID: ${notification.meta?.propertyId}). 
+Let me know which details you need.
+
+${notification.meta?.sellerName}
+${notification.meta?.sellerNumber}`;
+          Linking.openURL(
+            `https://wa.me/${
+              notification.meta?.buyerNumber
+            }?text=${encodeURIComponent(message)}`
+          );
         }
         break;
 

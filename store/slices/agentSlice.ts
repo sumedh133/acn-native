@@ -22,6 +22,7 @@ import { setAgentListener, clearAgentListener } from "./listenerSlice";
 import { RootState } from "../store";
 import { analytics } from "@/app/config/firebase";
 import { logEvent } from "@react-native-firebase/analytics";
+import { router } from "expo-router";
 
 export const setAgentDataState = createAsyncThunk(
   "agent/setAgentDataState",
@@ -50,110 +51,117 @@ export const setAgentDataState = createAsyncThunk(
   }
 );
 
-export const handleNewAgentThunk = async (phonenumber: string, setAddingNewAgent: (value: boolean) => void, setCurrentForm: (value: string) => void, setErrorMessage: (value: string) => void) => {
+export const handleNewAgentThunk = async (
+  phonenumber: string,
+  setAddingNewAgent: (value: boolean) => void,
+  setCurrentForm: (value: string) => void,
+  setErrorMessage: (value: string) => void
+) => {
   if (phonenumber) {
-      setAddingNewAgent(true);
-      try {
-          console.log('🔄 Adding new agent:')
+    setAddingNewAgent(true);
+    try {
+      console.log("🔄 Adding new agent:");
 
-          const timestamp = Math.floor(Date.now() / 1000)
+      const timestamp = Math.floor(Date.now() / 1000);
 
-          // Get next agent ID from admin collection
-          const adminDocRef = doc(db, 'acn-admin', 'lastLeadId')
-          const adminDoc = await getDoc(adminDocRef)
+      // Get next agent ID from admin collection
+      const adminDocRef = doc(db, "acn-admin", "lastLeadId");
+      const adminDoc = await getDoc(adminDocRef);
 
-          if (!adminDoc.exists()) {
-              throw new Error('Admin agent ID document not found')
-          }
-
-          const adminData = adminDoc.data()
-          const currentCount = adminData.count || 100
-          const prefix = adminData.prefix || 'A'
-          const label = adminData.label || 'AG'
-
-          const agentId = `${label}${prefix}${currentCount + 1}`
-
-          // Format phone number
-          let phone = phonenumber.replace(/\s+/g, '')
-          if (!phone.startsWith('+91')) {
-              if (phone.startsWith('91') && phone.length === 12) {
-                  phone = `+${phone}`
-              } else {
-                  phone = `+91${phone}`
-              }
-          }
-
-          // Create notes array if notes provided
-          const notes: string[] = []
-
-          let formattedPhoneNumber = phone
-          if (formattedPhoneNumber && !formattedPhoneNumber.startsWith('+91')) {
-              // Remove any existing country code or leading zeros
-              formattedPhoneNumber = formattedPhoneNumber.replace(/^(\+91|91|0+)/, '')
-              formattedPhoneNumber = `+91${formattedPhoneNumber}`
-          }
-
-          let kamId = ''
-              let kamName = ''
-
-              try {
-                  const pipelineDocRef = doc(db, 'acnPipeline', formattedPhoneNumber)
-                  const pipelineDoc = await getDoc(pipelineDocRef)
-
-                  if (pipelineDoc.exists()) {
-                      const pipelineData = pipelineDoc.data()
-                      kamId = pipelineData.kamId || ''
-                      kamName = pipelineData.kamName || ''
-                  }
-              } catch (error) {
-                  console.log('Pipeline doc not found for:', formattedPhoneNumber)
-              }
-              
-
-          const newAgent = {
-              leadId: agentId,
-              name: "",
-              phoneNumber: formattedPhoneNumber,
-              emailAddress: '',
-              source: 'direct',
-              kamId: kamId,
-              kamName: kamName,
-              notes,
-              leadStatus: 'not contact yet',
-              contactStatus: 'not contact',
-              verified: false,
-              communityJoined: false,
-              onBroadcast: false,
-              blackListed: false,
-              lastTried: 0,
-              lastConnect: 0,
-              added: timestamp,
-              lastModified: timestamp,
-          }
-
-          // Add agent to Firestore
-          const agentDocRef = doc(db, 'acnLeads', agentId)
-          await setDoc(agentDocRef, newAgent)
-
-          // Update admin count
-          await updateDoc(adminDocRef, {
-              count: currentCount + 1,
-          })
-
-          console.log('✅ New agent added successfully:', agentId)
-
-          // Set the form to "B" once successful
-          setCurrentForm("B");
-
-      } catch (error) {
-          console.error('❌ Error adding new agent:', error)
-          // You might want to provide user feedback
-          setErrorMessage("There was an error adding the agent. Please try again.");
-      } finally {
-          setAddingNewAgent(false);
+      if (!adminDoc.exists()) {
+        throw new Error("Admin agent ID document not found");
       }
+
+      const adminData = adminDoc.data();
+      const currentCount = adminData.count || 100;
+      const prefix = adminData.prefix || "A";
+      const label = adminData.label || "AG";
+
+      const agentId = `${label}${prefix}${currentCount + 1}`;
+
+      // Format phone number
+      let phone = phonenumber.replace(/\s+/g, "");
+      if (!phone.startsWith("+91")) {
+        if (phone.startsWith("91") && phone.length === 12) {
+          phone = `+${phone}`;
+        } else {
+          phone = `+91${phone}`;
+        }
+      }
+
+      // Create notes array if notes provided
+      const notes: string[] = [];
+
+      let formattedPhoneNumber = phone;
+      if (formattedPhoneNumber && !formattedPhoneNumber.startsWith("+91")) {
+        // Remove any existing country code or leading zeros
+        formattedPhoneNumber = formattedPhoneNumber.replace(
+          /^(\+91|91|0+)/,
+          ""
+        );
+        formattedPhoneNumber = `+91${formattedPhoneNumber}`;
+      }
+
+      let kamId = "";
+      let kamName = "";
+
+      try {
+        const pipelineDocRef = doc(db, "acnPipeline", formattedPhoneNumber);
+        const pipelineDoc = await getDoc(pipelineDocRef);
+
+        if (pipelineDoc.exists()) {
+          const pipelineData = pipelineDoc.data();
+          kamId = pipelineData.kamId || "";
+          kamName = pipelineData.kamName || "";
+        }
+      } catch (error) {
+        console.log("Pipeline doc not found for:", formattedPhoneNumber);
+      }
+
+      const newAgent = {
+        leadId: agentId,
+        name: "",
+        phoneNumber: formattedPhoneNumber,
+        emailAddress: "",
+        source: "direct",
+        kamId: kamId,
+        kamName: kamName,
+        notes,
+        leadStatus: "not contact yet",
+        contactStatus: "not contact",
+        verified: false,
+        communityJoined: false,
+        onBroadcast: false,
+        blackListed: false,
+        lastTried: 0,
+        lastConnect: 0,
+        added: timestamp,
+        lastModified: timestamp,
+      };
+
+      // Add agent to Firestore
+      const agentDocRef = doc(db, "acnLeads", agentId);
+      await setDoc(agentDocRef, newAgent);
+
+      // Update admin count
+      await updateDoc(adminDocRef, {
+        count: currentCount + 1,
+      });
+
+      console.log("✅ New agent added successfully:", agentId);
+
+      // Set the form to "B" once successful
+      setCurrentForm("B");
+    } catch (error) {
+      console.error("❌ Error adding new agent:", error);
+      // You might want to provide user feedback
+      setErrorMessage("There was an error adding the agent. Please try again.");
+    } finally {
+      router.push("/components/Auth/VerificationPage");
+      setAddingNewAgent(false);
+    }
   }
-} 
+};
 
 export const listenToAgentChanges =
   (agentId: string): ThunkAction<void, RootState, unknown, AnyAction> =>

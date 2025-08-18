@@ -123,7 +123,7 @@ export default function LayoutApp() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isMaintenanceMode, setIsMaintenanceMode] = useState(false);
 
-  const [showOnboarding, setShowOnboarding] = useState(false);
+  const [showOnboarding, setShowOnboarding] = useState(true);
   const colorScheme = useColorScheme();
   const [topMargin, setTopMargin] = useState(10);
   const [fontsLoaded] = useFonts({
@@ -316,19 +316,16 @@ export default function LayoutApp() {
     // Show onboarding modal if the user has not completed onboarding
     if (
       agentData &&
-      agentData?.onboardingComplete === undefined &&
-      agentData?.userType !== "premium" &&
-      agentData?.userType !== "trial" &&
-      agentData?.trialUsed !== true
-    ) {
-      setShowOnboarding(true);
-    } else if (
-      agentData &&
       (agentData?.onboardingComplete === true ||
-        agentData?.onboardingComplete === false)
+      agentData?.userType.toLowerCase() === "premium" ||
+      agentData?.userType.toLowerCase() === "trial" ||
+      agentData?.trialUsed === true) &&
+      agentData?.userType.toLowerCase() !== "basic"
     ) {
-      // Close the modal when onboarding is completed
       setShowOnboarding(false);
+    } else if (agentData && agentData?.onboardingComplete === true) {
+      setShowOnboarding(false);
+      // Close the modal when onboarding is completed
     }
   }, [agentData, agentData?.onboardingComplete]);
 
