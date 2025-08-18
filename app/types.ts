@@ -224,3 +224,261 @@ export interface SubscriptionPlan {
   taxPercentage: number;
   validityPeriod: string;
 }
+
+type extraRooms =
+  | ["Servant Room" | "Study Room" | "Pooja Room" | "Other"]
+  | null;
+type noOfBedrooms = 1 | 2 | 3 | 4 | 5 | 6 | 7;
+type noOfBathrooms = 1 | 2 | 3 | 4 | 5 | "5+";
+type noOfBalconies = 0 | 1 | 2 | 3 | 4 | 5 | "5+";
+type balconyFacing = "Inside" | "Outside";
+type possession = "Ready to Move" | "Under Construction";
+type ageOfTheBuilding =
+  | "New"
+  | "1-5 years"
+  | "6-10 years"
+  | "11-15 years"
+  | "15+ Years";
+
+type furnishing = "Unfurnished" | "Semi-Furnished" | "Furnished";
+type direction = "North" | "South" | "East" | "West";
+type apartmentType = "Simple" | "Duplex" | "Triplex" | "Penthouse";
+type amenities = [
+  | "Gym"
+  | "Lifts"
+  | "Water Storage"
+  | "Visitor Parking"
+  | "Service Lifts"
+  | "Pool"
+  | "CCTV Surveillance"
+  | "Security"
+  | "Power Backup"
+  | "Club-House"
+];
+type maintenance = "Included" | "Not Included";
+type commissionType = "Side by Side" | "Comission Sharing";
+type preferedTenants = ["Anyone", "Family", "Bachelor Female", "Bachelor Male"];
+type communityType = "Gated" | "Independent";
+type landKhata = "A" | "B";
+
+type PropertyType = "Office Space" | "Retail Space" | "Commercial Space";
+type specificType = PropertyType extends "Office Space"
+  ? "Independent Office Space" | "IT Park" | "Co-Working Space"
+  : PropertyType extends "Retail Space"
+  ? "Commercial Shop" | "Showroom"
+  : PropertyType extends "Commercial Space"
+  ?
+      | "PG/Guest-House"
+      | "Warehouse"
+      | "Commercial Plot"
+      | "Industrial Shed"
+      | "Factory"
+      | "Other"
+  : never;
+
+export interface BaseResidentialResale {
+  // agent details
+  cpId: string;
+  agentName: string;
+  agentPhoneNumber: string;
+
+  // kam details
+  kamId: string;
+  kamName: string;
+
+  added: number;
+  assetType: string;
+  communityType: communityType;
+
+  // available hold sold
+  dateOfLastChecked: number;
+  lastModified: number;
+  status: string;
+
+  //qc flow
+  kamStatus: string;
+  dataStatus: string;
+  stage: string;
+
+  // from places API
+  name: string;
+  micromarket: string;
+  area: string;
+  zone: string;
+
+  totalAskPrice: number;
+  pricePerSqft: number;
+
+  rented: boolean;
+  rent: {
+    rentalIncome: number;
+    currentDeposit: number;
+    startDate: number;
+    endDate: number;
+  } | null;
+
+  type: {
+    cornerUnit: boolean;
+    exclusive: boolean;
+  };
+
+  khata: {
+    landKhata: landKhata | null;
+    eKhata: boolean;
+    biappaApproved: boolean;
+    bdaApproved: boolean;
+  };
+
+  // photos, videos and documents
+  photos: string[] | [];
+  videos: string[] | [];
+  documents: string[] | [];
+
+  unitNumber: string | null;
+  extraDetails: string | null;
+}
+
+export interface ResaleResidentialApartment extends BaseResidentialResale {
+  apartmentType: apartmentType;
+  sbua: number;
+  carpetArea: number | null;
+  doorFacing: direction;
+  exactFloorNo: number;
+  floorNo: number;
+  totalFloors: number | null;
+  furnishing: furnishing;
+  noOfBedrooms: noOfBedrooms;
+  extraRooms: extraRooms;
+  noOfBathrooms: noOfBathrooms;
+  noOfBalconies: noOfBalconies;
+  balconyFacing: balconyFacing | null;
+  possession: possession;
+  ageOfTheBuilding: ageOfTheBuilding;
+  availableFrom: number;
+  amenities: amenities | [];
+  parking: number | null;
+  uds: number | null;
+  type: BaseResidentialResale["type"] & {
+    ocReceived: boolean;
+  };
+}
+
+export interface ResaleResidentialVilla extends BaseResidentialResale {
+  sbua: number;
+  carpetArea: number | null;
+  plotArea: number | null;
+  doorFacing: direction;
+  structure: string;
+  furnishing: furnishing;
+  noOfBedrooms: noOfBedrooms;
+  extraRooms: extraRooms;
+  noOfBathrooms: noOfBathrooms;
+  noOfBalconies: noOfBalconies;
+  balconyFacing: balconyFacing | null;
+  possession: possession;
+  ageOfTheBuilding: ageOfTheBuilding;
+  availableFrom: number;
+  amenities: amenities | [];
+  uds: number | null;
+  type: BaseResidentialResale["type"] & {
+    ocReceived: boolean;
+  };
+}
+
+export interface ResaleResidentialPlot extends BaseResidentialResale {
+  plotSize: number;
+  facing: direction;
+  plotNo: string | null;
+  plotLength: number | null;
+  plotBreadth: number | null;
+  oddSized: boolean;
+  handOverData: number | null;
+  readyToMove: boolean;
+}
+
+export interface ResaleResidentialVillament extends ResaleResidentialVilla {}
+
+export interface ResaleResidentialRowHouse extends ResaleResidentialVilla {}
+
+export interface ResaleResidentialIndependentBuilding
+  extends ResaleResidentialVilla {}
+
+export interface BaseResidentialRental {
+  // agent details
+  cpId: string;
+  agentName: string;
+  agentPhoneNumber: string;
+
+  // kam details
+  kamId: string;
+  kamName: string;
+
+  added: number;
+  assetType: string;
+  communityType: communityType;
+
+  // available hold sold
+  dateOfLastChecked: number;
+  lastModified: number;
+  status: string;
+
+  // qc flow
+  kamStatus: string;
+  dataStatus: string;
+  stage: string;
+
+  // from places API
+  name: string;
+  micromarket: string;
+  area: string;
+  zone: string;
+
+  // area
+  sbua: number;
+  carpetArea: number | null;
+  doorFacing: direction;
+  furnishing: furnishing;
+  noOfBedrooms: noOfBedrooms;
+  extraRooms: extraRooms;
+  noOfBathrooms: noOfBathrooms;
+  noOfBalconies: noOfBalconies;
+  balconyFacing: balconyFacing | null;
+  handOverDate: number | null;
+  readyToMove: boolean;
+  ageOfTheBuilding: ageOfTheBuilding;
+  rent: {
+    rent: number;
+    deposit: number;
+    maintenance: maintenance;
+    maintenanceAmount: number;
+    commissionType: commissionType;
+  };
+  preferedTenants: preferedTenants;
+  petsAllowed: boolean;
+  nonVegAllowed: boolean;
+  amenities: amenities | [];
+  parking: number | null;
+  extraDetails: string | null;
+}
+
+export interface RentalResidentialApartment extends BaseResidentialRental {
+  floorNo: number;
+  totalFloors: number | null;
+}
+
+export interface RentalResidentialVilla extends BaseResidentialRental {
+  structure: string;
+}
+export interface RentalResidentialVillament extends BaseResidentialRental {
+  structure: string;
+}
+
+export interface RentalResidentialRowHouse extends BaseResidentialRental {
+  structure: string;
+}
+
+export interface RentalResidentialIndependentBuilding
+  extends BaseResidentialRental {
+  structure: string;
+}
+
