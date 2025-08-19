@@ -256,8 +256,13 @@ type amenities = [
   | "Club-House"
 ];
 type maintenance = "Included" | "Not Included";
-type commissionType = "Side by Side" | "Comission Sharing";
-type preferedTenants = ["Anyone", "Family", "Bachelor Female", "Bachelor Male"];
+type commissionType = "Side by Side" | "Commission Sharing";
+type preferredTenants = [
+  "Anyone",
+  "Family",
+  "Bachelor Female",
+  "Bachelor Male"
+];
 type communityType = "Gated" | "Independent";
 type landKhata = "A" | "B";
 
@@ -278,7 +283,7 @@ type commercialSubType = PropertyType extends "Office Space"
 
 type commercialAmenities = [
   | "Power Backup"
-  | "Securitty"
+  | "Security"
   | "Lifts"
   | "Water Storage"
   | "CCTV Surveillance"
@@ -298,6 +303,9 @@ type suitableWarehouse =
   | "Cold Storage";
 
 export interface BaseResidentialResale {
+  propertyId: string;
+  base: "resale";
+
   // agent details
   cpId: string;
   agentName: string;
@@ -322,7 +330,7 @@ export interface BaseResidentialResale {
   stage: string;
 
   // from places API
-  name: string;
+  propertyName: string;
   micromarket: string;
   area: string;
   zone: string;
@@ -425,6 +433,9 @@ export interface ResaleResidentialIndependentBuilding
   extends ResaleResidentialVilla {}
 
 export interface BaseResidentialRental {
+  propertyId: string;
+  base: "rental";
+
   // agent details
   cpId: string;
   agentName: string;
@@ -449,7 +460,7 @@ export interface BaseResidentialRental {
   stage: string;
 
   // from places API
-  name: string;
+  propertyName: string;
   micromarket: string;
   area: string;
   zone: string;
@@ -474,7 +485,7 @@ export interface BaseResidentialRental {
     maintenanceAmount: number;
     commissionType: commissionType;
   };
-  preferedTenants: preferedTenants;
+  preferredTenants: preferredTenants;
   petsAllowed: boolean;
   nonVegAllowed: boolean;
   amenities: amenities | [];
@@ -504,6 +515,9 @@ export interface RentalResidentialIndependentBuilding
 }
 
 export interface BaseCommercialResale {
+  propertyId: string;
+  base: "resale";
+
   // agent details
   cpId: string;
   agentName: string;
@@ -527,7 +541,7 @@ export interface BaseCommercialResale {
   dataStatus: string;
   stage: string;
   // from places API
-  name: string;
+  propertyName: string;
   micromarket: string;
   area: string;
   zone: string;
@@ -621,6 +635,9 @@ export interface ResalePG extends BaseCommercialResale {
 }
 
 export interface BaseCommercialRental {
+  propertyId: string;
+  base: "rental";
+
   // agent details
   cpId: string;
   agentName: string;
@@ -643,9 +660,9 @@ export interface BaseCommercialRental {
   kamStatus: string;
   dataStatus: string;
   stage: string;
-  
+
   // from places API
-  name: string;
+  propertyName: string;
   micromarket: string;
   area: string;
   zone: string;
@@ -705,3 +722,28 @@ export interface RentalCommercialPG extends BaseCommercialRental {
   waterSupply: boolean;
   typeOfWaterSupply: "Borewell" | "Cauvery";
 }
+
+export type main =
+  // resale residential
+  | ResaleResidentialApartment
+  | ResaleResidentialVilla
+  | ResaleResidentialPlot
+  | ResaleResidentialRowHouse
+  | ResaleResidentialIndependentBuilding
+  | ResaleResidentialVillament
+  // rental residential
+  | RentalResidentialApartment
+  | RentalResidentialVilla
+  | RentalResidentialRowHouse
+  | RentalResidentialIndependentBuilding
+  | RentalResidentialVillament
+  //resale commercial
+  | ResaleOfficeSpace
+  | ResaleRetailSpace
+  | ResaleWarehouse
+  | ResalePG
+  // rental commercial
+  | RentalCommercialOfficeSpace
+  | RentalCommercialRetailSpace
+  | RentalCommercialWarehouse
+  | RentalCommercialPG;
