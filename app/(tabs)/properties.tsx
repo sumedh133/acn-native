@@ -23,6 +23,7 @@ import {
   Configure,
   useInstantSearch,
   useInfiniteHits,
+  Hits,
 } from "react-instantsearch";
 import { useHits, useSearchBox } from "react-instantsearch";
 import PropertyFilters from "../components/PropertyFilters";
@@ -42,11 +43,11 @@ import { logEvent } from "@react-native-firebase/analytics";
 
 // Initialize Algolia search client
 const searchClient = algoliasearch(
-  "1F93ZRBESW",
-  "b9023694178852d83995620a6c9ba933"
+  "CGRV5YKD8Y",
+  "6790dabe95e962dcb64be2a64106c5b2"
 );
 
-const indexName = "properties";
+const indexName = "acnTest";
 
 // SearchRefresher component that accesses the refresh method
 function SearchRefresher({
@@ -79,7 +80,7 @@ const MobileHits = () => {
 
   const viewabilityConfig = useRef<ViewabilityConfig>({
     itemVisiblePercentThreshold: 50, // Item is considered viewed when 50% visible
-    minimumViewTime: 500 // Must be visible for at least 500ms
+    minimumViewTime: 500, // Must be visible for at least 500ms
   });
 
   const { refresh } = useInstantSearch();
@@ -90,17 +91,17 @@ const MobileHits = () => {
 
   // Track search results
   useEffect(() => {
-    if (items && status === 'idle') {
+    if (items && status === "idle") {
       try {
-        logEvent(analytics, 'property_search_results', {
-          event_category: 'search',
-          event_label: 'results',
+        logEvent(analytics, "property_search_results", {
+          event_category: "search",
+          event_label: "results",
           results_count: items.length,
-          search_query: query || 'empty',
-          user_type: userType
+          search_query: query || "empty",
+          user_type: userType,
         });
       } catch (error) {
-        console.error('Error logging search results:', error);
+        console.error("Error logging search results:", error);
       }
     }
   }, [items, status, query, userType]);
@@ -108,13 +109,13 @@ const MobileHits = () => {
   const onRefresh = useCallback(() => {
     setRefreshing(true);
     try {
-      logEvent(analytics, 'property_list_refresh', {
-        event_category: 'interaction',
-        event_label: 'refresh',
-        user_type: userType
+      logEvent(analytics, "property_list_refresh", {
+        event_category: "interaction",
+        event_label: "refresh",
+        user_type: userType,
       });
     } catch (error) {
-      console.error('Error logging refresh:', error);
+      console.error("Error logging refresh:", error);
     }
     refresh();
     setTimeout(() => {
@@ -125,14 +126,14 @@ const MobileHits = () => {
   const handleEndReached = useCallback(() => {
     if (!isLastPage && !isLoadingMore) {
       try {
-        logEvent(analytics, 'property_list_pagination', {
-          event_category: 'interaction',
-          event_label: 'load_more',
+        logEvent(analytics, "property_list_pagination", {
+          event_category: "interaction",
+          event_label: "load_more",
           current_items: items.length,
-          user_type: userType
+          user_type: userType,
         });
       } catch (error) {
-        console.error('Error logging pagination:', error);
+        console.error("Error logging pagination:", error);
       }
       setIsLoadingMore(true);
       requestAnimationFrame(() => {
@@ -142,86 +143,104 @@ const MobileHits = () => {
     }
   }, [isLastPage, isLoadingMore, showMore, items.length, userType]);
 
-  const keyExtractor = useCallback((item: Property) => item.propertyId || String(item.propertyId), []);
+  const keyExtractor = useCallback(
+    (item: any) => item.propertyId || String(item.propertyId),
+    []
+  );
 
-  const handleViewableItemsChanged = useCallback(({ viewableItems }: any) => {
-    const newPropertiesViewed = viewableItems.filter((item: any) => {
-      const propertyId = item.item.propertyId;
-      return !viewedProperties.current.has(propertyId);
-    });
-
-    if (newPropertiesViewed.length > 0) {
-      newPropertiesViewed.forEach((item: any) => {
+  const handleViewableItemsChanged = useCallback(
+    ({ viewableItems }: any) => {
+      const newPropertiesViewed = viewableItems.filter((item: any) => {
         const propertyId = item.item.propertyId;
-        viewedProperties.current.add(propertyId);
+        return !viewedProperties.current.has(propertyId);
       });
 
-      setTotalPropertiesViewed(viewedProperties.current.size);
-
-      try {
-        logEvent(analytics, 'property_cards_viewed', {
-          event_category: 'engagement',
-          event_label: 'impression',
-          total_viewed: viewedProperties.current.size,
-          new_properties_count: newPropertiesViewed.length,
-          total_available: items.length,
-          view_percentage: Math.round((viewedProperties.current.size / items.length) * 100),
-          user_type: userType
+      if (newPropertiesViewed.length > 0) {
+        newPropertiesViewed.forEach((item: any) => {
+          const propertyId = item.item.propertyId;
+          viewedProperties.current.add(propertyId);
         });
-      } catch (error) {
-        console.error('Error logging property views:', error);
-      }
-    }
-  }, [items.length, userType]);
 
-  const handleScroll = useCallback((event: any) => {
-    const { contentOffset, contentSize, layoutMeasurement } = event.nativeEvent;
-    const scrollDepthPercentage = Math.floor(
-      ((contentOffset.y + layoutMeasurement.height) / contentSize.height) * 100
-    );
-    
-    if (scrollDepthPercentage > maxScrollDepth) {
-      setMaxScrollDepth(scrollDepthPercentage);
-      try {
-        logEvent(analytics, 'property_scroll_depth', {
-          event_category: 'engagement',
-          event_label: 'scroll',
-          depth_percentage: scrollDepthPercentage,
-          total_items: items.length,
-          properties_viewed: viewedProperties.current.size,
-          user_type: userType
-        });
-      } catch (error) {
-        console.error('Error logging scroll depth:', error);
-      }
-    }
-  }, [maxScrollDepth, items.length, userType]);
+        setTotalPropertiesViewed(viewedProperties.current.size);
 
-  const renderItem = useCallback(({ item, index }: { item: Property; index: number }) => {
-    const transformedProperty: Property = item;
-    const handlePropertyView = () => {
-      try {
-        logEvent(analytics, 'property_card_view', {
-          event_category: 'interaction',
-          event_label: 'property_view',
-          property_id: item.propertyId,
-          list_position: index + 1,
-          user_type: userType
-        });
-      } catch (error) {
-        console.error('Error logging property view:', error);
+        try {
+          logEvent(analytics, "property_cards_viewed", {
+            event_category: "engagement",
+            event_label: "impression",
+            total_viewed: viewedProperties.current.size,
+            new_properties_count: newPropertiesViewed.length,
+            total_available: items.length,
+            view_percentage: Math.round(
+              (viewedProperties.current.size / items.length) * 100
+            ),
+            user_type: userType,
+          });
+        } catch (error) {
+          console.error("Error logging property views:", error);
+        }
       }
-    };
+    },
+    [items.length, userType]
+  );
 
-    return (
-      <View onStartShouldSetResponder={() => {
-        handlePropertyView();
-        return false;
-      }}>
-        <PropertyCard key={item.propertyId} property={transformedProperty} />
-      </View>
-    );
-  }, [userType]);
+  const handleScroll = useCallback(
+    (event: any) => {
+      const { contentOffset, contentSize, layoutMeasurement } =
+        event.nativeEvent;
+      const scrollDepthPercentage = Math.floor(
+        ((contentOffset.y + layoutMeasurement.height) / contentSize.height) *
+          100
+      );
+
+      if (scrollDepthPercentage > maxScrollDepth) {
+        setMaxScrollDepth(scrollDepthPercentage);
+        try {
+          logEvent(analytics, "property_scroll_depth", {
+            event_category: "engagement",
+            event_label: "scroll",
+            depth_percentage: scrollDepthPercentage,
+            total_items: items.length,
+            properties_viewed: viewedProperties.current.size,
+            user_type: userType,
+          });
+        } catch (error) {
+          console.error("Error logging scroll depth:", error);
+        }
+      }
+    },
+    [maxScrollDepth, items.length, userType]
+  );
+
+  const renderItem = useCallback(
+    ({ item, index }: { item: any; index: number }) => {
+      const transformedProperty: any = item;
+      const handlePropertyView = () => {
+        try {
+          logEvent(analytics, "property_card_view", {
+            event_category: "interaction",
+            event_label: "property_view",
+            property_id: item.propertyId,
+            list_position: index + 1,
+            user_type: userType,
+          });
+        } catch (error) {
+          console.error("Error logging property view:", error);
+        }
+      };
+
+      return (
+        <View
+          onStartShouldSetResponder={() => {
+            handlePropertyView();
+            return false;
+          }}
+        >
+          <PropertyCard key={item.propertyId} property={transformedProperty} />
+        </View>
+      );
+    },
+    [userType]
+  );
 
   const renderFooter = useCallback(() => {
     if (loading) {
@@ -275,14 +294,14 @@ const MobileHits = () => {
 
   if (items?.length === 0 && query?.length !== 0) {
     try {
-      logEvent(analytics, 'property_search_no_results', {
-        event_category: 'search',
-        event_label: 'no_results',
+      logEvent(analytics, "property_search_no_results", {
+        event_category: "search",
+        event_label: "no_results",
         search_query: query,
-        user_type: userType
+        user_type: userType,
       });
     } catch (error) {
-      console.error('Error logging no results:', error);
+      console.error("Error logging no results:", error);
     }
     return (
       <View className="flex items-center justify-center h-64">
@@ -347,26 +366,26 @@ export default function PropertiesScreen() {
   // Track page view
   useEffect(() => {
     try {
-      logEvent(analytics, 'properties_page_view', {
-        event_category: 'page_view',
-        event_label: 'properties',
-        user_type: userType
+      logEvent(analytics, "properties_page_view", {
+        event_category: "page_view",
+        event_label: "properties",
+        user_type: userType,
       });
     } catch (error) {
-      console.error('Error logging page view:', error);
+      console.error("Error logging page view:", error);
     }
   }, [userType]);
 
   const handleToggleMoreFilters = () => {
     try {
-      logEvent(analytics, 'property_filters_toggle', {
-        event_category: 'interaction',
-        event_label: 'filters',
-        filter_state: !isMoreFiltersModalOpen ? 'open' : 'close',
-        user_type: userType
+      logEvent(analytics, "property_filters_toggle", {
+        event_category: "interaction",
+        event_label: "filters",
+        filter_state: !isMoreFiltersModalOpen ? "open" : "close",
+        user_type: userType,
       });
     } catch (error) {
-      console.error('Error logging filter toggle:', error);
+      console.error("Error logging filter toggle:", error);
     }
     setIsMoreFiltersModalOpen((prev) => !prev);
     Keyboard.dismiss();
@@ -376,15 +395,15 @@ export default function PropertiesScreen() {
   useEffect(() => {
     if (selectedLandmark) {
       try {
-        logEvent(analytics, 'property_landmark_selected', {
-          event_category: 'search',
-          event_label: 'landmark',
+        logEvent(analytics, "property_landmark_selected", {
+          event_category: "search",
+          event_label: "landmark",
           landmark_name: selectedLandmark.name,
           landmark_radius: selectedLandmark.radius,
-          user_type: userType
+          user_type: userType,
         });
       } catch (error) {
-        console.error('Error logging landmark selection:', error);
+        console.error("Error logging landmark selection:", error);
       }
     }
   }, [selectedLandmark, userType]);
@@ -393,13 +412,13 @@ export default function PropertiesScreen() {
 
   if (!isConnectedToInternet) {
     try {
-      logEvent(analytics, 'properties_offline_view', {
-        event_category: 'error',
-        event_label: 'offline',
-        user_type: userType
+      logEvent(analytics, "properties_offline_view", {
+        event_category: "error",
+        event_label: "offline",
+        user_type: userType,
       });
     } catch (error) {
-      console.error('Error logging offline state:', error);
+      console.error("Error logging offline state:", error);
     }
     return <Offline />;
   }
@@ -410,7 +429,7 @@ export default function PropertiesScreen() {
         <Configure
           analytics={true}
           hitsPerPage={20}
-          filters={`status:'Available'`}
+          // filters={`status:'available'`}
           aroundLatLng={
             selectedLandmark?.lat && selectedLandmark?.lng
               ? `${selectedLandmark.lat},${selectedLandmark.lng}`

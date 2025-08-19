@@ -21,6 +21,15 @@ export const formatUnixDate = (unix) => {
   return `${day}-${month}-${year}`;
 };
 
+// Returns the difference in days between two unix timestamps
+export const getDaysDifference = (unix1, unix2) => {
+  // if (!unix1 || !unix2) {
+  //   return;
+  // }
+  const diffInSeconds = Math.abs(unix1 - unix2);
+  return Math.floor(diffInSeconds / (24 * 60 * 60));
+};
+
 export const formatUnixDateWithMonth = (unix) => {
   if (!unix) {
     return;

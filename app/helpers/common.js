@@ -77,7 +77,9 @@ export function formatCost(price) {
 }
 
 export function formatCost2(cost) {
-  return helper(cost / 100000);
+  if (cost < 100000) return formatCost(cost);
+  
+  return helper((cost / 100000).toFixed(2));
 }
 
 export function helper(cost) {
@@ -152,6 +154,13 @@ function getRandomInt(min, max) {
   const maxFloored = Math.floor(max);
   return Math.floor(Math.random() * (maxFloored - minCeiled) + minCeiled); // The maximum is exclusive and the minimum is inclusive
 }
+
+export const getDaysFrom = (dateString) => {
+  const date = new Date(dateString);
+  const now = new Date();
+  const diffTime = Math.abs(Math.floor(now / 1000) - date);
+  return Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+};
 
 export const formatMonthYear = (dateString) => {
   const [month, year] = dateString.split("/");
