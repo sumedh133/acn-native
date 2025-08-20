@@ -59,57 +59,61 @@ const LandmarkDropdownFilters = ({
     selectedLandmark?.radius || 5000
   );
   const [userInitiatedSearch, setUserInitiatedSearch] = useState(false);
-  const userType = useSelector((state: RootState) => state.agent?.docData?.userType) || "free";
+  const userType =
+    useSelector((state: RootState) => state.agent?.docData?.userType) || "free";
 
   const searchTimeout = useRef<NodeJS.Timeout | null>(null);
   // Track if component has mounted
   const isInitialMount = useRef(true);
 
   // Search for locations with debounce
-  const searchLocations = useCallback(async (query: string) => {
-    if (!query.trim()) {
-      setSearchResults([]);
-      return;
-    }
-
-    try {
-      setIsLoading(true);
-      const response = await fetch(
-        `https://maps.googleapis.com/maps/api/place/autocomplete/json?input=${encodeURIComponent(
-          query
-        )}&locationrestriction=${locationRestriction}&key=${API_KEY}`
-      );
-      const data = await response.json();
-
-      if (data.status === "OK") {
-        const predictions = data.predictions.map((prediction: any) => ({
-          place_id: prediction.place_id,
-          description: prediction.description,
-        }));
-        setSearchResults(predictions);
-
-        try {
-          logEvent(analytics, 'landmark_search', {
-            event_category: 'location',
-            event_label: 'search',
-            search_term: query,
-            results_count: predictions.length,
-            user_type: userType
-          });
-        } catch (error) {
-          console.error('Error logging landmark search:', error);
-        }
-      } else {
-        console.error("Places API error:", data.status);
+  const searchLocations = useCallback(
+    async (query: string) => {
+      if (!query.trim()) {
         setSearchResults([]);
+        return;
       }
-    } catch (error) {
-      console.error("Error fetching location suggestions:", error);
-      setSearchResults([]);
-    } finally {
-      setIsLoading(false);
-    }
-  }, [userType]);
+
+      try {
+        setIsLoading(true);
+        const response = await fetch(
+          `https://maps.googleapis.com/maps/api/place/autocomplete/json?input=${encodeURIComponent(
+            query
+          )}&locationrestriction=${locationRestriction}&key=${API_KEY}`
+        );
+        const data = await response.json();
+
+        if (data.status === "OK") {
+          const predictions = data.predictions.map((prediction: any) => ({
+            place_id: prediction.place_id,
+            description: prediction.description,
+          }));
+          setSearchResults(predictions);
+
+          try {
+            logEvent(analytics, "landmark_search", {
+              event_category: "location",
+              event_label: "search",
+              search_term: query,
+              results_count: predictions.length,
+              user_type: userType,
+            });
+          } catch (error) {
+            console.error("Error logging landmark search:", error);
+          }
+        } else {
+          console.error("Places API error:", data.status);
+          setSearchResults([]);
+        }
+      } catch (error) {
+        console.error("Error fetching location suggestions:", error);
+        setSearchResults([]);
+      } finally {
+        setIsLoading(false);
+      }
+    },
+    [userType]
+  );
 
   // Get place details by ID
   const getPlaceDetails = useCallback(
@@ -223,15 +227,15 @@ const LandmarkDropdownFilters = ({
           };
 
           try {
-            logEvent(analytics, 'select_landmark', {
-              event_category: 'location',
-              event_label: 'select',
+            logEvent(analytics, "select_landmark", {
+              event_category: "location",
+              event_label: "select",
               landmark_name: location.name,
               landmark_radius: location.radius,
-              user_type: userType
+              user_type: userType,
             });
           } catch (error) {
-            console.error('Error logging landmark selection:', error);
+            console.error("Error logging landmark selection:", error);
           }
 
           setUserInitiatedSearch(false);
@@ -265,16 +269,16 @@ const LandmarkDropdownFilters = ({
         setSelectedLandmark(updatedLandmark);
 
         try {
-          logEvent(analytics, 'update_landmark_radius', {
-            event_category: 'location',
-            event_label: 'radius',
+          logEvent(analytics, "update_landmark_radius", {
+            event_category: "location",
+            event_label: "radius",
             landmark_name: selectedLandmark.name,
             previous_radius: selectedLandmark.radius,
             new_radius: value,
-            user_type: userType
+            user_type: userType,
           });
         } catch (error) {
-          console.error('Error logging radius update:', error);
+          console.error("Error logging radius update:", error);
         }
       }
     },
@@ -284,14 +288,14 @@ const LandmarkDropdownFilters = ({
   // Clear search
   const handleClearSearch = useCallback(() => {
     try {
-      logEvent(analytics, 'clear_landmark_search', {
-        event_category: 'location',
-        event_label: 'clear',
+      logEvent(analytics, "clear_landmark_search", {
+        event_category: "location",
+        event_label: "clear",
         had_selection: !!selectedLandmark,
-        user_type: userType
+        user_type: userType,
       });
     } catch (error) {
-      console.error('Error logging search clear:', error);
+      console.error("Error logging search clear:", error);
     }
 
     setSearchQuery("");
@@ -317,14 +321,12 @@ const LandmarkDropdownFilters = ({
   };
 
   return (
-    <View style={styles.container}>
+    <View className="w-full z-[100]">
       {/* Search Input */}
-      <View style={styles.inputContainer}>
-        {/* Location Icon */}
-        {/* <View style={styles.iconPlaceholder} /> */}
+      <View className="flex-row items-center border-[1.5px] border-gray-200 rounded-md bg-white h-10 px-3">
         <Ionicons name="location-outline" size={20} color="#6B7280" />
         <TextInput
-          style={styles.textInput}
+          className="flex-1 text-xs text-gray-800 p-0 ml-2"
           placeholder="Search landmarks"
           placeholderTextColor="#7A7B7C"
           value={searchQuery}
@@ -333,41 +335,39 @@ const LandmarkDropdownFilters = ({
         />
 
         {isLoading ? (
-          <ActivityIndicator
-            style={styles.rightIcon}
-            size="small"
-            color="#153E3B"
-          />
+          <ActivityIndicator className="w-5 h-5" size="small" color="#153E3B" />
         ) : searchQuery ? (
           <TouchableOpacity
             onPress={handleClearSearch}
-            style={styles.rightIcon}
+            className="w-5 h-5 justify-center items-center"
           >
-            <Text style={styles.clearButtonText}>✕</Text>
+            <Text className="text-sm text-gray-400 font-bold">✕</Text>
           </TouchableOpacity>
         ) : null}
       </View>
 
       {/* Search Results Dropdown */}
       {showResults && searchResults.length > 0 && (
-        <View style={styles.resultsContainer}>
+        <View className="absolute top-[45px] left-0 right-0 bg-white rounded-md border border-gray-200 max-h-[200px] z-[1000] shadow-sm">
           <FlatList
             data={searchResults}
             keyExtractor={(item) => item.place_id}
             renderItem={({ item }) => (
               <TouchableOpacity
-                style={styles.resultItem}
+                className="p-3 border-b border-gray-100"
                 onPress={() =>
                   handleSelectPlace(item.place_id, item.description)
                 }
               >
-                <Text style={styles.resultText}>{item.description}</Text>
+                <Text className="text-xs text-gray-800">
+                  {item.description}
+                </Text>
               </TouchableOpacity>
             )}
             keyboardShouldPersistTaps="handled"
             scrollEnabled={true}
             nestedScrollEnabled={true}
-            style={styles.resultsList}
+            className="w-full"
           />
         </View>
       )}
@@ -386,7 +386,7 @@ const LandmarkDropdownFilters = ({
             />
           </View>
 
-          <View style={styles.radiusLabelsContainer}>
+          <View className="flex-row items-center justify-between my-1.5">
             <Text className="text-sm text-gray-700 font-medium mb-2">1 km</Text>
             <Text className="text-sm text-gray-700 font-medium mb-2">
               {formatRadius(sliderTempValue)} km
@@ -395,9 +395,7 @@ const LandmarkDropdownFilters = ({
               10 km
             </Text>
           </View>
-          {/* <Text className="text-sm text-gray-700 font-medium mb-2">
-                  Selected: {sliderTempValue.toFixed(1)} km
-          </Text> */}
+
           <Slider
             className="h-8 mb-3"
             minimumValue={1000}
@@ -415,117 +413,5 @@ const LandmarkDropdownFilters = ({
     </View>
   );
 };
-
-const styles = StyleSheet.create({
-  container: {
-    width: "100%",
-    zIndex: 100,
-  },
-  inputContainer: {
-    flexDirection: "row",
-    alignItems: "center",
-    borderWidth: 1.5,
-    borderColor: "#E3E3E3",
-    borderRadius: 5,
-    backgroundColor: "#FFFFFF",
-    height: 40,
-    paddingHorizontal: 12,
-  },
-  iconPlaceholder: {
-    width: 20,
-    height: 20,
-    marginRight: 8,
-    backgroundColor: "#CCCCCC", // Replace with actual icon
-  },
-  textInput: {
-    flex: 1,
-    fontFamily: "System",
-    fontSize: 12,
-    color: "#333333",
-    padding: 0,
-  },
-  rightIcon: {
-    width: 20,
-    height: 20,
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  clearButtonText: {
-    fontSize: 14,
-    color: "#999",
-    fontWeight: "bold",
-  },
-  resultsContainer: {
-    position: "absolute",
-    top: 45,
-    left: 0,
-    right: 0,
-    backgroundColor: "white",
-    borderRadius: 5,
-    borderWidth: 1,
-    borderColor: "#E3E3E3",
-    maxHeight: 200,
-    zIndex: 1000,
-    elevation: 5,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 2,
-  },
-  resultsList: {
-    width: "100%",
-  },
-  resultItem: {
-    padding: 12,
-    borderBottomWidth: 1,
-    borderBottomColor: "#f0f0f0",
-  },
-  resultText: {
-    fontSize: 12,
-    color: "#333",
-  },
-  sliderContainer: {
-    marginTop: 16,
-    width: "100%",
-  },
-  radiusHeaderContainer: {
-    flexDirection: "row",
-    alignItems: "center",
-    marginBottom: 6,
-  },
-  radiusHeader: {
-    fontFamily: "System",
-    fontSize: 13,
-    fontWeight: "600",
-    color: "#666666",
-    marginRight: 10,
-  },
-  infoIconPlaceholder: {
-    width: 16,
-    height: 16,
-    backgroundColor: "#CCCCCC", // Replace with actual icon
-  },
-  radiusLabelsContainer: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    marginVertical: 6,
-  },
-  radiusLabel: {
-    fontFamily: "System",
-    fontSize: 12,
-    color: "#7A7B7C",
-  },
-  radiusLabelCurrent: {
-    fontFamily: "System",
-    fontSize: 12,
-    color: "#333",
-    fontWeight: "500",
-  },
-  slider: {
-    width: "100%",
-    height: 40,
-  },
-});
 
 export default LandmarkDropdownFilters;

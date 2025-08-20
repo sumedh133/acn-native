@@ -1,26 +1,24 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import {
   View,
   Text,
-  TouchableOpacity,
-  StyleSheet,
   TextInput,
-  Dimensions,
+  TouchableOpacity,
   Keyboard,
   ActivityIndicator,
+  Animated,
 } from "react-native";
-import { useInstantSearch, useSearchBox } from "react-instantsearch";
+import { useInstantSearch, useSearchBox, useSortBy } from "react-instantsearch";
 import { analytics } from "@/app/config/firebase";
 import { logEvent } from "@react-native-firebase/analytics";
 import { useSelector } from "react-redux";
 import { RootState } from "@/store/store";
-import DropdownRefinementList from "./DropdownRefinementList";
 import CustomCurrentRefinements from "./CustomCurrentRefinements";
-import { Property } from "../types";
-import { Feather, MaterialCommunityIcons } from "@expo/vector-icons";
+import DropdownSelect from "./Listing/Dropdown";
 import CloseIcon from "@/assets/icons/svg/CloseIcon";
-import SearchIcon from "@/assets/icons/svg/PropertiesPage/SearchIcon";
 import FilterIcon from "@/assets/icons/svg/PropertiesPage/FilterIcon";
+import NewSearchIcon from "@/assets/icons/svg/PropertiesPage/NewSearchIcon";
+import DropdownTailwind from "./DropdownTailwind";
 
 interface PropertyFiltersProps {
   handleToggleMoreFilters: () => void;
@@ -34,121 +32,213 @@ export default function PropertyFilters({
   setSelectedLandmark,
 }: PropertyFiltersProps) {
   const { query, refine } = useSearchBox();
+  const { refine: sortRefine, currentRefinement } = useSortBy({
+    items: [
+      { label: "Most Relevant", value: "properties" },
+      { label: "Price: Low to High", value: "properties_price_asc" },
+      { label: "Price: High to Low", value: "properties_price_desc" },
+      { label: "Newest First", value: "properties_date_desc" },
+      { label: "Oldest First", value: "properties_date_asc" },
+    ],
+  });
   const { status } = useInstantSearch();
   const [searchText, setSearchText] = useState(query);
   const [loading, setLoading] = useState(false);
-  const userType = useSelector((state: RootState) => state?.agent?.docData?.userType) || "free";
+  const [activeTab, setActiveTab] = useState<"resale" | "rental">("rental");
+  const [sortValue, setSortValue] = useState<string | null>(currentRefinement);
+  const slideAnim = useRef(
+    new Animated.Value(activeTab === "rental" ? 1 : 0)
+  ).current;
 
-  // Handle text input change
-  const handleSearchChange = (text: string) => {
-    setSearchText(text); // Update the local state with the new search text
-  };
+  const userType =
+    useSelector((state: RootState) => state?.agent?.docData?.userType) ||
+    "free";
 
-  // Handle search button press (refine action)
-  const handleSearchPress = () => {
-    Keyboard.dismiss(); // Dismiss the keyboard when searching
-    if (searchText.trim() != query) {
+  // Sort options
+  const sortOptions = [
+    { label: "Most Relevant", value: "properties" },
+    { label: "Price: Low to High", value: "properties_price_asc" },
+    { label: "Price: High to Low", value: "properties_price_desc" },
+    { label: "Newest First", value: "properties_date_desc" },
+    { label: "Oldest First", value: "properties_date_asc" },
+  ];
+
+  // Debounced refine
+  useEffect(() => {
+    const handler = setTimeout(() => {
+      if (searchText.trim() !== query) {
+        try {
+          logEvent(analytics, "property_search", {
+            event_category: "search",
+            event_label: "property",
+            search_query: searchText.trim(),
+            previous_query: query,
+            user_type: userType,
+          });
+        } catch (error) {
+          console.error("Error logging property search:", error);
+        }
+        refine(searchText.trim());
+      }
+    }, 500);
+
+    return () => {
+      clearTimeout(handler);
+    };
+  }, [searchText]);
+
+  // Handle sort changes
+  const handleSortChange = (value: string | null) => {
+    if (value) {
       try {
-        logEvent(analytics, 'property_search', {
-          event_category: 'search',
-          event_label: 'property',
-          search_query: searchText.trim(),
-          previous_query: query,
-          user_type: userType
+        logEvent(analytics, "property_sort_change", {
+          event_category: "sort",
+          event_label: "property",
+          sort_value: value,
+          user_type: userType,
         });
       } catch (error) {
-        console.error('Error logging property search:', error);
+        console.error("Error logging sort change:", error);
       }
-      
-      setLoading(true);
-      setTimeout(() => {
-        refine(searchText.trim()); // Trigger the refine action with the updated search text
-      }, 0);
+      sortRefine(value);
+      setSortValue(value);
     }
   };
 
   const handleClear = () => {
     try {
-      logEvent(analytics, 'clear_property_search', {
-        event_category: 'search',
-        event_label: 'clear',
+      logEvent(analytics, "clear_property_search", {
+        event_category: "search",
+        event_label: "clear",
         cleared_query: query,
-        user_type: userType
+        user_type: userType,
       });
     } catch (error) {
-      console.error('Error logging search clear:', error);
+      console.error("Error logging search clear:", error);
     }
 
-    Keyboard.dismiss(); // Dismiss the keyboard when clearing the search
-    setSearchText("".trim());
-    if ("" !== query) {
-      setLoading(true);
-      setTimeout(() => {
-        refine("");
-      }, 0);
+    Keyboard.dismiss();
+    setSearchText("");
+    if (query !== "") {
+      refine("");
     }
   };
 
+  useEffect(() => {
+    Animated.timing(slideAnim, {
+      toValue: activeTab === "rental" ? 1 : 0,
+      duration: 200,
+      useNativeDriver: false,
+    }).start();
+  }, [activeTab]);
+
   const handleMoreFilters = () => {
     try {
-      logEvent(analytics, 'open_property_filters', {
-        event_category: 'filters',
-        event_label: 'open',
+      logEvent(analytics, "open_property_filters", {
+        event_category: "filters",
+        event_label: "open",
         current_query: query,
         has_landmark: !!selectedLandmark,
-        user_type: userType
+        user_type: userType,
       });
     } catch (error) {
-      console.error('Error logging filter open:', error);
+      console.error("Error logging filter open:", error);
     }
     handleToggleMoreFilters();
   };
 
-  // Track search status changes
+  // Track status changes
   useEffect(() => {
-    if (status === 'loading') {
-      try {
-        logEvent(analytics, 'property_search_loading', {
-          event_category: 'search',
-          event_label: 'status',
-          query: query,
-          user_type: userType
-        });
-      } catch (error) {
-        console.error('Error logging search loading:', error);
-      }
-    }
     setLoading(status === "loading");
   }, [status]);
 
   return (
-    <View style={styles.container}>
-      <View style={[styles.content, styles.mobileContent]}>
-        {/* Search Box */}
-        <View style={styles.searchBox}>
+    <View className="px-4 pt-3">
+      {/* Top Row: Tabs + Sort */}
+      <View className="mb-3">
+        <View className="flex-row w-full rounded-full border border-[#153E3B] overflow-hidden p-1 relative">
+          <Animated.View
+            className="absolute top-1 bottom-1 w-1/2 bg-[#153E3B] rounded-full z-0"
+            style={{
+              left: slideAnim.interpolate({
+                inputRange: [0, 1],
+                outputRange: ["1.5%", "50.5%"],
+              }),
+              shadowColor: "#000",
+              shadowOffset: { width: 0, height: 0 },
+              shadowOpacity: 0.25,
+              shadowRadius: 4,
+              elevation: 4,
+            }}
+          />
+
+          <TouchableOpacity
+            className="flex-1 py-3 items-center justify-center rounded-full z-10"
+            onPress={() => setActiveTab("resale")}
+          >
+            <Text
+              className={`text-sm font-medium ${
+                activeTab === "resale" ? "text-white" : "text-gray-700"
+              }`}
+            >
+              Resale
+            </Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            className="flex-1 py-2 items-center justify-center rounded-full z-10"
+            onPress={() => setActiveTab("rental")}
+          >
+            <Text
+              className={`text-sm font-medium ${
+                activeTab === "rental" ? "text-white" : "text-gray-700"
+              }`}
+            >
+              Rental
+            </Text>
+          </TouchableOpacity>
+        </View>
+      </View>
+
+      {/* Search + Sort + Filters */}
+      <View className="flex-row justify-center items-center space-x-2">
+        {/* Search Input */}
+        <View className="flex-1 flex-row items-center bg-white border border-[#B5B3B3] rounded-lg px-3 h-10">
+          <NewSearchIcon style={{ marginRight: 8 }} />
           <TextInput
-            style={styles.searchInput}
-            placeholder="Search by project, location..."
+            className="flex-1 text-sm text-gray-700"
+            placeholder="Search by project, micro market"
             value={searchText}
-            onChangeText={handleSearchChange}
+            onChangeText={setSearchText}
             placeholderTextColor="#9CA3AF"
-            onSubmitEditing={handleSearchPress}
           />
         </View>
 
-        {/* Search Button */}
-        <View style={styles.filters}>
-          <TouchableOpacity onPress={handleSearchPress}>
-            {loading ? <ActivityIndicator color="#153E3B" /> : <SearchIcon />}
-          </TouchableOpacity>
-        </View>
+        {/* Sort Dropdown */}
+        {/* <View className="w-10 flex justify-center items-center">
+          <DropdownTailwind
+            value={sortValue}
+            setValue={handleSortChange}
+            options={sortOptions}
+            placeholder="Sort"
+            searchable={false}
+            containerClassName="w-full border border-[#B5B3B3] "
+          />
+        </View> */}
+
+        {/* Loading Indicator */}
+        {loading && (
+          <View className="flex-row items-center">
+            <ActivityIndicator color="#153E3B" />
+          </View>
+        )}
 
         {/* Clear Button */}
         {searchText.trim() && (
-          <View style={styles.filters}>
+          <View className="flex-row items-center">
             <TouchableOpacity
               onPress={handleClear}
-              style={styles.clearButton}
+              className="h-10 w-10 justify-center items-center border border-red-500 rounded-md bg-red-500"
               disabled={loading}
             >
               <CloseIcon strokeColor="white" />
@@ -156,17 +246,15 @@ export default function PropertyFilters({
           </View>
         )}
 
-        {/* More Filters Button */}
-        <View style={styles.filters}>
-          <TouchableOpacity
-            onPress={handleMoreFilters}
-          >
+        {/* Filter Button */}
+        <View className="flex-row items-center">
+          <TouchableOpacity onPress={handleMoreFilters}>
             <FilterIcon />
           </TouchableOpacity>
         </View>
       </View>
-      <View style={styles.refinements}>
-        {/* Applied Filters */}
+
+      <View className="mt-2 flex-row -ml-3">
         <CustomCurrentRefinements
           selectedLandmark={selectedLandmark}
           setSelectedLandmark={setSelectedLandmark}
@@ -175,104 +263,3 @@ export default function PropertyFilters({
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    width: "100%",
-    borderBottomWidth: 0,
-    borderBottomColor: "#E5E7EB",
-    alignSelf: "center",
-    // backgroundColor: '#fff',
-    // paddingTop: 16,
-    padding: 16,
-    // marginBottom: 16,
-    borderRadius: 16,
-    // gap: 6,
-  },
-  contentWrapper: {
-    flexDirection: "column",
-    // paddingHorizontal: 16,
-    // paddingVertical: 8,
-  },
-  content: {
-    flexDirection: "column",
-    alignItems: "center",
-    gap: 8,
-  },
-  searchBox: {
-    flex: 1,
-  },
-  searchInput: {
-    height: 40, // fixed height
-    backgroundColor: "#FFFFFF",
-    borderWidth: 1,
-    borderColor: "#E5E7EB",
-    borderRadius: 6,
-    paddingHorizontal: 12,
-    fontSize: 14,
-    fontFamily: "Montserrat_400Regular",
-    color: "#374151",
-  },
-  filters: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    alignContent: "center",
-    alignSelf: "center",
-  },
-  searchButton: {
-    height: 40,
-    flexDirection: "column",
-    alignItems: "center",
-    borderWidth: 1,
-    borderColor: "#E5E7EB",
-    borderRadius: 6,
-    paddingHorizontal: 8,
-    paddingVertical: 8,
-    backgroundColor: "#153E3B",
-  },
-  clearButton: {
-    height: 40,
-    width: 40,
-    display: "flex",
-    flexDirection: "row",
-    alignItems: "center",
-    alignSelf: "center",
-    alignContent: "center",
-    justifyContent: "center",
-    borderWidth: 1,
-    borderColor: "#ff0000",
-    borderRadius: 6,
-    paddingHorizontal: 8,
-    paddingVertical: 8,
-    backgroundColor: "#EF4444",
-  },
-  moreFiltersButton: {
-    height: 40,
-    flexDirection: "column",
-    alignItems: "center",
-    borderWidth: 1,
-    borderColor: "#E5E7EB",
-    borderRadius: 6,
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-    backgroundColor: "#FFFFFF",
-  },
-  moreFiltersText: {
-    fontFamily: "Montserrat_500Medium",
-    alignContent: "center",
-    justifyContent: "center",
-    top: 10,
-    fontSize: 14,
-    color: "#374151",
-  },
-  refinements: {
-    marginTop: 8,
-    flexDirection: "row",
-    left: -12,
-  },
-  mobileContent: {
-    flexDirection: "row",
-    justifyContent: "center",
-  },
-});
