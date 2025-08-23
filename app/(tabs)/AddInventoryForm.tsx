@@ -1316,7 +1316,7 @@ const AddInventoryForm = () => {
             >
               <ArrowLeftIcon />
             </TouchableOpacity>
-            <Text style={styles.headerTitle}>Add Inventory</Text>
+            <Text style={styles.headerTitle} className="text-red-200">Add Property</Text>
           </View>
 
           <TouchableOpacity style={styles.headerRight} onPress={handleClear}>
