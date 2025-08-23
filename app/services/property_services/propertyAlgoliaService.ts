@@ -10,7 +10,7 @@ const INDEX_NAME = "acnTest";
 
 export interface SearchFilters {
   type?: string[];
-  
+  // Add more filters as needed
 }
 
 export interface SearchParams {
@@ -31,78 +31,80 @@ export interface AlgoliaSearchResponse {
   facets?: Record<string, Record<string, number>>;
 }
 
-export interface FacetValue {
-  value: string;
-  count: number;
-  highlighted?: string;
+export interface InfiniteScrollState {
+  allResults: any[]; // Accumulated results from all pages
+  currentPage: number; // Next page to fetch
+  totalPages: number;
+  totalHits: number;
+  hasMore: boolean;
+  loading: boolean; // Initial search loading
+  loadingMore: boolean; // Loading next page
+  error: string | null;
+  query: string;
+  filters: SearchFilters;
+  sortBy?: string;
 }
 
-const getClientAndIndex = (sortBy?: string) => {
-  if (!sortBy || sortBy === "relevance") {
-    return { searchClient, indexName: INDEX_NAME };
-  }
+class AlgoliaInfiniteSearchService {
+  private currentRequest: AbortController | null = null;
+  private loadMoreRequest: AbortController | null = null;
 
-  const sortIndexMap: Record<string, string> = {
-    price_asc: `${INDEX_NAME}_price_asc`,
-    price_desc: `${INDEX_NAME}_price_desc`,
-    date_desc: `${INDEX_NAME}_date_desc`,
-    date_asc: `${INDEX_NAME}_date_asc`,
-  };
+  // Initialize empty state
+  getInitialState = (): InfiniteScrollState => ({
+    allResults: [],
+    currentPage: 0,
+    totalPages: 0,
+    totalHits: 0,
+    hasMore: false,
+    loading: false,
+    loadingMore: false,
+    error: null,
+    query: "",
+    filters: {},
+  });
 
-  return { searchClient, indexName: sortIndexMap[sortBy] || INDEX_NAME };
-};
+  // Build filter string (same as before)
+  private buildFilterString = (filters: SearchFilters): string => {
+    const filterParts: string[] = [];
 
-function memoizeBuildFilterString(fn: (filters: SearchFilters) => string) {
-  const cache = new Map<string, string>();
-  return (filters: SearchFilters) => {
-    const key = JSON.stringify(filters);
-    if (cache.has(key)) {
-      return cache.get(key) as string;
+    if (filters.type && filters.type.length > 0) {
+      const typeFilters = filters.type
+        .map((type) => `type:'${type}'`)
+        .join(" OR ");
+      filterParts.push(`(${typeFilters})`);
     }
-    const result = fn(filters);
-    cache.set(key, result);
-    return result;
+
+    return filterParts.join(" AND ");
   };
-}
 
-const _buildFilterString = (filters: SearchFilters): string => {
-  const filterParts: string[] = [];
+  // Get client and index (same as before)
+  private getClientAndIndex = (sortBy?: string) => {
+    if (!sortBy || sortBy === "relevance") {
+      return { searchClient, indexName: INDEX_NAME };
+    }
 
-  if (filters.type && filters.type.length > 0) {
-    const typeFilters = filters.type
-      .map((type) => `type:'${type}'`)
-      .join(" OR ");
-    filterParts.push(`(${typeFilters})`);
-  }
+    const sortIndexMap: Record<string, string> = {
+      price_asc: `${INDEX_NAME}_price_asc`,
+      price_desc: `${INDEX_NAME}_price_desc`,
+      date_desc: `${INDEX_NAME}`,
+    };
 
-  return filterParts.join(" AND ");
-};
+    return { searchClient, indexName: sortIndexMap[sortBy] || INDEX_NAME };
+  };
 
-export const buildFilterString = memoizeBuildFilterString(_buildFilterString);
-
-export const searchProperties = async (
-  params: SearchParams = {}
-): Promise<AlgoliaSearchResponse> => {
-  try {
+  // Core search method
+  private performSearch = async (params: SearchParams): Promise<AlgoliaSearchResponse> => {
     const {
       query = "",
       filters = {},
       page = 0,
-      hitsPerPage = 50,
+      hitsPerPage = 20,
       sortBy,
     } = params;
-    const { searchClient, indexName } = getClientAndIndex(sortBy);
-    const filterString = buildFilterString(filters);
 
-    console.log("Algolia search params:", {
-      indexName,
-      query,
-      page,
-      hitsPerPage,
-      filters: filterString,
-    });
+    const { searchClient, indexName } = this.getClientAndIndex(sortBy);
+    const filterString = this.buildFilterString(filters);
 
-    // Fixed: Use proper search method with correct parameter names
     const response = await searchClient.search([
       {
         indexName,
@@ -112,7 +114,8 @@ export const searchProperties = async (
           hitsPerPage,
           filters: filterString,
           facets: ["type"],
-          //   analytics: true,
+          maxValuesPerFacet: 100,
+          analytics: true,
         },
       },
     ]);
@@ -124,59 +127,176 @@ export const searchProperties = async (
       nbHits: result.nbHits || 0,
       page: result.page || 0,
       nbPages: result.nbPages || 0,
-      hitsPerPage: result.hitsPerPage || 50,
+      hitsPerPage: result.hitsPerPage || 20,
       processingTimeMS: result.processingTimeMS || 0,
       facets: result.facets || {},
     };
-  } catch (error) {
-    console.error("Algolia search error:", error);
-    throw new Error(
-      `Search failed: ${
-        error instanceof Error ? error.message : "Unknown error"
-      }`
-    );
-  }
-};
+  };
 
-// Test function to verify everything works
-export const testSearch = async () => {
-  try {
-    // Test 1: Basic search
-    console.log("Testing basic search...");
-    const basicResult = await searchProperties({
-      query: "brigade",
-      hitsPerPage: 10,
-    });
-    console.log("Basic search result:", {
-      nbHits: basicResult.nbHits,
-      hitsCount: basicResult.hits.length,
-    });
+  // Initial search - resets everything
+  search = async (
+    query: string = "",
+    filters: SearchFilters = {},
+    sortBy?: string,
+    hitsPerPage: number = 20
+  ): Promise<InfiniteScrollState> => {
+    // Cancel any ongoing requests
+    if (this.currentRequest) {
+      this.currentRequest.abort();
+    }
+    if (this.loadMoreRequest) {
+      this.loadMoreRequest.abort();
+    }
 
-    // Test 2: Search with filters
-    console.log("Testing search with filters...");
-    const filteredResult = await searchProperties({
-      query: "",
-      filters: { type: ["resale"] }, // Adjust based on your data
-      hitsPerPage: 5,
-    });
-    console.log("Filtered search result:", {
-      nbHits: filteredResult.nbHits,
-      hitsCount: filteredResult.hits.length,
-    });
+    this.currentRequest = new AbortController();
 
-    // Test 3: Empty search (get all)
-    console.log("Testing empty search...");
-    const allResult = await searchProperties({
-      hitsPerPage: 3,
-    });
-    console.log("All results:", {
-      nbHits: allResult.nbHits,
-      hitsCount: allResult.hits.length,
-    });
+    try {
+      const response = await this.performSearch({
+        query,
+        filters,
+        page: 0,
+        hitsPerPage,
+        sortBy,
+      });
 
-    return true;
-  } catch (error) {
-    console.error("Test failed:", error);
-    return false;
-  }
+      return {
+        allResults: response.hits,
+        currentPage: 1, // Next page to fetch
+        totalPages: response.nbPages,
+        totalHits: response.nbHits,
+        hasMore: response.page < response.nbPages - 1,
+        loading: false,
+        loadingMore: false,
+        error: null,
+        query,
+        filters,
+        sortBy,
+      };
+    } catch (error : any) {
+      if (error.name === 'AbortError') {
+        throw error; // Let the caller handle aborted requests
+      }
+      
+      return {
+        allResults: [],
+        currentPage: 0,
+        totalPages: 0,
+        totalHits: 0,
+        hasMore: false,
+        loading: false,
+        loadingMore: false,
+        error: error instanceof Error ? error.message : "Search failed",
+        query,
+        filters,
+        sortBy,
+      };
+    }
+  };
+
+  // Load next page and append to existing results
+  loadMore = async (
+    currentState: InfiniteScrollState,
+    hitsPerPage: number = 20
+  ): Promise<InfiniteScrollState> => {
+    // Don't load if already loading or no more results
+    if (currentState.loadingMore || !currentState.hasMore) {
+      return currentState;
+    }
+
+    // Cancel any ongoing load more request
+    if (this.loadMoreRequest) {
+      this.loadMoreRequest.abort();
+    }
+
+    this.loadMoreRequest = new AbortController();
+
+    try {
+      const response = await this.performSearch({
+        query: currentState.query,
+        filters: currentState.filters,
+        page: currentState.currentPage,
+        hitsPerPage,
+        sortBy: currentState.sortBy,
+      });
+
+      return {
+        ...currentState,
+        allResults: [...currentState.allResults, ...response.hits],
+        currentPage: currentState.currentPage + 1,
+        hasMore: response.page < response.nbPages - 1,
+        loadingMore: false,
+        error: null,
+      };
+    } catch (error : any) {
+      if (error.name === 'AbortError') {
+        throw error;
+      }
+
+      return {
+        ...currentState,
+        loadingMore: false,
+        error: error instanceof Error ? error.message : "Load more failed",
+      };
+    }
+  };
+
+  // Reset search state
+  reset = (): InfiniteScrollState => {
+    if (this.currentRequest) {
+      this.currentRequest.abort();
+    }
+    if (this.loadMoreRequest) {
+      this.loadMoreRequest.abort();
+    }
+
+    return this.getInitialState();
+  };
+
+  // Get facet values for filters
+  getFacetValues = async (facetName: string): Promise<Array<{value: string, count: number}>> => {
+    try {
+      const response = await searchClient.search([
+        {
+          indexName: INDEX_NAME,
+          params: {
+            query: "",
+            hitsPerPage: 0,
+            facets: [facetName],
+            maxValuesPerFacet: 100,
+          },
+        },
+      ]);
+
+      const result = response.results[0] as SearchResponse<any>;
+      const facetValues = result.facets?.[facetName] || {};
+
+      return Object.entries(facetValues)
+        .map(([value, count]) => ({
+          value,
+          count: count as number,
+        }))
+        .sort((a, b) => b.count - a.count);
+    } catch (error) {
+      console.error("Get facet values error:", error);
+      return [];
+    }
+  };
+
+  // Cleanup method
+  cleanup = () => {
+    if (this.currentRequest) {
+      this.currentRequest.abort();
+    }
+    if (this.loadMoreRequest) {
+      this.loadMoreRequest.abort();
+    }
+  };
+}
+
+// Export singleton instance
+export const algoliaInfiniteSearch = new AlgoliaInfiniteSearchService();
+
+// Export types and class for easier testing
+export {
+  AlgoliaInfiniteSearchService,
 };

@@ -19,7 +19,6 @@ import CloseIcon from "@/assets/icons/svg/CloseIcon";
 import FilterIcon from "@/assets/icons/svg/PropertiesPage/FilterIcon";
 import NewSearchIcon from "@/assets/icons/svg/PropertiesPage/NewSearchIcon";
 import DropdownTailwind from "./DropdownTailwind";
-import { testSearch } from "../services/property_services/propertyAlgoliaService";
 
 interface PropertyFiltersProps {
   handleToggleMoreFilters: () => void;
