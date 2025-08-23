@@ -30,6 +30,7 @@ import { SafeAreaProvider, SafeAreaView } from "react-native-safe-area-context";
 import CloseIcon from "@/assets/icons/svg/CloseIcon";
 import { Landmark } from "../types";
 import CustomCurrentRefinements from "./CustomCurrentRefinements";
+import NewSearchIcon from "@/assets/icons/svg/PropertiesPage/NewSearchIcon";
 
 export interface RangeState {
   start: (number | undefined)[];
@@ -272,14 +273,16 @@ const MoreFilters = ({
     };
 
     return (
-      <View className="w-full">
+      <View className="w-full mb-2">
         {attribute === "micromarket" && (
-          <View className="mb-3">
+          <View className="flex-row items-center  w-full border px-2 border-gray-300 rounded-md h-10 pl-3 bg-white ">
+            <NewSearchIcon strokeColor="#726C6C" />
             <TextInput
-              className="w-full p-2 border border-gray-300 rounded-md bg-white text-sm"
-              placeholder="Search categories..."
+              className="text-[12px] ml-2"
+              placeholder="Search micromarket..."
               value={searchQuery}
               onChangeText={handleSearch}
+              style={{ fontFamily: "Lato_400Regular" }}
             />
           </View>
         )}
@@ -403,25 +406,23 @@ const MoreFilters = ({
 
         <ScrollView className="flex-1 px-4 py-2 mb-2">
           {/* Location Filter - Lower z-index */}
-          <View
-            className="border border-gray-200 rounded-xl mb-4"
-            style={{ zIndex: 40 }}
-          >
+          <View className="" style={{ zIndex: 40 }}>
             {/* Location Tabs */}
-            <View className="bg-gray-100 p-1 rounded-t-xl">
+            <View className="bg-[#EFF0F1] p-2 rounded-[8px]">
               <View className="flex-row">
                 <TouchableOpacity
-                  className={`flex-1 py-3 px-4 rounded-md ${
-                    selectedLocationFilter === "landmark" ? "bg-white" : ""
+                  className={`flex-1 py-3 px-4 rounded-[5px] ${
+                    selectedLocationFilter === "landmark" ? "bg-[#205E59]" : ""
                   }`}
                   onPress={() => handleLocationFilterChange("landmark")}
                 >
                   <Text
                     className={`text-center font-medium ${
                       selectedLocationFilter === "landmark"
-                        ? "text-gray-800"
-                        : "text-gray-500"
+                        ? "text-white"
+                        : "text-black"
                     }`}
+                    style={{ fontFamily: "Montserrat_600SemiBold" }}
                   >
                     Landmark
                   </Text>
@@ -429,49 +430,51 @@ const MoreFilters = ({
 
                 <TouchableOpacity
                   className={`flex-1 py-3 px-4 rounded-md ${
-                    selectedLocationFilter === "micromarket" ? "bg-white" : ""
+                    selectedLocationFilter === "micromarket"
+                      ? "bg-[#205E59]"
+                      : ""
                   }`}
                   onPress={() => handleLocationFilterChange("micromarket")}
                 >
                   <Text
                     className={`text-center font-medium ${
                       selectedLocationFilter === "micromarket"
-                        ? "text-gray-800"
-                        : "text-gray-500"
+                        ? "text-white"
+                        : "text-black"
                     }`}
+                    style={{ fontFamily: "Montserrat_600SemiBold" }}
                   >
                     Micromarket
                   </Text>
                 </TouchableOpacity>
               </View>
             </View>
-
-            {/* Search Input with proper z-index */}
-            <View className="p-4">
-              {selectedLocationFilter === "landmark" && (
-                <View style={{ zIndex: 15 }}>
-                  <LandmarkDropdownFilters
-                    selectedLandmark={selectedLandmark}
-                    setSelectedLandmark={setSelectedLandmark}
-                  />
-                </View>
-              )}
-
-              {selectedLocationFilter === "micromarket" && (
-                <SearchableRefinementList
-                  items={micromarketItems}
-                  refine={refineMicromarket}
-                  attribute="micromarket"
+          </View>
+          {/* Search Input with proper z-index */}
+          <View className="py-2.5">
+            {selectedLocationFilter === "landmark" && (
+              <View style={{ zIndex: 1500 }}>
+                <LandmarkDropdownFilters
+                  selectedLandmark={selectedLandmark}
+                  setSelectedLandmark={setSelectedLandmark}
                 />
-              )}
-            </View>
+              </View>
+            )}
+
+            {selectedLocationFilter === "micromarket" && (
+              <SearchableRefinementList
+                items={micromarketItems}
+                refine={refineMicromarket}
+                attribute="micromarket"
+              />
+            )}
           </View>
 
           {/* Asset Type & Configuration - First Row */}
           <View className="flex-row flex-wrap justify-between mb-4">
             {/* Asset Type Dropdown - Now with higher z-index */}
             <View
-              className="p-4 border border-gray-200 rounded-xl w-[48%] "
+              className="p-4 border border-gray-200 rounded-xl w-[48%]"
               style={{ zIndex: 30 }}
             >
               <Text

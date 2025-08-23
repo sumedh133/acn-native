@@ -17,6 +17,7 @@ import { analytics } from "@/app/config/firebase";
 import { logEvent } from "@react-native-firebase/analytics";
 import { useSelector } from "react-redux";
 import { RootState } from "@/store/store";
+import LocationSearchBarIcon from "@/assets/icons/svg/PropertiesPage/locationSearchBarIcon";
 // import { PLACES_API_KEY } from '@env';
 
 // Define types for API responses
@@ -321,17 +322,18 @@ const LandmarkDropdownFilters = ({
   };
 
   return (
-    <View className="w-full z-[100]">
+    <View className="w-full z-[2000]">
       {/* Search Input */}
       <View className="flex-row items-center border-[1.5px] border-gray-200 rounded-md bg-white h-10 px-3">
-        <Ionicons name="location-outline" size={20} color="#6B7280" />
+        <LocationSearchBarIcon width={20} height={20} strokeColor="#153E3B" />
         <TextInput
-          className="flex-1 text-xs text-gray-800 p-0 ml-2"
-          placeholder="Search landmarks"
+          className="flex-1 text-[12px] text-gray-800 p-0 ml-2"
+          placeholder="Search by landmark..."
           placeholderTextColor="#7A7B7C"
           value={searchQuery}
           onChangeText={handleSearchInputChange}
           onFocus={handleSearchFocus}
+          style={{ fontFamily: "Lato_400Regular" }}
         />
 
         {isLoading ? (
@@ -348,7 +350,7 @@ const LandmarkDropdownFilters = ({
 
       {/* Search Results Dropdown */}
       {showResults && searchResults.length > 0 && (
-        <View className="absolute top-[45px] left-0 right-0 bg-white rounded-md border border-gray-200 max-h-[200px] z-[1000] shadow-sm">
+        <View className="absolute top-[45px] left-0 right-0 bg-white rounded-md border border-gray-200 max-h-[200px] z-[2000] shadow-sm">
           <FlatList
             data={searchResults}
             keyExtractor={(item) => item.place_id}
