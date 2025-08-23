@@ -19,6 +19,7 @@ import CloseIcon from "@/assets/icons/svg/CloseIcon";
 import FilterIcon from "@/assets/icons/svg/PropertiesPage/FilterIcon";
 import NewSearchIcon from "@/assets/icons/svg/PropertiesPage/NewSearchIcon";
 import DropdownTailwind from "./DropdownTailwind";
+import { testSearch } from "../services/property_services/propertyAlgoliaService";
 
 interface PropertyFiltersProps {
   handleToggleMoreFilters: () => void;
@@ -44,7 +45,7 @@ export default function PropertyFilters({
   const { status } = useInstantSearch();
   const [searchText, setSearchText] = useState(query);
   const [loading, setLoading] = useState(false);
-  const [activeTab, setActiveTab] = useState<"resale" | "rental">("rental");
+  const [activeTab, setActiveTab] = useState<"resale" | "rental">("resale");
   const [sortValue, setSortValue] = useState<string | null>(currentRefinement);
   const slideAnim = useRef(
     new Animated.Value(activeTab === "rental" ? 1 : 0)
@@ -155,49 +156,47 @@ export default function PropertyFilters({
   return (
     <View className="px-4 pt-3">
       {/* Top Row: Tabs + Sort */}
-      <View className="mb-3">
-        <View className="flex-row w-full rounded-full border border-[#153E3B] overflow-hidden p-1 relative">
-          <Animated.View
-            className="absolute top-1 bottom-1 w-1/2 bg-[#153E3B] rounded-full z-0"
-            style={{
-              left: slideAnim.interpolate({
-                inputRange: [0, 1],
-                outputRange: ["1.5%", "50.5%"],
-              }),
-              shadowColor: "#000",
-              shadowOffset: { width: 0, height: 0 },
-              shadowOpacity: 0.25,
-              shadowRadius: 4,
-              elevation: 4,
-            }}
-          />
+      <View className="flex-row w-full rounded-full border border-[#153E3B] overflow-hidden p-1 relative mb-3">
+        <Animated.View
+          className="absolute top-1 bottom-1 w-1/2 bg-[#153E3B] rounded-full z-0"
+          style={{
+            left: slideAnim.interpolate({
+              inputRange: [0, 1],
+              outputRange: ["1.5%", "50.5%"],
+            }),
+            shadowColor: "#000",
+            shadowOffset: { width: 0, height: 0 },
+            shadowOpacity: 0.25,
+            shadowRadius: 4,
+            elevation: 4,
+          }}
+        />
 
-          <TouchableOpacity
-            className="flex-1 py-3 items-center justify-center rounded-full z-10"
-            onPress={() => setActiveTab("resale")}
+        <TouchableOpacity
+          className="flex-1 py-3 items-center justify-center rounded-full z-10"
+          onPress={() => setActiveTab("resale")}
+        >
+          <Text
+            className={`text-sm font-medium ${
+              activeTab === "resale" ? "text-white" : "text-gray-700"
+            }`}
           >
-            <Text
-              className={`text-sm font-medium ${
-                activeTab === "resale" ? "text-white" : "text-gray-700"
-              }`}
-            >
-              Resale
-            </Text>
-          </TouchableOpacity>
+            Resale
+          </Text>
+        </TouchableOpacity>
 
-          <TouchableOpacity
-            className="flex-1 py-2 items-center justify-center rounded-full z-10"
-            onPress={() => setActiveTab("rental")}
+        <TouchableOpacity
+          className="flex-1 py-2 items-center justify-center rounded-full z-10"
+          onPress={() => setActiveTab("rental")}
+        >
+          <Text
+            className={`text-sm font-medium ${
+              activeTab === "rental" ? "text-white" : "text-gray-700"
+            }`}
           >
-            <Text
-              className={`text-sm font-medium ${
-                activeTab === "rental" ? "text-white" : "text-gray-700"
-              }`}
-            >
-              Rental
-            </Text>
-          </TouchableOpacity>
-        </View>
+            Rental
+          </Text>
+        </TouchableOpacity>
       </View>
 
       {/* Search + Sort + Filters */}
