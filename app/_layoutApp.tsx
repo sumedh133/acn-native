@@ -19,6 +19,7 @@ import {
   TouchableOpacity,
   useColorScheme,
   View,
+  Animated,
 } from "react-native";
 import {
   useFonts,
@@ -317,9 +318,9 @@ export default function LayoutApp() {
     if (
       agentData &&
       (agentData?.onboardingComplete === true ||
-      agentData?.userType.toLowerCase() === "premium" ||
-      agentData?.userType.toLowerCase() === "trial" ||
-      agentData?.trialUsed === true) &&
+        agentData?.userType.toLowerCase() === "premium" ||
+        agentData?.userType.toLowerCase() === "trial" ||
+        agentData?.trialUsed === true) &&
       agentData?.userType.toLowerCase() !== "basic"
     ) {
       setShowOnboarding(false);
@@ -383,6 +384,8 @@ export default function LayoutApp() {
 
   if (!isConnectedToInternet) return <Offline />;
 
+  const scrollY = new Animated.Value(0);
+
   return (
     <View style={{ flex: 1 }} onLayout={onLayoutRootView}>
       <VersionChecker />
@@ -434,6 +437,11 @@ export default function LayoutApp() {
           name="(tabs)/index"
           options={{ headerShown: false }}
           initialParams={{ showFooter: false }}
+        />
+        <Stack.Screen
+          name="(pages)/ComingSoon"
+          options={{ headerShown: false }}
+          // initialParams={{ showFooter: false }}
         />
         <Stack.Screen
           name="(tabs)/properties"

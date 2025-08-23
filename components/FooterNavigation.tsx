@@ -3,7 +3,6 @@ import ActiveNotificationIcon from "@/assets/icons/svg/Footer/ActiveNotification
 import ActivePropertiesIcon from "@/assets/icons/svg/Footer/ActivePropertiesIcon";
 import ActiveRequirementsIcon from "@/assets/icons/svg/Footer/ActiveRequirementsIcon";
 import DashboardIcon from "@/assets/icons/svg/Footer/DashboardIcon";
-import NotificationIcon from "@/assets/icons/svg/Footer/NotificationIcon";
 import PropertiesIcon from "@/assets/icons/svg/Footer/PropertiesIcon";
 import RequirementsIcon from "@/assets/icons/svg/Footer/RequirementsIcon";
 import PlusIcon from "@/assets/icons/svg/Common/PlusIcon";
@@ -24,6 +23,9 @@ import { logEvent } from "@react-native-firebase/analytics";
 import { useSelector } from "react-redux";
 import { RootState } from "@/store/store";
 import useNotification from "@/app/components/Notification/useNotification";
+
+// icons import
+import MyBusiness from "@/assets/icons/svg/Footer/MyBuisness.svg";
 
 interface MenuItem {
   title: string;
@@ -52,9 +54,9 @@ const menuItems: MenuItem[] = [
     activeIcon: null,
   },
   {
-    title: "Notifications",
-    path: "/NotificationPage",
-    icon: <NotificationIcon width={24} height={24} />,
+    title: "My Business",
+    path: "/(pages)/ComingSoon",
+    icon: <MyBusiness width={24} height={24} />,
     activeIcon: <ActiveNotificationIcon width={24} height={24} />,
   },
   {
@@ -265,7 +267,6 @@ const FooterNavigation = () => {
               </TouchableOpacity>
             );
           }
-          const isNotificationsTab = item?.path === "/NotificationPage";
           return (
             <TouchableOpacity
               onPress={() => handleNavigation(item?.path)}
@@ -275,9 +276,6 @@ const FooterNavigation = () => {
                 {active && <View style={styles.activeBar}></View>}
                 <View style={{ position: "relative" }}>
                   {active ? item?.activeIcon : item?.icon}
-                  {isNotificationsTab && unreadCount > 0 && (
-                    <View style={styles.notificationDot} />
-                  )}
                 </View>
                 <Text style={active ? styles.itemActiveText : styles.itemText}>
                   {item?.title}
