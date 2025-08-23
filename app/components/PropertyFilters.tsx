@@ -8,44 +8,45 @@ import {
   ActivityIndicator,
   Animated,
 } from "react-native";
-import { useInstantSearch, useSearchBox, useSortBy } from "react-instantsearch";
 import { analytics } from "@/app/config/firebase";
 import { logEvent } from "@react-native-firebase/analytics";
 import { useSelector } from "react-redux";
 import { RootState } from "@/store/store";
-import CustomCurrentRefinements from "./CustomCurrentRefinements";
-import DropdownSelect from "./Listing/Dropdown";
+// import CustomCurrentRefinements from "./CustomCurrentRefinements";
 import CloseIcon from "@/assets/icons/svg/CloseIcon";
 import FilterIcon from "@/assets/icons/svg/PropertiesPage/FilterIcon";
 import NewSearchIcon from "@/assets/icons/svg/PropertiesPage/NewSearchIcon";
-import DropdownTailwind from "./DropdownTailwind";
+import { SearchFilters } from "../services/property_services/propertyAlgoliaService";
 
 interface PropertyFiltersProps {
   handleToggleMoreFilters: () => void;
   selectedLandmark?: any;
-  setSelectedLandmark?: (landmark: any) => void;
+  setSelectedLandmark: (landmark: any) => void;
+  // New props from the hook
+  query: string;
+  onQueryChange: (query: string) => void;
+  filters: SearchFilters;
+  onFiltersChange: (filters: SearchFilters) => void;
+  sortBy?: string;
+  onSortChange: (sortBy: string) => void;
+  loading?: boolean;
 }
 
 export default function PropertyFilters({
   handleToggleMoreFilters,
   selectedLandmark,
   setSelectedLandmark,
+  query,
+  onQueryChange,
+  filters,
+  onFiltersChange,
+  sortBy,
+  onSortChange,
+  loading = false,
 }: PropertyFiltersProps) {
-  const { query, refine } = useSearchBox();
-  const { refine: sortRefine, currentRefinement } = useSortBy({
-    items: [
-      { label: "Most Relevant", value: "properties" },
-      { label: "Price: Low to High", value: "properties_price_asc" },
-      { label: "Price: High to Low", value: "properties_price_desc" },
-      { label: "Newest First", value: "properties_date_desc" },
-      { label: "Oldest First", value: "properties_date_asc" },
-    ],
-  });
-  const { status } = useInstantSearch();
   const [searchText, setSearchText] = useState(query);
-  const [loading, setLoading] = useState(false);
   const [activeTab, setActiveTab] = useState<"resale" | "rental">("resale");
-  const [sortValue, setSortValue] = useState<string | null>(currentRefinement);
+  const [sortValue, setSortValue] = useState<string | null>(sortBy || null);
   const slideAnim = useRef(
     new Animated.Value(activeTab === "rental" ? 1 : 0)
   ).current;
@@ -54,16 +55,21 @@ export default function PropertyFilters({
     useSelector((state: RootState) => state?.agent?.docData?.userType) ||
     "free";
 
-  // Sort options
+  // Sort options - updated to match your service's sort mapping
   const sortOptions = [
-    { label: "Most Relevant", value: "properties" },
-    { label: "Price: Low to High", value: "properties_price_asc" },
-    { label: "Price: High to Low", value: "properties_price_desc" },
-    { label: "Newest First", value: "properties_date_desc" },
-    { label: "Oldest First", value: "properties_date_asc" },
+    { label: "Most Relevant", value: "relevance" },
+    { label: "Price: Low to High", value: "price_asc" },
+    { label: "Price: High to Low", value: "price_desc" },
+    { label: "Newest First", value: "date_desc" },
+    { label: "Oldest First", value: "date_asc" },
   ];
 
-  // Debounced refine
+  // Sync local search text with external query
+  useEffect(() => {
+    setSearchText(query);
+  }, [query]);
+
+  // Debounced search - now calls the hook's onQueryChange
   useEffect(() => {
     const handler = setTimeout(() => {
       if (searchText.trim() !== query) {
@@ -78,14 +84,14 @@ export default function PropertyFilters({
         } catch (error) {
           console.error("Error logging property search:", error);
         }
-        refine(searchText.trim());
+        onQueryChange(searchText.trim());
       }
     }, 500);
 
     return () => {
       clearTimeout(handler);
     };
-  }, [searchText]);
+  }, [searchText, query, onQueryChange, userType]);
 
   // Handle sort changes
   const handleSortChange = (value: string | null) => {
@@ -100,9 +106,29 @@ export default function PropertyFilters({
       } catch (error) {
         console.error("Error logging sort change:", error);
       }
-      sortRefine(value);
+      onSortChange(value);
       setSortValue(value);
     }
+  };
+
+  // Handle property type tab change
+  const handleTabChange = (tab: "resale" | "rental") => {
+    setActiveTab(tab);
+    onFiltersChange({ type: [tab] });
+
+    try {
+      logEvent(analytics, "property_type_change", {
+        event_category: "navigation",
+        event_label: "property_type",
+        property_type: tab,
+        user_type: userType,
+      });
+    } catch (error) {
+      console.error("Error logging property type change:", error);
+    }
+
+    // You might want to trigger a new search or update filters based on property type
+    // For now, this just changes the UI. You can extend this to affect the actual search.
   };
 
   const handleClear = () => {
@@ -120,7 +146,7 @@ export default function PropertyFilters({
     Keyboard.dismiss();
     setSearchText("");
     if (query !== "") {
-      refine("");
+      onQueryChange("");
     }
   };
 
@@ -139,6 +165,7 @@ export default function PropertyFilters({
         event_label: "open",
         current_query: query,
         has_landmark: !!selectedLandmark,
+        active_filters: Object.keys(filters).length,
         user_type: userType,
       });
     } catch (error) {
@@ -146,11 +173,6 @@ export default function PropertyFilters({
     }
     handleToggleMoreFilters();
   };
-
-  // Track status changes
-  useEffect(() => {
-    setLoading(status === "loading");
-  }, [status]);
 
   return (
     <View className="px-4 pt-3">
@@ -173,7 +195,7 @@ export default function PropertyFilters({
 
         <TouchableOpacity
           className="flex-1 py-3 items-center justify-center rounded-full z-10"
-          onPress={() => setActiveTab("resale")}
+          onPress={() => handleTabChange("resale")}
         >
           <Text
             className={`text-sm font-medium ${
@@ -186,7 +208,7 @@ export default function PropertyFilters({
 
         <TouchableOpacity
           className="flex-1 py-2 items-center justify-center rounded-full z-10"
-          onPress={() => setActiveTab("rental")}
+          onPress={() => handleTabChange("rental")}
         >
           <Text
             className={`text-sm font-medium ${
@@ -212,7 +234,7 @@ export default function PropertyFilters({
           />
         </View>
 
-        {/* Sort Dropdown */}
+        {/* Sort Dropdown - Commented out but ready to implement */}
         {/* <View className="w-10 flex justify-center items-center">
           <DropdownTailwind
             value={sortValue}
@@ -220,7 +242,7 @@ export default function PropertyFilters({
             options={sortOptions}
             placeholder="Sort"
             searchable={false}
-            containerClassName="w-full border border-[#B5B3B3] "
+            containerClassName="w-full border border-[#B5B3B3]"
           />
         </View> */}
 
@@ -253,10 +275,13 @@ export default function PropertyFilters({
       </View>
 
       <View className="mt-2 flex-row -ml-3">
-        <CustomCurrentRefinements
+        {/* <CustomCurrentRefinements
           selectedLandmark={selectedLandmark}
           setSelectedLandmark={setSelectedLandmark}
-        />
+          // Pass current filters to show active refinements
+          filters={filters}
+          onFiltersChange={onFiltersChange}
+        /> */}
       </View>
     </View>
   );

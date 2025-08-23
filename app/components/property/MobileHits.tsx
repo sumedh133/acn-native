@@ -1,9 +1,4 @@
-import React, {
-  useState,
-  useRef,
-  useEffect,
-  useCallback,
-} from "react";
+import React, { useState, useRef, useEffect, useCallback } from "react";
 import {
   View,
   Text,
@@ -11,50 +6,59 @@ import {
   RefreshControl,
   FlatList,
   ViewabilityConfig,
-  StyleSheet,
+  TouchableOpacity
 } from "react-native";
-import {
-  useInstantSearch,
-  useInfiniteHits,
-} from "react-instantsearch";
-import { useSearchBox } from "react-instantsearch";
-import { Property } from "../../types";
 import PropertyCard from "../../components/property/PropertyCard";
 import { useSelector } from "react-redux";
 import { RootState } from "@/store/store";
 import { analytics } from "../../config/firebase";
 import { logEvent } from "@react-native-firebase/analytics";
 
-// MobileHits Component
-export const MobileHits = () => {
-  const { items, isLastPage, showMore } = useInfiniteHits<Property>();
-  const { status } = useInstantSearch();
-  const { query } = useSearchBox();
+interface MobileHitsProps {
+  results: any[]; // All accumulated results from infinite scroll
+  loading: boolean; // Initial search loading
+  loadingMore: boolean; // Loading next page
+  hasMore: boolean; // Whether more results available
+  error: string | null; // Error message if any
+  totalHits: number; // Total number of results available
+  query?: string; // Current search query for analytics
+  onLoadMore: () => void; // Function to load next page
+  onRefresh?: () => void; // Optional refresh function
+}
+
+export const MobileHits = ({
+  results = [],
+  loading = false,
+  loadingMore = false,
+  hasMore = false,
+  error = null,
+  totalHits = 0,
+  query = "",
+  onLoadMore,
+  onRefresh,
+}: MobileHitsProps) => {
   const agentData = useSelector((state: RootState) => state?.agent?.docData);
   const userType = agentData?.userType || "free";
   const [maxScrollDepth, setMaxScrollDepth] = useState(0);
   const viewedProperties = useRef(new Set<string>());
   const [totalPropertiesViewed, setTotalPropertiesViewed] = useState(0);
+  const [refreshing, setRefreshing] = useState(false);
+  const [isRendered, setIsRendered] = useState(false);
 
   const viewabilityConfig = useRef<ViewabilityConfig>({
     itemVisiblePercentThreshold: 50, // Item is considered viewed when 50% visible
     minimumViewTime: 500, // Must be visible for at least 500ms
   });
 
-  const { refresh } = useInstantSearch();
-  const [refreshing, setRefreshing] = useState(false);
-  const [loading, setLoading] = useState(false);
-  const [isLoadingMore, setIsLoadingMore] = useState(false);
-  const [isRendered, setIsRendered] = useState(false);
-
-  // Track search results
+  // Track search results when they change
   useEffect(() => {
-    if (items && status === "idle") {
+    if (results && results.length > 0 && !loading) {
       try {
         logEvent(analytics, "property_search_results", {
           event_category: "search",
           event_label: "results",
-          results_count: items.length,
+          results_count: results.length,
+          total_available: totalHits,
           search_query: query || "empty",
           user_type: userType,
         });
@@ -62,61 +66,71 @@ export const MobileHits = () => {
         console.error("Error logging search results:", error);
       }
     }
-  }, [items, status, query, userType]);
+  }, [results.length, totalHits, loading, query, userType]);
 
-  const onRefresh = useCallback(() => {
-    setRefreshing(true);
-    try {
-      logEvent(analytics, "property_list_refresh", {
-        event_category: "interaction",
-        event_label: "refresh",
-        user_type: userType,
-      });
-    } catch (error) {
-      console.error("Error logging refresh:", error);
+  // Handle refresh
+  const handleRefresh = useCallback(() => {
+    if (onRefresh) {
+      setRefreshing(true);
+      try {
+        logEvent(analytics, "property_list_refresh", {
+          event_category: "interaction",
+          event_label: "refresh",
+          current_results: results.length,
+          user_type: userType,
+        });
+      } catch (error) {
+        console.error("Error logging refresh:", error);
+      }
+      
+      onRefresh();
+      
+      // Reset refresh state after a delay
+      setTimeout(() => {
+        setRefreshing(false);
+      }, 1000);
     }
-    refresh();
-    setTimeout(() => {
-      setRefreshing(false);
-    }, 1000);
-  }, [refresh, userType]);
+  }, [onRefresh, results.length, userType]);
 
+  // Handle infinite scroll
   const handleEndReached = useCallback(() => {
-    if (!isLastPage && !isLoadingMore) {
+    if (hasMore && !loadingMore && !loading) {
       try {
         logEvent(analytics, "property_list_pagination", {
           event_category: "interaction",
           event_label: "load_more",
-          current_items: items.length,
+          current_items: results.length,
+          total_available: totalHits,
           user_type: userType,
         });
       } catch (error) {
         console.error("Error logging pagination:", error);
       }
-      setIsLoadingMore(true);
-      requestAnimationFrame(() => {
-        showMore();
-        setIsLoadingMore(false);
-      });
+      
+      onLoadMore();
     }
-  }, [isLastPage, isLoadingMore, showMore, items.length, userType]);
+  }, [hasMore, loadingMore, loading, onLoadMore, results.length, totalHits, userType]);
 
+  // Key extractor for FlatList
   const keyExtractor = useCallback(
-    (item: any) => item.propertyId || String(item.propertyId),
+    (item: any, index: number) => item.propertyId || item.objectID || String(index),
     []
   );
 
+  // Track property card views
   const handleViewableItemsChanged = useCallback(
     ({ viewableItems }: any) => {
       const newPropertiesViewed = viewableItems.filter((item: any) => {
-        const propertyId = item.item.propertyId;
-        return !viewedProperties.current.has(propertyId);
+        const propertyId = item.item.propertyId || item.item.objectID;
+        return propertyId && !viewedProperties.current.has(propertyId);
       });
 
       if (newPropertiesViewed.length > 0) {
         newPropertiesViewed.forEach((item: any) => {
-          const propertyId = item.item.propertyId;
-          viewedProperties.current.add(propertyId);
+          const propertyId = item.item.propertyId || item.item.objectID;
+          if (propertyId) {
+            viewedProperties.current.add(propertyId);
+          }
         });
 
         setTotalPropertiesViewed(viewedProperties.current.size);
@@ -127,9 +141,9 @@ export const MobileHits = () => {
             event_label: "impression",
             total_viewed: viewedProperties.current.size,
             new_properties_count: newPropertiesViewed.length,
-            total_available: items.length,
+            total_available: results.length,
             view_percentage: Math.round(
-              (viewedProperties.current.size / items.length) * 100
+              (viewedProperties.current.size / results.length) * 100
             ),
             user_type: userType,
           });
@@ -138,9 +152,10 @@ export const MobileHits = () => {
         }
       }
     },
-    [items.length, userType]
+    [results.length, userType]
   );
 
+  // Track scroll depth
   const handleScroll = useCallback(
     (event: any) => {
       const { contentOffset, contentSize, layoutMeasurement } =
@@ -157,7 +172,7 @@ export const MobileHits = () => {
             event_category: "engagement",
             event_label: "scroll",
             depth_percentage: scrollDepthPercentage,
-            total_items: items.length,
+            total_items: results.length,
             properties_viewed: viewedProperties.current.size,
             user_type: userType,
           });
@@ -166,19 +181,20 @@ export const MobileHits = () => {
         }
       }
     },
-    [maxScrollDepth, items.length, userType]
+    [maxScrollDepth, results.length, userType]
   );
 
+  // Render individual property card
   const renderItem = useCallback(
     ({ item, index }: { item: any; index: number }) => {
-      const transformedProperty: any = item;
       const handlePropertyView = () => {
         try {
           logEvent(analytics, "property_card_view", {
             event_category: "interaction",
             event_label: "property_view",
-            property_id: item.propertyId,
+            property_id: item.propertyId || item.objectID,
             list_position: index + 1,
+            total_results: results.length,
             user_type: userType,
           });
         } catch (error) {
@@ -193,30 +209,49 @@ export const MobileHits = () => {
             return false;
           }}
         >
-          <PropertyCard key={item.propertyId} property={transformedProperty} />
+          <PropertyCard 
+            key={item.propertyId || item.objectID || index} 
+            property={item} 
+          />
         </View>
       );
     },
-    [userType]
+    [results.length, userType]
   );
 
+  // Render footer with loading indicator
   const renderFooter = useCallback(() => {
-    if (loading) {
+    if (loadingMore && hasMore) {
       return (
-        <View className="flex items-center justify-center h-32">
-          <ActivityIndicator size={"large"} color={"#153E3B"} />
+        <View className="flex items-center justify-center py-4">
+          <ActivityIndicator size="large" color="#153E3B" />
+          <Text 
+            className="text-gray-500 mt-2 text-sm"
+            style={{ fontFamily: "Montserrat_400Regular" }}
+          >
+            Loading more properties...
+          </Text>
         </View>
       );
     }
+    
+    if (!hasMore && results.length > 0) {
+      return (
+        <View className="flex items-center justify-center py-8">
+          <Text 
+            className="text-gray-500 text-sm"
+            style={{ fontFamily: "Montserrat_400Regular" }}
+          >
+            You've seen all {totalHits} properties
+          </Text>
+        </View>
+      );
+    }
+    
     return null;
-  }, [loading]);
+  }, [loadingMore, hasMore, results.length, totalHits]);
 
-  useEffect(() => {
-    setLoading(
-      status === "loading" || status === "stalled" || status === "error"
-    );
-  }, [status]);
-
+  // Set rendered state
   useEffect(() => {
     const timer = requestAnimationFrame(() => {
       setIsRendered(true);
@@ -225,32 +260,58 @@ export const MobileHits = () => {
     return () => cancelAnimationFrame(timer);
   }, []);
 
-  if (!isRendered || (items?.length === 0 && loading))
+  // Show initial loading state
+  if (!isRendered || (results.length === 0 && loading)) {
     return (
       <View className="flex items-center justify-center h-64 gap-10 mt-20">
-        <ActivityIndicator size={"large"} color={"#153E3B"} />
-        <View className="flex flex-col items-center">
+        <ActivityIndicator size="large" color="#153E3B" />
+        <View className="flex flex-col items-center px-8">
           <Text
-            style={{
-              ...styles.text,
-              fontWeight: "bold",
-              fontFamily: "Montserrat_400Regular",
-              color: "black",
-              fontSize: 17,
-            }}
+            className="font-bold text-black text-[17px] text-center"
+            style={{ fontFamily: "Montserrat_400Regular" }}
           >
             "The best investment on Earth is earth."
           </Text>
           <Text
-            style={{ ...styles.text, fontStyle: "italic", fontFamily: "Lato" }}
+            className="italic text-gray-500 mt-2"
+            style={{ fontFamily: "Lato_400Regular" }}
           >
             - Louis Glickman
           </Text>
         </View>
       </View>
     );
+  }
 
-  if (items?.length === 0 && query?.length !== 0) {
+  // Show error state
+  if (error) {
+    return (
+      <View className="flex items-center justify-center h-64 px-8">
+        <Text
+          className="text-red-500 text-base text-center"
+          style={{ fontFamily: "Montserrat_400Regular" }}
+        >
+          Error loading properties: {error}
+        </Text>
+        {onRefresh && (
+          <TouchableOpacity 
+            onPress={handleRefresh}
+            className="mt-4 px-4 py-2 bg-[#153E3B] rounded-lg"
+          >
+            <Text 
+              className="text-white text-sm"
+              style={{ fontFamily: "Montserrat_400Regular" }}
+            >
+              Try Again
+            </Text>
+          </TouchableOpacity>
+        )}
+      </View>
+    );
+  }
+
+  // Show no results state
+  if (results.length === 0 && query.length > 0 && !loading) {
     try {
       logEvent(analytics, "property_search_no_results", {
         event_category: "search",
@@ -261,106 +322,80 @@ export const MobileHits = () => {
     } catch (error) {
       console.error("Error logging no results:", error);
     }
+    
     return (
-      <View className="flex items-center justify-center h-64">
-        <Text style={{ ...styles.text, fontFamily: "Montserrat_400Regular" }}>
+      <View className="flex items-center justify-center h-64 px-8">
+        <Text
+          className="text-gray-500 text-base text-center"
+          style={{ fontFamily: "Montserrat_400Regular" }}
+        >
           No results found for "{query}"
+        </Text>
+        <Text
+          className="text-gray-400 text-sm text-center mt-2"
+          style={{ fontFamily: "Lato_400Regular" }}
+        >
+          Try adjusting your search terms or filters
         </Text>
       </View>
     );
   }
 
-  // When we have hits, render the property cards
+  // Show empty state (no search query)
+  if (results.length === 0 && !loading) {
+    return (
+      <View className="flex items-center justify-center h-64 px-8">
+        <Text
+          className="text-gray-500 text-base text-center"
+          style={{ fontFamily: "Montserrat_400Regular" }}
+        >
+          No properties found
+        </Text>
+        <Text
+          className="text-gray-400 text-sm text-center mt-2"
+          style={{ fontFamily: "Lato_400Regular" }}
+        >
+          Try adjusting your filters or search criteria
+        </Text>
+      </View>
+    );
+  }
+
+  // Render the property list
   return (
-    <>
-      <FlatList
-        data={items}
-        renderItem={renderItem}
-        keyExtractor={keyExtractor}
-        onScroll={handleScroll}
-        scrollEventThrottle={16}
-        onViewableItemsChanged={handleViewableItemsChanged}
-        viewabilityConfig={viewabilityConfig.current}
-        refreshControl={
+    <FlatList
+      data={results}
+      renderItem={renderItem}
+      keyExtractor={keyExtractor}
+      onScroll={handleScroll}
+      scrollEventThrottle={16}
+      onViewableItemsChanged={handleViewableItemsChanged}
+      viewabilityConfig={viewabilityConfig.current}
+      refreshControl={
+        onRefresh ? (
           <RefreshControl
             refreshing={refreshing}
-            onRefresh={onRefresh}
+            onRefresh={handleRefresh}
             colors={["#153E3B"]}
             tintColor="#153E3B"
             title="Refreshing..."
             titleColor="#153E3B"
           />
-        }
-        contentContainerStyle={{
-          paddingHorizontal: 16,
-          width: "100%",
-          flexGrow: 1,
-        }}
-        style={{ flexGrow: 1, flexShrink: 1 }}
-        initialNumToRender={10}
-        maxToRenderPerBatch={5}
-        windowSize={10}
-        removeClippedSubviews={true}
-        onEndReached={handleEndReached}
-        onEndReachedThreshold={0.5}
-        ListFooterComponent={renderFooter}
-      />
-    </>
+        ) : undefined
+      }
+      contentContainerStyle={{
+        paddingHorizontal: 16,
+        width: "100%",
+        flexGrow: 1,
+      }}
+      style={{ flexGrow: 1, flexShrink: 1 }}
+      initialNumToRender={10}
+      maxToRenderPerBatch={5}
+      windowSize={10}
+      removeClippedSubviews={true}
+      onEndReached={handleEndReached}
+      onEndReachedThreshold={0.3}
+      ListFooterComponent={renderFooter}
+    />
   );
 };
-
-const styles = StyleSheet.create({
-  text: {
-    // fontFamily: 'Montserrat_400Regular',
-    color: "#6B7280",
-    fontSize: 16,
-  },
-  title: {
-    fontFamily: "Montserrat_600SemiBold",
-    fontSize: 18,
-    marginBottom: 4,
-  },
-  description: {
-    fontFamily: "Montserrat_400Regular",
-    color: "#6B7280",
-    fontSize: 14,
-    marginBottom: 4,
-  },
-  price: {
-    fontFamily: "Montserrat_500Medium",
-    color: "#3B82F6",
-    fontSize: 16,
-  },
-  card: {
-    flexDirection: "row",
-    alignItems: "center",
-    padding: 10,
-    borderWidth: 1,
-    borderColor: "#E5E7EB",
-    borderRadius: 8,
-  },
-  image: {
-    width: 100,
-    height: 100,
-    borderRadius: 8,
-    marginRight: 10,
-  },
-  content: {
-    flex: 1,
-  },
-  details: {
-    flexDirection: "row",
-    alignItems: "center",
-    marginTop: 4,
-  },
-  detailItem: {
-    flexDirection: "row",
-    alignItems: "center",
-    marginRight: 10,
-  },
-  detailText: {
-    fontFamily: "Montserrat_400Regular",
-    color: "#6B7280",
-    fontSize: 14,
-  },
-});
