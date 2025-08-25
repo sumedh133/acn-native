@@ -323,7 +323,7 @@ const LandmarkDropdownFilters = ({
   return (
     <View className="w-full z-[2000]">
       {/* Search Input */}
-      <View className="flex-row items-center border-[1.5px] border-gray-200 rounded-md bg-white h-10 px-3">
+      <View className="flex-row items-center border-[1.5px] border-gray-200 rounded-md bg-white h-11 px-3">
         <LocationSearchBarIcon width={20} height={20} strokeColor="#153E3B" />
         <TextInput
           className="flex-1 text-[12px] text-gray-800 p-0 ml-2"
@@ -376,14 +376,15 @@ const LandmarkDropdownFilters = ({
       {/* Slider section */}
       {selectedLandmark && (
         <View className="mt-4 mb-4">
-          <View className="flex-row justify-between items-center mb-2">
+          <View className="flex-row space-x-2 items-center mb-2">
             <Text className="font-semibold text-sm text-gray-700">
-              Search Radius (in km)
+              Search Radius
             </Text>
             <Ionicons
               name="information-circle-outline"
-              size={18}
+              size={24}
               color="#6B7280"
+              style={{ marginTop: 2 }}
             />
           </View>
 

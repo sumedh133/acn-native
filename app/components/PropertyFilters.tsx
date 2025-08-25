@@ -5,19 +5,18 @@ import {
   TextInput,
   TouchableOpacity,
   Keyboard,
-  ActivityIndicator,
   Animated,
 } from "react-native";
 import { analytics } from "@/app/config/firebase";
 import { logEvent } from "@react-native-firebase/analytics";
 import { useSelector } from "react-redux";
 import { RootState } from "@/store/store";
-import CloseIcon from "@/assets/icons/svg/CloseIcon";
 import FilterIcon from "@/assets/icons/svg/PropertiesPage/FilterIcon";
 import NewSearchIcon from "@/assets/icons/svg/PropertiesPage/NewSearchIcon";
 import { SearchFilters } from "../services/property_services/propertyAlgoliaService";
 import CustomCurrentRefinements from "./newCustomCurrentRefinements";
 import DropdownTailwind from "./DropdownTailwind";
+import ToggleTabs from "./ToggleTabs";
 
 interface PropertyFiltersProps {
   handleToggleMoreFilters: () => void;
@@ -113,7 +112,7 @@ export default function PropertyFilters({
   // Handle property type tab change
   const handleTabChange = (tab: "resale" | "rental") => {
     setActiveTab(tab);
-    onFiltersChange({...filters, type: [tab] });
+    onFiltersChange({ ...filters, type: [tab] });
 
     try {
       logEvent(analytics, "property_type_change", {
@@ -175,57 +174,28 @@ export default function PropertyFilters({
 
   return (
     <View className="px-4 pt-3">
-      {/* Top Row: Tabs + Sort */}
-      <View className="flex-row w-full rounded-full border border-[#153E3B] overflow-hidden p-1 relative mb-3">
-        <Animated.View
-          className="absolute top-1 bottom-1 w-1/2 bg-[#153E3B] rounded-full z-0"
-          style={{
-            left: slideAnim.interpolate({
-              inputRange: [0, 1],
-              outputRange: ["1.5%", "50.5%"],
-            }),
-            shadowColor: "#000",
-            shadowOffset: { width: 0, height: 0 },
-            shadowOpacity: 0.25,
-            shadowRadius: 4,
-            elevation: 4,
-          }}
-        />
-
-        <TouchableOpacity
-          className="flex-1 py-3 items-center justify-center rounded-full z-10"
-          onPress={() => handleTabChange("resale")}
-        >
-          <Text
-            className={`text-sm font-medium ${
-              activeTab === "resale" ? "text-white" : "text-gray-700"
-            }`}
-          >
-            Resale
-          </Text>
-        </TouchableOpacity>
-
-        <TouchableOpacity
-          className="flex-1 py-2 items-center justify-center rounded-full z-10"
-          onPress={() => handleTabChange("rental")}
-        >
-          <Text
-            className={`text-sm font-medium ${
-              activeTab === "rental" ? "text-white" : "text-gray-700"
-            }`}
-          >
-            Rental
-          </Text>
-        </TouchableOpacity>
+      <View className="mb-3" >
+      <ToggleTabs
+        tabs={[
+          { label: "Resale", value: "resale" },
+          { label: "Rental", value: "rental" },
+        ]}
+        activeTab={activeTab}
+        onChange={(val) =>
+          handleTabChange(
+            val == "resale" ? ("resale" as const) : ("rental" as const)
+          )
+        }
+      />
       </View>
 
       {/* Search + Sort + Filters */}
-      <View className="flex-row justify-center items-center space-x-2">
+      <View className="flex-row items-center space-x-3">
         {/* Search Input */}
         <View className="flex-1 flex-row items-center bg-white border border-[#B5B3B3] rounded-lg px-3 h-10">
           <NewSearchIcon style={{ marginRight: 8 }} />
           <TextInput
-            className="flex-1 text-sm text-gray-700"
+            className="flex-1 text-xs text-gray-700"
             placeholder="Search by project, micro market"
             value={searchText}
             onChangeText={setSearchText}
@@ -233,45 +203,28 @@ export default function PropertyFilters({
           />
         </View>
 
-        {/* Sort Dropdown - Commented out but ready to implement */}
-        <View className="w-28 flex justify-center items-center">
-          <DropdownTailwind
-            value={sortBy ?? null} // <- from props (hook state)
-            setValue={handleSortChange}
-            options={sortOptions}
-            placeholder="Sort"
-            searchable={false}
-            loading={loading}
-            buttonTextClassName="whitespace-nowrap "
-          />
-        </View>
-
-        {/* Loading Indicator */}
-        {loading && (
-          <View className="flex-row items-center">
-            <ActivityIndicator color="#153E3B" />
-          </View>
-        )}
-
-        {/* Clear Button */}
-        {searchText.trim() && (
-          <View className="flex-row items-center">
-            <TouchableOpacity
-              onPress={handleClear}
-              className="h-10 w-10 justify-center items-center border border-red-500 rounded-md bg-red-500"
-              disabled={loading}
-            >
-              <CloseIcon strokeColor="white" />
-            </TouchableOpacity>
-          </View>
-        )}
+        {/* Sort Dropdown */}
+        <DropdownTailwind
+          value={sortBy ?? null}
+          setValue={handleSortChange}
+          options={sortOptions}
+          placeholder="Sort"
+          forcePlaceholder={true}
+          searchable={false}
+          loading={loading}
+          containerClassName="w-20 ml-1.5"
+          buttonClassName="h-10 px-4 border border-[#B5B3B3] rounded-lg bg-white flex-row items-center justify-between"
+          placeholderClassName="text-sm text-black font-medium "
+          dropdownClassName="absolute bg-white w-36 rounded-lg border border-gray-200 shadow-md z-50 p-1 mt-0.5"
+        />
 
         {/* Filter Button */}
-        <View className="flex-row items-center">
-          <TouchableOpacity onPress={handleMoreFilters}>
-            <FilterIcon />
-          </TouchableOpacity>
-        </View>
+        <TouchableOpacity
+          onPress={handleMoreFilters}
+          className="h-10 w-10 items-center justify-center rounded-lg border border-[#B5B3B3] bg-white"
+        >
+          <FilterIcon />
+        </TouchableOpacity>
       </View>
 
       <View className="mt-2 flex-row -ml-3">
