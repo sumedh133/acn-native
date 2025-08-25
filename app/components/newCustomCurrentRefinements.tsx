@@ -1,14 +1,5 @@
 import React from "react";
-import {
-  View,
-  Text,
-  TouchableOpacity,
-  ScrollView,
-} from "react-native";
-import {
-  useClearRefinements,
-  useCurrentRefinements,
-} from "react-instantsearch";
+import { View, Text, TouchableOpacity, ScrollView } from "react-native";
 import { analytics } from "@/app/config/firebase";
 import { logEvent } from "@react-native-firebase/analytics";
 import { useSelector } from "react-redux";
@@ -25,37 +16,47 @@ interface CustomCurrentRefinementsProps {
 export default function CustomCurrentRefinements({
   selectedLandmark,
   setSelectedLandmark,
+  filters,
+  onFiltersChange,
 }: CustomCurrentRefinementsProps) {
-  const { items, refine } = useCurrentRefinements();
-  const { refine: clearRefinements } = useClearRefinements();
   const userType =
     useSelector((state: RootState) => state.agent?.docData?.userType) || "free";
 
-  if (items.length === 0 && !selectedLandmark) {
+  // Convert filters object into an array of {key, value}
+  const allRefinements = Object.entries(filters)
+    .filter(([key]) => key !== "type") // exclude "type"
+    .flatMap(([key, values]) =>
+      (values || []).map((val: any) => ({
+        attribute: key,
+        value: val,
+      }))
+    );
+
+  if (allRefinements.length === 0 && !selectedLandmark) {
     return null;
   }
 
-  // Flatten refinements from all items into a single array for inline display
-  const allRefinements = items.flatMap((item) =>
-    item.refinements.map((refinement) => ({
-      attribute: item.attribute,
-      refinement: refinement,
-    }))
-  );
-
-  const handleRefinementRemove = (refinement: any, attribute: string) => {
+  const handleRefinementRemove = (attribute: string, value: string) => {
     try {
       logEvent(analytics, "remove_refinement", {
         event_category: "filters",
         event_label: "remove",
         filter_type: attribute,
-        filter_value: refinement.label || refinement.value,
+        filter_value: value,
         user_type: userType,
       });
     } catch (error) {
       console.error("Error logging refinement removal:", error);
     }
-    refine(refinement);
+
+    const newFilters: SearchFilters = {
+      ...filters,
+      [attribute]: (filters[attribute as keyof SearchFilters] || []).filter(
+        (v) => v !== value
+      ),
+    };
+
+    onFiltersChange(newFilters);
   };
 
   const handleClearAll = () => {
@@ -63,13 +64,17 @@ export default function CustomCurrentRefinements({
       logEvent(analytics, "clear_all_refinements", {
         event_category: "filters",
         event_label: "clear_all",
-        active_filters: items.map((item) => item.attribute),
+        // Exclude type since we're keeping it
+        active_filters: Object.keys(filters).filter((key) => key !== "type"),
         user_type: userType,
       });
     } catch (error) {
       console.error("Error logging clear all:", error);
     }
-    clearRefinements();
+
+    // Keep type, reset everything else
+    onFiltersChange({ type: filters.type });
+
     if (setSelectedLandmark) {
       setSelectedLandmark(null);
     }
@@ -109,22 +114,18 @@ export default function CustomCurrentRefinements({
 
         {allRefinements.map((item, index) => (
           <TouchableOpacity
-            key={`${item.attribute}-${item.refinement.value || index}`}
-            onPress={() =>
-              handleRefinementRemove(item.refinement, item.attribute)
-            }
+            key={`${item.attribute}-${item.value}-${index}`}
+            onPress={() => handleRefinementRemove(item.attribute, item.value)}
             className="flex-row items-center bg-gray-200 px-3 py-1.5 rounded-full"
           >
             <Text className="font-montserrat text-sm text-gray-700 mr-1">
-              {item.refinement.attribute === "agentCpid"
-                ? "My Requirements"
-                : item.refinement.label}
+              {item.attribute === "agentCpid" ? "My Requirements" : item.value}
             </Text>
             <Text className="text-base text-gray-500">×</Text>
           </TouchableOpacity>
         ))}
 
-        {(items.length > 0 || selectedLandmark) && (
+        {(allRefinements.length > 0 || selectedLandmark) && (
           <TouchableOpacity onPress={handleClearAll} className="ml-1">
             <View className="flex-row items-center border border-red-600 bg-red-600/10 px-2 py-1.5 rounded-full">
               <Text className="font-montserrat-semibold text-xs text-red-600">

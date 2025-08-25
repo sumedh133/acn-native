@@ -45,3 +45,4 @@ const SearchIcon: React.FC<SearchIconProps> = ({
 };
 
 export default SearchIcon;
+

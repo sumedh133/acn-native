@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect } from "react";
 import {
   View,
   Text,
@@ -6,30 +6,21 @@ import {
   Modal,
   ScrollView,
   TextInput,
-  Pressable,
-  PanResponder,
-  Animated,
   Platform,
   StyleSheet,
 } from "react-native";
-import {
-  useCurrentRefinements,
-  useRange,
-  useRefinementList,
-} from "react-instantsearch";
 import { analytics } from "@/app/config/firebase";
 import { logEvent } from "@react-native-firebase/analytics";
 import { useSelector } from "react-redux";
 import { RootState } from "@/store/store";
 import DropdownMoreFilters from "./DropdownMoreFilters";
-import { Ionicons } from "@expo/vector-icons";
-import BudgetRangeSlider from "./property/BudgetRangeSlider";
 import RangeMoreFilters from "./RangeMoreFilters";
 import LandmarkDropdownFilters from "./LandmarkDropdownFilters";
-import { SafeAreaProvider, SafeAreaView } from "react-native-safe-area-context";
 import CloseIcon from "@/assets/icons/svg/CloseIcon";
 import { Landmark } from "../types";
-import CustomCurrentRefinements from "./CustomCurrentRefinements";
+import NewSearchIcon from "@/assets/icons/svg/PropertiesPage/NewSearchIcon";
+import { SearchFilters } from "../services/property_services/propertyAlgoliaService";
+
 
 export interface RangeState {
   start: (number | undefined)[];
@@ -48,6 +39,9 @@ interface MoreFiltersProps {
   isMobile: boolean;
   selectedLandmark: Landmark | null;
   setSelectedLandmark: (landmark: Landmark | null) => void;
+  filters: SearchFilters;
+  onFiltersChange: (filters: SearchFilters) => void;
+  facets: Record<string, Record<string, number>>;
 }
 
 const MoreFilters = ({
@@ -57,14 +51,39 @@ const MoreFilters = ({
   isMobile,
   selectedLandmark,
   setSelectedLandmark,
+  filters,
+  facets,
+  onFiltersChange
 }: MoreFiltersProps) => {
-  const { items, refine } = useCurrentRefinements();
   const userType =
     useSelector((state: RootState) => state?.agent?.docData?.userType) ||
     "free";
   const [selectedLocationFilter, setSelectedLocationFilter] =
     useState("micromarket");
   const [landmarkSearch, setLandmarkSearch] = useState("");
+
+  // Local filter state - manage filters locally until applied
+  const [localFilters, setLocalFilters] = useState<SearchFilters>(filters);
+  const [localSelectedLandmark, setLocalSelectedLandmark] = useState<Landmark | null>(selectedLandmark);
+
+  // Mock data for refinement options (you might want to fetch this from your service)
+  // These would typically come from your search service's facet data
+  const [facetData, setFacetData] = useState({
+    micromarket: facets.micromarket || [],
+    currentStatus: [],
+    area: [],
+    assetType: [],
+    unitType: [],
+    facing: [],
+    floorNo: [],
+    sbua: [],
+  });
+
+  // Update local state when props change
+  useEffect(() => {
+    setLocalFilters(filters);
+    setLocalSelectedLandmark(selectedLandmark);
+  }, [filters, selectedLandmark]);
 
   // Track modal view
   useEffect(() => {
@@ -73,9 +92,9 @@ const MoreFilters = ({
         logEvent(analytics, "more_filters_view", {
           event_category: "filters",
           event_label: "modal_view",
-          current_refinements: items.length,
+          current_refinements: Object.keys(localFilters).length,
           location_filter: selectedLocationFilter,
-          has_landmark: !!selectedLandmark,
+          has_landmark: !!localSelectedLandmark,
           user_type: userType,
         });
       } catch (error) {
@@ -84,85 +103,53 @@ const MoreFilters = ({
     }
   }, [isOpen]);
 
-  // Micromarket refinement list
-  const { items: micromarketItems, refine: refineMicromarket } =
-    useRefinementList({
-      attribute: "micromarket",
-      limit: 50,
-    });
+  // Helper function to update local filters
+  const updateLocalFilter = (attribute: string, values: string[]) => {
+    setLocalFilters(prev => ({
+      ...prev,
+      [attribute]: values
+    }));
+  };
 
-  // Status refinement list
-  const { items: statusItems, refine: refineStatus } = useRefinementList({
-    attribute: "currentStatus",
-    limit: 50,
-  });
+  // Helper function to toggle a filter value
+  const toggleFilterValue = (attribute: string, value: string) => {
+    const currentValues = localFilters[attribute as keyof SearchFilters] || [];
+    const isSelected = currentValues.includes(value);
+    
+    const newValues = isSelected 
+      ? currentValues.filter(v => v !== value)
+      : [...currentValues, value];
+    
+    updateLocalFilter(attribute, newValues);
+  };
 
-  // Area refinement list
-  const { items: areaItems, refine: refineArea } = useRefinementList({
-    attribute: "area",
-    limit: 50,
-  });
-  // Other refinement lists for assetType, unitType, etc.
-  const { items: assetTypeItems, refine: refineAssetType } = useRefinementList({
-    attribute: "assetType",
-    limit: 50,
-  });
+  // Helper function to set range filter
+  const updateRangeFilter = (attribute: string, range: [number, number]) => {
+    setLocalFilters(prev => ({
+      ...prev,
+      [`${attribute}_min`]: range[0],
+      [`${attribute}_max`]: range[1]
+    }));
+  };
 
-  const { items: unitTypeItems, refine: refineUnitType } = useRefinementList({
-    attribute: "unitType",
-    limit: 50,
-  });
-
-  const { items: facingItems, refine: refineFacing } = useRefinementList({
-    attribute: "facing",
-    limit: 50,
-  });
-
-  const { items: floorItems, refine: refineFloor } = useRefinementList({
-    attribute: "floorNo",
-    limit: 50,
-  });
-
-  const { items: sbuaItems, refine: refineSbua } = useRefinementList({
-    attribute: "sbua",
-    limit: 50,
-  });
-
-  const sbuaRangeState: RangeState = useRange({
-    attribute: "sbua",
-  });
-
-  const totalAskPriceState: RangeState = useRange({
-    attribute: "totalAskPrice",
-  });
-
-  const plotSizeState: RangeState = useRange({
-    attribute: "plotSize",
-  });
-  const carpetState: RangeState = useRange({
-    attribute: "carpet",
-  });
-  const askPricePerSqftState: RangeState = useRange({
-    attribute: "askPricePerSqft",
-  });
-
+  // Clear specific attribute filter
   const clearAttributeFilter = (attribute: string) => {
-    const targetItem = items.find((item) => item.attribute === attribute);
-    if (targetItem) {
-      targetItem.refinements.forEach((refinement) => {
-        refine(refinement);
-      });
-    }
+    setLocalFilters(prev => {
+      const newFilters = { ...prev };
+      delete newFilters[attribute as keyof SearchFilters];
+      // Also clear range filters if applicable
+      delete newFilters[`${attribute}_min` as keyof SearchFilters];
+      delete newFilters[`${attribute}_max` as keyof SearchFilters];
+      return newFilters;
+    });
   };
 
   useEffect(() => {
-    const hasMicromarketFilter = items?.some(
-      (item) => item.attribute === "micromarket"
-    );
+    const hasMicromarketFilter = localFilters.micromarket && localFilters.micromarket.length > 0;
     setSelectedLocationFilter(
-      hasMicromarketFilter && !selectedLandmark ? "micromarket" : "landmark"
+      hasMicromarketFilter && !localSelectedLandmark ? "micromarket" : "landmark"
     );
-  }, [items, selectedLandmark]);
+  }, [localFilters, localSelectedLandmark]);
 
   const outsideFilters = [
     { title: "Asset Type", attribute: "assetType", type: "dropdown" },
@@ -191,43 +178,46 @@ const MoreFilters = ({
 
   const renderRefinementList = (
     items: any[],
-    refine: (value: string) => void
+    attribute: string
   ) => {
+    const selectedValues = localFilters[attribute as keyof SearchFilters] || [];
+
     return (
       <View className="flex-row flex-wrap gap-2">
-        {items.map((item) => (
-          <TouchableOpacity
-            key={item.value}
-            className={`py-2 px-3 border border-gray-300 rounded-md bg-white ${
-              item.isRefined ? "bg-[#DFF4F3] border-[#153E3B]" : ""
-            }`}
-            onPress={() => refine(item.value)}
-          >
-            <View className="flex-row justify-between items-center">
-              <Text
-                className={`text-sm ${
-                  item.isRefined ? "text-[#153E3B]" : "text-gray-700"
-                }`}
-              >
-                {item.label}
-              </Text>
-              <Text className="text-xs ml-2 px-1 py-0.5 bg-gray-200 rounded text-gray-600 font-bold">
-                {item.count}
-              </Text>
-            </View>
-          </TouchableOpacity>
-        ))}
+        {items.map((item) => {
+          const isRefined = selectedValues.includes(item.value);
+          return (
+            <TouchableOpacity
+              key={item.value}
+              className={`py-2 px-3 border border-gray-300 rounded-md bg-white ${
+                isRefined ? "bg-[#DFF4F3] border-[#153E3B]" : ""
+              }`}
+              onPress={() => toggleFilterValue(attribute, item.value)}
+            >
+              <View className="flex-row justify-between items-center">
+                <Text
+                  className={`text-sm ${
+                    isRefined ? "text-[#153E3B]" : "text-gray-700"
+                  }`}
+                >
+                  {item.label}
+                </Text>
+                <Text className="text-xs ml-2 px-1 py-0.5 bg-gray-200 rounded text-gray-600 font-bold">
+                  {item.count}
+                </Text>
+              </View>
+            </TouchableOpacity>
+          );
+        })}
       </View>
     );
   };
 
   const SearchableRefinementList = ({
     items,
-    refine,
     attribute,
   }: {
     items: any[];
-    refine: (value: string) => void;
     attribute: string;
   }) => {
     const [searchQuery, setSearchQuery] = useState("");
@@ -256,30 +246,33 @@ const MoreFilters = ({
     const handleRefine = (value: string) => {
       try {
         const item = items.find((i) => i.value === value);
+        const isRefined = (localFilters[attribute as keyof SearchFilters] || []).includes(value);
         logEvent(analytics, "filter_refinement", {
           event_category: "filters",
           event_label: "refinement",
           filter_type: attribute,
           value: value,
           label: item?.label,
-          action: item?.isRefined ? "remove" : "add",
+          action: isRefined ? "remove" : "add",
           user_type: userType,
         });
       } catch (error) {
         console.error("Error logging refinement:", error);
       }
-      refine(value);
+      toggleFilterValue(attribute, value);
     };
 
     return (
-      <View className="w-full">
+      <View className="w-full mb-2">
         {attribute === "micromarket" && (
-          <View className="mb-3">
+          <View className="flex-row items-center  w-full border px-2 border-gray-300 rounded-md h-10 pl-3 bg-white ">
+            <NewSearchIcon strokeColor="#726C6C" />
             <TextInput
-              className="w-full p-2 border border-gray-300 rounded-md bg-white text-sm"
-              placeholder="Search categories..."
+              className="text-[12px] ml-2"
+              placeholder="Search micromarket..."
               value={searchQuery}
               onChangeText={handleSearch}
+              style={{ fontFamily: "Lato_400Regular" }}
             />
           </View>
         )}
@@ -287,30 +280,33 @@ const MoreFilters = ({
         <View className="flex-row flex-wrap gap-2">
           {filteredItems
             ?.slice(0, searchQuery === "" ? 10 : filteredItems.length)
-            ?.map((item) => (
-              <TouchableOpacity
-                key={item.value}
-                className={`py-2 px-3 border border-gray-300 rounded-md bg-white ${
-                  item.isRefined ? "bg-[#DFF4F3] border-[#153E3B]" : ""
-                }`}
-                onPress={() => handleRefine(item.value)}
-              >
-                <View className="flex-row justify-between items-center">
-                  <Text
-                    className={`text-sm ${
-                      item.isRefined
-                        ? "text-[#153E3B] font-medium"
-                        : "text-gray-700"
-                    }`}
-                  >
-                    {item.label}
-                  </Text>
-                  <Text className="text-xs ml-2 px-1 py-0.5 bg-gray-200 rounded text-gray-600 font-bold">
-                    {item.count}
-                  </Text>
-                </View>
-              </TouchableOpacity>
-            ))}
+            ?.map((item) => {
+              const isRefined = (localFilters[attribute as keyof SearchFilters] || []).includes(item.value);
+              return (
+                <TouchableOpacity
+                  key={item.value}
+                  className={`py-2 px-3 border border-gray-300 rounded-md bg-white ${
+                    isRefined ? "bg-[#DFF4F3] border-[#153E3B]" : ""
+                  }`}
+                  onPress={() => handleRefine(item.value)}
+                >
+                  <View className="flex-row justify-between items-center">
+                    <Text
+                      className={`text-sm ${
+                        isRefined
+                          ? "text-[#153E3B] font-medium"
+                          : "text-gray-700"
+                      }`}
+                    >
+                      {item.label}
+                    </Text>
+                    <Text className="text-xs ml-2 px-1 py-0.5 bg-gray-200 rounded text-gray-600 font-bold">
+                      {item.count}
+                    </Text>
+                  </View>
+                </TouchableOpacity>
+              );
+            })}
         </View>
       </View>
     );
@@ -336,7 +332,7 @@ const MoreFilters = ({
       clearAttributeFilter("micromarket");
     } else {
       setSelectedLocationFilter("micromarket");
-      setSelectedLandmark?.(null);
+      setLocalSelectedLandmark(null);
     }
   };
 
@@ -345,16 +341,52 @@ const MoreFilters = ({
       logEvent(analytics, "apply_more_filters", {
         event_category: "filters",
         event_label: "apply",
-        total_filters: items.length,
-        filter_types: items.map((item) => item.attribute),
+        total_filters: Object.keys(localFilters).length,
+        filter_types: Object.keys(localFilters),
         location_filter: selectedLocationFilter,
-        has_landmark: !!selectedLandmark,
+        has_landmark: !!localSelectedLandmark,
         user_type: userType,
       });
     } catch (error) {
       console.error("Error logging filter application:", error);
     }
+    
+    // Apply the local filters to the parent component
+    onFiltersChange(localFilters);
+    setSelectedLandmark(localSelectedLandmark);
     handleToggle();
+  };
+
+  // Create mock range states for compatibility with existing RangeMoreFilters component
+  const createRangeState = (attribute: string): RangeState => ({
+    start: [localFilters[`${attribute}_min`], localFilters[`${attribute}_max`]],
+    range: { min: 0, max: 10000000 }, // You might want to fetch actual min/max from your service
+    refine: (range: [number, number]) => updateRangeFilter(attribute, range),
+    currentRefinement: [localFilters[`${attribute}_min`], localFilters[`${attribute}_max`]]
+  });
+
+  const sbuaRangeState = createRangeState("sbua");
+  const totalAskPriceState = createRangeState("totalAskPrice");
+  const plotSizeState = createRangeState("plotSize");
+  const carpetState = createRangeState("carpet");
+  const askPricePerSqftState = createRangeState("askPricePerSqft");
+
+  // Mock dropdown items - you should replace these with actual data from your service
+  const createDropdownItems = (attribute: string) => {
+    const normalizeFacetData = (
+      facets: Record<string, Record<string, number>>,
+      attribute: string
+    ) => {
+      const facet = facets[attribute];
+      if (!facet) return [];
+      return Object.entries(facet).map(([value, count]) => ({
+        value,
+        label: value, // if you need human-readable labels, map here
+        count,
+      }));
+    };
+
+    return normalizeFacetData(facets, attribute);
   };
 
   return (
@@ -369,7 +401,7 @@ const MoreFilters = ({
             event_category: "filters",
             event_label: "modal_close",
             close_method: "back_button",
-            applied_filters: items.length,
+            applied_filters: Object.keys(localFilters).length,
             user_type: userType,
           });
         } catch (error) {
@@ -393,35 +425,26 @@ const MoreFilters = ({
             <CloseIcon />
           </TouchableOpacity>
         </View>
-        <View style={styles.refinements}>
-          {/* Applied Filters */}
-          <CustomCurrentRefinements
-            selectedLandmark={selectedLandmark}
-            setSelectedLandmark={setSelectedLandmark}
-          />
-        </View>
 
         <ScrollView className="flex-1 px-4 py-2 mb-2">
           {/* Location Filter - Lower z-index */}
-          <View
-            className="border border-gray-200 rounded-xl mb-4"
-            style={{ zIndex: 40 }}
-          >
+          <View className="" style={{ zIndex: 40 }}>
             {/* Location Tabs */}
-            <View className="bg-gray-100 p-1 rounded-t-xl">
+            <View className="bg-[#EFF0F1] p-2 rounded-[8px]">
               <View className="flex-row">
                 <TouchableOpacity
-                  className={`flex-1 py-3 px-4 rounded-md ${
-                    selectedLocationFilter === "landmark" ? "bg-white" : ""
+                  className={`flex-1 py-3 px-4 rounded-[5px] ${
+                    selectedLocationFilter === "landmark" ? "bg-[#205E59]" : ""
                   }`}
                   onPress={() => handleLocationFilterChange("landmark")}
                 >
                   <Text
                     className={`text-center font-medium ${
                       selectedLocationFilter === "landmark"
-                        ? "text-gray-800"
-                        : "text-gray-500"
+                        ? "text-white"
+                        : "text-black"
                     }`}
+                    style={{ fontFamily: "Montserrat_600SemiBold" }}
                   >
                     Landmark
                   </Text>
@@ -429,49 +452,51 @@ const MoreFilters = ({
 
                 <TouchableOpacity
                   className={`flex-1 py-3 px-4 rounded-md ${
-                    selectedLocationFilter === "micromarket" ? "bg-white" : ""
+                    selectedLocationFilter === "micromarket"
+                      ? "bg-[#205E59]"
+                      : ""
                   }`}
                   onPress={() => handleLocationFilterChange("micromarket")}
                 >
                   <Text
                     className={`text-center font-medium ${
                       selectedLocationFilter === "micromarket"
-                        ? "text-gray-800"
-                        : "text-gray-500"
+                        ? "text-white"
+                        : "text-black"
                     }`}
+                    style={{ fontFamily: "Montserrat_600SemiBold" }}
                   >
                     Micromarket
                   </Text>
                 </TouchableOpacity>
               </View>
             </View>
-
-            {/* Search Input with proper z-index */}
-            <View className="p-4">
-              {selectedLocationFilter === "landmark" && (
-                <View style={{ zIndex: 15 }}>
-                  <LandmarkDropdownFilters
-                    selectedLandmark={selectedLandmark}
-                    setSelectedLandmark={setSelectedLandmark}
-                  />
-                </View>
-              )}
-
-              {selectedLocationFilter === "micromarket" && (
-                <SearchableRefinementList
-                  items={micromarketItems}
-                  refine={refineMicromarket}
-                  attribute="micromarket"
+          </View>
+          
+          {/* Search Input with proper z-index */}
+          <View className="py-2.5">
+            {selectedLocationFilter === "landmark" && (
+              <View style={{ zIndex: 1500 }}>
+                <LandmarkDropdownFilters
+                  selectedLandmark={localSelectedLandmark}
+                  setSelectedLandmark={setLocalSelectedLandmark}
                 />
-              )}
-            </View>
+              </View>
+            )}
+
+            {selectedLocationFilter === "micromarket" && (
+              <SearchableRefinementList
+                items={createDropdownItems("micromarket")}
+                attribute="micromarket"
+              />
+            )}
           </View>
 
           {/* Asset Type & Configuration - First Row */}
           <View className="flex-row flex-wrap justify-between mb-4">
             {/* Asset Type Dropdown - Now with higher z-index */}
             <View
-              className="p-4 border border-gray-200 rounded-xl w-[48%] "
+              className="p-4 border border-gray-200 rounded-xl w-[48%]"
               style={{ zIndex: 30 }}
             >
               <Text
@@ -482,8 +507,8 @@ const MoreFilters = ({
               </Text>
               <DropdownMoreFilters
                 title="Please Select"
-                items={assetTypeItems}
-                refine={refineAssetType}
+                items={createDropdownItems("assetType")}
+                refine={(value: string) => toggleFilterValue("assetType", value)}
                 isAssetType={true}
               />
             </View>
@@ -501,8 +526,8 @@ const MoreFilters = ({
               </Text>
               <DropdownMoreFilters
                 title="Please Select"
-                items={unitTypeItems}
-                refine={refineUnitType}
+                items={createDropdownItems("unitType")}
+                refine={(value: string) => toggleFilterValue("unitType", value)}
                 isRight={true}
               />
             </View>
@@ -569,8 +594,8 @@ const MoreFilters = ({
               </Text>
               <DropdownMoreFilters
                 title="Please Select"
-                items={facingItems}
-                refine={refineFacing}
+                items={createDropdownItems("facing")}
+                refine={(value: string) => toggleFilterValue("facing", value)}
               />
             </View>
 
@@ -584,8 +609,8 @@ const MoreFilters = ({
               </Text>
               <DropdownMoreFilters
                 title="Please Select"
-                items={floorItems}
-                refine={refineFloor}
+                items={createDropdownItems("floorNo")}
+                refine={(value: string) => toggleFilterValue("floorNo", value)}
                 isRight={true}
               />
             </View>
@@ -599,7 +624,7 @@ const MoreFilters = ({
             <Text className="font-semibold text-sm text-gray-700 mb-3">
               {insideFilters[5].title}
             </Text>
-            {renderRefinementList(statusItems, refineStatus)}
+            {renderRefinementList(createDropdownItems("currentStatus"), "currentStatus")}
           </View>
 
           {/* Area Refinement List - Lowest z-index */}
@@ -610,7 +635,7 @@ const MoreFilters = ({
             <Text className="font-semibold text-sm text-gray-700 mb-3">
               {insideFilters[6].title}
             </Text>
-            {renderRefinementList(areaItems, refineArea)}
+            {renderRefinementList(createDropdownItems("area"), "area")}
           </View>
         </ScrollView>
 
