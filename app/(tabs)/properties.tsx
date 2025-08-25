@@ -10,6 +10,7 @@ import { analytics } from "../config/firebase";
 import { logEvent } from "@react-native-firebase/analytics";
 import { MobileHits } from "../components/property/MobileHits";
 import { useAlgoliaSearch } from "@/hooks/propertyHooks/useAlgoliaSearchProperties";
+import MoreFilters from "../components/MoreFilters";
 
 
 export default function PropertiesScreen() {
@@ -26,6 +27,7 @@ export default function PropertiesScreen() {
     searchState,
     query,
     filters,
+    facets,
     selectedLandmark,
     sortBy,
     updateQuery,
@@ -157,7 +159,7 @@ export default function PropertiesScreen() {
           />
         </View>
       </View>
-      {/* <MoreFilters
+      <MoreFilters
         isOpen={isMoreFiltersModalOpen}
         setIsOpen={setIsMoreFiltersModalOpen}
         handleToggle={handleToggleMoreFilters}
@@ -166,7 +168,8 @@ export default function PropertiesScreen() {
         setSelectedLandmark={updateLandmark}
         filters={filters}
         onFiltersChange={updateFilters}
-      /> */}
+        facets={facets}
+      />
     </View>
   );
 }

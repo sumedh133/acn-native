@@ -113,7 +113,7 @@ export default function PropertyFilters({
   // Handle property type tab change
   const handleTabChange = (tab: "resale" | "rental") => {
     setActiveTab(tab);
-    onFiltersChange({ type: [tab] });
+    onFiltersChange({...filters, type: [tab] });
 
     try {
       logEvent(analytics, "property_type_change", {

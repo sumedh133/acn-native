@@ -1,6 +1,10 @@
 import { useState, useEffect, useCallback } from "react";
 import type { Landmark } from "@/app/types";
-import { algoliaInfiniteSearch, type InfiniteScrollState, type SearchFilters } from "../../app/services/property_services/propertyAlgoliaService";
+import {
+  algoliaInfiniteSearch,
+  type InfiniteScrollState,
+  type SearchFilters,
+} from "../../app/services/property_services/propertyAlgoliaService";
 
 // Custom hook for Algolia search state management
 export const useAlgoliaSearch = () => {
@@ -9,133 +13,131 @@ export const useAlgoliaSearch = () => {
   );
   const [query, setQuery] = useState("");
   const [filters, setFilters] = useState<SearchFilters>({ type: ["resale"] });
-  const [selectedLandmark, setSelectedLandmark] = useState<Landmark | null>(null);
+  const [selectedLandmark, setSelectedLandmark] = useState<Landmark | null>(
+    null
+  );
   const [sortBy, setSortBy] = useState<string>("relevance");
+  const [facets, setFacets] = useState<Record<string, Record<string, number>>>(
+    {}
+  );
 
   // Debounced search function
-  const [searchTimeout, setSearchTimeout] = useState<NodeJS.Timeout | null>(null);
+  const [searchTimeout, setSearchTimeout] = useState<NodeJS.Timeout | null>(
+    null
+  );
 
-  const performSearch = useCallback(async (
-    searchQuery: string,
-    searchFilters: SearchFilters,
-    landmark?: Landmark | null,
-    sort?: string
-  ) => {
-    setSearchState(prev => ({ ...prev, loading: true, error: null }));
+  const performSearch = useCallback(
+    async (
+      searchQuery: string,
+      searchFilters: SearchFilters,
+      landmark?: Landmark | null,
+      sort?: string
+    ) => {
+      setSearchState((prev) => ({ ...prev, loading: true, error: null }));
 
-    try {
-      // Add geo parameters if landmark is selected
-      const searchParams: any = {
-        query: searchQuery,
-        filters: searchFilters,
-        sortBy: sort,
-        hitsPerPage: 20,
-      };
+      try {
+        const searchParams: any = {
+          query: searchQuery,
+          filters: searchFilters,
+          sortBy: sort,
+          hitsPerPage: 20,
+        };
 
-      // Handle geo search
-      if (landmark?.lat && landmark?.lng) {
-        searchParams.aroundLatLng = `${landmark.lat},${landmark.lng}`;
-        searchParams.aroundRadius = landmark.radius || 10000; // 10km default
+        if (landmark?.lat && landmark?.lng) {
+          searchParams.aroundLatLng = `${landmark.lat},${landmark.lng}`;
+          searchParams.aroundRadius = landmark.radius || 10000;
+        }
+
+        const newState = await algoliaInfiniteSearch.search(
+          searchQuery,
+          searchFilters,
+          sort,
+          20
+        );
+
+        // ✅ merge state so `loading` always toggles properly
+        setSearchState((prev) => ({
+          ...prev,
+          ...newState,
+          loading: false,
+        }));
+        setFacets(newState.facets || {});
+      } catch (error) {
+        console.error("Search error:", error);
+        setSearchState((prev) => ({
+          ...prev,
+          loading: false,
+          error: error instanceof Error ? error.message : "Search failed",
+        }));
       }
+    },
+    []
+  );
 
-      const newState = await algoliaInfiniteSearch.search(
-        searchQuery,
-        searchFilters,
-        sort,
-        20
-      );
-      
-      setSearchState(newState);
-    } catch (error) {
-      console.error("Search error:", error);
-      setSearchState(prev => ({
-        ...prev,
-        loading: false,
-        error: error instanceof Error ? error.message : "Search failed"
-      }));
-    }
-  }, []);
-
-  // Debounced search
-  const debouncedSearch = useCallback((
-    searchQuery: string,
-    searchFilters: SearchFilters,
-    landmark?: Landmark | null,
-    sort?: string
-  ) => {
+  // 🔑 Trigger search automatically whenever query, filters, landmark, or sortBy changes
+  useEffect(() => {
     if (searchTimeout) {
       clearTimeout(searchTimeout);
     }
-
     const timeout = setTimeout(() => {
-      performSearch(searchQuery, searchFilters, landmark, sort);
-    }, 500); // 300ms debounce
-
+      performSearch(query, filters, selectedLandmark, sortBy);
+    }, 400); // debounce
     setSearchTimeout(timeout);
-  }, [performSearch, searchTimeout]);
 
-  // Load more results for infinite scroll
+    return () => clearTimeout(timeout);
+  }, [query, filters, selectedLandmark, sortBy, performSearch]);
+
+  // Update helpers (these only set state, not trigger search directly)
+  const updateQuery = useCallback((newQuery: string) => {
+    setQuery(newQuery);
+  }, []);
+
+  const updateFilters = useCallback((newFilters: SearchFilters) => {
+    setFilters(newFilters);
+  }, []);
+
+  const updateLandmark = useCallback((landmark: Landmark | null) => {
+    setSelectedLandmark(landmark);
+  }, []);
+
+  const updateSort = useCallback((sort: string) => {
+    setSortBy(sort);
+  }, []);
+
   const loadMore = useCallback(async () => {
     if (!searchState.hasMore || searchState.loadingMore) {
       return;
     }
-
-    setSearchState(prev => ({ ...prev, loadingMore: true }));
+    setSearchState((prev) => ({ ...prev, loadingMore: true }));
 
     try {
       const newState = await algoliaInfiniteSearch.loadMore(searchState, 20);
-      setSearchState(newState);
+      setSearchState((prev) => ({
+        ...prev,
+        ...newState,
+        loadingMore: false,
+      }));
     } catch (error) {
       console.error("Load more error:", error);
-      setSearchState(prev => ({
+      setSearchState((prev) => ({
         ...prev,
         loadingMore: false,
-        error: error instanceof Error ? error.message : "Load more failed"
+        error: error instanceof Error ? error.message : "Load more failed",
       }));
     }
   }, [searchState]);
 
-  // Update search query
-  const updateQuery = useCallback((newQuery: string) => {
-    setQuery(newQuery);
-    debouncedSearch(newQuery, filters, selectedLandmark, sortBy);
-  }, [filters, selectedLandmark, sortBy, debouncedSearch]);
-
-  // Update filters
-  const updateFilters = useCallback((newFilters: SearchFilters) => {
-    setFilters(newFilters);
-    performSearch(query, newFilters, selectedLandmark, sortBy);
-  }, [query, selectedLandmark, sortBy, performSearch]);
-
-  // Update landmark
-  const updateLandmark = useCallback((landmark: Landmark | null) => {
-    setSelectedLandmark(landmark);
-    performSearch(query, filters, landmark, sortBy);
-  }, [query, filters, sortBy, performSearch]);
-
-  // Update sort
-  const updateSort = useCallback((sort: string) => {
-    setSortBy(sort);
-    performSearch(query, filters, selectedLandmark, sort);
-  }, [query, filters, selectedLandmark, performSearch]);
-
   // Initial search
   useEffect(() => {
-    performSearch("", filters , null, "");
-    
-    // Cleanup on unmount
-    return () => {
-      if (searchTimeout) {
-        clearTimeout(searchTimeout);
-      }
-      algoliaInfiniteSearch.cleanup();
-    };
-  }, []);
+    performSearch(query, filters, selectedLandmark, sortBy);
+    return () => algoliaInfiniteSearch.cleanup();
+  }, []); // only on mount
 
   return {
     searchState,
     query,
     filters,
+    facets,
     selectedLandmark,
     sortBy,
     updateQuery,

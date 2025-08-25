@@ -261,7 +261,7 @@ export const MobileHits = ({
   }, []);
 
   // Show initial loading state
-  if (!isRendered || (loading)) {
+  if (!isRendered || (loading || !results.length)) {
     return (
       <View className="flex items-center justify-center h-64 gap-10 mt-20">
         <ActivityIndicator size="large" color="#153E3B" />

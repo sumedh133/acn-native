@@ -64,14 +64,16 @@ export default function CustomCurrentRefinements({
       logEvent(analytics, "clear_all_refinements", {
         event_category: "filters",
         event_label: "clear_all",
-        active_filters: Object.keys(filters),
+        // Exclude type since we're keeping it
+        active_filters: Object.keys(filters).filter((key) => key !== "type"),
         user_type: userType,
       });
     } catch (error) {
       console.error("Error logging clear all:", error);
     }
 
-    onFiltersChange({}); // reset filters
+    // Keep type, reset everything else
+    onFiltersChange({ type: filters.type });
 
     if (setSelectedLandmark) {
       setSelectedLandmark(null);

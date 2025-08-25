@@ -11,6 +11,7 @@ const INDEX_NAME = "acnTest";
 export interface SearchFilters {
   type?: string[];
   // Add more filters as needed
+  micromarket?: string[];
 }
 
 export interface SearchParams {
@@ -43,6 +44,7 @@ export interface InfiniteScrollState {
   query: string;
   filters: SearchFilters;
   sortBy?: string;
+  facets: Record<string, Record<string, number>>;
 }
 
 class AlgoliaInfiniteSearchService {
@@ -56,6 +58,7 @@ class AlgoliaInfiniteSearchService {
     totalPages: 0,
     totalHits: 0,
     hasMore: false,
+    facets: {},
     loading: false,
     loadingMore: false,
     error: null,
@@ -72,6 +75,13 @@ class AlgoliaInfiniteSearchService {
         .map((type) => `type:'${type}'`)
         .join(" OR ");
       filterParts.push(`(${typeFilters})`);
+    }
+    
+    if (filters.micromarket && filters.micromarket.length > 0) {
+      const micromarketFilters = filters.micromarket
+        .map((micromarket) => `micromarket:'${micromarket}'`)
+        .join(" OR ");
+      filterParts.push(`(${micromarketFilters})`);
     }
 
     return filterParts.join(" AND ");
@@ -115,7 +125,7 @@ class AlgoliaInfiniteSearchService {
           page,
           hitsPerPage,
           filters: filterString,
-          facets: ["type"],
+          facets: ["type", "micromarket"],
           maxValuesPerFacet: 100,
           analytics: true,
         },
@@ -172,6 +182,7 @@ class AlgoliaInfiniteSearchService {
         error: null,
         query,
         filters,
+        facets: response.facets || {},
         sortBy,
       };
     } catch (error : any) {
@@ -190,6 +201,7 @@ class AlgoliaInfiniteSearchService {
         error: error instanceof Error ? error.message : "Search failed",
         query,
         filters,
+        facets: {},
         sortBy,
       };
     }
