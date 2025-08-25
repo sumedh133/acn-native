@@ -43,16 +43,26 @@ export const useAlgoliaSearch = () => {
           hitsPerPage: 20,
         };
 
+        // ✅ only add geo if landmark is valid
         if (landmark?.lat && landmark?.lng) {
           searchParams.aroundLatLng = `${landmark.lat},${landmark.lng}`;
           searchParams.aroundRadius = landmark.radius || 10000;
         }
 
+        const geoOptions =
+          landmark?.lat && landmark?.lng
+            ? {
+                aroundLatLng: `${landmark.lat},${landmark.lng}`,
+                aroundRadius: landmark.radius || 10000,
+              }
+            : undefined; 
+
         const newState = await algoliaInfiniteSearch.search(
           searchQuery,
           searchFilters,
           sort,
-          20
+          20,
+          geoOptions
         );
 
         // ✅ merge state so `loading` always toggles properly
@@ -61,6 +71,7 @@ export const useAlgoliaSearch = () => {
           ...newState,
           loading: false,
         }));
+
         setFacets(newState.facets || {});
       } catch (error) {
         console.error("Search error:", error);

@@ -20,6 +20,8 @@ export interface SearchParams {
   page?: number;
   hitsPerPage?: number;
   sortBy?: string;
+  aroundLatLng?: string; // <-- NEW
+  aroundRadius?: number;
 }
 
 export interface AlgoliaSearchResponse {
@@ -45,6 +47,8 @@ export interface InfiniteScrollState {
   filters: SearchFilters;
   sortBy?: string;
   facets: Record<string, Record<string, number>>;
+  aroundLatLng?: string; // <-- NEW
+  aroundRadius?: number;
 }
 
 class AlgoliaInfiniteSearchService {
@@ -76,7 +80,7 @@ class AlgoliaInfiniteSearchService {
         .join(" OR ");
       filterParts.push(`(${typeFilters})`);
     }
-    
+
     if (filters.micromarket && filters.micromarket.length > 0) {
       const micromarketFilters = filters.micromarket
         .map((micromarket) => `micromarket:'${micromarket}'`)
@@ -105,13 +109,17 @@ class AlgoliaInfiniteSearchService {
   };
 
   // Core search method
-  private performSearch = async (params: SearchParams): Promise<AlgoliaSearchResponse> => {
+  private performSearch = async (
+    params: SearchParams
+  ): Promise<AlgoliaSearchResponse> => {
     const {
       query = "",
       filters = {},
       page = 0,
       hitsPerPage = 20,
       sortBy,
+      aroundLatLng, // <-- NEW
+      aroundRadius, // <-- NEW
     } = params;
 
     const { searchClient, indexName } = this.getClientAndIndex(sortBy);
@@ -128,6 +136,8 @@ class AlgoliaInfiniteSearchService {
           facets: ["type", "micromarket"],
           maxValuesPerFacet: 100,
           analytics: true,
+          ...(aroundLatLng ? { aroundLatLng } : {}), // <-- NEW
+          ...(aroundRadius ? { aroundRadius } : {}), // <-- NEW
         },
       },
     ]);
@@ -150,8 +160,10 @@ class AlgoliaInfiniteSearchService {
     query: string = "",
     filters: SearchFilters = {},
     sortBy?: string,
-    hitsPerPage: number = 20
+    hitsPerPage: number = 20,
+    options?: { aroundLatLng?: string; aroundRadius?: number }
   ): Promise<InfiniteScrollState> => {
+    
     // Cancel any ongoing requests
     if (this.currentRequest) {
       this.currentRequest.abort();
@@ -169,6 +181,7 @@ class AlgoliaInfiniteSearchService {
         page: 0,
         hitsPerPage,
         sortBy,
+        ...options,
       });
 
       return {
@@ -184,12 +197,14 @@ class AlgoliaInfiniteSearchService {
         filters,
         facets: response.facets || {},
         sortBy,
+        aroundLatLng: options?.aroundLatLng, // <-- NEW
+        aroundRadius: options?.aroundRadius,
       };
-    } catch (error : any) {
-      if (error.name === 'AbortError') {
+    } catch (error: any) {
+      if (error.name === "AbortError") {
         throw error; // Let the caller handle aborted requests
       }
-      
+
       return {
         allResults: [],
         currentPage: 0,
@@ -231,6 +246,8 @@ class AlgoliaInfiniteSearchService {
         page: currentState.currentPage,
         hitsPerPage,
         sortBy: currentState.sortBy,
+        aroundLatLng: currentState.aroundLatLng, // <-- NEW
+        aroundRadius: currentState.aroundRadius,
       });
 
       return {
@@ -241,8 +258,8 @@ class AlgoliaInfiniteSearchService {
         loadingMore: false,
         error: null,
       };
-    } catch (error : any) {
-      if (error.name === 'AbortError') {
+    } catch (error: any) {
+      if (error.name === "AbortError") {
         throw error;
       }
 
@@ -267,7 +284,9 @@ class AlgoliaInfiniteSearchService {
   };
 
   // Get facet values for filters
-  getFacetValues = async (facetName: string): Promise<Array<{value: string, count: number}>> => {
+  getFacetValues = async (
+    facetName: string
+  ): Promise<Array<{ value: string; count: number }>> => {
     try {
       const response = await searchClient.search([
         {
@@ -311,6 +330,4 @@ class AlgoliaInfiniteSearchService {
 export const algoliaInfiniteSearch = new AlgoliaInfiniteSearchService();
 
 // Export types and class for easier testing
-export {
-  AlgoliaInfiniteSearchService,
-};
+export { AlgoliaInfiniteSearchService };
