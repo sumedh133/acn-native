@@ -5,19 +5,18 @@ import {
   TextInput,
   TouchableOpacity,
   Keyboard,
-  ActivityIndicator,
   Animated,
 } from "react-native";
 import { analytics } from "@/app/config/firebase";
 import { logEvent } from "@react-native-firebase/analytics";
 import { useSelector } from "react-redux";
 import { RootState } from "@/store/store";
-import CloseIcon from "@/assets/icons/svg/CloseIcon";
 import FilterIcon from "@/assets/icons/svg/PropertiesPage/FilterIcon";
 import NewSearchIcon from "@/assets/icons/svg/PropertiesPage/NewSearchIcon";
 import { SearchFilters } from "../services/property_services/propertyAlgoliaService";
 import CustomCurrentRefinements from "./newCustomCurrentRefinements";
 import DropdownTailwind from "./DropdownTailwind";
+import ToggleTabs from "./ToggleTabs";
 
 interface PropertyFiltersProps {
   handleToggleMoreFilters: () => void;
@@ -175,50 +174,19 @@ export default function PropertyFilters({
 
   return (
     <View className="px-4 pt-3">
-      {/* Top Row: Tabs + Sort */}
-      <View className="flex-row w-full rounded-full border border-[#153E3B] overflow-hidden p-1 relative mb-3">
-        <Animated.View
-          className="absolute top-1 bottom-1 w-1/2 bg-[#153E3B] rounded-full z-0"
-          style={{
-            left: slideAnim.interpolate({
-              inputRange: [0, 1],
-              outputRange: ["1.5%", "50.5%"],
-            }),
-            shadowColor: "#000",
-            shadowOffset: { width: 0, height: 0 },
-            shadowOpacity: 0.25,
-            shadowRadius: 4,
-            elevation: 4,
-          }}
-        />
-
-        <TouchableOpacity
-          className="flex-1 py-3 items-center justify-center rounded-full z-10"
-          onPress={() => handleTabChange("resale")}
-        >
-          <Text
-            className={`text-sm  ${
-              activeTab === "resale" ? "text-white" : "text-gray-700"
-            }`}
-            style={{ fontFamily: "Montserrat_600SemiBold" }}
-          >
-            Resale
-          </Text>
-        </TouchableOpacity>
-
-        <TouchableOpacity
-          className="flex-1 py-2 items-center justify-center rounded-full z-10"
-          onPress={() => handleTabChange("rental")}
-        >
-          <Text
-            className={`text-sm  ${
-              activeTab === "rental" ? "text-white" : "text-gray-700"
-            }`}
-            style={{ fontFamily: "Montserrat_600SemiBold" }}
-          >
-            Rental
-          </Text>
-        </TouchableOpacity>
+      <View className="mb-3" >
+      <ToggleTabs
+        tabs={[
+          { label: "Resale", value: "resale" },
+          { label: "Rental", value: "rental" },
+        ]}
+        activeTab={activeTab}
+        onChange={(val) =>
+          handleTabChange(
+            val == "resale" ? ("resale" as const) : ("rental" as const)
+          )
+        }
+      />
       </View>
 
       {/* Search + Sort + Filters */}
