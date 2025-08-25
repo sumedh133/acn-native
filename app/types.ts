@@ -353,6 +353,7 @@ export interface Property {
   area: string;
   zone: string;
   communityType: communityType;
+  _geoloc: GeoLocation;
 
   // Area Measurements (unified naming)
   sbua: number; // Renamed from sbua for clarity
