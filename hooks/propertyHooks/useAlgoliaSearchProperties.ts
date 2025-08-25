@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 import type { Landmark } from "@/app/types";
-import { algoliaInfiniteSearch, type InfiniteScrollState, type SearchFilters } from "../app/services/property_services/propertyAlgoliaService";
+import { algoliaInfiniteSearch, type InfiniteScrollState, type SearchFilters } from "../../app/services/property_services/propertyAlgoliaService";
 
 // Custom hook for Algolia search state management
 export const useAlgoliaSearch = () => {
@@ -8,9 +8,9 @@ export const useAlgoliaSearch = () => {
     algoliaInfiniteSearch.getInitialState()
   );
   const [query, setQuery] = useState("");
-  const [filters, setFilters] = useState<SearchFilters>({});
+  const [filters, setFilters] = useState<SearchFilters>({ type: ["resale"] });
   const [selectedLandmark, setSelectedLandmark] = useState<Landmark | null>(null);
-  const [sortBy, setSortBy] = useState<string>("");
+  const [sortBy, setSortBy] = useState<string>("relevance");
 
   // Debounced search function
   const [searchTimeout, setSearchTimeout] = useState<NodeJS.Timeout | null>(null);
@@ -121,7 +121,7 @@ export const useAlgoliaSearch = () => {
 
   // Initial search
   useEffect(() => {
-    performSearch("", {}, null, "");
+    performSearch("", filters , null, "");
     
     // Cleanup on unmount
     return () => {

@@ -12,11 +12,12 @@ import { analytics } from "@/app/config/firebase";
 import { logEvent } from "@react-native-firebase/analytics";
 import { useSelector } from "react-redux";
 import { RootState } from "@/store/store";
-// import CustomCurrentRefinements from "./CustomCurrentRefinements";
 import CloseIcon from "@/assets/icons/svg/CloseIcon";
 import FilterIcon from "@/assets/icons/svg/PropertiesPage/FilterIcon";
 import NewSearchIcon from "@/assets/icons/svg/PropertiesPage/NewSearchIcon";
 import { SearchFilters } from "../services/property_services/propertyAlgoliaService";
+import CustomCurrentRefinements from "./newCustomCurrentRefinements";
+import DropdownTailwind from "./DropdownTailwind";
 
 interface PropertyFiltersProps {
   handleToggleMoreFilters: () => void;
@@ -46,7 +47,6 @@ export default function PropertyFilters({
 }: PropertyFiltersProps) {
   const [searchText, setSearchText] = useState(query);
   const [activeTab, setActiveTab] = useState<"resale" | "rental">("resale");
-  const [sortValue, setSortValue] = useState<string | null>(sortBy || null);
   const slideAnim = useRef(
     new Animated.Value(activeTab === "rental" ? 1 : 0)
   ).current;
@@ -106,8 +106,7 @@ export default function PropertyFilters({
       } catch (error) {
         console.error("Error logging sort change:", error);
       }
-      onSortChange(value);
-      setSortValue(value);
+      onSortChange(value); // <-- this comes from the hook
     }
   };
 
@@ -235,16 +234,17 @@ export default function PropertyFilters({
         </View>
 
         {/* Sort Dropdown - Commented out but ready to implement */}
-        {/* <View className="w-10 flex justify-center items-center">
+        <View className="w-28 flex justify-center items-center">
           <DropdownTailwind
-            value={sortValue}
+            value={sortBy ?? null} // <- from props (hook state)
             setValue={handleSortChange}
             options={sortOptions}
             placeholder="Sort"
             searchable={false}
-            containerClassName="w-full border border-[#B5B3B3]"
+            loading={loading}
+            buttonTextClassName="whitespace-nowrap "
           />
-        </View> */}
+        </View>
 
         {/* Loading Indicator */}
         {loading && (
@@ -275,13 +275,12 @@ export default function PropertyFilters({
       </View>
 
       <View className="mt-2 flex-row -ml-3">
-        {/* <CustomCurrentRefinements
+        <CustomCurrentRefinements
           selectedLandmark={selectedLandmark}
           setSelectedLandmark={setSelectedLandmark}
-          // Pass current filters to show active refinements
           filters={filters}
           onFiltersChange={onFiltersChange}
-        /> */}
+        />
       </View>
     </View>
   );

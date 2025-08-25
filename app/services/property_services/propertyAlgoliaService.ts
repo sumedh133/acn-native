@@ -86,7 +86,9 @@ class AlgoliaInfiniteSearchService {
     const sortIndexMap: Record<string, string> = {
       price_asc: `${INDEX_NAME}_price_asc`,
       price_desc: `${INDEX_NAME}_price_desc`,
-      date_desc: `${INDEX_NAME}`,
+      date_desc: `${INDEX_NAME}_date_desc`,
+      date_asc: `${INDEX_NAME}_date_asc`,
+      relevanceLow: `${INDEX_NAME}`,
     };
 
     return { searchClient, indexName: sortIndexMap[sortBy] || INDEX_NAME };

@@ -7,6 +7,7 @@ import {
   FlatList,
   Pressable,
   Modal,
+  StyleSheet,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 
@@ -35,6 +36,7 @@ interface DropdownSelectProps {
   selectedOptionClassName?: string;
   hoveredOptionClassName?: string;
   iconComponent?: React.ReactNode;
+  loading?: boolean;
 }
 
 const DropdownTailwind = ({
@@ -129,12 +131,16 @@ const DropdownTailwind = ({
         activeOpacity={0.7}
         ref={dropdownRef}
       >
-        <Text 
-          className={`${buttonTextClassName} ${!value ? "text-gray-400" : "text-black"}`}
+        <Text
+          className={`${buttonTextClassName} ${
+            !value ? "text-gray-400" : "text-black"
+          }`}
         >
           {selectedLabel}
         </Text>
-        {iconComponent || <Ionicons name="chevron-down" size={16} color="#555" />}
+        {iconComponent || (
+          <Ionicons name="chevron-down" size={16} color="#555" />
+        )}
       </TouchableOpacity>
 
       {modalVisible && (
@@ -144,49 +150,54 @@ const DropdownTailwind = ({
           visible={modalVisible}
           onRequestClose={toggleModal}
         >
-          {/* invisible full-screen backdrop */}
-          <Pressable className="absolute inset-0" onPress={toggleModal} />
-          {/* Position the dropdown list directly below the button */}
-          <View
-            className={dropdownClassName}
-            style={{
-              top: dropdownPosition.y + dropdownPosition.height - 35,
-              left: dropdownPosition.x,
-              width: dropdownPosition.width,
-              maxHeight: 200,
-            }}
-          >
-            {searchable && (
-              <TextInput
-                className={searchInputClassName}
-                value={searchTerm}
-                onChangeText={handleSearchChange}
-                placeholder="Search..."
-                placeholderTextColor="#6B7280"
-              />
-            )}
-            <FlatList
-              data={filteredOptions}
-              keyExtractor={(item, index) => `${item.value}-${index}`}
-              renderItem={({ item }) => (
-                <Pressable
-                  className={`${optionItemClassName} ${
-                    hoveredItem === item.value ? hoveredOptionClassName : ""
-                  } ${value === item.value ? selectedOptionClassName : ""}`}
-                  onPress={() => handleSelect(item)}
-                  onPressIn={() => setHoveredItem(item.value)}
-                  onPressOut={() => setHoveredItem(null)}
-                >
-                  <Text className={optionTextClassName}>
-                    {item.label}
-                  </Text>
-                </Pressable>
-              )}
-              keyboardShouldPersistTaps="handled"
-              scrollEnabled={true}
-              nestedScrollEnabled={true}
-              className="w-full"
+          <View style={{ flex: 1 }}>
+            {/* Full-screen backdrop */}
+            <Pressable
+              style={StyleSheet.absoluteFillObject}
+              onPress={toggleModal}
             />
+
+            {/* Dropdown list */}
+            <View
+              className={dropdownClassName}
+              style={{
+                position: "absolute",
+                top: dropdownPosition.y + dropdownPosition.height,
+                left: dropdownPosition.x,
+                width: dropdownPosition.width,
+                maxHeight: 200,
+              }}
+            >
+              {searchable && (
+                <TextInput
+                  className={searchInputClassName}
+                  value={searchTerm}
+                  onChangeText={handleSearchChange}
+                  placeholder="Search..."
+                  placeholderTextColor="#6B7280"
+                />
+              )}
+              <FlatList
+                data={filteredOptions}
+                keyExtractor={(item, index) => `${item.value}-${index}`}
+                renderItem={({ item }) => (
+                  <Pressable
+                    className={`${optionItemClassName} ${
+                      hoveredItem === item.value ? hoveredOptionClassName : ""
+                    } ${value === item.value ? selectedOptionClassName : ""}`}
+                    onPress={() => handleSelect(item)}
+                    onPressIn={() => setHoveredItem(item.value)}
+                    onPressOut={() => setHoveredItem(null)}
+                  >
+                    <Text className={optionTextClassName}>{item.label}</Text>
+                  </Pressable>
+                )}
+                keyboardShouldPersistTaps="handled"
+                scrollEnabled
+                nestedScrollEnabled
+                className="w-full"
+              />
+            </View>
           </View>
         </Modal>
       )}

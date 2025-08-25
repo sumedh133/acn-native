@@ -9,7 +9,7 @@ import { RootState } from "@/store/store";
 import { analytics } from "../config/firebase";
 import { logEvent } from "@react-native-firebase/analytics";
 import { MobileHits } from "../components/property/MobileHits";
-import { useAlgoliaSearch } from "@/hooks/useAlgoliaSearchProperties";
+import { useAlgoliaSearch } from "@/hooks/propertyHooks/useAlgoliaSearchProperties";
 
 
 export default function PropertiesScreen() {
