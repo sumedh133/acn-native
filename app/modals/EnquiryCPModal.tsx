@@ -19,6 +19,10 @@ import {
   showSuccessToast,
   toastConfig,
 } from "@/utils/toastUtils";
+
+// import external
+import ConfettiCannon from "react-native-confetti-cannon";
+
 import CloseIcon from "@/assets/icons/svg/CloseIcon";
 import Toast from "react-native-toast-message";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -203,7 +207,10 @@ ${user?.phoneNumber}`;
         <View style={styles.modalContent}>
           <TouchableOpacity
             style={styles.closeButton}
-            onPress={() => setIsEnquiryCPModelOpen(false)}
+            onPress={(e: any) => {
+              e.stopPropagation();
+              setIsEnquiryCPModelOpen(false);
+            }}
           >
             <CloseIcon />
           </TouchableOpacity>
@@ -268,6 +275,15 @@ ${user?.phoneNumber}`;
         </View>
       </View>
       {/* <Text style={styles.modalOverlay}>Hi</Text> */}
+      {visible && (
+        <View style={styles.ConfettiContainer}>
+          <ConfettiCannon
+            count={500}
+            origin={{ x: -50, y: 50 }}
+            autoStart={true}
+          />
+        </View>
+      )}
     </Modal>
   );
 };
@@ -277,7 +293,7 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
-    zIndex: 9999,
+    zIndex: 9998,
     backgroundColor: "rgba(0,0,0,0.5)",
     padding: 20,
   },
@@ -297,6 +313,7 @@ const styles = StyleSheet.create({
     position: "absolute",
     top: 12,
     right: 16,
+    zIndex: 9999,
   },
   contentContainer: {
     alignItems: "center",
@@ -371,6 +388,9 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: "bold",
     color: "#313131",
+  },
+  ConfettiContainer: {
+    zIndex: 9998,
   },
 });
 

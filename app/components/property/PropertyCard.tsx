@@ -498,7 +498,7 @@ const PropertyCard: React.FC<PropertyCardProps> = ({ property }) => {
             {/* share button*/}
             <TouchableOpacity
               style={styles.shareButton}
-              onPress={handleEnquireNowBtn}
+              onPress={handleShareButton}
             >
               <Share />
             </TouchableOpacity>
