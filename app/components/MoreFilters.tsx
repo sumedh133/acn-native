@@ -17,6 +17,7 @@ import CloseIcon from "@/assets/icons/svg/CloseIcon";
 import { Landmark } from "../types";
 import { SearchFilters } from "../services/property_services/propertyAlgoliaService";
 import ToggleTabs from "./ToggleTabs";
+import BackButtonIcon from "@/assets/icons/svg/PropertiesPage/BackButtonIcon";
 
 export interface RangeState {
   start: (number | undefined)[];
@@ -104,6 +105,11 @@ const MoreFilters = ({
     updateLocalFilter(attribute, newValues);
   };
 
+  const handleReset= ()=>{
+    setLocalFilters({});
+    setLocalSelectedLandmark(null);
+  }
+
   // Clear specific attribute filter
   const clearAttributeFilter = (attribute: string) => {
     setLocalFilters((prev) => {
@@ -116,15 +122,16 @@ const MoreFilters = ({
     });
   };
 
+  // Only set default tab once when modal opens, not every filter change
   useEffect(() => {
-    const hasMicromarketFilter =
-      localFilters.micromarket && localFilters.micromarket.length > 0;
-    setSelectedLocationFilter(
-      hasMicromarketFilter && !localSelectedLandmark
-        ? "micromarket"
-        : "landmark"
-    );
-  }, [localFilters, localSelectedLandmark]);
+    if (isOpen) {
+      if (localFilters.micromarket && localFilters.micromarket.length > 0) {
+        setSelectedLocationFilter("micromarket");
+      } else if (localSelectedLandmark) {
+        setSelectedLocationFilter("landmark");
+      }
+    }
+  }, [isOpen]);
 
   const [forceRender, setForceRender] = useState(false);
 
@@ -219,10 +226,21 @@ const MoreFilters = ({
       >
         {/* Header */}
         {forceRender && <View style={{ height: 0 }} />}
-        <View className="flex-row justify-between items-center p-4 border-b border-gray-200 mb-2">
-          <Text className="font-semibold text-lg text-gray-800">Filters</Text>
-          <TouchableOpacity onPress={handleToggle}>
-            <CloseIcon />
+        <View className="flex-row justify-between items-center p-4 border-b border-gray-200 mb-1">
+          {/* Left: Back button + title */}
+          <View className="flex-row items-center">
+            <TouchableOpacity
+              onPress={handleToggle}
+              className="w-9 h-9 rounded-full bg-gray-100 items-center justify-center mr-2"
+            >
+              <BackButtonIcon  />
+            </TouchableOpacity>
+            <Text className="font-semibold text-lg text-gray-800 mt-1" style={{fontFamily: "Montserrat_700Bold"}}>Filters</Text>
+          </View>
+
+          {/* Right: Reset */}
+          <TouchableOpacity onPress={handleReset}>
+            <Text className="text-red-600 text-sm mt-1 underline">Reset</Text>
           </TouchableOpacity>
         </View>
 
@@ -234,9 +252,9 @@ const MoreFilters = ({
             ]}
             activeTab={selectedLocationFilter}
             onChange={(val) => handleLocationFilterChange(val)}
-            sliderClassName="rounded-lg top-1.5"
-            containerClassName="rounded-lg border-0 bg-gray-200 h-16"
-            sliderHeight="90%"
+            sliderClassName="rounded-lg top-[6.5px] bg-[#205E59]"
+            containerClassName="rounded-lg border-0 bg-gray-200 h-14"
+            sliderHeight="88%"
           />
 
           {/* Search Input with proper z-index */}
@@ -259,15 +277,20 @@ const MoreFilters = ({
               />
             )}
           </View>
+
+          {/* Rest of the filters */}
         </ScrollView>
 
         {/* Footer */}
-        <View className="p-4 border-t border-gray-200">
+        <View className="p-4 py-3 border-t border-gray-200">
           <TouchableOpacity
             className="bg-[#153E3B] py-3 mx-4 rounded-md items-center"
             onPress={handleShowResults}
           >
-            <Text className="text-white font-medium text-md ml-1">
+            <Text
+              className="text-white font-medium text-base ml-1"
+              style={{ fontFamily: "Lato_400Regular" }}
+            >
               Show Results
             </Text>
           </TouchableOpacity>

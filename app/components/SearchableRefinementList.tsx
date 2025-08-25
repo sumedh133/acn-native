@@ -7,6 +7,8 @@ import { RootState } from "@/store/store";
 import NewSearchIcon from "@/assets/icons/svg/PropertiesPage/NewSearchIcon";
 import { SearchFilters } from "../services/property_services/propertyAlgoliaService";
 
+const MAX_VISIBLE = 7;
+
 interface RefinementItem {
   value: string;
   label: string;
@@ -77,7 +79,7 @@ const SearchableRefinementList: React.FC<SearchableRefinementListProps> = ({
   return (
     <View className="w-full mb-2">
       {attribute === "micromarket" && (
-        <View className="flex-row items-center w-full border px-2 border-gray-300 rounded-md h-10 pl-3 bg-white">
+        <View className="flex-row items-center w-full border px-2 border-gray-300 rounded-md h-11 pl-3 bg-white mb-2">
           <NewSearchIcon strokeColor="#726C6C" />
           <TextInput
             className="text-[12px] ml-2"
@@ -91,11 +93,12 @@ const SearchableRefinementList: React.FC<SearchableRefinementListProps> = ({
 
       <View className="flex-row flex-wrap gap-2">
         {filteredItems
-          ?.slice(0, searchQuery === "" ? 10 : filteredItems.length)
+          ?.slice(0, Math.min(MAX_VISIBLE, filteredItems.length))
           ?.map((item) => {
             const isRefined = (
               localFilters[attribute as keyof SearchFilters] || []
             ).includes(item.value);
+
             return (
               <TouchableOpacity
                 key={item.value}
@@ -106,21 +109,26 @@ const SearchableRefinementList: React.FC<SearchableRefinementListProps> = ({
               >
                 <View className="flex-row justify-between items-center">
                   <Text
+                    style={{ fontFamily: "Lato_400Regular" }}
                     className={`text-sm ${
-                      isRefined
-                        ? "text-[#153E3B] font-medium"
-                        : "text-gray-700"
+                      isRefined ? "text-[#10302D] font-semibold" : "text-black"
                     }`}
                   >
                     {item.label}
-                  </Text>
-                  <Text className="text-xs ml-2 px-1 py-0.5 bg-gray-200 rounded text-gray-600 font-bold">
-                    {item.count}
                   </Text>
                 </View>
               </TouchableOpacity>
             );
           })}
+
+        {/* Show "+X" chip if there are more items */}
+        {filteredItems.length > MAX_VISIBLE && (
+          <View className="py-2 px-3 bg-gray-200 rounded-md">
+            <Text className="text-sm text-gray-600 font-bold">
+              +{filteredItems.length - MAX_VISIBLE}
+            </Text>
+          </View>
+        )}
       </View>
     </View>
   );

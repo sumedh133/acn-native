@@ -58,7 +58,7 @@ const ToggleTabs: React.FC<ToggleTabsProps> = ({
       <Animated.View
         
         style={{
-          width: `${100 / tabs.length - 1.5}%`,
+          width: `${100 / tabs.length - 1}%`,
           left: slideAnim.interpolate({
             inputRange: tabs.map((_, i) => i),
             outputRange: tabs.map(
