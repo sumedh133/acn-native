@@ -382,7 +382,7 @@ export default function LayoutApp() {
     setShowOnboarding(false);
   };
 
-  if (!isConnectedToInternet) return <Offline />;
+  // if (!isConnectedToInternet) return <Offline />;
 
   const scrollY = new Animated.Value(0);
 

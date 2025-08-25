@@ -146,9 +146,9 @@ export interface UploadedFileUrls {
 }
 
 export interface FileObject {
-  name?: string | null;
+  name?: string;
   size?: number | null;
-  uri?: string | null;
+  uri: string;
   firebaseUri?: string | null;
 }
 

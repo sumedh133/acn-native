@@ -1,6 +1,7 @@
 import {
   ActivityIndicator,
   BackHandler,
+  Platform,
   ScrollView,
   StyleSheet,
   Text,
@@ -39,7 +40,11 @@ import Offline from "../components/Offline";
 import ArrowLeftIcon from "@/assets/icons/svg/Common/ArrowLeftIcon";
 import { router, useLocalSearchParams } from "expo-router";
 import { useFocusEffect } from "@react-navigation/native";
-import { showErrorToast, showSuccessToast } from "@/utils/toastUtils";
+import {
+  showErrorToast,
+  showSuccessToast,
+  showToast,
+} from "@/utils/toastUtils";
 import { areasData } from "../helpers/areasData";
 import { handleIdGeneration } from "../helpers/nextId";
 import { getUnixDateTime } from "../helpers/getUnixDateTime";
@@ -51,8 +56,15 @@ import { useBackToSaveDraft } from "@/hooks/useBackToSaveDraft";
 import MultiSelectSlider from "../components/Listing/MuliSelectSliderButton";
 import { logEvent } from "@react-native-firebase/analytics";
 import { analytics } from "../config/firebase";
+import * as tus from "tus-js-client";
+import { Upload } from "tus-js-client";
+import * as FileSystem from "expo-file-system";
 
 const API_URL = "https://uploadtodrive-ouurm6pska-uc.a.run.app";
+const TUS_ENDPOINT =
+  Platform.OS === "android"
+    ? "http://10.0.2.2:1080/files/"
+    : "http://localhost:1080/files/";
 
 const initialState: ListingProperty = {
   _geoloc: {
@@ -831,49 +843,208 @@ const AddInventoryForm = () => {
     }
   };
 
-  const handleUploadToStorage = async (propId: string) => {
-    const uploadedFileUrls: UploadedFileUrls = {
-      photo: [],
-      video: [],
-      document: [],
-    };
-    const copyOfDocs = { ...docsToUpload };
-    for (const [type, files] of Object.entries(copyOfDocs)) {
-      for (const file of files) {
-        if (file.firebaseUri) {
-          uploadedFileUrls[type].push(file.firebaseUri);
-          continue;
+  // const handleUploadToStorage = async (propId: string) => {
+  //   const uploadedFileUrls: UploadedFileUrls = {
+  //     photo: [],
+  //     video: [],
+  //     document: [],
+  //   };
+  //   const copyOfDocs = { ...docsToUpload };
+  //   for (const [type, files] of Object.entries(copyOfDocs)) {
+  //     for (const file of files) {
+  //       if (file.firebaseUri) {
+  //         uploadedFileUrls[type].push(file.firebaseUri);
+  //         continue;
+  //       }
+  //       try {
+  //         const uniqueFileName = `${Date.now()}-${file.name}`;
+  //         const storagePath = `media-files/${propId}/${type}/${uniqueFileName}`;
+
+  //         const reference = storage().ref(storagePath);
+
+  //         const filePath = file.uri ? file.uri.replace("file://", "") : null;
+
+  //         if (!filePath) {
+  //           console.error(`File path not found for ${file.name}`);
+  //           continue;
+  //         }
+
+  //         await reference.putFile(filePath);
+
+  //         const downloadURL = await reference.getDownloadURL();
+
+  //         uploadedFileUrls[type].push(downloadURL);
+  //         file.firebaseUri = downloadURL;
+  //       } catch (error: any) {
+  //         console.error(`Failed to upload ${type} file (${file.name}):`, error);
+  //         throw new Error(
+  //           `Error uploading ${type} file (${file.name}): ${error.message}`
+  //         );
+  //       }
+  //     }
+  //   }
+  //   setDocsToUpload(copyOfDocs);
+  //   return uploadedFileUrls; // Return the URLs of uploaded files
+  // };
+
+  // Convert content:// to a real file:// by copying into app cache if needed
+const toFileUri = async (uri: string, name: string) => {
+  if (uri.startsWith("file://")) return uri;
+
+  const ext = name?.includes(".") ? "." + name.split(".").pop() : "";
+  const target = `${FileSystem.cacheDirectory}upload-${Date.now()}${ext}`;
+
+  try {
+    await FileSystem.copyAsync({ from: uri, to: target });
+    return target;
+  } catch {
+    const base64 = await FileSystem.readAsStringAsync(uri, {
+      encoding: FileSystem.EncodingType.Base64,
+    });
+    await FileSystem.writeAsStringAsync(target, base64, {
+      encoding: FileSystem.EncodingType.Base64,
+    });
+    return target;
+  }
+};
+
+const ensureLocalFileForTus = async (rawUri?: string, name?: string) => {
+  if (!rawUri || typeof rawUri !== "string") {
+    throw new Error("Invalid file URI (empty)");
+  }
+  const fileUri = await toFileUri(rawUri, name ?? "upload");
+  const info = await FileSystem.getInfoAsync(fileUri);
+  if (!info.exists) throw new Error("Invalid file URI (not found)");
+  // @ts-ignore (size is present in Expo file info)
+  const size: number | undefined = typeof info.size === "number" ? info.size : undefined;
+  return { fileUri, size };
+};
+
+
+  // Replace your old Firebase uploader with this tus variant:
+const handleUploadToStorage = async (propId: string) => {
+  const uploadedFileUrls: UploadedFileUrls = {
+    photo: [],
+    video: [],
+    document: [],
+  };
+
+  // Make a working copy so we can mutate file.firebaseUri and then commit once
+  const copyOfDocs = {
+    photo: [...docsToUpload.photo],
+    video: [...docsToUpload.video],
+    document: [...docsToUpload.document],
+  };
+
+  // Helper to upload a single file via tus and return the upload URL
+  const tusUploadSingle = (typeKey: keyof UploadedFileUrls, file: FileObject) => {
+    return new Promise<string>(async (resolve, reject) => {
+      try {
+        // If already uploaded (we reuse your firebaseUri field as the canonical URL), skip
+        if ((file as any).firebaseUri) {
+          return resolve((file as any).firebaseUri as string);
         }
-        try {
-          const uniqueFileName = `${Date.now()}-${file.name}`;
-          const storagePath = `media-files/${propId}/${type}/${uniqueFileName}`;
 
-          const reference = storage().ref(storagePath);
+        const { fileUri, size: statSize } = await ensureLocalFileForTus(file.uri, file.name);
 
-          const filePath = file.uri ? file.uri.replace("file://", "") : null;
+        // Decide size: prefer file.size from picker, fallback to FS stat
+        const uploadSize =
+          typeof file.size === "number" && file.size > 0 ? file.size : statSize;
 
-          if (!filePath) {
-            console.error(`File path not found for ${file.name}`);
-            continue;
-          }
-
-          await reference.putFile(filePath);
-
-          const downloadURL = await reference.getDownloadURL();
-
-          uploadedFileUrls[type].push(downloadURL);
-          file.firebaseUri = downloadURL;
-        } catch (error: any) {
-          console.error(`Failed to upload ${type} file (${file.name}):`, error);
-          throw new Error(
-            `Error uploading ${type} file (${file.name}): ${error.message}`
-          );
+        if (!uploadSize) {
+          return reject(new Error(`Unknown file size for ${file.name}`));
         }
+
+        // RN-style file descriptor (no Blob/fetch)
+        const rnFile: any = {
+          uri: fileUri,
+          name: file.name ?? "unnamed",
+          type: "application/octet-stream", // set real mime if you store it
+        };
+
+
+
+        // Fingerprint that stays stable across cache copies so resume works
+        const fingerprint = () =>
+          Promise.resolve(`rn-${propId}-${typeKey}-${rnFile.name}-${uploadSize}`);
+
+        console.log(rnFile)
+
+        const upload = new Upload(rnFile, {
+          endpoint: TUS_ENDPOINT,
+          uploadSize,
+          retryDelays: [0, 3000, 5000, 10000, 20000],
+          storeFingerprintForResuming: true,
+          removeFingerprintOnSuccess: true,
+          fingerprint,
+          metadata: {
+            filename: rnFile.name,
+            filetype: rnFile.type,
+            propId,
+            category: String(typeKey),
+          },
+          onError(error) {
+            console.error(`Tus upload failed (${rnFile.name}):`, error);
+            showToast("error", `Upload failed for ${rnFile.name}`);
+            reject(error);
+          },
+          onProgress(bytesUploaded, bytesTotal) {
+            const pct = ((bytesUploaded / bytesTotal) * 100).toFixed(2);
+            console.log(`${rnFile.name}: ${bytesUploaded}/${bytesTotal} (${pct}%)`);
+          },
+          onSuccess() {
+            // Most tus servers allow GET on the upload URL; if yours returns a fileId or a separate download URL,
+            // map that here instead of using upload.url directly.
+            const url = upload.url as string;
+            console.log(`Upload finished: ${rnFile.name} → ${url}`);
+            resolve(url);
+          },
+          onAfterResponse(_req, res) {
+            try {
+              console.log("Tus response:", res.getStatus(), res.getHeader("upload-offset"));
+            } catch (error) {
+              console.log("error: ", error);
+            }
+          },
+        });
+
+        // Resume if possible
+        const prev = upload.findPreviousUploads();
+        if (prev.length > 0) {
+          console.log("Resuming from:", prev[0].uploadUrl);
+          upload.resumeFromPreviousUpload(prev[0]);
+        }
+
+        upload.start();
+      } catch (err) {
+        reject(err);
+      }
+    });
+  };
+
+  // Iterate your categories and files (same shape as before)
+  for (const [type, files] of Object.entries(copyOfDocs) as Array<
+    [keyof UploadedFileUrls, FileObject[]]
+  >) {
+    for (const file of files) {
+      try {
+        const url = await tusUploadSingle(type, file);
+        uploadedFileUrls[type].push(url);
+        // keep your existing contract: stash URL so future runs skip it
+        (file as any).firebaseUri = url;
+      } catch (error: any) {
+        console.error(`Failed to upload ${type} file (${file.name}):`, error);
+        throw new Error(`Error uploading ${type} file (${file.name}): ${error.message ?? error}`);
       }
     }
-    setDocsToUpload(copyOfDocs);
-    return uploadedFileUrls; // Return the URLs of uploaded files
-  };
+  }
+
+  // Commit updated file records back to state (now they carry .firebaseUri)
+  setDocsToUpload(copyOfDocs);
+
+  return uploadedFileUrls; // same return contract as your old function
+};
+
 
   const handleUploadToDrive = async (
     propId: string,
@@ -940,14 +1111,14 @@ const AddInventoryForm = () => {
 
       let propId = property.propertyId;
       if (!property.propertyId) {
-        propId = await generateNextQcId();
+        // propId = await generateNextQcId();
       }
-      if (!propId) {
-        console.error("Error generating Property ID. Please try again later");
-        showErrorToast("Error generating Property ID. Please try again later");
-        setSaving(false);
-        return;
-      }
+      // if (!propId) {
+      //   console.error("Error generating Property ID. Please try again later");
+      //   showErrorToast("Error generating Property ID. Please try again later");
+      //   setSaving(false);
+      //   return;
+      // }
 
       const autoFields: Partial<ListingProperty> = {
         propertyId: propId,
@@ -976,39 +1147,39 @@ const AddInventoryForm = () => {
         document: [],
       };
       try {
-        uploadedFileUrls = await handleUploadToStorage(propId);
+        await handleUploadToStorage(propId);
       } catch (error) {
-        console.error("Error uploading files to Firebase Storage:", error);
+        console.log("Error uploading files to Firebase Storage: 1", error);
         showErrorToast("Error uploading files. Please try again.");
         setSaving(false);
         return;
       }
 
-      let driveLink = null;
-      if (
-        uploadedFileUrls?.document?.length > 0 ||
-        uploadedFileUrls?.photo?.length > 0 ||
-        uploadedFileUrls?.video?.length > 0
-      ) {
-        try {
-          driveLink = await handleUploadToDrive(propId, uploadedFileUrls);
-        } catch (error) {
-          console.error("Error uploading files to Drive:", error);
-          showErrorToast("Error uploading files. Please try again.");
-          setSaving(false);
-          return;
-        }
-      }
+      // let driveLink = null;
+      // if (
+      //   uploadedFileUrls?.document?.length > 0 ||
+      //   uploadedFileUrls?.photo?.length > 0 ||
+      //   uploadedFileUrls?.video?.length > 0
+      // ) {
+      //   try {
+      //     driveLink = await handleUploadToDrive(propId, uploadedFileUrls);
+      //   } catch (error) {
+      //     console.error("Error uploading files to Drive:", error);
+      //     showErrorToast("Error uploading files. Please try again.");
+      //     setSaving(false);
+      //     return;
+      //   }
+      // }
 
       const dataToSave: ListingProperty = {
         ...property,
         ...autoFields,
         ...uploadedFileUrls,
-        driveLink,
+        // driveLink,
       };
 
       console.log("dataToSave", dataToSave);
-      await setDoc(doc(db, "acnQCInventories", propId), dataToSave);
+      await setDoc(doc(db, "acnTestProperties", "1"), dataToSave);
       console.log("Document successfully written with ID:", propId);
       showSuccessToast("Property sent for verification!");
       handleSetValue("propertyId", propId);
@@ -1085,14 +1256,14 @@ const AddInventoryForm = () => {
 
       let propId = property.propertyId;
       if (!property.propertyId) {
-        propId = await generateNextQcId();
+        // propId = await generateNextQcId();
       }
-      if (!propId) {
-        console.error("Error generating Property ID. Please try again later");
-        showErrorToast("Error generating Property ID. Please try again later");
-        setSaving(false);
-        return;
-      }
+      // if (!propId) {
+      //   console.error("Error generating Property ID. Please try again later");
+      //   showErrorToast("Error generating Property ID. Please try again later");
+      //   setSaving(false);
+      //   return;
+      // }
 
       const autoFields: Partial<ListingProperty> = {
         propertyId: propId,
@@ -1107,29 +1278,29 @@ const AddInventoryForm = () => {
         document: [],
       };
       try {
-        uploadedFileUrls = await handleUploadToStorage(propId);
+        await handleUploadToStorage(propId);
       } catch (error) {
-        console.error("Error uploading files to Firebase Storage:", error);
+        console.error("Error uploading files to Firebase Storage: 2", error);
         showErrorToast("Error uploading files. Please try again.");
         setSaving(false);
         return;
       }
 
       let driveLink = null;
-      if (
-        uploadedFileUrls?.document?.length > 0 ||
-        uploadedFileUrls?.photo?.length > 0 ||
-        uploadedFileUrls?.video?.length > 0
-      ) {
-        try {
-          driveLink = await handleUploadToDrive(propId, uploadedFileUrls);
-        } catch (error) {
-          console.error("Error uploading files to Drive:", error);
-          showErrorToast("Error uploading files. Please try again.");
-          setSaving(false);
-          return;
-        }
-      }
+      // if (
+      //   uploadedFileUrls?.document?.length > 0 ||
+      //   uploadedFileUrls?.photo?.length > 0 ||
+      //   uploadedFileUrls?.video?.length > 0
+      // ) {
+      //   try {
+      //     driveLink = await handleUploadToDrive(propId, uploadedFileUrls);
+      //   } catch (error) {
+      //     console.error("Error uploading files to Drive:", error);
+      //     showErrorToast("Error uploading files. Please try again.");
+      //     setSaving(false);
+      //     return;
+      //   }
+      // }
 
       const dataToSave: ListingProperty = {
         ...property,
@@ -1139,7 +1310,7 @@ const AddInventoryForm = () => {
       };
       console.log(property);
 
-      await setDoc(doc(db, "acnQCInventories", propId), dataToSave);
+      await setDoc(doc(db, "acnTestProperties", "1"), dataToSave);
       showSuccessToast("Property saved as draft successfully!");
       handleSetValue("propertyId", propId);
       setSavingDraft(false);
@@ -1168,6 +1339,8 @@ const AddInventoryForm = () => {
       });
       console.error("An unexpected error occurred during submission:", error);
       showErrorToast("An unexpected error occurred during submission");
+      setSavingDraft(false);
+    } finally {
       setSavingDraft(false);
     }
     router.back();
@@ -1291,7 +1464,7 @@ const AddInventoryForm = () => {
     return () => backHandler.remove();
   }, [saveAsDraftModalVisible, property]);
 
-  if (!isConnectedToInternet) return <Offline />;
+  // if (isConnectedToInternet) return <Offline />;
 
   if (!isRendered)
     return (
@@ -1316,7 +1489,9 @@ const AddInventoryForm = () => {
             >
               <ArrowLeftIcon />
             </TouchableOpacity>
-            <Text style={styles.headerTitle} className="text-red-200">Add Property</Text>
+            <Text style={styles.headerTitle} className="text-red-200">
+              Add Property
+            </Text>
           </View>
 
           <TouchableOpacity style={styles.headerRight} onPress={handleClear}>
