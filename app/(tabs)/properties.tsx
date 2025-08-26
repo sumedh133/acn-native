@@ -34,6 +34,7 @@ export default function PropertiesScreen() {
     updateFilters,
     updateLandmark,
     updateSort,
+    refresh,
     loadMore,
   } = useAlgoliaSearch();
 
@@ -156,6 +157,7 @@ export default function PropertiesScreen() {
             error={searchState.error}
             totalHits={searchState.totalHits}
             onLoadMore={loadMore}
+            onRefresh={refresh}
           />
         </View>
       </View>

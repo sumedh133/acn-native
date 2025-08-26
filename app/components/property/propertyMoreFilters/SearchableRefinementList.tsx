@@ -110,7 +110,7 @@ const SearchableRefinementList: React.FC<SearchableRefinementListProps> = ({
                 <View className="flex-row justify-between items-center">
                   <Text
                     style={{ fontFamily: "Lato_400Regular" }}
-                    className={`text-sm ${
+                    className={`text-xs leading-[150%] ${
                       isRefined ? "text-[#10302D] font-semibold" : "text-black"
                     }`}
                   >
@@ -124,7 +124,7 @@ const SearchableRefinementList: React.FC<SearchableRefinementListProps> = ({
         {/* Show "+X" chip if there are more items */}
         {filteredItems.length > MAX_VISIBLE && (
           <View className="py-2 px-3 bg-gray-200 rounded-md">
-            <Text className="text-sm text-gray-600 font-bold">
+            <Text className="text-xs text-gray-600 font-bold">
               +{filteredItems.length - MAX_VISIBLE}
             </Text>
           </View>

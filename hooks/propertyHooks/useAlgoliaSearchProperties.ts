@@ -6,25 +6,49 @@ import {
   type SearchFilters,
 } from "../../app/services/property_services/propertyAlgoliaService";
 
-// Custom hook for Algolia search state management
 export const useAlgoliaSearch = () => {
   const [searchState, setSearchState] = useState<InfiniteScrollState>(
     algoliaInfiniteSearch.getInitialState()
   );
   const [query, setQuery] = useState("");
   const [filters, setFilters] = useState<SearchFilters>({ type: ["resale"] });
-  const [selectedLandmark, setSelectedLandmark] = useState<Landmark | null>(
-    null
-  );
+  const [selectedLandmark, setSelectedLandmark] = useState<Landmark | null>(null);
   const [sortBy, setSortBy] = useState<string>("relevance");
-  const [facets, setFacets] = useState<Record<string, Record<string, number>>>(
-    {}
-  );
 
-  // Debounced search function
-  const [searchTimeout, setSearchTimeout] = useState<NodeJS.Timeout | null>(
-    null
-  );
+  // 🔑 facet states
+  const [facets, setFacets] = useState<Record<string, Record<string, number>>>({});
+  const [masterFacets, setMasterFacets] = useState<
+    Record<string, Set<string>>
+  >({});
+
+  // --- bootstrap master facets once ---
+  useEffect(() => {
+    const fetchMasterFacets = async () => {
+      try {
+        // run a query with no filters, just to get all facet values
+        const initialState = await algoliaInfiniteSearch.search(
+          "",
+          {}, // no filters
+          undefined,
+          0 // hitsPerPage = 0 → we only care about facets
+        );
+
+        const mf: Record<string, Set<string>> = {};
+        for (const [facetKey, values] of Object.entries(initialState.facets ?? {})) {
+          mf[facetKey] = new Set(Object.keys(values));
+        }
+
+        setMasterFacets(mf);
+      } catch (err) {
+        console.error("Failed to fetch master facets:", err);
+      }
+    };
+
+    fetchMasterFacets();
+  }, []);
+
+  // --- debounced search ---
+  const [searchTimeout, setSearchTimeout] = useState<NodeJS.Timeout | null>(null);
 
   const performSearch = useCallback(
     async (
@@ -36,26 +60,13 @@ export const useAlgoliaSearch = () => {
       setSearchState((prev) => ({ ...prev, loading: true, error: null }));
 
       try {
-        const searchParams: any = {
-          query: searchQuery,
-          filters: searchFilters,
-          sortBy: sort,
-          hitsPerPage: 20,
-        };
-
-        // ✅ only add geo if landmark is valid
-        if (landmark?.lat && landmark?.lng) {
-          searchParams.aroundLatLng = `${landmark.lat},${landmark.lng}`;
-          searchParams.aroundRadius = landmark.radius || 10000;
-        }
-
         const geoOptions =
           landmark?.lat && landmark?.lng
             ? {
                 aroundLatLng: `${landmark.lat},${landmark.lng}`,
                 aroundRadius: landmark.radius || 10000,
               }
-            : undefined; 
+            : undefined;
 
         const newState = await algoliaInfiniteSearch.search(
           searchQuery,
@@ -65,14 +76,28 @@ export const useAlgoliaSearch = () => {
           geoOptions
         );
 
-        // ✅ merge state so `loading` always toggles properly
         setSearchState((prev) => ({
           ...prev,
           ...newState,
           loading: false,
         }));
 
-        setFacets(newState.facets || {});
+        // merge with master facet list
+        if (masterFacets && Object.keys(masterFacets).length > 0) {
+          const merged: Record<string, Record<string, number>> = {};
+
+          for (const [facetKey, valueSet] of Object.entries(masterFacets)) {
+            merged[facetKey] = {};
+            valueSet.forEach((val) => {
+              merged[facetKey][val] = newState.facets?.[facetKey]?.[val] ?? 0;
+            });
+          }
+
+          setFacets(merged);
+        } else {
+          // fallback if master not ready yet
+          setFacets(newState.facets || {});
+        }
       } catch (error) {
         console.error("Search error:", error);
         setSearchState((prev) => ({
@@ -82,43 +107,32 @@ export const useAlgoliaSearch = () => {
         }));
       }
     },
-    []
+    [masterFacets]
   );
 
-  // 🔑 Trigger search automatically whenever query, filters, landmark, or sortBy changes
   useEffect(() => {
-    if (searchTimeout) {
-      clearTimeout(searchTimeout);
-    }
+    if (searchTimeout) clearTimeout(searchTimeout);
     const timeout = setTimeout(() => {
       performSearch(query, filters, selectedLandmark, sortBy);
-    }, 400); // debounce
+    }, 400);
     setSearchTimeout(timeout);
-
     return () => clearTimeout(timeout);
   }, [query, filters, selectedLandmark, sortBy, performSearch]);
 
-  // Update helpers (these only set state, not trigger search directly)
-  const updateQuery = useCallback((newQuery: string) => {
-    setQuery(newQuery);
-  }, []);
+  // helpers
+  const updateQuery = useCallback((q: string) => setQuery(q), []);
+  const updateFilters = useCallback((f: SearchFilters) => setFilters(f), []);
+  const updateLandmark = useCallback((lm: Landmark | null) => setSelectedLandmark(lm), []);
+  const updateSort = useCallback((s: string) => setSortBy(s), []);
 
-  const updateFilters = useCallback((newFilters: SearchFilters) => {
-    setFilters(newFilters);
-  }, []);
+  // --- add inside your hook
+  const refresh = useCallback(async () => {
+    await performSearch(query, filters, selectedLandmark, sortBy);
+  }, [performSearch, query, filters, selectedLandmark, sortBy]);
 
-  const updateLandmark = useCallback((landmark: Landmark | null) => {
-    setSelectedLandmark(landmark);
-  }, []);
-
-  const updateSort = useCallback((sort: string) => {
-    setSortBy(sort);
-  }, []);
 
   const loadMore = useCallback(async () => {
-    if (!searchState.hasMore || searchState.loadingMore) {
-      return;
-    }
+    if (!searchState.hasMore || searchState.loadingMore) return;
     setSearchState((prev) => ({ ...prev, loadingMore: true }));
 
     try {
@@ -138,11 +152,11 @@ export const useAlgoliaSearch = () => {
     }
   }, [searchState]);
 
-  // Initial search
+  // run an initial search when mounted
   useEffect(() => {
     performSearch(query, filters, selectedLandmark, sortBy);
     return () => algoliaInfiniteSearch.cleanup();
-  }, []); // only on mount
+  }, []); 
 
   return {
     searchState,
@@ -155,6 +169,7 @@ export const useAlgoliaSearch = () => {
     updateFilters,
     updateLandmark,
     updateSort,
+    refresh,
     loadMore,
   };
 };

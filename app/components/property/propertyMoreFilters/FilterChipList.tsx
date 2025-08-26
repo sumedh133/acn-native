@@ -83,7 +83,7 @@ const FilterChipList: React.FC<FilterChipListProps> = ({
             {item.icon && <View className="mr-2">{item.icon}</View>}
             <Text
               style={{ fontFamily: "Lato_400Regular" }}
-              className={`text-sm ${
+              className={`text-xs ${
                 isRefined
                   ? "text-[#10302D] font-semibold"
                   : "text-black"
