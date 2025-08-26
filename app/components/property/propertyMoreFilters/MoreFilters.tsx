@@ -18,6 +18,7 @@ import { Landmark } from "../../../types";
 import { SearchFilters } from "../../../services/property_services/propertyAlgoliaService";
 import ToggleTabs from "../../ToggleTabs";
 import BackButtonIcon from "@/assets/icons/svg/PropertiesPage/BackButtonIcon";
+import FilterChipList from "./FilterChipList";
 
 export interface RangeState {
   start: (number | undefined)[];
@@ -94,21 +95,38 @@ const MoreFilters = ({
   };
 
   // Helper function to toggle a filter value
-  const toggleFilterValue = (attribute: string, value: string) => {
+  const toggleFilterValue = (
+    attribute: string,
+    value: string,
+    singleSelect: boolean = false
+  ) => {
     const currentValues = localFilters[attribute as keyof SearchFilters] || [];
     const isSelected = currentValues.includes(value);
 
-    const newValues = isSelected
-      ? currentValues.filter((v) => v !== value)
-      : [...currentValues, value];
+    let newValues: string[];
+
+    if (singleSelect) {
+      if (isSelected) {
+        // If already selected in single select mode, deselect (empty array)
+        newValues = [];
+      } else {
+        // If not selected in single select mode, select only this value
+        newValues = [value];
+      }
+    } else {
+      // Multi-select mode (original logic)
+      newValues = isSelected
+        ? currentValues.filter((v) => v !== value)
+        : [...currentValues, value];
+    }
 
     updateLocalFilter(attribute, newValues);
   };
 
-  const handleReset= ()=>{
+  const handleReset = () => {
     setLocalFilters({});
     setLocalSelectedLandmark(null);
-  }
+  };
 
   // Clear specific attribute filter
   const clearAttributeFilter = (attribute: string) => {
@@ -226,16 +244,21 @@ const MoreFilters = ({
       >
         {/* Header */}
         {forceRender && <View style={{ height: 0 }} />}
-        <View className="flex-row justify-between items-center p-4 border-b border-gray-200 mb-1">
+        <View className="flex-row justify-between items-center p-4 pb-3 border-b border-gray-200 mb-1">
           {/* Left: Back button + title */}
           <View className="flex-row items-center">
             <TouchableOpacity
               onPress={handleToggle}
               className="w-9 h-9 rounded-full bg-gray-100 items-center justify-center mr-2"
             >
-              <BackButtonIcon  />
+              <BackButtonIcon />
             </TouchableOpacity>
-            <Text className="font-semibold text-lg text-gray-800 mt-1" style={{fontFamily: "Montserrat_700Bold"}}>Filters</Text>
+            <Text
+              className="font-semibold text-lg text-gray-800 mt-1"
+              style={{ fontFamily: "Montserrat_700Bold" }}
+            >
+              Filters
+            </Text>
           </View>
 
           {/* Right: Reset */}
@@ -279,6 +302,42 @@ const MoreFilters = ({
           </View>
 
           {/* Rest of the filters */}
+          <View className="flex-col gap-5 mt-1 px-4">
+            <FilterChipList
+              title="Select Category Type"
+              items={[
+                { label: "Residential", value: "residential" },
+                { label: "Commercial", value: "commercial" },
+              ]}
+              attribute="type"
+              localFilters={localFilters}
+              onToggleFilterValue={(attr, val) =>
+                toggleFilterValue(attr, val, true)
+              }
+              singleSelect={true}
+              horizontal
+              containerClassName="gap-[10px] "
+              chipClassName="px-3 py-1.5 rounded-full"
+              titleClassName="text-sm "
+            />
+            <FilterChipList
+              title="Select Category Type"
+              items={[
+                { value: "residential", label: "Residential" },
+                { value: "commercial", label: "Commercial" },
+              ]}
+              attribute="type"
+              localFilters={localFilters}
+              onToggleFilterValue={(attr, val) =>
+                toggleFilterValue(attr, val, true)
+              }
+              singleSelect={true}
+              horizontal
+              containerClassName="gap-[10px] "
+              chipClassName="px-3 py-1.5 rounded-full"
+              titleClassName="text-sm "
+            />
+          </View>
         </ScrollView>
 
         {/* Footer */}

@@ -22,6 +22,7 @@ interface FilterChipListProps {
   chipClassName?: string;
   title?: string; // <-- optional title
   titleClassName?: string; // <-- optional styles for title
+  singleSelect?: boolean;
 }
 
 const FilterChipList: React.FC<FilterChipListProps> = ({
@@ -34,16 +35,18 @@ const FilterChipList: React.FC<FilterChipListProps> = ({
   chipClassName = "",
   title,
   titleClassName = "",
+  singleSelect = false,
 }) => {
   const userType =
-    useSelector((state: RootState) => state?.agent?.docData?.userType) || "free";
+    useSelector((state: RootState) => state?.agent?.docData?.userType) ||
+    "free";
 
   const handleRefine = (value: string) => {
     try {
       const item = items.find((i) => i.value === value);
-      const isRefined = (
-        localFilters[attribute as keyof SearchFilters] || []
-      ).includes(value);
+      const current = (localFilters[attribute as keyof SearchFilters] ||
+        []) as string[];
+      const isRefined = current.includes(value);
 
       logEvent(analytics, "filter_refinement", {
         event_category: "filters",
@@ -54,25 +57,41 @@ const FilterChipList: React.FC<FilterChipListProps> = ({
         action: isRefined ? "remove" : "add",
         user_type: userType,
       });
+
+      if (singleSelect) {
+        // For single select, set the entire filter to just this value (or empty if deselecting)
+        const newValues = isRefined ? [] : [value];
+
+        // Or if you must use onToggleFilterValue, clear everything first:
+        if (!isRefined) {
+          current.forEach((v) => {
+            if (v !== value) onToggleFilterValue(attribute, v); // clear others
+          });
+        }
+        onToggleFilterValue(attribute, value); // toggle this one
+      } else {
+        onToggleFilterValue(attribute, value);
+      }
     } catch (error) {
       console.error("Error logging refinement:", error);
     }
-    onToggleFilterValue(attribute, value);
   };
 
   const content = (
     <View
-      className={`flex-row gap-2 ${!horizontal ? "flex-wrap" : ""} ${containerClassName}`}
+      className={`flex-row gap-2 ${
+        !horizontal ? "flex-wrap" : ""
+      } ${containerClassName}`}
     >
       {items.map((item) => {
         const isRefined = (
           localFilters[attribute as keyof SearchFilters] || []
         ).includes(item.value);
 
-        const chipBase = "flex-row items-center py-2 px-4 border rounded-lg";
+        const chipBase = "flex-row items-center py-2 px-3 border rounded-lg";
         const chipState = isRefined
           ? "bg-[#DFF4F3] border-[#153E3B]"
-          : "bg-white border-gray-300";
+          : "bg-[#FAFAFA] border-[#B5B3B3]";
 
         return (
           <TouchableOpacity
@@ -83,10 +102,8 @@ const FilterChipList: React.FC<FilterChipListProps> = ({
             {item.icon && <View className="mr-2">{item.icon}</View>}
             <Text
               style={{ fontFamily: "Lato_400Regular" }}
-              className={`text-xs ${
-                isRefined
-                  ? "text-[#10302D] font-semibold"
-                  : "text-black"
+              className={`text-sm  ${
+                isRefined ? "text-[#10302D] font-semibold" : "text-black"
               }`}
             >
               {item.label}
@@ -101,7 +118,7 @@ const FilterChipList: React.FC<FilterChipListProps> = ({
     <View className="w-full mb-2">
       {title ? (
         <Text
-          style={{ fontFamily: "Lato_700Bold" }}
+          style={{ fontFamily: "Montserrat_600SemiBold" }}
           className={`text-base text-gray-800 mb-2 ${titleClassName}`}
         >
           {title}
