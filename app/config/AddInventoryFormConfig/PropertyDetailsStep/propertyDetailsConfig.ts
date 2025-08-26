@@ -1,6 +1,10 @@
 import { FormStep } from "@/types/FormConfig";
-import { residentialApartmentFields } from "./residentialApartmentConfig";
-import { residentialPlot } from "./residentialPlot";
+import { residentialApartmentFields } from "./ResidentialAssetType/residentialApartmentConfig";
+import { residentialVillaFields } from "./ResidentialAssetType/residentialVilla";
+import { residentialVillamentFields } from "./ResidentialAssetType/residentialVillament";
+import { residentialRowHouseFields } from "./ResidentialAssetType/residentialRowHouse";
+import { residentialIndependentBuildingFields } from "./ResidentialAssetType/residentialIndependentBuilding";
+import { residentialPlot } from "./ResidentialAssetType/residentialPlot";
 
 export const propertyDetailsStep: FormStep = {
   id: "propertyDetails",
@@ -9,63 +13,18 @@ export const propertyDetailsStep: FormStep = {
   fields: [
     // ===== RESIDENTIAL APARTMENT FIELDS =====
     ...residentialApartmentFields,
-    // ===== RESIDENTIAL VILLA/VILLAMENT/ROW HOUSE/INDEPENDENT FIELDS =====
-    {
-      id: "sbua",
-      label: "Super Built-up Area (sqft)",
-      type: "number",
-      required: true,
-      placeholder: "Enter SBUA in square feet",
-      validation: {
-        min: 100,
-        message: "SBUA must be at least 100 sqft",
-      },
-      dependsOn: {
-        field: "residentialSubCategory",
-        values: ["villa", "villament", "rowhouse", "independent"],
-      },
-      colspan: 6,
-      conditional: true,
-    },
-    {
-      id: "carpetArea",
-      label: "Carpet Area (sqft)",
-      type: "number",
-      required: false,
-      placeholder: "Enter carpet area in square feet",
-      dependsOn: {
-        field: "residentialSubCategory",
-        values: ["villa", "villament", "rowhouse", "independent"],
-      },
-      colspan: 6,
-      conditional: true,
-    },
-    {
-      id: "plotArea",
-      label: "Plot Area (sqft)",
-      type: "number",
-      required: true,
-      placeholder: "Enter plot area in square feet",
-      dependsOn: {
-        field: "residentialSubCategory",
-        values: ["villa", "villament", "rowhouse", "independent"],
-      },
-      colspan: 6,
-      conditional: true,
-    },
-    {
-      id: "structure",
-      label: "Structure",
-      type: "text",
-      required: true,
-      placeholder: "E.g., G+1, G+2",
-      dependsOn: {
-        field: "residentialSubCategory",
-        values: ["villa", "villament", "rowhouse", "independent"],
-      },
-      colspan: 6,
-      conditional: true,
-    },
+
+    // ===== RESIDENTIAL VILLA FIELDS =====
+    ...residentialVillaFields,
+
+    // ===== RESIDENTIAL VILLAMENT FIELDS =====
+    ...residentialVillamentFields,
+
+    // ===== RESIDENTIAL INDEPENDENT BUILDING FIELDS =====
+    ...residentialIndependentBuildingFields,
+
+    // ===== RESIDENTIAL RAW HOUSE FIELDS =====
+    ...residentialRowHouseFields,
 
     // ===== RESIDENTIAL PLOT FIELDS =====
     ...residentialPlot,

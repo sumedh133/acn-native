@@ -1,6 +1,6 @@
 import { FormConfig } from "@/types/FormConfig";
-import { basicDetailsStep } from "./basicDetailsConfig";
-import { propertyDetailsStep } from "./propertyDetailsConfig";
+import { basicDetailsStep } from "./BasicDetailsStep/basicDetailsConfig";
+import { propertyDetailsStep } from "./PropertyDetailsStep/propertyDetailsConfig";
 
 
 export const inventoryFormConfig: FormConfig = {

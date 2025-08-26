@@ -2,6 +2,19 @@ import { FormField } from "@/types/FormConfig";
 
 export const residentialPlot: FormField[] = [
   {
+    id: "propertyName",
+    label: "Property/Project Name",
+    type: "text",
+    required: true,
+    placeholder: "Enter property name",
+    colspan: 6,
+    conditional: false,
+    dependsOn: {
+      field: "residentialSubCategory",
+      values: ["plot"],
+    },
+  },
+  {
     id: "plotSize",
     label: "Plot Size (sqft)",
     type: "number",

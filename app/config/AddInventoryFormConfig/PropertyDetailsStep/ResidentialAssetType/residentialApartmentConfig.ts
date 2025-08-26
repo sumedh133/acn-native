@@ -76,8 +76,8 @@ export const residentialApartmentFields: FormField[] = [
       { label: "West", value: "West" },
     ],
     dependsOn: {
-      field: "category",
-      values: ["residential"],
+      field: "residentialSubCategory",
+      values: ["apartment"],
     },
     colspan: 6,
     conditional: true,

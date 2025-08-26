@@ -9,7 +9,7 @@ import {
     Alert
 } from 'react-native';
 import { FormRenderer } from './FormRenderer';
-import { inventoryFormConfig } from '@/app/config/inventoryFormConfig';
+import { inventoryFormConfig } from '@/app/config/AddInventoryFormConfig/inventoryFormConfig';
 import { Property } from '@/app/types';
 import ArrowLeftIcon from '@/assets/icons/svg/Common/ArrowLeftIcon';
 
