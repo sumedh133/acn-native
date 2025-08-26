@@ -7,7 +7,13 @@ import PropertiesIcon from "@/assets/icons/svg/Footer/PropertiesIcon";
 import RequirementsIcon from "@/assets/icons/svg/Footer/RequirementsIcon";
 import PlusIcon from "@/assets/icons/svg/Common/PlusIcon";
 import { useNavigation, usePathname, useRouter } from "expo-router";
-import React, { ReactNode, useState, useRef, useEffect } from "react";
+import React, {
+  ReactNode,
+  useState,
+  useRef,
+  useEffect,
+  useContext,
+} from "react";
 import {
   Text,
   TouchableOpacity,
@@ -23,6 +29,7 @@ import { logEvent } from "@react-native-firebase/analytics";
 import { useSelector } from "react-redux";
 import { RootState } from "@/store/store";
 import useNotification from "@/app/components/Notification/useNotification";
+import { ScrollContext } from "@/app/ScrollContext";
 
 // icons import
 import MyBusiness from "@/assets/icons/svg/Footer/MyBuisness.svg";
@@ -84,6 +91,17 @@ const FooterNavigation = () => {
   const rotateAnimation = useRef(new Animated.Value(0)).current;
   const slideAnimation = useRef(new Animated.Value(height)).current;
   const opacityAnimation = useRef(new Animated.Value(0)).current;
+  const { isScrolling } = useContext(ScrollContext);
+  const footerTranslateY = useRef(new Animated.Value(0)).current;
+
+  useEffect(() => {
+    Animated.timing(footerTranslateY, {
+      toValue: isScrolling ? 59 : 0, 
+      duration: 200,
+      easing: Easing.out(Easing.quad),
+      useNativeDriver: true,
+    }).start();
+  }, [isScrolling, footerTranslateY]);
 
   const rotate = rotateAnimation.interpolate({
     inputRange: [0, 1],
@@ -244,7 +262,14 @@ const FooterNavigation = () => {
           </TouchableOpacity>
         </Animated.View>
       )}
-      <View style={styles.footer}>
+      <Animated.View
+        style={[
+          styles.footer,
+          {
+            transform: [{ translateY: footerTranslateY }],
+          },
+        ]}
+      >
         {menuItems?.map((item, idx) => {
           const active = item?.path === pathname;
           if (item?.path === "/add") {
@@ -284,7 +309,7 @@ const FooterNavigation = () => {
             </TouchableOpacity>
           );
         })}
-      </View>
+      </Animated.View>
     </>
   );
 };
@@ -308,6 +333,10 @@ const styles = StyleSheet.create({
     paddingBottom: 59,
   },
   footer: {
+    position: "absolute", // Add this
+    bottom: 0, // Add this
+    left: 0, // Add this
+    right: 0, // Add this
     display: "flex",
     flexDirection: "row",
     alignItems: "center",

@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect, useCallback } from "react";
+import React, { useState, useRef, useEffect, useCallback, useContext } from "react";
 import {
   View,
   Text,
@@ -13,6 +13,7 @@ import { useSelector } from "react-redux";
 import { RootState } from "@/store/store";
 import { analytics } from "../../config/firebase";
 import { logEvent } from "@react-native-firebase/analytics";
+import { ScrollContext } from "@/app/ScrollContext";
 
 interface MobileHitsProps {
   results: any[]; // All accumulated results from infinite scroll
@@ -44,11 +45,20 @@ export const MobileHits = ({
   const [totalPropertiesViewed, setTotalPropertiesViewed] = useState(0);
   const [refreshing, setRefreshing] = useState(false);
   const [isRendered, setIsRendered] = useState(false);
+  const { setIsScrolling } = useContext(ScrollContext);
 
   const viewabilityConfig = useRef<ViewabilityConfig>({
     itemVisiblePercentThreshold: 50, // Item is considered viewed when 50% visible
     minimumViewTime: 500, // Must be visible for at least 500ms
   });
+
+  const handleScrollBegin = () => {
+    setIsScrolling(true);
+  };
+
+  const handleScrollEnd = () => {
+    setIsScrolling(false);
+  };
 
   // Track search results when they change
   useEffect(() => {
@@ -370,6 +380,8 @@ export const MobileHits = ({
       onScroll={handleScroll}
       scrollEventThrottle={16}
       onViewableItemsChanged={handleViewableItemsChanged}
+      onScrollBeginDrag={handleScrollBegin}
+      onMomentumScrollEnd={handleScrollEnd}
       viewabilityConfig={viewabilityConfig.current}
       refreshControl={
         onRefresh ? (
