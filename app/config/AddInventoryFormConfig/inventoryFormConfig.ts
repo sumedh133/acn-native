@@ -1,22 +1,13 @@
 import { FormConfig } from "@/types/FormConfig";
 import { basicDetailsStep } from "./BasicDetailsStep/basicDetailsConfig";
 import { propertyDetailsStep } from "./PropertyDetailsStep/propertyDetailsConfig";
-
+import { pricingDetailsStep } from "./PricingDetailsStep/PricingDetailsConfig";
 
 export const inventoryFormConfig: FormConfig = {
   steps: [
     basicDetailsStep,
     propertyDetailsStep,
-    {
-      id: "pricingDetails",
-      title: "Pricing Details",
-      description: "Provide the pricing details",
-      dependsOn: {
-        field: "propertyType",
-        values: ["residential"],
-      },
-      fields: [],
-    },
+    pricingDetailsStep,
     {
       id: "moreDetails",
       title: "More Details",
