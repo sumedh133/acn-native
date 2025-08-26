@@ -1,4 +1,5 @@
 import { FormField } from "@/types/FormConfig";
+
 export const residentialApartmentFields: FormField[] = [
   {
     id: "propertyName",
@@ -9,7 +10,7 @@ export const residentialApartmentFields: FormField[] = [
     colspan: 6,
     conditional: false,
     dependsOn: {
-      field: "residentialSubCategory",
+      field: "assetType",
       values: ["apartment"],
     },
   },
@@ -21,18 +22,19 @@ export const residentialApartmentFields: FormField[] = [
     required: true,
     placeholder: "Select apartment type",
     options: [
-      { label: "Simplex", value: "Simple" },
+      { label: "Simple", value: "Simple" },
       { label: "Duplex", value: "Duplex" },
       { label: "Triplex", value: "Triplex" },
       { label: "Penthouse", value: "Penthouse" },
     ],
     dependsOn: {
-      field: "residentialSubCategory",
+      field: "assetType",
       values: ["apartment"],
     },
     colspan: 6,
     conditional: true,
   },
+
   {
     id: "sbua",
     label: "Super Built-up Area (sqft)",
@@ -44,7 +46,7 @@ export const residentialApartmentFields: FormField[] = [
       message: "SBUA must be at least 100 sqft",
     },
     dependsOn: {
-      field: "residentialSubCategory",
+      field: "assetType",
       values: ["apartment"],
     },
     colspan: 6,
@@ -57,26 +59,7 @@ export const residentialApartmentFields: FormField[] = [
     required: false,
     placeholder: "Enter carpet area in square feet",
     dependsOn: {
-      field: "residentialSubCategory",
-      values: ["apartment"],
-    },
-    colspan: 6,
-    conditional: true,
-  },
-  {
-    id: "doorFacing",
-    label: "Door Facing",
-    type: "select",
-    required: true,
-    placeholder: "Select door facing direction",
-    options: [
-      { label: "North", value: "North" },
-      { label: "South", value: "South" },
-      { label: "East", value: "East" },
-      { label: "West", value: "West" },
-    ],
-    dependsOn: {
-      field: "residentialSubCategory",
+      field: "assetType",
       values: ["apartment"],
     },
     colspan: 6,
@@ -84,8 +67,28 @@ export const residentialApartmentFields: FormField[] = [
   },
 
   {
-    id: "floorNo",
-    label: "Floor",
+    id: "facing",
+    label: "Facing (Main Door)",
+    type: "select",
+    required: true,
+    placeholder: "Select facing direction",
+    options: [
+      { label: "North", value: "North" },
+      { label: "South", value: "South" },
+      { label: "East", value: "East" },
+      { label: "West", value: "West" },
+    ],
+    dependsOn: {
+      field: "assetType",
+      values: ["apartment"],
+    },
+    colspan: 6,
+    conditional: true,
+  },
+
+  {
+    id: "floorNumber",
+    label: "Floor Number",
     type: "number",
     required: true,
     placeholder: "Enter floor number",
@@ -94,7 +97,7 @@ export const residentialApartmentFields: FormField[] = [
       message: "Floor number must be 0 or higher",
     },
     dependsOn: {
-      field: "residentialSubCategory",
+      field: "assetType",
       values: ["apartment"],
     },
     colspan: 6,
@@ -111,12 +114,13 @@ export const residentialApartmentFields: FormField[] = [
       message: "Total floors must be at least 1",
     },
     dependsOn: {
-      field: "residentialSubCategory",
+      field: "assetType",
       values: ["apartment"],
     },
     colspan: 6,
     conditional: true,
   },
+
   {
     id: "furnishing",
     label: "Furnishing",
@@ -129,12 +133,13 @@ export const residentialApartmentFields: FormField[] = [
       { label: "Furnished", value: "Furnished" },
     ],
     dependsOn: {
-      field: "residentialSubCategory",
+      field: "assetType",
       values: ["apartment"],
     },
     colspan: 6,
     conditional: true,
   },
+
   {
     id: "noOfBedrooms",
     label: "Number of Bedrooms",
@@ -151,7 +156,7 @@ export const residentialApartmentFields: FormField[] = [
       { label: "7 BHK", value: 7 },
     ],
     dependsOn: {
-      field: "residentialSubCategory",
+      field: "assetType",
       values: ["apartment"],
     },
     colspan: 6,
@@ -171,12 +176,13 @@ export const residentialApartmentFields: FormField[] = [
       { label: "Other", value: "Other" },
     ],
     dependsOn: {
-      field: "residentialSubCategory",
+      field: "assetType",
       values: ["apartment"],
     },
     colspan: 12,
     conditional: true,
   },
+
   {
     id: "noOfBathrooms",
     label: "Number of Bathrooms",
@@ -192,12 +198,13 @@ export const residentialApartmentFields: FormField[] = [
       { label: "5+", value: "5+" },
     ],
     dependsOn: {
-      field: "residentialSubCategory",
+      field: "assetType",
       values: ["apartment"],
     },
     colspan: 6,
     conditional: true,
   },
+
   {
     id: "noOfBalconies",
     label: "Number of Balconies",
@@ -214,12 +221,13 @@ export const residentialApartmentFields: FormField[] = [
       { label: "5+", value: "5+" },
     ],
     dependsOn: {
-      field: "residentialSubCategory",
+      field: "assetType",
       values: ["apartment"],
     },
     colspan: 6,
     conditional: true,
   },
+
   {
     id: "balconyFacing",
     label: "Balcony Facing",
@@ -231,7 +239,7 @@ export const residentialApartmentFields: FormField[] = [
       { label: "Outside", value: "Outside" },
     ],
     dependsOn: {
-      field: "residentialSubCategory",
+      field: "assetType",
       values: ["apartment"],
     },
     colspan: 6,
@@ -249,12 +257,13 @@ export const residentialApartmentFields: FormField[] = [
       { label: "Under Construction", value: "Under Construction" },
     ],
     dependsOn: {
-      field: "residentialSubCategory",
+      field: "assetType",
       values: ["apartment"],
     },
     colspan: 6,
     conditional: true,
   },
+
   {
     id: "ageOfTheBuilding",
     label: "Age of Building",
@@ -268,9 +277,8 @@ export const residentialApartmentFields: FormField[] = [
       { label: "11-15 years", value: "11-15 years" },
       { label: "15+ Years", value: "15+ Years" },
     ],
-
     dependsOn: {
-      field: "residentialSubCategory",
+      field: "assetType",
       values: ["apartment"],
     },
     colspan: 6,

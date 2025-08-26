@@ -10,7 +10,7 @@ export const residentialVillaFields: FormField[] = [
     colspan: 6,
     conditional: false,
     dependsOn: {
-      field: "residentialSubCategory",
+      field: "assetType",
       values: ["villa"],
     },
   },
@@ -25,7 +25,7 @@ export const residentialVillaFields: FormField[] = [
       message: "SBUA must be at least 100 sqft",
     },
     dependsOn: {
-      field: "residentialSubCategory",
+      field: "assetType",
       values: ["villa"],
     },
     colspan: 6,
@@ -38,7 +38,7 @@ export const residentialVillaFields: FormField[] = [
     required: false,
     placeholder: "Enter carpet area in square feet",
     dependsOn: {
-      field: "residentialSubCategory",
+      field: "assetType",
       values: ["villa"],
     },
     colspan: 6,
@@ -51,7 +51,7 @@ export const residentialVillaFields: FormField[] = [
     required: true,
     placeholder: "Enter plot area in square feet",
     dependsOn: {
-      field: "residentialSubCategory",
+      field: "assetType",
       values: ["villa"],
     },
     colspan: 6,
@@ -64,7 +64,7 @@ export const residentialVillaFields: FormField[] = [
     required: true,
     placeholder: "E.g., G+1, G+2",
     dependsOn: {
-      field: "residentialSubCategory",
+      field: "assetType",
       values: ["villa"],
     },
     colspan: 6,
@@ -82,7 +82,7 @@ export const residentialVillaFields: FormField[] = [
       { label: "Furnished", value: "Furnished" },
     ],
     dependsOn: {
-      field: "residentialSubCategory",
+      field: "assetType",
       values: ["villa"],
     },
     colspan: 6,
@@ -104,7 +104,7 @@ export const residentialVillaFields: FormField[] = [
       { label: "7 BHK", value: 7 },
     ],
     dependsOn: {
-      field: "residentialSubCategory",
+      field: "assetType",
       values: ["villa"],
     },
     colspan: 6,
@@ -123,7 +123,7 @@ export const residentialVillaFields: FormField[] = [
       { label: "Other", value: "Other" },
     ],
     dependsOn: {
-      field: "residentialSubCategory",
+      field: "assetType",
       values: ["villa"],
     },
     colspan: 12,
@@ -144,7 +144,7 @@ export const residentialVillaFields: FormField[] = [
       { label: "5+", value: "5+" },
     ],
     dependsOn: {
-      field: "residentialSubCategory",
+      field: "assetType",
       values: ["villa"],
     },
     colspan: 6,
@@ -166,7 +166,7 @@ export const residentialVillaFields: FormField[] = [
       { label: "5+", value: "5+" },
     ],
     dependsOn: {
-      field: "residentialSubCategory",
+      field: "assetType",
       values: ["villa"],
     },
     colspan: 6,
@@ -183,7 +183,7 @@ export const residentialVillaFields: FormField[] = [
       { label: "Outside", value: "Outside" },
     ],
     dependsOn: {
-      field: "residentialSubCategory",
+      field: "assetType",
       values: ["villa"],
     },
     colspan: 6,
@@ -200,7 +200,7 @@ export const residentialVillaFields: FormField[] = [
       { label: "Under Construction", value: "Under Construction" },
     ],
     dependsOn: {
-      field: "residentialSubCategory",
+      field: "assetType",
       values: ["villa"],
     },
     colspan: 6,
@@ -220,7 +220,7 @@ export const residentialVillaFields: FormField[] = [
       { label: "15+ Years", value: "15+ Years" },
     ],
     dependsOn: {
-      field: "residentialSubCategory",
+      field: "assetType",
       values: ["villa"],
     },
     colspan: 6,
