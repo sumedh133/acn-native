@@ -6,7 +6,7 @@ export const basicDetailsStep: FormStep = {
   description: "Tell us what you're looking to do",
   fields: [
     {
-      id: "transactionType",
+      id: "listingType",
       label: "What would you like to do?",
       type: "select",
       required: true,
@@ -19,26 +19,25 @@ export const basicDetailsStep: FormStep = {
       conditional: false,
     },
     {
-      id: "category",
+      id: "propertyType",
       label: "Property Category",
       type: "select",
       required: true,
       placeholder: "Select property category",
       options: [
-        { label: "Residential", value: "residential" },
-        { label: "Commercial", value: "commercial" },
+        { label: "Residential", value: "Residential" },
+        { label: "Commercial", value: "Commercial" },
       ],
       dependsOn: {
-        field: "transactionType",
+        field: "listingType",
         values: ["resale", "rental"],
       },
       colspan: 12,
       conditional: false,
     },
 
-    // Residential asset types - shown only when residential is selected
     {
-      id: "residentialSubCategory",
+      id: "assetType",
       label: "Asset Type",
       type: "select",
       required: true,
@@ -47,19 +46,18 @@ export const basicDetailsStep: FormStep = {
         { label: "Apartment", value: "apartment" },
         { label: "Villa", value: "villa" },
         { label: "Villament", value: "villament" },
-        { label: "Row House", value: "rowhouse" },
+        { label: "Row House", value: "row house" },
         { label: "Plot", value: "plot" },
-        { label: "Independent Building", value: "independent" },
+        { label: "Independent House", value: "independent house" },
       ],
       dependsOn: {
-        field: "category",
-        values: ["residential"],
+        field: "propertyType",
+        values: ["Residential"],
       },
       colspan: 12,
       conditional: true,
     },
 
-    // Commercial property types - shown only when commercial is selected
     {
       id: "commercialPropertyType",
       label: "Property Type",
@@ -72,14 +70,13 @@ export const basicDetailsStep: FormStep = {
         { label: "Commercial Space", value: "Commercial Space" },
       ],
       dependsOn: {
-        field: "category",
-        values: ["commercial"],
+        field: "propertyType",
+        values: ["Commercial"],
       },
       colspan: 12,
       conditional: true,
     },
 
-    // Office Space subtypes - shown only when Office Space is selected
     {
       id: "officeSpaceSubType",
       label: "Office Space Type",
@@ -102,7 +99,6 @@ export const basicDetailsStep: FormStep = {
       conditional: true,
     },
 
-    // Retail Space subtypes - shown only when Retail Space is selected
     {
       id: "retailSpaceSubType",
       label: "Retail Space Type",
@@ -121,7 +117,6 @@ export const basicDetailsStep: FormStep = {
       conditional: true,
     },
 
-    // Commercial Space subtypes - shown only when Commercial Space is selected
     {
       id: "commercialSpaceSubType",
       label: "Commercial Space Type",
@@ -144,7 +139,6 @@ export const basicDetailsStep: FormStep = {
       conditional: true,
     },
 
-    // Community type - only shown for residential properties
     {
       id: "communityType",
       label: "Community Type",
@@ -156,8 +150,8 @@ export const basicDetailsStep: FormStep = {
         { label: "Independent", value: "Independent" },
       ],
       dependsOn: {
-        field: "category",
-        values: ["residential"],
+        field: "propertyType",
+        values: ["Residential"],
       },
       colspan: 12,
       conditional: true,

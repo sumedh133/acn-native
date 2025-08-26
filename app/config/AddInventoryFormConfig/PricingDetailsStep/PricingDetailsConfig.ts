@@ -4,10 +4,6 @@ export const pricingDetailsStep: FormStep = {
   id: "pricingDetails",
   title: "Pricing Details",
   description: "Provide the pricing details",
-  dependsOn: {
-    field: "listingType", // matches schema
-    values: ["resale", "rental"],
-  },
   fields: [
     // ----------- Resale Pricing -----------
     {
