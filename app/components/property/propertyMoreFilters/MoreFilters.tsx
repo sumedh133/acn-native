@@ -13,12 +13,12 @@ import { useSelector } from "react-redux";
 import { RootState } from "@/store/store";
 import LandmarkDropdownFilters from "./LandmarkDropdownFilters";
 import SearchableRefinementList from "./SearchableRefinementList";
-import CloseIcon from "@/assets/icons/svg/CloseIcon";
 import { Landmark } from "../../../types";
 import { SearchFilters } from "../../../services/property_services/propertyAlgoliaService";
 import ToggleTabs from "../../ToggleTabs";
 import BackButtonIcon from "@/assets/icons/svg/PropertiesPage/BackButtonIcon";
 import FilterChipList from "./FilterChipList";
+import { apartmentTypes, bedroomOptions, commercialPropertyTypes, commercialSubTypes, residentialPropertyTypes } from "./moreFilterOptions";
 
 export interface RangeState {
   start: (number | undefined)[];
@@ -29,6 +29,8 @@ export interface RangeState {
   refine: (range: [number, number]) => void;
   currentRefinement?: [number | undefined, number | undefined];
 }
+
+
 
 interface MoreFiltersProps {
   isOpen: boolean;
@@ -302,41 +304,102 @@ const MoreFilters = ({
           </View>
 
           {/* Rest of the filters */}
-          <View className="flex-col gap-5 mt-1 px-4">
+          <View className="flex-col mt-1">
             <FilterChipList
               title="Select Category Type"
               items={[
                 { label: "Residential", value: "residential" },
                 { label: "Commercial", value: "commercial" },
               ]}
-              attribute="type"
+              attribute="propertyType"
               localFilters={localFilters}
               onToggleFilterValue={(attr, val) =>
                 toggleFilterValue(attr, val, true)
               }
               singleSelect={true}
-              horizontal
               containerClassName="gap-[10px] "
               chipClassName="px-3 py-1.5 rounded-full"
               titleClassName="text-sm "
             />
-            <FilterChipList
-              title="Select Category Type"
-              items={[
-                { value: "residential", label: "Residential" },
-                { value: "commercial", label: "Commercial" },
-              ]}
-              attribute="type"
-              localFilters={localFilters}
-              onToggleFilterValue={(attr, val) =>
-                toggleFilterValue(attr, val, true)
-              }
-              singleSelect={true}
-              horizontal
-              containerClassName="gap-[10px] "
-              chipClassName="px-3 py-1.5 rounded-full"
-              titleClassName="text-sm "
-            />
+            {(localFilters?.propertyType?.length ?? 0) > 0 && (
+              <FilterChipList
+                title={
+                  localFilters?.propertyType?.includes("residential")
+                    ? "Property Type"
+                    : "Asset Type"
+                }
+                items={
+                  localFilters.propertyType?.includes("commercial")
+                    ? commercialPropertyTypes
+                    : residentialPropertyTypes
+                }
+                attribute="assetType" // 🔑 different attribute than listingType
+                localFilters={localFilters}
+                onToggleFilterValue={(attr, val) =>
+                  toggleFilterValue(attr, val, true)
+                }
+                singleSelect={true}
+                horizontal
+                containerClassName="gap-4"
+                labelClassName="text-[11px] leading-[12px]"
+                chipClassName="w-[84px] h-[80px] px-0.5"
+                titleClassName="text-sm"
+              />
+            )}
+            {localFilters?.propertyType?.includes("commercial") &&
+              ["Office Space", "Retail Space", "Commercial Space"].some(
+                (type) => localFilters?.assetType?.includes(type)
+              ) && (
+                <FilterChipList
+                  title={`${localFilters.assetType?.[0]} Type`}
+                  items={
+                    localFilters.assetType?.[0]
+                      ? commercialSubTypes[localFilters.assetType[0]] || []
+                      : []
+                  }
+                  attribute="commercialSubType"
+                  localFilters={localFilters}
+                  onToggleFilterValue={
+                    (attr, val) => toggleFilterValue(attr, val) // single select
+                  }
+                  singleSelect={true}
+                  containerClassName="gap-2 flex-wrap"
+                  chipClassName="px-3 py-1.5 rounded-lg"
+                  titleClassName="text-sm"
+                />
+              )}
+            {localFilters?.propertyType?.includes("residential") &&
+              localFilters?.assetType?.includes("apartment") && (
+                <FilterChipList
+                  title={`Apartment Type`}
+                  items={apartmentTypes}
+                  attribute="apartmentType"
+                  localFilters={localFilters}
+                  onToggleFilterValue={
+                    (attr, val) => toggleFilterValue(attr, val) // single select
+                  }
+                  singleSelect={true}
+                  containerClassName="gap-2 flex-wrap"
+                  chipClassName="px-3 py-1.5 rounded-lg"
+                  titleClassName="text-sm"
+                />
+              )}
+            {localFilters?.propertyType?.includes("residential") &&
+              !localFilters?.assetType?.includes("plot") && (
+                <FilterChipList
+                  title={`Bedroom`}
+                  items={bedroomOptions}
+                  attribute="noOfBedrooms"
+                  localFilters={localFilters}
+                  onToggleFilterValue={
+                    (attr, val) => toggleFilterValue(attr, val) // single select
+                  }
+                  singleSelect={true}
+                  containerClassName="gap-2 flex-wrap"
+                  chipClassName="px-3 py-1.5 rounded-lg"
+                  titleClassName="text-sm"
+                />
+              )}
           </View>
         </ScrollView>
 
