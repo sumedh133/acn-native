@@ -1,0 +1,108 @@
+import { FormField } from "@/types/FormConfig";
+
+export const residentialPlot: FormField[] = [
+  {
+    id: "plotSize",
+    label: "Plot Size (sqft)",
+    type: "number",
+    required: true,
+    placeholder: "Enter plot size",
+    validation: {
+      min: 100,
+      message: "Plot size must be at least 100 sqft",
+    },
+    dependsOn: {
+      field: "residentialSubCategory",
+      values: ["plot"],
+    },
+    colspan: 6,
+    conditional: true,
+  },
+  {
+    id: "facing",
+    label: "Facing",
+    type: "select",
+    required: true,
+    placeholder: "Select facing direction",
+    options: [
+      { label: "North", value: "North" },
+      { label: "South", value: "South" },
+      { label: "East", value: "East" },
+      { label: "West", value: "West" },
+    ],
+    dependsOn: {
+      field: "residentialSubCategory",
+      values: ["plot"],
+    },
+    colspan: 6,
+    conditional: true,
+  },
+  {
+    id: "plotNo",
+    label: "Plot Number",
+    type: "text",
+    required: false,
+    placeholder: "Enter plot number",
+    dependsOn: {
+      field: "residentialSubCategory",
+      values: ["plot"],
+    },
+    colspan: 6,
+    conditional: true,
+  },
+  {
+    id: "plotLength",
+    label: "Plot Length (ft)",
+    type: "number",
+    required: false,
+    placeholder: "Enter plot length",
+    dependsOn: {
+      field: "residentialSubCategory",
+      values: ["plot"],
+    },
+    colspan: 6,
+    conditional: true,
+  },
+  {
+    id: "plotBreadth",
+    label: "Plot Breadth (ft)",
+    type: "number",
+    required: false,
+    placeholder: "Enter plot breadth",
+    dependsOn: {
+      field: "residentialSubCategory",
+      values: ["plot"],
+    },
+    colspan: 6,
+    conditional: true,
+  },
+  {
+    id: "oddSized",
+    label: "Odd Sized Plot",
+    type: "boolean",
+    required: true,
+    dependsOn: {
+      field: "residentialSubCategory",
+      values: ["plot"],
+    },
+    colspan: 6,
+    conditional: true,
+  },
+  {
+    id: "possession",
+    label: "Possession",
+    type: "select",
+    required: true,
+    placeholder: "Select possession status",
+    options: [
+      { label: "Ready to Move", value: "Ready to Move" },
+      { label: "Under Construction", value: "Under Construction" },
+    ],
+    dependsOn: {
+      field: "residentialSubCategory",
+      values: ["plot"],
+    },
+    colspan: 6,
+    conditional: true,
+  },
+];
