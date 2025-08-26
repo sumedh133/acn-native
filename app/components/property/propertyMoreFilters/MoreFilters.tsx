@@ -14,9 +14,9 @@ import { RootState } from "@/store/store";
 import LandmarkDropdownFilters from "./LandmarkDropdownFilters";
 import SearchableRefinementList from "./SearchableRefinementList";
 import CloseIcon from "@/assets/icons/svg/CloseIcon";
-import { Landmark } from "../types";
-import { SearchFilters } from "../services/property_services/propertyAlgoliaService";
-import ToggleTabs from "./ToggleTabs";
+import { Landmark } from "../../../types";
+import { SearchFilters } from "../../../services/property_services/propertyAlgoliaService";
+import ToggleTabs from "../../ToggleTabs";
 import BackButtonIcon from "@/assets/icons/svg/PropertiesPage/BackButtonIcon";
 
 export interface RangeState {
@@ -54,7 +54,7 @@ const MoreFilters = ({
     useSelector((state: RootState) => state?.agent?.docData?.userType) ||
     "free";
   const [selectedLocationFilter, setSelectedLocationFilter] =
-    useState("micromarket");
+    useState("landmark");
 
   // Local filter state - manage filters locally until applied
   const [localFilters, setLocalFilters] = useState<SearchFilters>(filters);

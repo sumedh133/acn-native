@@ -13,10 +13,10 @@ import { useSelector } from "react-redux";
 import { RootState } from "@/store/store";
 import FilterIcon from "@/assets/icons/svg/PropertiesPage/FilterIcon";
 import NewSearchIcon from "@/assets/icons/svg/PropertiesPage/NewSearchIcon";
-import { SearchFilters } from "../services/property_services/propertyAlgoliaService";
-import CustomCurrentRefinements from "./newCustomCurrentRefinements";
-import DropdownTailwind from "./DropdownTailwind";
-import ToggleTabs from "./ToggleTabs";
+import { SearchFilters } from "../../services/property_services/propertyAlgoliaService";
+import CustomCurrentRefinements from "./propertyMoreFilters/newCustomCurrentRefinements";
+import DropdownTailwind from "../DropdownTailwind";
+import ToggleTabs from "../ToggleTabs";
 
 interface PropertyFiltersProps {
   handleToggleMoreFilters: () => void;

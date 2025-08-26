@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { View, Keyboard } from "react-native";
-import PropertyFilters from "../components/PropertyFilters";
+import PropertyFilters from "../components/property/PropertyFilters";
 // import MoreFilters from "../components/MoreFilters";
 import { useDoubleBackPressExit } from "@/hooks/useDoubleBackPressExit";
 import Offline from "../components/Offline";
@@ -10,7 +10,7 @@ import { analytics } from "../config/firebase";
 import { logEvent } from "@react-native-firebase/analytics";
 import { MobileHits } from "../components/property/MobileHits";
 import { useAlgoliaSearch } from "@/hooks/propertyHooks/useAlgoliaSearchProperties";
-import MoreFilters from "../components/MoreFilters";
+import MoreFilters from "../components/property/propertyMoreFilters/MoreFilters";
 
 
 export default function PropertiesScreen() {

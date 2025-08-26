@@ -10,8 +10,8 @@ import {
 } from "react-native";
 import Slider from "@react-native-community/slider";
 import { Ionicons } from "@expo/vector-icons";
-import { Landmark } from "../types";
-import { locationRestriction } from "../constants/PropertyConstants";
+import { Landmark } from "../../../types";
+import { locationRestriction } from "../../../constants/PropertyConstants";
 import { analytics } from "@/app/config/firebase";
 import { logEvent } from "@react-native-firebase/analytics";
 import { useSelector } from "react-redux";

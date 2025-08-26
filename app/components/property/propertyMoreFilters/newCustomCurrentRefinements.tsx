@@ -4,7 +4,7 @@ import { analytics } from "@/app/config/firebase";
 import { logEvent } from "@react-native-firebase/analytics";
 import { useSelector } from "react-redux";
 import { RootState } from "@/store/store";
-import { SearchFilters } from "../services/property_services/propertyAlgoliaService";
+import { SearchFilters } from "../../../services/property_services/propertyAlgoliaService";
 
 interface CustomCurrentRefinementsProps {
   selectedLandmark?: any;
