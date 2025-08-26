@@ -10,22 +10,22 @@ export const residentialPlot: FormField[] = [
     colspan: 6,
     conditional: false,
     dependsOn: {
-      field: "residentialSubCategory",
+      field: "assetType",
       values: ["plot"],
     },
   },
   {
-    id: "plotSize",
-    label: "Plot Size (sqft)",
+    id: "plotArea",
+    label: "Plot Area (sqft)",
     type: "number",
     required: true,
-    placeholder: "Enter plot size",
+    placeholder: "Enter plot area in square feet",
     validation: {
       min: 100,
-      message: "Plot size must be at least 100 sqft",
+      message: "Plot area must be at least 100 sqft",
     },
     dependsOn: {
-      field: "residentialSubCategory",
+      field: "assetType",
       values: ["plot"],
     },
     colspan: 6,
@@ -44,7 +44,7 @@ export const residentialPlot: FormField[] = [
       { label: "West", value: "West" },
     ],
     dependsOn: {
-      field: "residentialSubCategory",
+      field: "assetType",
       values: ["plot"],
     },
     colspan: 6,
@@ -57,7 +57,7 @@ export const residentialPlot: FormField[] = [
     required: false,
     placeholder: "Enter plot number",
     dependsOn: {
-      field: "residentialSubCategory",
+      field: "assetType",
       values: ["plot"],
     },
     colspan: 6,
@@ -70,7 +70,7 @@ export const residentialPlot: FormField[] = [
     required: false,
     placeholder: "Enter plot length",
     dependsOn: {
-      field: "residentialSubCategory",
+      field: "assetType",
       values: ["plot"],
     },
     colspan: 6,
@@ -83,7 +83,7 @@ export const residentialPlot: FormField[] = [
     required: false,
     placeholder: "Enter plot breadth",
     dependsOn: {
-      field: "residentialSubCategory",
+      field: "assetType",
       values: ["plot"],
     },
     colspan: 6,
@@ -95,7 +95,7 @@ export const residentialPlot: FormField[] = [
     type: "boolean",
     required: true,
     dependsOn: {
-      field: "residentialSubCategory",
+      field: "assetType",
       values: ["plot"],
     },
     colspan: 6,
@@ -112,7 +112,7 @@ export const residentialPlot: FormField[] = [
       { label: "Under Construction", value: "Under Construction" },
     ],
     dependsOn: {
-      field: "residentialSubCategory",
+      field: "assetType",
       values: ["plot"],
     },
     colspan: 6,
