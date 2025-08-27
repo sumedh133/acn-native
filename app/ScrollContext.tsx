@@ -5,31 +5,123 @@ interface ScrollContextType {
   scrollY: Animated.Value;
   footerTranslateY: Animated.AnimatedInterpolation<number>;
   resetFooterPosition: () => void;
+  onScrollEndDrag: () => void;
+  onMomentumScrollEnd: () => void;
 }
+
+const FOOTER_HEIGHT = 77;
 
 export const ScrollContext = createContext<ScrollContextType>({
   scrollY: new Animated.Value(0),
   footerTranslateY: new Animated.Value(0),
   resetFooterPosition: () => {},
+  onScrollEndDrag: () => {},
+  onMomentumScrollEnd: () => {},
 });
 
 export const ScrollProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const scrollY = useRef(new Animated.Value(0)).current;
+  const clampedScrollY = useRef(new Animated.Value(0)).current;
+  const lastScrollValue = useRef(0);
+  const currentClampedValue = useRef(0);
+  const scrollDirection = useRef<'up' | 'down'>('down');
 
-  // Smooth clamp: footer moves between 0 → 59 depending on scroll direction
-  const footerTranslateY = Animated.diffClamp(scrollY, 0, 59).interpolate({
-    inputRange: [0, 59],
-    outputRange: [0, 77],
+  const footerTranslateY = clampedScrollY.interpolate({
+    inputRange: [0, FOOTER_HEIGHT],
+    outputRange: [0, FOOTER_HEIGHT],
     extrapolate: "clamp",
   });
 
+  const updateClampedValue = useCallback((currentScroll: number) => {
+    const diff = currentScroll - lastScrollValue.current;
+    
+    if (Math.abs(diff) > 0.5) {
+      scrollDirection.current = diff > 0 ? 'down' : 'up';
+      
+      let newClampedValue;
+      if (scrollDirection.current === 'down') {
+        newClampedValue = Math.min(FOOTER_HEIGHT, currentClampedValue.current + Math.abs(diff));
+      } else {
+        newClampedValue = Math.max(0, currentClampedValue.current - Math.abs(diff));
+      }
+      
+      currentClampedValue.current = newClampedValue;
+      clampedScrollY.setValue(newClampedValue);
+    }
+    
+    lastScrollValue.current = currentScroll;
+  }, [clampedScrollY]);
+
+  React.useEffect(() => {
+    const listener = scrollY.addListener(({ value }) => {
+      updateClampedValue(value);
+    });
+
+    return () => scrollY.removeListener(listener);
+  }, [scrollY, updateClampedValue]);
+
+  const snapToNearest = useCallback(() => {
+    const currentValue = currentClampedValue.current;
+    const thresholdShow = 0.2 * FOOTER_HEIGHT; // 15.4 - very easy to show (just a tiny scroll up)
+    const thresholdHide = 0.8 * FOOTER_HEIGHT;  // 61.6 - much harder to hide (need significant scroll down)
+    
+    let targetValue: number;
+
+    // Biased toward showing:
+    // 0 to 11.55: Always show
+    // 11.55 to 61.6: Show unless user was scrolling down aggressively  
+    // 61.6 to 77: Hide only when mostly sure
+    
+    if (currentValue <= thresholdShow) {
+      // Footer barely moved - always show
+      targetValue = 0;
+    } else if (currentValue >= thresholdHide) {
+      // Footer almost completely hidden - hide it
+      targetValue = FOOTER_HEIGHT;
+    } else {
+      // Large middle zone - bias toward showing
+      if (scrollDirection.current === 'up') {
+        // Any upward scroll in middle zone = show
+        targetValue = 0;
+      } else {
+        // Downward scroll in middle zone - only hide if past 50%
+        targetValue = currentValue > (0.5 * FOOTER_HEIGHT) ? FOOTER_HEIGHT : 0;
+      }
+    }
+
+    currentClampedValue.current = targetValue;
+    Animated.timing(clampedScrollY, {
+      toValue: targetValue,
+      duration: 200,
+      useNativeDriver: true,
+    }).start();
+  }, [clampedScrollY]);
+
+  const onScrollEndDrag = useCallback(() => {
+    snapToNearest();
+  }, [snapToNearest]);
+
+  const onMomentumScrollEnd = useCallback(() => {
+    snapToNearest();
+  }, [snapToNearest]);
+
   const resetFooterPosition = useCallback(() => {
-    // Reset the underlying scrollY value to 0, which will reset the footer position
     scrollY.setValue(0);
-  }, [scrollY]);
+    clampedScrollY.setValue(0);
+    currentClampedValue.current = 0;
+    lastScrollValue.current = 0;
+  }, [scrollY, clampedScrollY]);
 
   return (
-    <ScrollContext.Provider value={{ scrollY, footerTranslateY, resetFooterPosition }}>
+    <ScrollContext.Provider 
+      value={{ 
+        scrollY, 
+        footerTranslateY, 
+        resetFooterPosition,
+        onScrollEndDrag,
+        onMomentumScrollEnd,
+      }}
+    >
       {children}
     </ScrollContext.Provider>
   );

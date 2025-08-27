@@ -46,7 +46,7 @@ export const MobileHits = ({
   const [totalPropertiesViewed, setTotalPropertiesViewed] = useState(0);
   const [refreshing, setRefreshing] = useState(false);
   const [isRendered, setIsRendered] = useState(false);
-  const { scrollY } = useContext(ScrollContext);
+  const { scrollY, onScrollEndDrag, onMomentumScrollEnd } = useContext(ScrollContext);
 
   const viewabilityConfig = useRef<ViewabilityConfig>({
     itemVisiblePercentThreshold: 50, // Item is considered viewed when 50% visible
@@ -377,6 +377,8 @@ export const MobileHits = ({
         { useNativeDriver: false, listener: handleScroll }
       )}
       scrollEventThrottle={16}
+      onScrollEndDrag={onScrollEndDrag}      // ← This fixes partial visibility
+  onMomentumScrollEnd={onMomentumScrollEnd}
       onViewableItemsChanged={handleViewableItemsChanged}
       viewabilityConfig={viewabilityConfig.current}
       refreshControl={
