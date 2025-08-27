@@ -1,28 +1,38 @@
+import React, { useState } from "react";
+import { View, Text, TouchableOpacity, TextInput } from "react-native";
+import { analytics } from "@/app/config/firebase";
 import { logEvent } from "@react-native-firebase/analytics";
-import { useState } from "react";
-import {
-  View,
-  Text,
-  TouchableOpacity,
-  TextInput
-} from "react-native";
-import { analytics } from "../config/firebase";
-import { RootState } from "@/store/store";
 import { useSelector } from "react-redux";
+import { RootState } from "@/store/store";
+import NewSearchIcon from "@/assets/icons/svg/PropertiesPage/NewSearchIcon";
+import { SearchFilters } from "../services/property_services/propertyAlgoliaService";
 
-export const SearchableRefinementList = ({
-  items,
-  refine,
-  attribute,
-}: {
-  items: any[];
-  refine: (value: string) => void;
+const MAX_VISIBLE = 7;
+
+interface RefinementItem {
+  value: string;
+  label: string;
+  count: number;
+}
+
+interface SearchableRefinementListProps {
+  items: RefinementItem[];
   attribute: string;
+  localFilters: SearchFilters;
+  onToggleFilterValue: (attribute: string, value: string) => void;
+}
+
+const SearchableRefinementList: React.FC<SearchableRefinementListProps> = ({
+  items,
+  attribute,
+  localFilters,
+  onToggleFilterValue,
 }) => {
   const userType =
     useSelector((state: RootState) => state?.agent?.docData?.userType) ||
     "free";
   const [searchQuery, setSearchQuery] = useState("");
+
   const filteredItems = items.filter((item) =>
     item.label.toLowerCase().includes(searchQuery.toLowerCase())
   );
@@ -48,62 +58,80 @@ export const SearchableRefinementList = ({
   const handleRefine = (value: string) => {
     try {
       const item = items.find((i) => i.value === value);
+      const isRefined = (
+        localFilters[attribute as keyof SearchFilters] || []
+      ).includes(value);
       logEvent(analytics, "filter_refinement", {
         event_category: "filters",
         event_label: "refinement",
         filter_type: attribute,
         value: value,
         label: item?.label,
-        action: item?.isRefined ? "remove" : "add",
+        action: isRefined ? "remove" : "add",
         user_type: userType,
       });
     } catch (error) {
       console.error("Error logging refinement:", error);
     }
-    refine(value);
+    onToggleFilterValue(attribute, value);
   };
 
   return (
-    <View className="w-full">
+    <View className="w-full mb-2">
       {attribute === "micromarket" && (
-        <View className="mb-3">
+        <View className="flex-row items-center w-full border px-2 border-gray-300 rounded-md h-11 pl-3 bg-white mb-2">
+          <NewSearchIcon strokeColor="#726C6C" />
           <TextInput
-            className="w-full p-2 border border-gray-300 rounded-md bg-white text-sm"
-            placeholder="Search categories..."
+            className="text-[12px] ml-2"
+            placeholder="Search micromarket..."
             value={searchQuery}
             onChangeText={handleSearch}
+            style={{ fontFamily: "Lato_400Regular" }}
           />
         </View>
       )}
 
       <View className="flex-row flex-wrap gap-2">
         {filteredItems
-          ?.slice(0, searchQuery === "" ? 10 : filteredItems.length)
-          ?.map((item) => (
-            <TouchableOpacity
-              key={item.value}
-              className={`py-2 px-3 border border-gray-300 rounded-md bg-white ${
-                item.isRefined ? "bg-[#DFF4F3] border-[#153E3B]" : ""
-              }`}
-              onPress={() => handleRefine(item.value)}
-            >
-              <View className="flex-row justify-between items-center">
-                <Text
-                  className={`text-sm ${
-                    item.isRefined
-                      ? "text-[#153E3B] font-medium"
-                      : "text-gray-700"
-                  }`}
-                >
-                  {item.label}
-                </Text>
-                <Text className="text-xs ml-2 px-1 py-0.5 bg-gray-200 rounded text-gray-600 font-bold">
-                  {item.count}
-                </Text>
-              </View>
-            </TouchableOpacity>
-          ))}
+          ?.slice(0, Math.min(MAX_VISIBLE, filteredItems.length))
+          ?.map((item) => {
+            const isRefined = (
+              localFilters[attribute as keyof SearchFilters] || []
+            ).includes(item.value);
+
+            return (
+              <TouchableOpacity
+                key={item.value}
+                className={`py-2 px-3 border border-gray-300 rounded-md bg-white ${
+                  isRefined ? "bg-[#DFF4F3] border-[#153E3B]" : ""
+                }`}
+                onPress={() => handleRefine(item.value)}
+              >
+                <View className="flex-row justify-between items-center">
+                  <Text
+                    style={{ fontFamily: "Lato_400Regular" }}
+                    className={`text-sm ${
+                      isRefined ? "text-[#10302D] font-semibold" : "text-black"
+                    }`}
+                  >
+                    {item.label}
+                  </Text>
+                </View>
+              </TouchableOpacity>
+            );
+          })}
+
+        {/* Show "+X" chip if there are more items */}
+        {filteredItems.length > MAX_VISIBLE && (
+          <View className="py-2 px-3 bg-gray-200 rounded-md">
+            <Text className="text-sm text-gray-600 font-bold">
+              +{filteredItems.length - MAX_VISIBLE}
+            </Text>
+          </View>
+        )}
       </View>
     </View>
   );
 };
+
+export default SearchableRefinementList;

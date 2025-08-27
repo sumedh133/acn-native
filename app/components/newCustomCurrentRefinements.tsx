@@ -86,7 +86,7 @@ export default function CustomCurrentRefinements({
       showsHorizontalScrollIndicator={false}
       className="flex-row"
     >
-      <View className="flex-row items-center px-4 space-x-2">
+      <View className="flex-row items-center px-4 space-x-2 mb-2">
         {selectedLandmark && (
           <TouchableOpacity
             onPress={() => {
