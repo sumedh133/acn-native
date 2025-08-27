@@ -120,3 +120,15 @@ export const preferredTenantsOptions: DropdownOption[] = [
   { label: "Bachelor Male", value: "Bachelor Male"},
   { label: "Bachelor Female", value: "Bachelor Female"},
 ];
+export const zoneOptions: FilterChipItem[] = [
+  { label: "Center Bangalore", value: "Center Bangalore" },
+  { label: "North Bangalore", value: "North Bangalore" },
+  { label: "South Bangalore", value: "South Bangalore" },
+  { label: "South-East Bangalore", value: "South-East Bangalore" },
+  { label: "East Bangalore", value: "East Bangalore" },
+  { label: "West Bangalore", value: "West Bangalore" }
+];
+export const possessionOptions: FilterChipItem[] = [
+  { label: "Ready To Move", value: "Ready To Move" },
+  { label: "Under Construction", value: "Under Construction" },
+];

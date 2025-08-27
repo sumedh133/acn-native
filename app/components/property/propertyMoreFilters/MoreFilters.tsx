@@ -25,8 +25,10 @@ import {
   commercialSubTypes,
   facingOptions,
   floorOptions,
+  possessionOptions,
   preferredTenantsOptions,
   residentialPropertyTypes,
+  zoneOptions,
 } from "./moreFilterOptions";
 import DropdownTailwind from "../../DropdownTailwind";
 
@@ -66,6 +68,9 @@ const MoreFilters = ({
     "free";
   const [selectedLocationFilter, setSelectedLocationFilter] =
     useState("landmark");
+  const [viewMode, setViewMode] = useState<"residential" | "commercial">(
+    "residential"
+  );
 
   // Local filter state - manage filters locally until applied
   const [localFilters, setLocalFilters] = useState<SearchFilters>(filters);
@@ -103,6 +108,9 @@ const MoreFilters = ({
       [attribute]: values,
     }));
   };
+  useEffect(() => {
+    console.log("View mode changed to:", viewMode);
+  }, [viewMode]);
 
   // Helper function to toggle a filter value
   const toggleFilterValue = (
@@ -145,6 +153,7 @@ const MoreFilters = ({
 
   const handleReset = () => {
     setLocalFilters({});
+    // setViewMode("residential");
     setLocalSelectedLandmark(null);
   };
 
@@ -329,41 +338,80 @@ const MoreFilters = ({
                 { label: "Residential", value: "residential" },
                 { label: "Commercial", value: "commercial" },
               ]}
-              attribute="propertyType"
-              localFilters={localFilters}
-              onToggleFilterValue={(attr, val) =>
-                toggleFilterValue(attr, val, true)
-              }
+              attribute="viewMode" // Changed from "propertyType"
+              localFilters={{ viewMode: [viewMode] }} // Use the UI state instead of actual filters
+              onToggleFilterValue={(_, val) => {
+                // Update the view mode, not the filters
+                if (val && typeof val === "string") {
+                  setViewMode(val as "residential" | "commercial");
+                }
+              }}
               singleSelect={true}
               containerClassName="gap-[10px] "
               chipClassName="px-3 py-1.5 rounded-full"
-              titleClassName="text-sm "
+              titleClassName="text-sm"
             />
-            {(localFilters?.propertyType?.length ?? 0) > 0 && (
-              <FilterChipList
-                title={
-                  localFilters?.propertyType?.includes("residential")
-                    ? "Property Type"
-                    : "Asset Type"
-                }
-                items={
-                  localFilters.propertyType?.includes("commercial")
-                    ? commercialPropertyTypes
-                    : residentialPropertyTypes
-                }
-                attribute="assetType" // 🔑 different attribute than listingType
-                localFilters={localFilters}
-                onToggleFilterValue={(attr, val) =>
-                  toggleFilterValue(attr, val, true)
-                }
-                singleSelect={true}
-                horizontal
-                containerClassName="gap-4"
-                labelClassName="text-[11px] leading-[12px]"
-                chipClassName="w-[84px] h-[80px] px-0.5"
-                titleClassName="text-sm"
-              />
-            )}
+            <FilterChipList
+              title={
+                viewMode === "residential" ? "Property Type" : "Asset Type"
+              }
+              items={
+                viewMode === "commercial"
+                  ? commercialPropertyTypes
+                  : residentialPropertyTypes
+              }
+              attribute="assetType"
+              localFilters={localFilters}
+              onToggleFilterValue={toggleFilterValue}
+              singleSelect={false} // Changed to false for multi-select
+              horizontal
+              containerClassName="gap-4"
+              labelClassName="text-[11px] leading-[12px]"
+              chipClassName="w-[84px] h-[80px] px-0.5"
+              titleClassName="text-sm"
+            />
+            {/* Render commercial sub-types if in commercial view and any commercial asset type is selected */}
+            {viewMode === "commercial" &&
+              localFilters?.assetType?.some((type) =>
+                ["Office Space", "Retail Space", "Commercial Space"].includes(
+                  type
+                )
+              ) && (
+                <View>
+                  {/* Create a merged list of all sub-types from selected commercial asset types */}
+                  <FilterChipList
+                    title="Property Sub-Type"
+                    items={
+                      // Flatten and merge all sub-types from selected asset types
+                      localFilters.assetType
+                        ?.filter((type) =>
+                          [
+                            "Office Space",
+                            "Retail Space",
+                            "Commercial Space",
+                          ].includes(type)
+                        )
+                        .flatMap(
+                          (assetType) => commercialSubTypes[assetType] || []
+                        )
+                        // Remove duplicates if any
+                        .filter(
+                          (item, index, self) =>
+                            index ===
+                            self.findIndex((t) => t.value === item.value)
+                        )
+                    }
+                    attribute="commercialSubType" // Single attribute for all sub-types
+                    localFilters={localFilters}
+                    onToggleFilterValue={toggleFilterValue}
+                    singleSelect={false}
+                    containerClassName="gap-2 flex-wrap"
+                    chipClassName="px-3 py-1.5 rounded-lg"
+                    titleClassName="text-sm"
+                  />
+                </View>
+              )}
+
             {localFilters?.propertyType?.includes("commercial") &&
               ["Office Space", "Retail Space", "Commercial Space"].some(
                 (type) => localFilters?.assetType?.includes(type)
@@ -386,7 +434,7 @@ const MoreFilters = ({
                   titleClassName="text-sm"
                 />
               )}
-            {localFilters?.propertyType?.includes("residential") &&
+            {viewMode == "residential" &&
               localFilters?.assetType?.includes("apartment") && (
                 <FilterChipList
                   title={`Apartment Type`}
@@ -402,7 +450,7 @@ const MoreFilters = ({
                   titleClassName="text-sm"
                 />
               )}
-            {localFilters?.propertyType?.includes("residential") &&
+            {viewMode == "residential" &&
               !localFilters?.assetType?.includes("plot") && (
                 <FilterChipList
                   title={`Bedroom`}
@@ -438,7 +486,7 @@ const MoreFilters = ({
                 containerClassName="flex-1 "
               />
             </View>
-            <View className="flex-row">
+            <View className="flex-row mb-6">
               <DropdownTailwind
                 multiSelect={true}
                 value={localFilters.furnishing ?? null}
@@ -448,16 +496,85 @@ const MoreFilters = ({
                 title="Furnishing"
                 containerClassName="flex-1"
               />
-              <DropdownTailwind
-                multiSelect={true}
-                value={localFilters.preferredTenants ?? null}
-                setValue={(val) => toggleFilterValue("preferredTenants", val)}
-                options={preferredTenantsOptions}
-                placeholder="Select"
-                title="Preffered Tenant"
-                containerClassName="flex-1 ml-2"
-              />
+              {filters.type?.includes("rental") && (
+                <DropdownTailwind
+                  multiSelect={true}
+                  value={localFilters.preferredTenants ?? null}
+                  setValue={(val) => toggleFilterValue("preferredTenants", val)}
+                  options={preferredTenantsOptions}
+                  placeholder="Select"
+                  title="Preferred Tenant"
+                  containerClassName="flex-1 ml-2"
+                />
+              )}
             </View>
+            
+            {filters.type?.includes("rental") && (<View className="mb-4 mt-2">
+              <TouchableOpacity
+                className="flex-row items-center pb-2"
+                onPress={() => toggleFilterValue("nonVegAllowed", "true", true)}
+              >
+                <View
+                  className={`w-4 h-4 rounded border mr-3 ${
+                    localFilters.nonVegAllowed?.includes("true")
+                      ? "bg-[#153E3B] border-[#153E3B]"
+                      : "bg-white border-gray-400"
+                  }`}
+                >
+                  {localFilters.nonVegAllowed?.includes("true") && (
+                    <Text className="text-white text-xs text-center leading-4">
+                      ✓
+                    </Text>
+                  )}
+                </View>
+                <Text className="text-[#2B2928] text-base" style={{fontFamily :"Lato_400Regular"}}>Non Veg Allowed</Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                className="flex-row items-center py-2"
+                onPress={() => toggleFilterValue("petsAllowed", "true", true)}
+              >
+                <View
+                  className={`w-4 h-4 rounded border mr-3 ${
+                    localFilters.petsAllowed?.includes("true")
+                      ? "bg-[#153E3B] border-[#153E3B]"
+                      : "bg-white border-gray-400"
+                  }`}
+                >
+                  {localFilters.petsAllowed?.includes("true") && (
+                    <Text className="text-white text-xs text-center leading-4">
+                      ✓
+                    </Text>
+                  )}
+                </View>
+                <Text className="text-[#2B2928] text-base" style={{fontFamily :"Lato_400Regular"}}>Pets Allowed</Text>
+              </TouchableOpacity>
+            </View>)}
+
+            {filters.type?.includes("resale") && (
+              <FilterChipList
+                title={`Posession`}
+                items={possessionOptions}
+                attribute="possession"
+                localFilters={localFilters}
+                onToggleFilterValue={(attr, val) =>
+                  toggleFilterValue(attr, val)
+                }
+                containerClassName="gap-2 flex-wrap"
+                chipClassName="px-3 py-1.5 rounded-lg"
+                titleClassName="text-sm"
+              />
+            )}
+            <FilterChipList
+              title={`Area`}
+              items={zoneOptions}
+              attribute="zone"
+              localFilters={localFilters}
+              onToggleFilterValue={(attr, val) => toggleFilterValue(attr, val)}
+              containerClassName="gap-2 flex-wrap"
+              chipClassName="px-3 py-1.5 rounded-lg"
+              titleClassName="text-sm"
+            />
           </View>
         </ScrollView>
 

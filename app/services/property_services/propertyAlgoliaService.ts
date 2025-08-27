@@ -19,6 +19,10 @@ export interface SearchFilters {
   floor?: string[];
   furnishing?: string[];
   preferredTenants?: string[];
+  availability?: string[];
+  zone?: string[];
+  petsAllowed?: string[];
+  nonVegAllowed?: string[];
 
   // Add more filters as needed
   micromarket?: string[];
@@ -107,6 +111,11 @@ class AlgoliaInfiniteSearchService {
       { values: filters.floor, fieldName: "floor" },// likely change
       { values: filters.furnishing, fieldName: "furnishing" },
       { values: filters.preferredTenants, fieldName: "tenantPreferences.preferredTenants" },
+      { values: filters.petsAllowed, fieldName: "tenantPreferences.petsAllowed" },
+      { values: filters.nonVegAllowed, fieldName: "tenantPreferences.nonVegAllowed" },
+      { values: filters.posession, fieldName: "posession" },
+      { values: filters.availability, fieldName: "availability" },
+      { values: filters.zone, fieldName: "zone" },
     ];
 
     const filterParts = filterConfigs

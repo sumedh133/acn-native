@@ -12,10 +12,14 @@ export interface FilterChipItem {
   icon?: React.ReactNode; // Optional icon
 }
 
+interface localFilters extends SearchFilters{
+  viewMode?:  string[];
+}
+
 interface FilterChipListProps {
   items: FilterChipItem[];
   attribute: string;
-  localFilters: SearchFilters;
+  localFilters: localFilters ;
   onToggleFilterValue: (attribute: string, value: string) => void;
   horizontal?: boolean;
   containerClassName?: string;
