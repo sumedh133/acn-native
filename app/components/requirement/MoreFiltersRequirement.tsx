@@ -14,7 +14,7 @@ import { useRange, useRefinementList } from "react-instantsearch";
 import CheckboxFilter from "./CheckboxFilter";
 import DropdownMoreFilters, { RefinementItem } from "../DropdownMoreFilters";
 import RangeMoreFilters from "../RangeMoreFilters";
-import { RangeState } from "../MoreFilters";
+import { RangeState } from "../property/propertyMoreFilters/MoreFilters";
 import { analytics } from "@/app/config/firebase";
 import { logEvent } from "@react-native-firebase/analytics";
 import { useSelector } from "react-redux";
