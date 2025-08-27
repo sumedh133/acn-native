@@ -3,11 +3,11 @@ import { FormField } from "@/types/FormConfig";
 export const residentialApartmentFields: FormField[] = [
   {
     id: "propertyName",
-    label: "Property/Project Name",
+    label: "Project Name",
     type: "text",
     required: true,
     placeholder: "Enter property name",
-    colspan: 6,
+    colspan: 12,
     conditional: false,
     dependsOn: {
       field: "assetType",
@@ -31,13 +31,13 @@ export const residentialApartmentFields: FormField[] = [
       field: "assetType",
       values: ["apartment"],
     },
-    colspan: 6,
+    colspan: 12,
     conditional: true,
   },
 
   {
     id: "sbua",
-    label: "Super Built-up Area (sqft)",
+    label: "SBUA",
     type: "number",
     required: true,
     placeholder: "Enter SBUA in square feet",
@@ -49,12 +49,12 @@ export const residentialApartmentFields: FormField[] = [
       field: "assetType",
       values: ["apartment"],
     },
-    colspan: 6,
+    colspan: 12,
     conditional: true,
   },
   {
     id: "carpetArea",
-    label: "Carpet Area (sqft)",
+    label: "Carpet Area",
     type: "number",
     required: false,
     placeholder: "Enter carpet area in square feet",
@@ -62,14 +62,14 @@ export const residentialApartmentFields: FormField[] = [
       field: "assetType",
       values: ["apartment"],
     },
-    colspan: 6,
+    colspan: 12,
     conditional: true,
   },
 
   {
     id: "facing",
-    label: "Facing (Main Door)",
-    type: "select",
+    label: "Door Facing",
+    type: "dropdown",
     required: true,
     placeholder: "Select facing direction",
     options: [
@@ -82,13 +82,13 @@ export const residentialApartmentFields: FormField[] = [
       field: "assetType",
       values: ["apartment"],
     },
-    colspan: 6,
+    colspan: 12,
     conditional: true,
   },
 
   {
     id: "floorNumber",
-    label: "Floor Number",
+    label: "Floor No.",
     type: "number",
     required: true,
     placeholder: "Enter floor number",
@@ -105,7 +105,7 @@ export const residentialApartmentFields: FormField[] = [
   },
   {
     id: "totalFloors",
-    label: "Total Floors in Building",
+    label: "Total Floors",
     type: "number",
     required: false,
     placeholder: "Enter total floors",
@@ -136,30 +136,30 @@ export const residentialApartmentFields: FormField[] = [
       field: "assetType",
       values: ["apartment"],
     },
-    colspan: 6,
+    colspan: 12,
     conditional: true,
   },
 
   {
     id: "noOfBedrooms",
-    label: "Number of Bedrooms",
+    label: "No. of Bedrooms",
     type: "select",
     required: true,
     placeholder: "Select number of bedrooms",
     options: [
-      { label: "1 BHK", value: 1 },
-      { label: "2 BHK", value: 2 },
-      { label: "3 BHK", value: 3 },
-      { label: "4 BHK", value: 4 },
-      { label: "5 BHK", value: 5 },
-      { label: "6 BHK", value: 6 },
-      { label: "7 BHK", value: 7 },
+      { label: "1", value: 1 },
+      { label: "2", value: 2 },
+      { label: "3", value: 3 },
+      { label: "4", value: 4 },
+      { label: "5", value: 5 },
+      { label: "6", value: 6 },
+      { label: "7", value: 7 },
     ],
     dependsOn: {
       field: "assetType",
       values: ["apartment"],
     },
-    colspan: 6,
+    colspan: 12,
     conditional: true,
   },
 
@@ -185,7 +185,7 @@ export const residentialApartmentFields: FormField[] = [
 
   {
     id: "noOfBathrooms",
-    label: "Number of Bathrooms",
+    label: "No. of Bathrooms",
     type: "select",
     required: true,
     placeholder: "Select number of bathrooms",
@@ -201,13 +201,13 @@ export const residentialApartmentFields: FormField[] = [
       field: "assetType",
       values: ["apartment"],
     },
-    colspan: 6,
+    colspan: 12,
     conditional: true,
   },
 
   {
     id: "noOfBalconies",
-    label: "Number of Balconies",
+    label: "No. of Balconies",
     type: "select",
     required: true,
     placeholder: "Select number of balconies",
@@ -224,7 +224,7 @@ export const residentialApartmentFields: FormField[] = [
       field: "assetType",
       values: ["apartment"],
     },
-    colspan: 6,
+    colspan: 12,
     conditional: true,
   },
 
@@ -242,7 +242,7 @@ export const residentialApartmentFields: FormField[] = [
       field: "assetType",
       values: ["apartment"],
     },
-    colspan: 6,
+    colspan: 12,
     conditional: true,
   },
 
@@ -250,7 +250,6 @@ export const residentialApartmentFields: FormField[] = [
     id: "possession",
     label: "Possession",
     type: "select",
-    required: true,
     placeholder: "Select possession status",
     options: [
       { label: "Ready to Move", value: "Ready to Move" },
@@ -260,7 +259,7 @@ export const residentialApartmentFields: FormField[] = [
       field: "assetType",
       values: ["apartment"],
     },
-    colspan: 6,
+    colspan: 12,
     conditional: true,
   },
 
@@ -281,7 +280,7 @@ export const residentialApartmentFields: FormField[] = [
       field: "assetType",
       values: ["apartment"],
     },
-    colspan: 6,
+    colspan: 12,
     conditional: true,
   },
 ];

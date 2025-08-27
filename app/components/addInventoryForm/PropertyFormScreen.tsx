@@ -12,6 +12,7 @@ import { FormRenderer } from './FormRenderer';
 import { inventoryFormConfig } from '@/app/config/AddInventoryFormConfig/inventoryFormConfig';
 import { Property } from '@/app/types';
 import ArrowLeftIcon from '@/assets/icons/svg/Common/ArrowLeftIcon';
+import { LinearGradient } from 'expo-linear-gradient';
 import { FormPreview } from '../Listing/listingPropertyDetails';
 
 interface PropertyFormScreenProps {
@@ -171,14 +172,14 @@ export const PropertyFormScreen: React.FC<PropertyFormScreenProps> = ({
             <StatusBar barStyle="dark-content" backgroundColor="#fff" />
 
             {/* Header */}
-            <View className="w-full bg-white">
-                <View className="flex-row items-center px-3 h-12 justify-between">
+            <View className="w-full py-4 px-3 bg-white border-b border-b-[#EEEEEE]">
+                <View className="flex-row items-center justify-between">
                     {/* Back Button & Title */}
-                    <View className="flex-row items-center gap-2.5">
+                    <View className="flex-row items-center gap-4">
                         <TouchableOpacity onPress={onCancel}>
                             <ArrowLeftIcon />
                         </TouchableOpacity>
-                        <Text className="font-['Montserrat_700Bold'] text-lg font-semibold text-black">
+                        <Text className="font-montserrat text-base font-bold text-[#BABABA]">
                             {isEdit ? 'Edit Property' : 'Add Property'}
                         </Text>
                     </View>
@@ -189,40 +190,87 @@ export const PropertyFormScreen: React.FC<PropertyFormScreenProps> = ({
                         onPress={handleClear}
                     >
                         <Text
-                            className={`font-['Montserrat_500Medium'] text-base ${isFormEmpty ? 'text-[#9E9E9E]' : 'text-[#D92D20]'
+                            className={`font-montserrat text-base font-bold underline ${isFormEmpty ? 'text-[#9E9E9E]' : 'text-[#D92D20]'
                                 }`}
                         >
                             Clear
                         </Text>
                     </TouchableOpacity>
+
                 </View>
             </View>
 
             <View className="flex-1 flex-col">
                 {/* Step Navigation */}
-                <View className="h-16 py-2 bg-white">
+                <View className="pt-3 pb-4 bg-white">
                     <ScrollView
                         horizontal
                         showsHorizontalScrollIndicator={false}
-                        className="bg-white border-b border-b-[#EEEEEE] px-3 py-1"
+                        className="bg-white px-3 gap-4"
                     >
                         {visibleSteps.map((step, index) => (
                             <TouchableOpacity
                                 key={step.id}
-                                className={`px-3 py-1 mr-2 rounded-full ${currentStepIndex === index ? 'bg-[#E6F0EF]' : 'bg-[#F5F6F7]'
-                                    }`}
                                 onPress={() => handleStepChange(index)}
+                                style={{ borderRadius: 10 }}
                             >
-                                <Text
-                                    className={`font-['Montserrat_500Medium'] text-sm ${currentStepIndex === index
-                                        ? 'text-[#153E3B] font-semibold'
-                                        : 'text-[#666]'
-                                        }`}
-                                >
-                                    {step.title}
-                                </Text>
+                                {currentStepIndex === index ? (
+                                    <LinearGradient
+                                        colors={['#10302D', '#32968D']}
+                                        start={{ x: 0, y: 0 }}
+                                        end={{ x: 1, y: 0 }}
+                                        style={{
+                                            borderRadius: 10,
+                                            padding: 2,
+                                        }}
+                                    >
+                                        <View
+                                            style={{
+                                                borderRadius: 8,
+                                                backgroundColor: '#FFFFFF',
+                                                paddingVertical: 12,
+                                                paddingHorizontal: 16,
+                                            }}
+                                        >
+                                            <Text className="font-['Montserrat_500Medium'] text-sm text-[#153E3B] font-semibold">
+                                                {step.title}
+                                            </Text>
+                                        </View>
+                                    </LinearGradient>
+                                ) : index < currentStepIndex ? (
+                                    <LinearGradient
+                                        colors={['#10302D', '#32968D']}
+                                        start={{ x: 0, y: 0 }}
+                                        end={{ x: 1, y: 0 }}
+                                        style={{
+                                            borderRadius: 10,
+                                            paddingVertical: 12,
+                                            paddingHorizontal: 16,
+                                        }}
+                                    >
+                                        <Text className="font-['Montserrat_500Medium'] text-sm text-white font-semibold">
+                                            {step.title}
+                                        </Text>
+                                    </LinearGradient>
+                                ) : (
+                                    <View
+                                        style={{
+                                            borderRadius: 10,
+                                            backgroundColor: '#F5F6F7',
+                                            paddingVertical: 12,
+                                            paddingHorizontal: 16,
+                                        }}
+                                    >
+                                        <Text className="font-['Montserrat_500Medium'] text-sm text-[#153E3B] font-semibold">
+                                            {step.title}
+                                        </Text>
+                                    </View>
+                                )}
                             </TouchableOpacity>
                         ))}
+
+
+
                     </ScrollView>
                 </View>
 
@@ -243,17 +291,18 @@ export const PropertyFormScreen: React.FC<PropertyFormScreenProps> = ({
                 </View>
 
                 {/* Navigation Buttons */}
-                <View className="flex-row px-5 py-5 gap-3">
+                <View className="flex-row items-center justify-between gap-[13px] px-4 py-[14px] gap-3 bg-white border-t border-t-[#EEEEEE]">
+                    {currentStepIndex && (
+                        <TouchableOpacity
+                            className="flex-1 py-2 px-5 rounded-[4px] bg-white border border-[#153E3B]"
+                            onPress={handleBack}
+                        >
+                            <Text className="text-center text-base font-semibold text-black">
+                                {"Back"}
+                            </Text>
+                        </TouchableOpacity>)}
                     <TouchableOpacity
-                        className="flex-1 py-4 rounded-lg bg-[#f5f5f5] border border-[#ddd]"
-                        onPress={handleBack}
-                    >
-                        <Text className="text-center text-base font-semibold text-[#666]">
-                            {currentStepIndex === 0 ? "Cancel" : "Back"}
-                        </Text>
-                    </TouchableOpacity>
-                    <TouchableOpacity
-                        className="flex-1 py-4 rounded-lg bg-[#2e7d32]"
+                        className="flex-1 py-2 px-5 rounded-[4px] bg-[#153E3B] border border-[#153E3B]"
                         onPress={handleNext}
                     >
                         <Text className="text-center text-base font-semibold text-white">

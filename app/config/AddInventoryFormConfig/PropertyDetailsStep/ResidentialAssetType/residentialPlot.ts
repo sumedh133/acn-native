@@ -3,11 +3,11 @@ import { FormField } from "@/types/FormConfig";
 export const residentialPlot: FormField[] = [
   {
     id: "propertyName",
-    label: "Property/Project Name",
+    label: "Project Name",
     type: "text",
     required: true,
     placeholder: "Enter property name",
-    colspan: 6,
+    colspan: 12,
     conditional: false,
     dependsOn: {
       field: "assetType",
@@ -16,7 +16,7 @@ export const residentialPlot: FormField[] = [
   },
   {
     id: "plotArea",
-    label: "Plot Area (sqft)",
+    label: "Plot Size",
     type: "number",
     required: true,
     placeholder: "Enter plot area in square feet",
@@ -28,7 +28,7 @@ export const residentialPlot: FormField[] = [
       field: "assetType",
       values: ["plot"],
     },
-    colspan: 6,
+   colspan: 12,
     conditional: true,
   },
   {
@@ -47,12 +47,12 @@ export const residentialPlot: FormField[] = [
       field: "assetType",
       values: ["plot"],
     },
-    colspan: 6,
+    colspan: 12,
     conditional: true,
   },
   {
     id: "plotNo",
-    label: "Plot Number",
+    label: "Plot No",
     type: "text",
     required: false,
     placeholder: "Enter plot number",
@@ -60,12 +60,12 @@ export const residentialPlot: FormField[] = [
       field: "assetType",
       values: ["plot"],
     },
-    colspan: 6,
+    colspan: 12,
     conditional: true,
   },
   {
     id: "plotLength",
-    label: "Plot Length (ft)",
+    label: "Plot Length",
     type: "number",
     required: false,
     placeholder: "Enter plot length",
@@ -78,7 +78,7 @@ export const residentialPlot: FormField[] = [
   },
   {
     id: "plotBreadth",
-    label: "Plot Breadth (ft)",
+    label: "Plot Breadth",
     type: "number",
     required: false,
     placeholder: "Enter plot breadth",
@@ -98,7 +98,7 @@ export const residentialPlot: FormField[] = [
       field: "assetType",
       values: ["plot"],
     },
-    colspan: 6,
+    colspan: 12,
     conditional: true,
   },
   {
@@ -115,7 +115,7 @@ export const residentialPlot: FormField[] = [
       field: "assetType",
       values: ["plot"],
     },
-    colspan: 6,
+    colspan: 12,
     conditional: true,
   },
 ];
