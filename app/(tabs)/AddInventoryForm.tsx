@@ -53,8 +53,8 @@ const AddInventoryForm = () => {
       isEdit={!!editData}
 
     />
- 
+
   );
-  
+
 };
 export default AddInventoryForm;
