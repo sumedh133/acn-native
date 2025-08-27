@@ -74,6 +74,8 @@ const menuItems: MenuItem[] = [
   },
 ];
 
+const FOOTER_HEIGHT = 59;
+
 const FooterNavigation = () => {
   const pathname = usePathname();
   const router = useRouter();
@@ -91,22 +93,14 @@ const FooterNavigation = () => {
   const rotateAnimation = useRef(new Animated.Value(0)).current;
   const slideAnimation = useRef(new Animated.Value(height)).current;
   const opacityAnimation = useRef(new Animated.Value(0)).current;
-  const { isScrolling } = useContext(ScrollContext);
-  const footerTranslateY = useRef(new Animated.Value(0)).current;
+const { footerTranslateY } = useContext(ScrollContext);
 
-  useEffect(() => {
-    Animated.timing(footerTranslateY, {
-      toValue: isScrolling ? 59 : 0, 
-      duration: 200,
-      easing: Easing.out(Easing.quad),
-      useNativeDriver: true,
-    }).start();
-  }, [isScrolling, footerTranslateY]);
 
   const rotate = rotateAnimation.interpolate({
     inputRange: [0, 1],
     outputRange: ["0deg", "45deg"],
   });
+
 
   const handleNavigation = (path: string) => {
     if (popupAnimationFlag) {
@@ -263,13 +257,13 @@ const FooterNavigation = () => {
         </Animated.View>
       )}
       <Animated.View
-        style={[
-          styles.footer,
-          {
-            transform: [{ translateY: footerTranslateY }],
-          },
-        ]}
-      >
+      style={[
+        styles.footer,
+        {
+          transform: [{ translateY: footerTranslateY }],
+        },
+      ]}
+    >
         {menuItems?.map((item, idx) => {
           const active = item?.path === pathname;
           if (item?.path === "/add") {

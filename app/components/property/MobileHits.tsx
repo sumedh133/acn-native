@@ -6,7 +6,8 @@ import {
   RefreshControl,
   FlatList,
   ViewabilityConfig,
-  TouchableOpacity
+  TouchableOpacity,
+  Animated
 } from "react-native";
 import PropertyCard from "../../components/property/PropertyCard";
 import { useSelector } from "react-redux";
@@ -45,20 +46,14 @@ export const MobileHits = ({
   const [totalPropertiesViewed, setTotalPropertiesViewed] = useState(0);
   const [refreshing, setRefreshing] = useState(false);
   const [isRendered, setIsRendered] = useState(false);
-  const { setIsScrolling } = useContext(ScrollContext);
+  const { scrollY } = useContext(ScrollContext);
 
   const viewabilityConfig = useRef<ViewabilityConfig>({
     itemVisiblePercentThreshold: 50, // Item is considered viewed when 50% visible
     minimumViewTime: 500, // Must be visible for at least 500ms
   });
 
-  const handleScrollBegin = () => {
-    setIsScrolling(true);
-  };
 
-  const handleScrollEnd = () => {
-    setIsScrolling(false);
-  };
 
   // Track search results when they change
   useEffect(() => {
@@ -373,15 +368,16 @@ export const MobileHits = ({
 
   // Render the property list
   return (
-    <FlatList
+    <Animated.FlatList
       data={results}
       renderItem={renderItem}
       keyExtractor={keyExtractor}
-      onScroll={handleScroll}
+      onScroll={Animated.event(
+        [{ nativeEvent: { contentOffset: { y: scrollY } } }],
+        { useNativeDriver: false, listener: handleScroll }
+      )}
       scrollEventThrottle={16}
       onViewableItemsChanged={handleViewableItemsChanged}
-      onScrollBeginDrag={handleScrollBegin}
-      onMomentumScrollEnd={handleScrollEnd}
       viewabilityConfig={viewabilityConfig.current}
       refreshControl={
         onRefresh ? (

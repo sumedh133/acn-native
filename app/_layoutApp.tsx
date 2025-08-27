@@ -72,7 +72,7 @@ import Maintenance from "./maintainance";
 import VersionChecker from "./VersionChecker";
 import { doc, onSnapshot } from "firebase/firestore";
 import { db } from "@/app/config/firebase";
-import { ScrollContext } from "./ScrollContext";
+import { ScrollContext, ScrollProvider } from "./ScrollContext";
 
 // Custom header component to apply the desired styling
 const CustomHeader = ({
@@ -387,7 +387,7 @@ export default function LayoutApp() {
   if (!isConnectedToInternet) return <Offline />;
 
   return (
-    <ScrollContext.Provider value={{ isScrolling, setIsScrolling }}>
+    <ScrollProvider >
     <View style={{ flex: 1 }} onLayout={onLayoutRootView}>
       <VersionChecker />
       {showOnboarding && isAuthenticated && (
@@ -617,7 +617,7 @@ export default function LayoutApp() {
 
       {isAuthenticated && <FooterNavigation />}
     </View>
-    </ScrollContext.Provider>
+    </ScrollProvider>
   );
 }
 
