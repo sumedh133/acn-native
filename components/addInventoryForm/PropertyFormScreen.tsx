@@ -130,12 +130,12 @@ export const PropertyFormScreen: React.FC<PropertyFormScreenProps> = ({
                 </View>
                 <View className="h-[1vh]">
                     {/* Progress Bar */}
-                    <View className="h-1 bg-[#E6E6E6] w-full rounded-full">
+                    {/* <View className="h-1 bg-[#E6E6E6] w-full rounded-full">
                         <View
                             className="h-full bg-[#153E3B] rounded-full"
                             style={{ width: `${((currentStepIndex + 1) / visibleSteps.length) * 100}%` }}
                         />
-                    </View>
+                    </View> */}
 
                 </View>
                 <View className="h-[85vh]">
@@ -146,6 +146,8 @@ export const PropertyFormScreen: React.FC<PropertyFormScreenProps> = ({
                         onComplete={handleComplete}
                         onCancel={onCancel}
                         isEdit={isEdit}
+                        currentStep={currentStepIndex}
+                        setCurrentStep={setCurrentStepIndex}
                     />
                 </View>
             </View>
