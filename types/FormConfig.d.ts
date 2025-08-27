@@ -5,6 +5,7 @@ export interface FormField {
     | "text"
     | "select"
     | "multiselect"
+    | "dropdown"
     | "number"
     | "boolean"
     | "date"
@@ -12,16 +13,25 @@ export interface FormField {
   required?: boolean;
   placeholder?: string;
   options?: { label: string; value: any }[];
-  dependsOn?: {
-    field: string;
-    values: any[];
-  };
+  dependsOn?:
+    | {
+        field: string;
+        values: any[];
+      }
+    | {
+        conditions: Array<{
+          field: string;
+          values: any[];
+        }>;
+        logicOperator: "AND"; 
+      };
   validation?: {
     min?: number;
     max?: number;
     pattern?: RegExp;
     message?: string;
   };
+  unit?: string;
   colspan: number;
   conditional?: boolean;
 }

@@ -7,10 +7,9 @@ export const basicDetailsStep: FormStep = {
   fields: [
     {
       id: "listingType",
-      label: "What would you like to do?",
+      label: "You're looking to?",
       type: "select",
       required: true,
-      placeholder: "Select transaction type",
       options: [
         { label: "Sell", value: "resale" },
         { label: "Rent", value: "rental" },
@@ -20,33 +19,27 @@ export const basicDetailsStep: FormStep = {
     },
     {
       id: "propertyType",
-      label: "Property Category",
+      label: "What kind of property?",
       type: "select",
       required: true,
-      placeholder: "Select property category",
       options: [
         { label: "Residential", value: "residential" },
         { label: "Commercial", value: "commercial" },
       ],
-      // dependsOn: {
-      //   field: "listingType",
-      //   values: ["resale", "rental"],
-      // },
       colspan: 12,
       conditional: false,
     },
     {
       id: "assetType",
-      label: "Asset Type",
+      label: "Select property type",
       type: "select",
       required: true,
-      placeholder: "Select asset type",
       options: [
         { label: "Apartment", value: "apartment" },
         { label: "Villa", value: "villa" },
-        { label: "Villament", value: "villament" },
-        { label: "Row House", value: "row house" },
         { label: "Plot", value: "plot" },
+        { label: "Row House", value: "row house" },
+        { label: "Villament", value: "villament" },
         { label: "Independent Building", value: "independent house" },
       ],
       dependsOn: {
@@ -58,10 +51,9 @@ export const basicDetailsStep: FormStep = {
     },
     {
       id: "commercialPropertyType",
-      label: "Property Type",
+      label: "Select property type",
       type: "select",
       required: true,
-      placeholder: "Select property type",
       options: [
         { label: "Office Space", value: "Office Space" },
         { label: "Retail Space", value: "Retail Space" },
@@ -76,10 +68,9 @@ export const basicDetailsStep: FormStep = {
     },
     {
       id: "commercialSubType",
-      label: "Office Space Type",
+      label: "Select office space type",
       type: "select",
       required: true,
-      placeholder: "Select office space type",
       options: [
         {
           label: "Independent Office Space",
@@ -97,10 +88,9 @@ export const basicDetailsStep: FormStep = {
     },
     {
       id: "commercialSubType",
-      label: "Retail Space Type",
+      label: "Select retail space type",
       type: "select",
       required: true,
-      placeholder: "Select retail space type",
       options: [
         { label: "Commercial Shop", value: "Commercial Shop" },
         { label: "Showroom", value: "Showroom" },
@@ -114,10 +104,9 @@ export const basicDetailsStep: FormStep = {
     },
     {
       id: "commercialSubType",
-      label: "Commercial Space Type",
+      label: "Select commercial space type",
       type: "select",
       required: true,
-      placeholder: "Select commercial space type",
       options: [
         { label: "PG/Guest-House", value: "PG/Guest-House" },
         { label: "Warehouse", value: "Warehouse" },
@@ -135,10 +124,9 @@ export const basicDetailsStep: FormStep = {
     },
     {
       id: "communityType",
-      label: "Community Type",
+      label: "Select community type",
       type: "select",
       required: true,
-      placeholder: "Select community type",
       options: [
         { label: "Gated", value: "Gated" },
         { label: "Independent", value: "Independent" },
