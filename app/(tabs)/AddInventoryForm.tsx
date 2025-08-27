@@ -2,28 +2,50 @@ import React, { useState } from 'react';
 import { Alert } from 'react-native';
 import { PropertyFormScreen } from '@/app/components/addInventoryForm/PropertyFormScreen';
 import { Property } from '../types';
+import { createProperty } from "../services/property_services/propertyService";
 
 const AddInventoryForm = () => {
   const [showForm, setShowForm] = useState(true);
   const [editData, setEditData] = useState<Partial<Property> | undefined>();
 
-  const handleFormComplete = (data: Partial<Property>) => {
-    console.log('Form completed with data:', data);
+  const handleFormComplete = async (data: Partial<Property>) => {
+  try {
+    console.log("Raw form data:", data);
+    Alert.alert("Debug Data", JSON.stringify(data, null, 2).slice(0, 300)); // show trimmed data
 
-    // Here you would typically save to your backend
-    // savePropertyData(data);
-
-    Alert.alert(
-      'Success',
-      editData ? 'Property updated successfully!' : 'Property added successfully!',
-      [
-        {
-          text: 'OK',
-          onPress: () => setShowForm(false)
-        }
-      ]
+    // Clean undefined/null fields
+    const cleanData = JSON.parse(
+      JSON.stringify(data, (key, value) =>
+        value === undefined ? null : value
+      )
     );
-  };
+
+    if (editData) {
+      // update flow
+      console.log("Cleaned update data:", cleanData);
+
+      Alert.alert(
+        "Success",
+        `Property updated successfully!\nID: ${editData.propertyId}`,
+        [{ text: "OK", onPress: () => setShowForm(false) }]
+      );
+    } else {
+      // create flow
+      const newProperty = await createProperty(cleanData as Omit<Property, "propertyId">);
+      console.log("Cleaned new property:", newProperty);
+
+      Alert.alert(
+        "Success",
+        `Property added successfully!\nID: ${newProperty.propertyId}`,
+        [{ text: "OK", onPress: () => setShowForm(false) }]
+      );
+    }
+  } catch (error: any) {
+    console.error("Error saving property:", error);
+    Alert.alert("Error", "Something went wrong while saving the property.");
+  }
+};
+
 
   const handleFormCancel = () => {
     Alert.alert(

@@ -12,6 +12,7 @@ import { FormRenderer } from './FormRenderer';
 import { inventoryFormConfig } from '@/app/config/AddInventoryFormConfig/inventoryFormConfig';
 import { Property } from '@/app/types';
 import ArrowLeftIcon from '@/assets/icons/svg/Common/ArrowLeftIcon';
+import { FormPreview } from '../Listing/listingPropertyDetails';
 
 interface PropertyFormScreenProps {
     initialData?: Partial<Property>;
@@ -31,6 +32,7 @@ export const PropertyFormScreen: React.FC<PropertyFormScreenProps> = ({
     const [currentStepIndex, setCurrentStepIndex] = useState<number>(0);
     const [isFormEmpty, setIsFormEmpty] = useState<boolean>(Object.keys(initialData || {}).length === 0);
     const [errors, setErrors] = useState<Record<string, string>>({});
+    const [showPreview, setShowPreview] = useState<boolean>(false);
 
     // -------------------- Utility Functions --------------------
 
@@ -59,7 +61,8 @@ export const PropertyFormScreen: React.FC<PropertyFormScreenProps> = ({
         if (currentStepIndex < visibleSteps.length - 1) {
             setCurrentStepIndex(prev => prev + 1);
         } else {
-            onComplete(formData);
+            //onComplete(formData);
+            setShowPreview(true);
         }
     };
 
@@ -111,6 +114,56 @@ export const PropertyFormScreen: React.FC<PropertyFormScreenProps> = ({
 
     // -------------------- Derived Values --------------------
     const visibleSteps = getVisibleSteps();
+
+    if (showPreview) {
+    return (
+      <SafeAreaView className="flex-1 bg-[#F5F6F7]">
+        <StatusBar barStyle="dark-content" backgroundColor="#fff" />
+
+        {/* Header */}
+        <View className="w-full bg-white">
+          <View className="flex-row items-center px-3 h-12 justify-between">
+            <View className="flex-row items-center gap-2.5">
+              <TouchableOpacity onPress={() => setShowPreview(false)}>
+                <ArrowLeftIcon />
+              </TouchableOpacity>
+              <Text className="font-['Montserrat_700Bold'] text-lg font-semibold text-black">
+                Preview Property
+              </Text>
+            </View>
+          </View>
+        </View>
+
+        {/* Preview */}
+        <View className="flex-1">
+          <FormPreview config={inventoryFormConfig} data={formData} />
+        </View>
+
+        {/* Back & Submit buttons */}
+        <View className="flex-row px-5 py-5 gap-3">
+          <TouchableOpacity
+            className="flex-1 py-4 rounded-lg bg-[#f5f5f5] border border-[#ddd]"
+            onPress={() => {
+              setShowPreview(false);
+              setCurrentStepIndex(0);
+            }}
+          >
+            <Text className="text-center text-base font-semibold text-[#666]">
+              Back
+            </Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            className="flex-1 py-4 rounded-lg bg-[#2e7d32]"
+            onPress={() => onComplete(formData)}
+          >
+            <Text className="text-center text-base font-semibold text-white">
+              {isEdit ? 'Update' : 'Submit'}
+            </Text>
+          </TouchableOpacity>
+        </View>
+      </SafeAreaView>
+    );
+  }
 
     // -------------------- Render --------------------
     return (
