@@ -18,9 +18,24 @@ export const FormPreview: React.FC<FormPreviewProps> = ({ config, data }) => {
 
   const isFieldVisible = (field: FormField): boolean => {
     if (!field.dependsOn) return true;
-    const currentValue = getFieldValue(data, field.dependsOn.field);
-    return field.dependsOn.values.includes(currentValue);
+
+    if ("field" in field.dependsOn) {
+      // Single dependency
+      const currentValue = getFieldValue(data, field.dependsOn.field);
+      return field.dependsOn.values.includes(currentValue);
+    }
+
+    if ("conditions" in field.dependsOn) {
+      // Multiple conditions with AND logic
+      return field.dependsOn.conditions.every(condition => {
+        const currentValue = getFieldValue(data, condition.field);
+        return condition.values.includes(currentValue);
+      });
+    }
+
+    return true;
   };
+
 
   const processedSteps = config.steps
     .map((step) => {
@@ -49,7 +64,7 @@ export const FormPreview: React.FC<FormPreviewProps> = ({ config, data }) => {
       {processedSteps.map((step) => {
         const displayType =
           step.title.toLowerCase().includes("more") ||
-          step.title.toLowerCase().includes("extra")
+            step.title.toLowerCase().includes("extra")
             ? "tags"
             : "list";
         return (
