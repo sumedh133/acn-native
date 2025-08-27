@@ -38,11 +38,15 @@ export const ScrollProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     if (Math.abs(diff) > 0.5) {
       scrollDirection.current = diff > 0 ? 'down' : 'up';
       
+      // Damping factor - reduce sensitivity
+      const dampingFactor = 0.3; // Adjust this: 0.5 = half speed, 0.3 = very slow, 0.8 = faster
+      const dampedDiff = Math.abs(diff) * dampingFactor;
+      
       let newClampedValue;
       if (scrollDirection.current === 'down') {
-        newClampedValue = Math.min(FOOTER_HEIGHT, currentClampedValue.current + Math.abs(diff));
+        newClampedValue = Math.min(FOOTER_HEIGHT, currentClampedValue.current + dampedDiff);
       } else {
-        newClampedValue = Math.max(0, currentClampedValue.current - Math.abs(diff));
+        newClampedValue = Math.max(0, currentClampedValue.current - dampedDiff);
       }
       
       currentClampedValue.current = newClampedValue;
@@ -62,7 +66,7 @@ export const ScrollProvider: React.FC<{ children: React.ReactNode }> = ({ childr
 
   const snapToNearest = useCallback(() => {
     const currentValue = currentClampedValue.current;
-    const thresholdShow = 0.2 * FOOTER_HEIGHT; // 15.4 - very easy to show (just a tiny scroll up)
+    const thresholdShow = 0.15 * FOOTER_HEIGHT; // 11.55 - very easy to show (just a tiny scroll up)
     const thresholdHide = 0.8 * FOOTER_HEIGHT;  // 61.6 - much harder to hide (need significant scroll down)
     
     let targetValue: number;
