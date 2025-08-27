@@ -56,15 +56,14 @@ import { useBackToSaveDraft } from "@/hooks/useBackToSaveDraft";
 import MultiSelectSlider from "../components/Listing/MuliSelectSliderButton";
 import { logEvent } from "@react-native-firebase/analytics";
 import { analytics } from "../config/firebase";
-import * as tus from "tus-js-client";
-import { Upload } from "tus-js-client";
+import {
+  MultipleFilesUploadService,
+  UploadResult,
+} from "../services/media_services/mediaService";
 import * as FileSystem from "expo-file-system";
 
 const API_URL = "https://uploadtodrive-ouurm6pska-uc.a.run.app";
-const TUS_ENDPOINT =
-  Platform.OS === "android"
-    ? "http://10.0.2.2:1080/files/"
-    : "http://localhost:1080/files/";
+const TUS_ENDPOINT = "https://tus-x-gcp-protocol-test-1.onrender.com/files";
 
 const initialState: ListingProperty = {
   _geoloc: {
@@ -156,6 +155,7 @@ const AddInventoryForm = () => {
           const fileMetadata = await fileref.getMetadata();
           const fileUrl = await fileref.getDownloadURL();
           returnValue.photo.push({
+            uri: photoUri,
             firebaseUri: fileUrl,
             name: fileName.slice(14),
             size: fileMetadata.size,
@@ -173,6 +173,7 @@ const AddInventoryForm = () => {
           const fileMetadata = await fileref.getMetadata();
           const fileUrl = await fileref.getDownloadURL();
           returnValue.video.push({
+            uri: videoUri,
             firebaseUri: fileUrl,
             name: fileName.slice(14),
             size: fileMetadata.size,
@@ -190,6 +191,7 @@ const AddInventoryForm = () => {
           const fileMetadata = await fileref.getMetadata();
           const fileUrl = await fileref.getDownloadURL();
           returnValue.document.push({
+            uri: documentUri,
             firebaseUri: fileUrl,
             name: fileName.slice(14),
             size: fileMetadata.size,
@@ -310,7 +312,7 @@ const AddInventoryForm = () => {
     }
 
     setGrayed(false);
-    setProperty((prevProperty) => ({
+    setProperty((prevProperty: ListingProperty) => ({
       ...prevProperty,
       [field]: value,
     }));
@@ -320,11 +322,10 @@ const AddInventoryForm = () => {
     field: keyof ListingProperty,
     value: string[]
   ) => {
-    setProperty((prevProperty) => ({
+    setProperty((prevProperty: ListingProperty) => ({
       ...prevProperty,
       [field]: value,
     }));
-    console.log(value, "This is value from function");
   };
 
   const getFormComponents = () => {
@@ -585,10 +586,15 @@ const AddInventoryForm = () => {
 
     switch (assetType) {
       case "Apartment":
-        for (let elem of compulsoryFields[assetType]) {
+        for (let elem of compulsoryFields[
+          assetType as keyof typeof compulsoryFields
+        ]) {
           if (elem === "handoverDate") {
             // If handoverDate is empty, set it to "NA"
-            if (property.currentStatus === false) {
+            if (
+              property.currentStatus === "false" ||
+              property.currentStatus === null
+            ) {
               const friendlyName = fieldLabels[elem] || elem;
               showErrorToast(`Missing field: ${friendlyName}`);
               return false;
@@ -605,10 +611,15 @@ const AddInventoryForm = () => {
         }
         break;
       case "Villa":
-        for (let elem of compulsoryFields[assetType]) {
+        for (let elem of compulsoryFields[
+          assetType as keyof typeof compulsoryFields
+        ]) {
           if (elem === "handoverDate") {
             // If handoverDate is empty, set it to "NA"
-            if (property.currentStatus === false) {
+            if (
+              property.currentStatus === "false" ||
+              property.currentStatus === null
+            ) {
               const friendlyName = fieldLabels[elem] || elem;
               showErrorToast(`Missing field: ${friendlyName}`);
               return false;
@@ -625,10 +636,15 @@ const AddInventoryForm = () => {
         }
         break;
       case "Plot":
-        for (let elem of compulsoryFields[assetType]) {
+        for (let elem of compulsoryFields[
+          assetType as keyof typeof compulsoryFields
+        ]) {
           if (elem === "handoverDate") {
             // If handoverDate is empty, set it to "NA"
-            if (property.currentStatus === false) {
+            if (
+              property.currentStatus === "false" ||
+              property.currentStatus === null
+            ) {
               const friendlyName = fieldLabels[elem] || elem;
               showErrorToast(`Missing field: ${friendlyName}`);
               return false;
@@ -645,10 +661,15 @@ const AddInventoryForm = () => {
         }
         break;
       case "Row House":
-        for (let elem of compulsoryFields[assetType]) {
+        for (let elem of compulsoryFields[
+          assetType as keyof typeof compulsoryFields
+        ]) {
           if (elem === "handoverDate") {
             // If handoverDate is empty, set it to "NA"
-            if (property.currentStatus === false) {
+            if (
+              property.currentStatus === "false" ||
+              property.currentStatus === null
+            ) {
               const friendlyName = fieldLabels[elem] || elem;
               showErrorToast(`Missing field: ${friendlyName}`);
               return false;
@@ -665,10 +686,15 @@ const AddInventoryForm = () => {
         }
         break;
       case "Villament":
-        for (let elem of compulsoryFields[assetType]) {
+        for (let elem of compulsoryFields[
+          assetType as keyof typeof compulsoryFields
+        ]) {
           if (elem === "handoverDate") {
             // If handoverDate is empty, set it to "NA"
-            if (property.currentStatus === false) {
+            if (
+              property.currentStatus === "false" ||
+              property.currentStatus === null
+            ) {
               const friendlyName = fieldLabels[elem] || elem;
               showErrorToast(`Missing field: ${friendlyName}`);
               return false;
@@ -686,10 +712,15 @@ const AddInventoryForm = () => {
         break;
       case "Independent Building":
         // Check if any required field is null or empty
-        for (let elem of compulsoryFields[assetType]) {
+        for (let elem of compulsoryFields[
+          assetType as keyof typeof compulsoryFields
+        ]) {
           if (elem === "handoverDate") {
             // If handoverDate is empty, set it to "NA"
-            if (property.currentStatus === false) {
+            if (
+              property.currentStatus === "false" ||
+              property.currentStatus === null
+            ) {
               const friendlyName = fieldLabels[elem] || elem;
               showErrorToast(`Missing field: ${friendlyName}`);
               return false;
@@ -888,163 +919,140 @@ const AddInventoryForm = () => {
   // };
 
   // Convert content:// to a real file:// by copying into app cache if needed
-const toFileUri = async (uri: string, name: string) => {
-  if (uri.startsWith("file://")) return uri;
+  const toFileUri = async (uri: string, name: string) => {
+    if (uri.startsWith("file://")) return uri;
 
-  const ext = name?.includes(".") ? "." + name.split(".").pop() : "";
-  const target = `${FileSystem.cacheDirectory}upload-${Date.now()}${ext}`;
+    const ext = name?.includes(".") ? "." + name.split(".").pop() : "";
+    const target = `${FileSystem.cacheDirectory}upload-${Date.now()}${ext}`;
 
-  try {
-    await FileSystem.copyAsync({ from: uri, to: target });
-    return target;
-  } catch {
-    const base64 = await FileSystem.readAsStringAsync(uri, {
-      encoding: FileSystem.EncodingType.Base64,
-    });
-    await FileSystem.writeAsStringAsync(target, base64, {
-      encoding: FileSystem.EncodingType.Base64,
-    });
-    return target;
-  }
-};
-
-const ensureLocalFileForTus = async (rawUri?: string, name?: string) => {
-  if (!rawUri || typeof rawUri !== "string") {
-    throw new Error("Invalid file URI (empty)");
-  }
-  const fileUri = await toFileUri(rawUri, name ?? "upload");
-  const info = await FileSystem.getInfoAsync(fileUri);
-  if (!info.exists) throw new Error("Invalid file URI (not found)");
-  // @ts-ignore (size is present in Expo file info)
-  const size: number | undefined = typeof info.size === "number" ? info.size : undefined;
-  return { fileUri, size };
-};
-
-
-  // Replace your old Firebase uploader with this tus variant:
-const handleUploadToStorage = async (propId: string) => {
-  const uploadedFileUrls: UploadedFileUrls = {
-    photo: [],
-    video: [],
-    document: [],
+    try {
+      await FileSystem.copyAsync({ from: uri, to: target });
+      return target;
+    } catch {
+      const base64 = await FileSystem.readAsStringAsync(uri, {
+        encoding: FileSystem.EncodingType.Base64,
+      });
+      await FileSystem.writeAsStringAsync(target, base64, {
+        encoding: FileSystem.EncodingType.Base64,
+      });
+      return target;
+    }
   };
 
-  // Make a working copy so we can mutate file.firebaseUri and then commit once
-  const copyOfDocs = {
-    photo: [...docsToUpload.photo],
-    video: [...docsToUpload.video],
-    document: [...docsToUpload.document],
-  };
+  // Enhanced TUS upload with resumable functionality
+  const handleUploadToStorage = async (
+    propId: string
+  ): Promise<UploadedFileUrls> => {
+    const uploadedFileUrls: UploadedFileUrls = {
+      photo: [],
+      video: [],
+      document: [],
+    };
 
-  // Helper to upload a single file via tus and return the upload URL
-  const tusUploadSingle = (typeKey: keyof UploadedFileUrls, file: FileObject) => {
-    return new Promise<string>(async (resolve, reject) => {
-      try {
-        // If already uploaded (we reuse your firebaseUri field as the canonical URL), skip
+    // Prepare files for upload
+    const filesToUpload: Array<{
+      file: FileObject;
+      type: keyof UploadedFileUrls;
+    }> = [];
+
+    // Collect all files that need uploading
+    for (const [type, files] of Object.entries(docsToUpload) as Array<
+      [keyof UploadedFileUrls, FileObject[]]
+    >) {
+      for (const file of files) {
+        // Skip files that are already uploaded
         if ((file as any).firebaseUri) {
-          return resolve((file as any).firebaseUri as string);
+          uploadedFileUrls[type].push((file as any).firebaseUri);
+          continue;
         }
-
-        const { fileUri, size: statSize } = await ensureLocalFileForTus(file.uri, file.name);
-
-        // Decide size: prefer file.size from picker, fallback to FS stat
-        const uploadSize =
-          typeof file.size === "number" && file.size > 0 ? file.size : statSize;
-
-        if (!uploadSize) {
-          return reject(new Error(`Unknown file size for ${file.name}`));
-        }
-
-        // RN-style file descriptor (no Blob/fetch)
-        const rnFile: any = {
-          uri: fileUri,
-          name: file.name ?? "unnamed",
-          type: "application/octet-stream", // set real mime if you store it
-        };
-
-
-
-        // Fingerprint that stays stable across cache copies so resume works
-        const fingerprint = () =>
-          Promise.resolve(`rn-${propId}-${typeKey}-${rnFile.name}-${uploadSize}`);
-
-        console.log(rnFile)
-
-        const upload = new Upload(rnFile, {
-          endpoint: TUS_ENDPOINT,
-          uploadSize,
-          retryDelays: [0, 3000, 5000, 10000, 20000],
-          storeFingerprintForResuming: true,
-          removeFingerprintOnSuccess: true,
-          fingerprint,
-          metadata: {
-            filename: rnFile.name,
-            filetype: rnFile.type,
-            propId,
-            category: String(typeKey),
-          },
-          onError(error) {
-            console.error(`Tus upload failed (${rnFile.name}):`, error);
-            showToast("error", `Upload failed for ${rnFile.name}`);
-            reject(error);
-          },
-          onProgress(bytesUploaded, bytesTotal) {
-            const pct = ((bytesUploaded / bytesTotal) * 100).toFixed(2);
-            console.log(`${rnFile.name}: ${bytesUploaded}/${bytesTotal} (${pct}%)`);
-          },
-          onSuccess() {
-            // Most tus servers allow GET on the upload URL; if yours returns a fileId or a separate download URL,
-            // map that here instead of using upload.url directly.
-            const url = upload.url as string;
-            console.log(`Upload finished: ${rnFile.name} → ${url}`);
-            resolve(url);
-          },
-          onAfterResponse(_req, res) {
-            try {
-              console.log("Tus response:", res.getStatus(), res.getHeader("upload-offset"));
-            } catch (error) {
-              console.log("error: ", error);
-            }
-          },
-        });
-
-        // Resume if possible
-        const prev = upload.findPreviousUploads();
-        if (prev.length > 0) {
-          console.log("Resuming from:", prev[0].uploadUrl);
-          upload.resumeFromPreviousUpload(prev[0]);
-        }
-
-        upload.start();
-      } catch (err) {
-        reject(err);
-      }
-    });
-  };
-
-  // Iterate your categories and files (same shape as before)
-  for (const [type, files] of Object.entries(copyOfDocs) as Array<
-    [keyof UploadedFileUrls, FileObject[]]
-  >) {
-    for (const file of files) {
-      try {
-        const url = await tusUploadSingle(type, file);
-        uploadedFileUrls[type].push(url);
-        // keep your existing contract: stash URL so future runs skip it
-        (file as any).firebaseUri = url;
-      } catch (error: any) {
-        console.error(`Failed to upload ${type} file (${file.name}):`, error);
-        throw new Error(`Error uploading ${type} file (${file.name}): ${error.message ?? error}`);
+        filesToUpload.push({ file, type });
       }
     }
-  }
+    if (filesToUpload.length === 0) {
+      return uploadedFileUrls;
+    }
 
-  // Commit updated file records back to state (now they carry .firebaseUri)
-  setDocsToUpload(copyOfDocs);
+    // Initialize the upload service
+    const uploadService = new MultipleFilesUploadService();
 
-  return uploadedFileUrls; // same return contract as your old function
-};
+    try {
+      // Prepare files for TUS upload
+      const selectedFiles = filesToUpload.map(({ file, type }, index) => {
+        const selectedFile = {
+          uri: file.uri,
+          name: file.name || "unknown",
+          type: "application/octet-stream",
+          size: file.size || 0,
+          id: `${propId}-${type}-${file.name || Date.now()}`,
+        };
+        return selectedFile;
+      });
 
+      // Configure upload
+      const uploadConfig = {
+        endpoint: TUS_ENDPOINT,
+        chunkSize: 2 * 1024 * 1024, // 2MB chunks
+        maxConcurrent: 3,
+        strategy: "parallel" as const,
+        resumable: true,
+        backgroundUpload: true,
+        retryAttempts: 3,
+        metadata: {
+          propId,
+          userId: agentData?.cpId || "unknown",
+        },
+        onBatchProgress: (progress: any) => {},
+        onFileProgress: (fileId: string, progress: any) => {},
+        onBatchComplete: (results: UploadResult[]) => {
+          const successful = results.filter((r) => r.success).length;
+        },
+        onBatchError: (error: Error, failedUploads: UploadResult[]) => {},
+      };
+
+      // Start the upload
+      const results = await uploadService.startBatchUpload(
+        selectedFiles,
+        uploadConfig
+      );
+
+      // Process results
+      const updatedDocs = { ...docsToUpload };
+
+      results.forEach((result, index) => {
+        const { file, type } = filesToUpload[index];
+
+        if (result.success && result.uploadUrl) {
+          uploadedFileUrls[type].push(result.uploadUrl);
+
+          // Update the file object with the upload URL for future reference
+          const fileIndex = updatedDocs[type].findIndex(
+            (f) => f.uri === file.uri
+          );
+          if (fileIndex !== -1) {
+            (updatedDocs[type][fileIndex] as any).firebaseUri =
+              result.uploadUrl;
+          } else {
+          }
+        } else {
+          throw new Error(
+            `Failed to upload ${file.name}: ${
+              result.error?.message || "Unknown error"
+            }`
+          );
+        }
+      });
+
+      // Update state with the updated file objects
+      setDocsToUpload(updatedDocs);
+      return uploadedFileUrls;
+    } catch (error: any) {
+      console.error("Upload failed:", error);
+      throw new Error(`Upload failed: ${error.message || error}`);
+    } finally {
+      // Clean up the upload service
+      // Remove destroy() call since it doesn't exist on MultipleFilesUploadService
+    }
+  };
 
   const handleUploadToDrive = async (
     propId: string,
@@ -1082,9 +1090,8 @@ const handleUploadToStorage = async (propId: string) => {
         user_type: userType,
       });
 
-      console.log(property, "This is property");
-
       const areCompulsoryFieldsValid = checkCompulsoryFields();
+
       if (!areCompulsoryFieldsValid) {
         logEvent(analytics, "inventory_submit_error", {
           event_category: "inventory",
@@ -1146,10 +1153,10 @@ const handleUploadToStorage = async (propId: string) => {
         video: [],
         document: [],
       };
+
       try {
-        await handleUploadToStorage(propId);
+        await handleUploadToStorage(propId || "temp-id");
       } catch (error) {
-        console.log("Error uploading files to Firebase Storage: 1", error);
         showErrorToast("Error uploading files. Please try again.");
         setSaving(false);
         return;
@@ -1278,7 +1285,7 @@ const handleUploadToStorage = async (propId: string) => {
         document: [],
       };
       try {
-        await handleUploadToStorage(propId);
+        await handleUploadToStorage(propId || "temp-id");
       } catch (error) {
         console.error("Error uploading files to Firebase Storage: 2", error);
         showErrorToast("Error uploading files. Please try again.");
@@ -1532,7 +1539,9 @@ const handleUploadToStorage = async (propId: string) => {
         </TouchableOpacity>
         <TouchableOpacity
           style={styles.primaryButton}
-          onPress={handleSubmitButton}
+          onPress={() => {
+            handleSubmitButton();
+          }}
           disabled={saving || savingDraft}
         >
           {saving ? (
