@@ -422,6 +422,8 @@ export interface Property {
     currentDeposit?: number;
     startDate?: number;
     endDate?: number;
+
+    isPreLeased?: boolean;
   };
 
   // Tenant Preferences (rental only)

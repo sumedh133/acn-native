@@ -65,10 +65,10 @@ export const pgGuestHouseFields: FormField[] = [
   },
   {
     id: "structure",
-    label: "Number of Floors",
-    type: "number",
+    label: "Structure",
+    type: "text",
     required: true,
-    placeholder: "Enter number of floors",
+    placeholder: "E.g., G+1, G+2",
     dependsOn: {
       field: "commercialSubType",
       values: ["PG/Guest-House"],

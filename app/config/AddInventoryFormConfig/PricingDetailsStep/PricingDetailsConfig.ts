@@ -8,7 +8,7 @@ export const pricingDetailsStep: FormStep = {
     // ----------- Resale Pricing -----------
     {
       id: "pricing.totalAskPrice",
-      label: "Total Asking Price",
+      label: "Total Ask Price",
       type: "number",
       required: true,
       placeholder: "Enter total asking price",
@@ -34,7 +34,7 @@ export const pricingDetailsStep: FormStep = {
     // ----------- Rental Pricing -----------
     {
       id: "rentalInfo.rent",
-      label: "Monthly Rent",
+      label: "Rent/ month ",
       type: "number",
       required: true,
       placeholder: "Enter monthly rent",
@@ -46,7 +46,7 @@ export const pricingDetailsStep: FormStep = {
     },
     {
       id: "rentalInfo.deposit",
-      label: "Security Deposit",
+      label: "Deposit",
       type: "number",
       required: true,
       placeholder: "Enter deposit amount",
