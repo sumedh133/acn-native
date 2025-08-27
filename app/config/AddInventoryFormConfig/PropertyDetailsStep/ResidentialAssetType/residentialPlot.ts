@@ -28,7 +28,7 @@ export const residentialPlot: FormField[] = [
       field: "assetType",
       values: ["plot"],
     },
-   colspan: 12,
+    colspan: 12,
     conditional: true,
   },
   {
@@ -114,6 +114,28 @@ export const residentialPlot: FormField[] = [
     dependsOn: {
       field: "assetType",
       values: ["plot"],
+    },
+    colspan: 12,
+    conditional: true,
+  },
+  {
+    id: "availableFrom",
+    label: "Available From",
+    type: "date",
+    required: true,
+    placeholder: "MM/YYYY",
+    dependsOn: {
+      conditions: [
+        {
+          field: "assetType",
+          values: ["plot"],
+        },
+        {
+          field: "possession",
+          values: ["Under Construction"],
+        },
+      ],
+      logicOperator: "AND",
     },
     colspan: 12,
     conditional: true,

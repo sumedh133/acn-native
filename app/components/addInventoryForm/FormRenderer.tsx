@@ -10,6 +10,7 @@ import {
 import { FormConfig, FormStep } from "@/types/FormConfig";
 import { Property } from "@/app/types";
 import CustomSelectDropdown from "../CustomSelectDropdown";
+import MonthYearPicker from "../Listing/MonthYearPicker";
 import Checkbox from "../Listing/CheckBox";
 import { FormField } from "@/types/FormConfig";
 
@@ -416,10 +417,17 @@ export const FormRenderer: React.FC<FormRendererProps> = ({
         case "date":
           return (
             <>
-              {commonLabel}
-              {commonTextInput({
-                placeholder: field.placeholder || "YYYY-MM-DD"
-              })}
+              <MonthYearPicker
+                value={value}
+                setValue={(val: string) => setFieldValue(field.id, val)}
+                title={field.label}
+                placeholder={field.placeholder || "MM/YYYY"}
+                required={field.required}
+                minYear={1900}
+                maxYear={2100}
+                disabled={false}
+
+              />
               {errorMessage}
             </>
           );
