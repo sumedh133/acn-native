@@ -9,7 +9,7 @@ import {
     Alert,
     Switch
 } from 'react-native';
-import { FormConfig, FormField } from '../../types/FormConfig';
+import { FormConfig, FormField } from '../../../types/FormConfig';
 import { Property } from '@/app/types';
 
 

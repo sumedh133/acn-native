@@ -22,10 +22,6 @@ export const inventoryFormConfig: FormConfig = {
       id: "media",
       title: "Media",
       description: "Please upload required media files",
-      dependsOn: {
-        field: "propertyType",
-        values: ["commercial"],
-      },
       fields: [],
     },
   ],

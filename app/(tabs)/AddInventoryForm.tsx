@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Alert } from 'react-native';
-import { PropertyFormScreen } from '@/components/addInventoryForm/PropertyFormScreen';
+import { PropertyFormScreen } from '@/app/components/addInventoryForm/PropertyFormScreen';
 import { Property } from '../types';
 
 const AddInventoryForm = () => {
