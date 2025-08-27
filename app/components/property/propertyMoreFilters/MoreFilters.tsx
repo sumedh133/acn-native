@@ -18,7 +18,17 @@ import { SearchFilters } from "../../../services/property_services/propertyAlgol
 import ToggleTabs from "../../ToggleTabs";
 import BackButtonIcon from "@/assets/icons/svg/PropertiesPage/BackButtonIcon";
 import FilterChipList from "./FilterChipList";
-import { apartmentTypes, bedroomOptions, commercialPropertyTypes, commercialSubTypes, residentialPropertyTypes } from "./moreFilterOptions";
+import {
+  apartmentTypes,
+  bedroomOptions,
+  commercialPropertyTypes,
+  commercialSubTypes,
+  facingOptions,
+  floorOptions,
+  preferredTenantsOptions,
+  residentialPropertyTypes,
+} from "./moreFilterOptions";
+import DropdownTailwind from "../../DropdownTailwind";
 
 export interface RangeState {
   start: (number | undefined)[];
@@ -29,8 +39,6 @@ export interface RangeState {
   refine: (range: [number, number]) => void;
   currentRefinement?: [number | undefined, number | undefined];
 }
-
-
 
 interface MoreFiltersProps {
   isOpen: boolean;
@@ -99,9 +107,22 @@ const MoreFilters = ({
   // Helper function to toggle a filter value
   const toggleFilterValue = (
     attribute: string,
-    value: string,
+    value: string | string[] | null,
     singleSelect: boolean = false
   ) => {
+    // Handle null values (clear filter)
+    if (value === null) {
+      updateLocalFilter(attribute, []);
+      return;
+    }
+
+    // Handle array values (from multi-select)
+    if (Array.isArray(value)) {
+      updateLocalFilter(attribute, value);
+      return;
+    }
+
+    // Handle single string values (original logic)
     const currentValues = localFilters[attribute as keyof SearchFilters] || [];
     const isSelected = currentValues.includes(value);
 
@@ -109,14 +130,11 @@ const MoreFilters = ({
 
     if (singleSelect) {
       if (isSelected) {
-        // If already selected in single select mode, deselect (empty array)
         newValues = [];
       } else {
-        // If not selected in single select mode, select only this value
         newValues = [value];
       }
     } else {
-      // Multi-select mode (original logic)
       newValues = isSelected
         ? currentValues.filter((v) => v !== value)
         : [...currentValues, value];
@@ -359,8 +377,8 @@ const MoreFilters = ({
                   }
                   attribute="commercialSubType"
                   localFilters={localFilters}
-                  onToggleFilterValue={
-                    (attr, val) => toggleFilterValue(attr, val) // single select
+                  onToggleFilterValue={(attr, val) =>
+                    toggleFilterValue(attr, val)
                   }
                   singleSelect={true}
                   containerClassName="gap-2 flex-wrap"
@@ -375,8 +393,8 @@ const MoreFilters = ({
                   items={apartmentTypes}
                   attribute="apartmentType"
                   localFilters={localFilters}
-                  onToggleFilterValue={
-                    (attr, val) => toggleFilterValue(attr, val) // single select
+                  onToggleFilterValue={(attr, val) =>
+                    toggleFilterValue(attr, val)
                   }
                   singleSelect={true}
                   containerClassName="gap-2 flex-wrap"
@@ -391,8 +409,8 @@ const MoreFilters = ({
                   items={bedroomOptions}
                   attribute="noOfBedrooms"
                   localFilters={localFilters}
-                  onToggleFilterValue={
-                    (attr, val) => toggleFilterValue(attr, val) // single select
+                  onToggleFilterValue={(attr, val) =>
+                    toggleFilterValue(attr, val)
                   }
                   singleSelect={true}
                   containerClassName="gap-2 flex-wrap"
@@ -400,6 +418,46 @@ const MoreFilters = ({
                   titleClassName="text-sm"
                 />
               )}
+            <View className="flex-row mb-9">
+              <DropdownTailwind
+                multiSelect={true}
+                value={localFilters.facing ?? null}
+                setValue={(val) => toggleFilterValue("facing", val)}
+                options={facingOptions}
+                placeholder="Select"
+                title="Facing"
+                containerClassName="flex-1 mr-2"
+              />
+              <DropdownTailwind
+                multiSelect={true}
+                value={localFilters.floor ?? null}
+                setValue={(val) => toggleFilterValue("floor", val)}
+                options={floorOptions}
+                placeholder="Select"
+                title="Floor"
+                containerClassName="flex-1 "
+              />
+            </View>
+            <View className="flex-row">
+              <DropdownTailwind
+                multiSelect={true}
+                value={localFilters.furnishing ?? null}
+                setValue={(val) => toggleFilterValue("furnishing", val)}
+                options={floorOptions}
+                placeholder="Select"
+                title="Furnishing"
+                containerClassName="flex-1"
+              />
+              <DropdownTailwind
+                multiSelect={true}
+                value={localFilters.preferredTenants ?? null}
+                setValue={(val) => toggleFilterValue("preferredTenants", val)}
+                options={preferredTenantsOptions}
+                placeholder="Select"
+                title="Preffered Tenant"
+                containerClassName="flex-1 ml-2"
+              />
+            </View>
           </View>
         </ScrollView>
 

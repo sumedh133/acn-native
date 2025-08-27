@@ -174,25 +174,25 @@ export default function PropertyFilters({
 
   return (
     <View className="px-4 pt-3">
-      <View className="mb-3" >
-      <ToggleTabs
-        tabs={[
-          { label: "Resale", value: "resale" },
-          { label: "Rental", value: "rental" },
-        ]}
-        activeTab={activeTab}
-        onChange={(val) =>
-          handleTabChange(
-            val == "resale" ? ("resale" as const) : ("rental" as const)
-          )
-        }
-      />
+      <View className="mb-3">
+        <ToggleTabs
+          tabs={[
+            { label: "Resale", value: "resale" },
+            { label: "Rental", value: "rental" },
+          ]}
+          activeTab={activeTab}
+          onChange={(val) =>
+            handleTabChange(
+              val == "resale" ? ("resale" as const) : ("rental" as const)
+            )
+          }
+        />
       </View>
 
       {/* Search + Sort + Filters */}
-      <View className="flex-row items-center space-x-3">
+      <View className="flex-row items-center space-x-2">
         {/* Search Input */}
-        <View className="flex-1 flex-row items-center bg-white border border-[#B5B3B3] rounded-lg px-3 h-10">
+        <View className="flex-1 flex-row items-center bg-white border border-[#B5B3B3] rounded-lg px-3 h-10 mr-3">
           <NewSearchIcon style={{ marginRight: 8 }} />
           <TextInput
             className="flex-1 text-xs text-gray-700"
@@ -211,11 +211,10 @@ export default function PropertyFilters({
           placeholder="Sort"
           forcePlaceholder={true}
           searchable={false}
-          loading={loading}
-          containerClassName="w-20 ml-1.5"
-          buttonClassName="h-10 px-4 border border-[#B5B3B3] rounded-lg bg-white flex-row items-center justify-between"
+          containerClassName="w-20"
+          buttonClassName="px-4 border border-[#B5B3B3] rounded-lg bg-white flex-row items-center justify-between"
           placeholderClassName="text-sm text-black font-medium "
-          dropdownClassName="absolute bg-white w-36 rounded-lg border border-gray-200 shadow-md z-50 p-1 mt-0.5"
+          dropdownClassName=" bg-white w-36"
         />
 
         {/* Filter Button */}

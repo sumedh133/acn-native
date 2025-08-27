@@ -14,6 +14,12 @@ export interface SearchFilters {
   assetType?: string[];
   commercialSubType?: string[];
   apartmentType?: string[];
+  posession?: string[];
+  facing?: string[];
+  floor?: string[];
+  furnishing?: string[];
+  preferredTenants?: string[];
+
   // Add more filters as needed
   micromarket?: string[];
 }
@@ -97,6 +103,10 @@ class AlgoliaInfiniteSearchService {
       { values: filters.commercialSubType, fieldName: "commercialSubType" },
       { values: filters.apartmentType, fieldName: "apartmentType" },
       { values: filters.micromarket, fieldName: "micromarket" },
+      { values: filters.facing, fieldName: "facing" },
+      { values: filters.floor, fieldName: "floor" },// likely change
+      { values: filters.furnishing, fieldName: "furnishing" },
+      { values: filters.preferredTenants, fieldName: "tenantPreferences.preferredTenants" },
     ];
 
     const filterParts = filterConfigs

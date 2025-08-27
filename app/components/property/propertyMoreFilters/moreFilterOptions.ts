@@ -9,6 +9,7 @@ import officeSpaceIcon from "@/assets/icons/propertiesMoreFilters/office-space.s
 import retailSpaceIcon from "@/assets/icons/propertiesMoreFilters/retail-space.svg";
 import commercialSpaceIcon from "@/assets/icons/propertiesMoreFilters/commercial-space.svg";
 import React from "react";
+import { DropdownOption } from "../../DropdownTailwind";
 
 
 export const residentialPropertyTypes: {
@@ -99,4 +100,23 @@ export const bedroomOptions: FilterChipItem[] = [
   { label: "5", value: "5" },
   { label: "6", value: "6" },
   { label: "6+", value: "6+" },
+];
+
+export const facingOptions: DropdownOption[] = [
+  { label: "North", value: "North", count: 5 },
+  { label: "South", value: "South", count: 3 },
+  { label: "East", value: "East", count: 4 },
+  { label: "West", value: "West", count: 2 },
+];
+export const floorOptions: DropdownOption[] = [
+  { label: "Lower Floors", value: "Lower Floors"},
+  { label: "Middle Floors", value: "Middle Floors"},
+  { label: "Upper Floors", value: "Upper Floors"},
+  { label: "Penthouse", value: "Penthouse"},
+];
+export const preferredTenantsOptions: DropdownOption[] = [
+  { label: "Anyone", value: "Anyone"},
+  { label: "Family", value: "Family"},
+  { label: "Bachelor Male", value: "Bachelor Male"},
+  { label: "Bachelor Female", value: "Bachelor Female"},
 ];

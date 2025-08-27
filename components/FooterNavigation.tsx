@@ -93,7 +93,7 @@ const FooterNavigation = () => {
   const rotateAnimation = useRef(new Animated.Value(0)).current;
   const slideAnimation = useRef(new Animated.Value(height)).current;
   const opacityAnimation = useRef(new Animated.Value(0)).current;
-const { footerTranslateY } = useContext(ScrollContext);
+const { footerTranslateY, resetFooterPosition } = useContext(ScrollContext);
 
 
   const rotate = rotateAnimation.interpolate({
@@ -145,6 +145,13 @@ const { footerTranslateY } = useContext(ScrollContext);
 
     navigateAtEndOfAnimation.current = path;
   };
+
+  useEffect(() => {
+  // Reset footer position when pathname changes (navigation occurs)
+  if (resetFooterPosition) {
+    resetFooterPosition();
+  }
+}, [pathname, resetFooterPosition]);
 
   const handlePopupClick = () => {
     const newState = !popupAnimationFlag;
