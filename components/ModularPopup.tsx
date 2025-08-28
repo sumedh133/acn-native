@@ -104,7 +104,7 @@ const ModularPopup = ({
               <LinearGradient
                 colors={
                   item.selected
-                    ? ["#E6F4EA", "#C8E6C9"] // light green gradient for selected
+                    ? ["#C8E6C9","#E6F4EA" ] // light green gradient for selected
                     : item.colors || ["#FFFFFF", "#FFFFFF"] // default
                 } // Default to white
                 start={{ x: 0, y: 0 }}

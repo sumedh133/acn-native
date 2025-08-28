@@ -507,7 +507,7 @@ const MoreFilters = ({
                 title="Furnishing"
                 containerClassName="flex-1"
               />
-              {filters.type?.includes("rental") && (
+              {filters.listingType?.includes("rental") && (
                 <DropdownTailwind
                   multiSelect={true}
                   value={localFilters.preferredTenants ?? null}
@@ -520,7 +520,7 @@ const MoreFilters = ({
               )}
             </View>
 
-            {filters.type?.includes("rental") && (
+            {filters.listingType?.includes("rental") && (
               <View className="mb-4 mt-2">
                 <TouchableOpacity
                   className="flex-row items-center pb-2"
@@ -576,7 +576,7 @@ const MoreFilters = ({
               </View>
             )}
 
-            {filters.type?.includes("resale") && (
+            {filters.listingType?.includes("resale") && (
               <FilterChipList
                 title={`Posession`}
                 items={possessionOptions}
@@ -602,7 +602,7 @@ const MoreFilters = ({
             />
           </View>
 
-          {localFilters.type?.includes("resale") && (
+          {localFilters.listingType?.includes("resale") && (
             <NumberRangeFilter
               attribute="carpetArea"
               title="Carpet Area (sqft)"

@@ -25,7 +25,7 @@ export default function CustomCurrentRefinements({
   // Convert filters object into an array of {key, value}
   // Convert filters object into an array of {key, value, isRange?}
   const allRefinements = Object.entries(filters)
-    .filter(([key]) => key !== "type")
+    .filter(([key]) => key !== "listingType")
     .flatMap(([key, values]) => {
       if (!values) return [];
 
@@ -118,7 +118,7 @@ export default function CustomCurrentRefinements({
     }
 
     // Keep type, reset everything else
-    onFiltersChange({ type: filters.type });
+    onFiltersChange({ listingType: filters.listingType });
 
     if (setSelectedLandmark) {
       setSelectedLandmark(null);

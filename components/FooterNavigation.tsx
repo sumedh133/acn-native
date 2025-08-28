@@ -268,6 +268,13 @@ const FooterNavigation = () => {
   const handlePopupClick = () => {
     const newState = !popupAnimationFlag;
 
+    if (newState) {
+      // 🔴 Close sort modal if it's open
+      closeSortPopup();
+    }
+
+    setPopupAnimationFlag(newState);
+
     try {
       logEvent(analytics, newState ? "open_add_popup" : "close_add_popup", {
         event_category: "interaction",
@@ -279,8 +286,6 @@ const FooterNavigation = () => {
     } catch (error) {
       console.error("Error logging popup interaction:", error);
     }
-
-    setPopupAnimationFlag(newState);
   };
 
   const params = navigation?.getState()?.routes?.at(-1)?.params as {
@@ -350,7 +355,14 @@ const FooterNavigation = () => {
   }, [popupAnimationFlag, rotateAnimation, slideAnimation, height]);
 
   useEffect(() => {
-    if (showSortPopup) setShowSortModal(true);
+    if (showSortPopup) {
+      // 🔴 Close popup modal if it's open
+      setPopupAnimationFlag(false);
+      setShowSortModal(true);
+
+      // ✅ Reset footer up when sort opens
+      resetFooterPosition?.();
+    }
 
     const sortSlideAnimationTemp = Animated.timing(sortSlideAnimation, {
       toValue: showSortPopup ? 0 : height,
@@ -404,29 +416,25 @@ const FooterNavigation = () => {
       {showSortModal && (
         <Animated.View
           style={[
-            styles.popupContainer,
-            {
-              opacity: sortOpacityAnimation,
-            },
+            styles.popupContainerOverFooter,
+            { opacity: sortOpacityAnimation },
           ]}
         >
           <TouchableOpacity
             activeOpacity={1}
-            style={styles.popupTouch}
+            style={styles.popupTouchOverFooter}
             onPress={closeSortPopup}
           >
             <ModularPopup
               items={sortItems}
               slideAnimation={sortSlideAnimation}
               onDragDown={closeSortPopup}
-              onItemPress={(item) => {
-                // Optional: Add any additional logging here
-              }}
               dragThreshold={10}
             />
           </TouchableOpacity>
         </Animated.View>
       )}
+
       <Animated.View
         style={[
           styles.footer,
@@ -487,6 +495,13 @@ const styles = StyleSheet.create({
     height: "100%",
     backgroundColor: "#00000033",
   },
+  popupContainerOverFooter: {
+    position: "absolute",
+    zIndex: 105,
+    width: "100%",
+    height: "100%",
+    backgroundColor: "#00000033",
+  },
   popupTouch: {
     width: "100%",
     height: "100%",
@@ -495,7 +510,17 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "flex-end",
     gap: 12,
-    paddingBottom: 59,
+    paddingBottom: 59, // 👈 keeps Add popup above footer
+  },
+  popupTouchOverFooter: {
+    width: "100%",
+    height: "100%",
+    display: "flex",
+    flexDirection: "column",
+    alignItems: "center",
+    justifyContent: "flex-end",
+    gap: 12,
+    zIndex: 105,
   },
   footer: {
     position: "absolute", // Add this

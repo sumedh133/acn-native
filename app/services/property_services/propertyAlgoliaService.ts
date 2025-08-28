@@ -9,7 +9,7 @@ const searchClient = algoliasearch(
 const INDEX_NAME = "acnTest";
 
 export interface SearchFilters {
-  type?: string[]; //listing type in real
+  listingType?: string[]; //listing type in real
   propertyType?: string[];
   assetType?: string[];
   commercialSubType?: string[];
@@ -123,7 +123,7 @@ class AlgoliaInfiniteSearchService {
 
   private buildFilterString = (filters: SearchFilters): string => {
     const filterConfigs = [
-      { values: filters.type, fieldName: "type" },
+      { values: filters.listingType, fieldName: "listingType" },
       { values: filters.propertyType, fieldName: "propertyType" },
       { values: filters.assetType, fieldName: "assetType" },
       { values: filters.commercialSubType, fieldName: "commercialSubType" },
