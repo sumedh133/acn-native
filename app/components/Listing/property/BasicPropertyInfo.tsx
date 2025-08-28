@@ -6,29 +6,27 @@ export const BasicPropertyInfo: React.FC<{ data: Partial<Property> }> = ({ data 
   const getFieldValue = (obj: any, path: string) =>
     path.split(".").reduce((acc, key) => acc?.[key], obj);
 
-  // Use data from props or fallback to sample data
   const title = "Independent Apartment in HSR Layout";
-  const price =  "1.34 Lakh";
+  const price = "1.34 Lakh";
   const updatedTime = "2 days ago";
-  
-  // Basic info items in 2x2 grid
+
   const basicInfo = [
     {
       icon: "📍",
-      label: getFieldValue(data, "location") || "Micromarket"
+      label: getFieldValue(data, "location") || "Micromarket",
     },
     {
       icon: "🏢",
-      label: getFieldValue(data, "propertyType") || "Apartment"
+      label: getFieldValue(data, "propertyType") || "Apartment",
     },
     {
       icon: "🕐",
-      label: getFieldValue(data, "possession") || "Handover"
+      label: getFieldValue(data, "possession") || "Handover",
     },
     {
       icon: "🛏️",
-      label: getFieldValue(data, "configuration") || "3BHK + 3T + 2B"
-    }
+      label: getFieldValue(data, "configuration") || "3BHK + 3T + 2B",
+    },
   ];
 
   return (
@@ -38,22 +36,29 @@ export const BasicPropertyInfo: React.FC<{ data: Partial<Property> }> = ({ data 
         {title}
       </Text>
 
-      {/* Price and Updated Time */}
+      {/* Price + Updated Time */}
       <View className="flex-row justify-between items-center mb-4">
-        <Text className="text-2xl font-bold text-gray-900">
+        {/* Price */}
+        <Text className="text-[20px] leading-6 font-bold text-[#153E3B] font-[Montserrat]">
           ₹ {price}
         </Text>
-        <Text className="text-gray-500 text-sm">
+
+        {/* Updated Time */}
+        <Text
+          numberOfLines={1}
+          ellipsizeMode="tail"
+          className="text-[12px] leading-[18px] font-medium font-[Lato] text-brand-tertiary"
+        >
           Updated {updatedTime}
         </Text>
       </View>
 
-      {/* Basic Info Grid - 2x2 */}
+      {/* Basic Info Grid */}
       <View className="flex-row flex-wrap">
         {basicInfo.map((item, index) => (
           <View key={index} className="w-1/2 flex-row items-center mb-3">
             <Text className="text-lg mr-3">{item.icon}</Text>
-            <Text className="text-gray-700 text-base flex-1">
+            <Text className="text-[12px] leading-[18px] font-medium text-[#433F3E] font-[Lato]">
               {item.label}
             </Text>
           </View>

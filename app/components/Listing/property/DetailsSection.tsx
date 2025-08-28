@@ -15,7 +15,7 @@ export const DetailsSection: React.FC<DetailsSectionProps> = ({
   title,
   stepValues,
   data,
-  defaultVisible = 6,
+  defaultVisible = 4,
   displayType = "list",
 }) => {
   const [showAll, setShowAll] = useState(false);
@@ -85,8 +85,8 @@ export const DetailsSection: React.FC<DetailsSectionProps> = ({
   const visibleFields = showAll ? fieldsWithValues : fieldsWithValues.slice(0, defaultVisible);
 
   return (
-    <View className="bg-white px-4 py-4">
-      <Text className="text-lg font-semibold text-gray-900 mb-4">{title}</Text>
+    <View className="bg-white px-5 py-4">
+      <Text className="text-[14px] leading-[21px] font-bold text-black font-[Montserrat] mb-4">{title}</Text>
       
       {/* Grid Layout - 2 columns */}
       <View className="flex-row flex-wrap -mx-1">
@@ -94,16 +94,16 @@ export const DetailsSection: React.FC<DetailsSectionProps> = ({
           <View key={field.id} className="w-1/2 px-1 mb-4">
             <View className="flex-row items-start">
               {/* Icon Container */}
-              <View className="w-10 h-10 bg-teal-50 rounded-lg items-center justify-center mr-3">
+              <View className="inline-flex p-[6px] items-center justify-center rounded-[6px] bg-[#E0F7F4] mr-3">
                 <Text className="text-base">{getIcon(field.label)}</Text>
               </View>
               
               {/* Content */}
               <View className="flex-1">
-                <Text className="text-gray-500 text-sm mb-1">
+                <Text className="text-[14px] leading-[21px] font-medium text-[#5A5555] font-[Lato] mb-1">
                   {field.label}
                 </Text>
-                <Text className="text-gray-900 font-semibold text-base">
+                <Text className="text-[16px] leading-[24px] font-bold text-black font-[Lato]">
                   {field.value}
                 </Text>
               </View>
@@ -120,53 +120,6 @@ export const DetailsSection: React.FC<DetailsSectionProps> = ({
           </Text>
         </TouchableOpacity>
       )}
-    </View>
-  );
-};
-
-// LocationSection Component
-interface LocationSectionProps {
-  data: Partial<Property>;
-}
-
-export const LocationSection: React.FC<LocationSectionProps> = ({ data }) => {
-  const getFieldValue = (obj: any, path: string) =>
-    path.split(".").reduce((acc, key) => acc?.[key], obj);
-
-  // Sample data or from props
-  const area = getFieldValue(data, "area") || "East Bangalore";
-  const address = getFieldValue(data, "address") || "CRL Layout A Block, Judicial Layout, RT Nagar, Bangalore, Karnataka 560044";
-  
-  return (
-    <View className="bg-white px-4 py-4">
-      {/* Area */}
-      <View className="flex-row items-center mb-3">
-        <View className="w-10 h-10 bg-teal-50 rounded-lg items-center justify-center mr-3">
-          <Text className="text-base">📍</Text>
-        </View>
-        <View className="flex-1">
-          <Text className="text-gray-500 text-sm mb-1">Area</Text>
-          <Text className="text-gray-900 font-semibold text-base">{area}</Text>
-        </View>
-      </View>
-
-      {/* Address */}
-      <View className="flex-row items-start mb-4">
-        <View className="w-10 h-10 bg-teal-50 rounded-lg items-center justify-center mr-3">
-          <Text className="text-base">🏠</Text>
-        </View>
-        <View className="flex-1">
-          <Text className="text-gray-500 text-sm mb-1">Address</Text>
-          <Text className="text-gray-900 text-base leading-5">{address}</Text>
-        </View>
-      </View>
-
-      {/* Open in Google Maps Button */}
-      <TouchableOpacity className="flex-row items-center justify-center py-3 border border-teal-600 rounded-lg">
-        <Text className="text-base mr-2">🗺️</Text>
-        <Text className="text-teal-600 font-medium">Open in Google Maps</Text>
-        <Text className="text-teal-600 ml-2">→</Text>
-      </TouchableOpacity>
     </View>
   );
 };

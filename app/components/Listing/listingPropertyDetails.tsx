@@ -1,11 +1,12 @@
 import React from "react";
-import { ScrollView } from "react-native";
+import { ScrollView, View } from "react-native";
 import { FormConfig, FormField } from "@/types/FormConfig";
 import { Property } from "@/app/types";
 
 import { PropertyImages } from "./property/PropertyImages";
 import { BasicPropertyInfo } from "./property/BasicPropertyInfo";
 import { DetailsSection } from "./property/DetailsSection";
+import {LocationSection} from "./property/LocationSection"
 
 interface FormPreviewProps {
   config: FormConfig;
@@ -27,7 +28,7 @@ export const FormPreview: React.FC<FormPreviewProps> = ({ config, data }) => {
 
     if ("conditions" in field.dependsOn) {
       // Multiple conditions with AND logic
-      return field.dependsOn.conditions.every(condition => {
+      return field.dependsOn.conditions.every((condition) => {
         const currentValue = getFieldValue(data, condition.field);
         return condition.values.includes(currentValue);
       });
@@ -35,7 +36,6 @@ export const FormPreview: React.FC<FormPreviewProps> = ({ config, data }) => {
 
     return true;
   };
-
 
   const processedSteps = config.steps
     .map((step) => {
@@ -48,7 +48,9 @@ export const FormPreview: React.FC<FormPreviewProps> = ({ config, data }) => {
       const stepValues = Object.values(fieldGroups)
         .map((fields) => {
           const activeField = fields.find((f) => isFieldVisible(f));
-          return activeField ? { id: activeField.id, label: activeField.label } : null;
+          return activeField
+            ? { id: activeField.id, label: activeField.label }
+            : null;
         })
         .filter(Boolean) as Array<{ id: string; label: string }>;
 
@@ -62,11 +64,28 @@ export const FormPreview: React.FC<FormPreviewProps> = ({ config, data }) => {
       <BasicPropertyInfo data={data} />
 
       {processedSteps.map((step) => {
+        if (step.title === "Basic Details") return;
         const displayType =
           step.title.toLowerCase().includes("more") ||
-            step.title.toLowerCase().includes("extra")
+          step.title.toLowerCase().includes("extra")
             ? "tags"
             : "list";
+
+        if (step.title === "Pricing Details") {
+          return (
+            <>
+              <DetailsSection
+                key={step.id}
+                title={step.title}
+                stepValues={step.stepValues}
+                data={data}
+                displayType={displayType as "list" | "tags"}
+              />
+              <View className="bg-white px-6 py-2 rounded-lg"><LocationSection data={data} /></View>
+              
+            </>
+          );
+        }
         return (
           <DetailsSection
             key={step.id}
