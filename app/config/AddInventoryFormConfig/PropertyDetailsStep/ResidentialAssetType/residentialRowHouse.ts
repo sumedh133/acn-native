@@ -32,6 +32,19 @@ export const residentialRowHouseFields: FormField[] = [
     conditional: true,
   },
   {
+    id: "carpetArea",
+    label: "Carpet Area",
+    type: "number",
+    required: false,
+    placeholder: "Enter carpet area in square feet",
+    dependsOn: {
+      field: "assetType",
+      values: ["villa"],
+    },
+    colspan: 12,
+    conditional: true,
+  },
+  {
     id: "plotArea",
     label: "Plot Area",
     type: "number",
@@ -196,6 +209,28 @@ export const residentialRowHouseFields: FormField[] = [
     conditional: true,
   },
   {
+    id: "handoverDate",
+    label: "Handover Date",
+    type: "date",
+    required: true,
+    placeholder: "MM/YYYY",
+    dependsOn: {
+      conditions: [
+        {
+          field: "assetType",
+          values: ["row house"],
+        },
+        {
+          field: "listingType",
+          values: ["rental"],
+        },
+      ],
+      logicOperator: "AND",
+    },
+    colspan: 12,
+    conditional: true,
+  },
+  {
     id: "possession",
     label: "Possession",
     type: "select",
@@ -206,8 +241,39 @@ export const residentialRowHouseFields: FormField[] = [
       { label: "Under Construction", value: "Under Construction" },
     ],
     dependsOn: {
-      field: "assetType",
-      values: ["row house"],
+      conditions: [
+        {
+          field: "assetType",
+          values: ["row house"],
+        },
+        {
+          field: "listingType",
+          values: ["resale"],
+        },
+      ],
+      logicOperator: "AND",
+    },
+    colspan: 12,
+    conditional: true,
+  },
+
+  {
+    id: "readyToMove",
+    label: "Ready-To-Move",
+    type: "boolean",
+    required: true,
+    dependsOn: {
+      conditions: [
+        {
+          field: "assetType",
+          values: ["row house"],
+        },
+        {
+          field: "listingType",
+          values: ["rental"],
+        },
+      ],
+      logicOperator: "AND",
     },
     colspan: 12,
     conditional: true,
@@ -227,6 +293,10 @@ export const residentialRowHouseFields: FormField[] = [
         {
           field: "possession",
           values: ["Under Construction"],
+        },
+        {
+          field: "listingType",
+          values: ["resale"],
         },
       ],
       logicOperator: "AND",
@@ -248,8 +318,50 @@ export const residentialRowHouseFields: FormField[] = [
       { label: "15+ Years", value: "15+ Years" },
     ],
     dependsOn: {
-      field: "assetType",
-      values: ["row house"],
+      conditions: [
+        {
+          field: "assetType",
+          values: ["row house"],
+        },
+        {
+          field: "possession",
+          values: ["Ready to Move"],
+        },
+        {
+          field: "listingType",
+          values: ["resale"],
+        },
+      ],
+      logicOperator: "AND",
+    },
+    colspan: 12,
+    conditional: true,
+  },
+  {
+    id: "ageOfTheBuilding",
+    label: "Age of Building",
+    type: "select",
+    required: true,
+    placeholder: "Select building age",
+    options: [
+      { label: "New", value: "New" },
+      { label: "1-5 years", value: "1-5 years" },
+      { label: "6-10 years", value: "6-10 years" },
+      { label: "11-15 years", value: "11-15 years" },
+      { label: "15+ Years", value: "15+ Years" },
+    ],
+    dependsOn: {
+      conditions: [
+        {
+          field: "assetType",
+          values: ["row house"],
+        },
+        {
+          field: "listingType",
+          values: ["rental"],
+        },
+      ],
+      logicOperator: "AND",
     },
     colspan: 12,
     conditional: true,

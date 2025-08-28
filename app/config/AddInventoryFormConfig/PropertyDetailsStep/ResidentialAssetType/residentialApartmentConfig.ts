@@ -245,24 +245,77 @@ export const residentialApartmentFields: FormField[] = [
     colspan: 12,
     conditional: true,
   },
-
+  {
+    id: "handoverDate",
+    label: "Handover Date",
+    type: "date",
+    required: true,
+    placeholder: "MM/YYYY",
+    dependsOn: {
+      conditions: [
+        {
+          field: "assetType",
+          values: ["apartment"],
+        },
+        {
+          field: "listingType",
+          values: ["rental"],
+        },
+      ],
+      logicOperator: "AND",
+    },
+    colspan: 12,
+    conditional: true,
+  },
   {
     id: "possession",
     label: "Possession",
     type: "select",
+    required: true,
     placeholder: "Select possession status",
     options: [
       { label: "Ready to Move", value: "Ready to Move" },
       { label: "Under Construction", value: "Under Construction" },
     ],
     dependsOn: {
-      field: "assetType",
-      values: ["apartment"],
+      conditions: [
+        {
+          field: "assetType",
+          values: ["apartment"],
+        },
+        {
+          field: "listingType",
+          values: ["resale"],
+        },
+      ],
+      logicOperator: "AND",
     },
     colspan: 12,
     conditional: true,
   },
-    {
+
+  {
+    id: "readyToMove",
+    label: "Ready-To-Move",
+    type: "boolean",
+    required: true,
+    dependsOn: {
+      conditions: [
+        {
+          field: "assetType",
+          values: ["apartment"],
+        },
+        {
+          field: "listingType",
+          values: ["rental"],
+        },
+      ],
+      logicOperator: "AND",
+    },
+    colspan: 12,
+    conditional: true,
+  },
+  {
     id: "availableFrom",
     label: "Available From",
     type: "date",
@@ -278,13 +331,16 @@ export const residentialApartmentFields: FormField[] = [
           field: "possession",
           values: ["Under Construction"],
         },
+        {
+          field: "listingType",
+          values: ["resale"],
+        },
       ],
       logicOperator: "AND",
     },
     colspan: 12,
     conditional: true,
   },
-
   {
     id: "ageOfTheBuilding",
     label: "Age of Building",
@@ -299,8 +355,50 @@ export const residentialApartmentFields: FormField[] = [
       { label: "15+ Years", value: "15+ Years" },
     ],
     dependsOn: {
-      field: "assetType",
-      values: ["apartment"],
+      conditions: [
+        {
+          field: "assetType",
+          values: ["apartment"],
+        },
+        {
+          field: "possession",
+          values: ["Ready to Move"],
+        },
+        {
+          field: "listingType",
+          values: ["resale"],
+        },
+      ],
+      logicOperator: "AND",
+    },
+    colspan: 12,
+    conditional: true,
+  },
+  {
+    id: "ageOfTheBuilding",
+    label: "Age of Building",
+    type: "select",
+    required: true,
+    placeholder: "Select building age",
+    options: [
+      { label: "New", value: "New" },
+      { label: "1-5 years", value: "1-5 years" },
+      { label: "6-10 years", value: "6-10 years" },
+      { label: "11-15 years", value: "11-15 years" },
+      { label: "15+ Years", value: "15+ Years" },
+    ],
+    dependsOn: {
+      conditions: [
+        {
+          field: "assetType",
+          values: ["apartment"],
+        },
+        {
+          field: "listingType",
+          values: ["rental"],
+        },
+      ],
+      logicOperator: "AND",
     },
     colspan: 12,
     conditional: true,

@@ -60,7 +60,7 @@ export const residentialIndependentBuildingFields: FormField[] = [
   {
     id: "facing",
     label: "Door Facing",
-    type: "select",
+    type: "dropdown",
     required: true,
     placeholder: "Select facing direction",
     options: [
@@ -169,7 +169,7 @@ export const residentialIndependentBuildingFields: FormField[] = [
     colspan: 12,
     conditional: true,
   },
-  
+
   {
     id: "noOfBalconies",
     label: "No. of Balconies",
@@ -210,6 +210,28 @@ export const residentialIndependentBuildingFields: FormField[] = [
     conditional: true,
   },
   {
+    id: "handoverDate",
+    label: "Handover Date",
+    type: "date",
+    required: true,
+    placeholder: "MM/YYYY",
+    dependsOn: {
+      conditions: [
+        {
+          field: "assetType",
+          values: ["independent house"],
+        },
+        {
+          field: "listingType",
+          values: ["rental"],
+        },
+      ],
+      logicOperator: "AND",
+    },
+    colspan: 12,
+    conditional: true,
+  },
+  {
     id: "possession",
     label: "Possession",
     type: "select",
@@ -220,13 +242,43 @@ export const residentialIndependentBuildingFields: FormField[] = [
       { label: "Under Construction", value: "Under Construction" },
     ],
     dependsOn: {
-      field: "assetType",
-      values: ["independent house"],
+      conditions: [
+        {
+          field: "assetType",
+          values: ["independent house"],
+        },
+        {
+          field: "listingType",
+          values: ["resale"],
+        },
+      ],
+      logicOperator: "AND",
     },
     colspan: 12,
     conditional: true,
   },
 
+  {
+    id: "readyToMove",
+    label: "Ready-To-Move",
+    type: "boolean",
+    required: true,
+    dependsOn: {
+      conditions: [
+        {
+          field: "assetType",
+          values: ["independent house"],
+        },
+        {
+          field: "listingType",
+          values: ["rental"],
+        },
+      ],
+      logicOperator: "AND",
+    },
+    colspan: 12,
+    conditional: true,
+  },
   {
     id: "availableFrom",
     label: "Available From",
@@ -242,6 +294,10 @@ export const residentialIndependentBuildingFields: FormField[] = [
         {
           field: "possession",
           values: ["Under Construction"],
+        },
+        {
+          field: "listingType",
+          values: ["resale"],
         },
       ],
       logicOperator: "AND",

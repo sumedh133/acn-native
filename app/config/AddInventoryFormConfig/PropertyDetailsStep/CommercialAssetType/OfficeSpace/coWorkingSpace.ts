@@ -2,8 +2,21 @@ import { FormField } from "@/types/FormConfig";
 
 export const coWorkingSpaceFields: FormField[] = [
   {
+    id: "propertyName",
+    label: "Project Name",
+    type: "text",
+    required: true,
+    placeholder: "Enter property name",
+    colspan: 12,
+    conditional: false,
+    dependsOn: {
+      field: "commercialSubType",
+      values: ["Co-Working Space"],
+    },
+  },
+  {
     id: "sbua",
-    label: "Super Built-up Area (sqft)",
+    label: "SBUA",
     type: "number",
     required: true,
     placeholder: "Enter SBUA in square feet",
@@ -15,25 +28,25 @@ export const coWorkingSpaceFields: FormField[] = [
       field: "commercialSubType",
       values: ["Co-working Space"],
     },
-    colspan: 6,
+    colspan: 12,
     conditional: true,
   },
   {
     id: "carpetArea",
-    label: "Carpet Area (sqft)",
+    label: "Carpet Area",
     type: "number",
     required: false,
     placeholder: "Enter carpet area in square feet",
     dependsOn: {
       field: "commercialSubType",
-      values: ["Co-working Space"],
+      values: ["Co-Working Space"],
     },
-    colspan: 6,
+    colspan: 12,
     conditional: true,
   },
   {
     id: "noOfSeats",
-    label: "Number of Seats",
+    label: "No. of Seats",
     type: "number",
     required: true,
     placeholder: "Enter seating capacity",
@@ -43,33 +56,15 @@ export const coWorkingSpaceFields: FormField[] = [
     },
     dependsOn: {
       field: "commercialSubType",
-      values: ["Co-working Space"],
+      values: ["Co-Working Space"],
     },
-    colspan: 6,
-    conditional: true,
-  },
-  {
-    id: "deskType",
-    label: "Desk Type",
-    type: "select",
-    required: true,
-    placeholder: "Select desk type",
-    options: [
-      { label: "Dedicated Desk", value: "Dedicated Desk" },
-      { label: "Hot Desk", value: "Hot Desk" },
-      { label: "Private Cabin", value: "Private Cabin" },
-    ],
-    dependsOn: {
-      field: "commercialSubType",
-      values: ["Co-working Space"],
-    },
-    colspan: 6,
+    colspan: 12,
     conditional: true,
   },
   {
     id: "facing",
     label: "Facing",
-    type: "select",
+    type: "dropdown",
     required: true,
     placeholder: "Select facing direction",
     options: [
@@ -80,14 +75,14 @@ export const coWorkingSpaceFields: FormField[] = [
     ],
     dependsOn: {
       field: "commercialSubType",
-      values: ["Co-working Space"],
+      values: ["Co-Working Space"],
     },
-    colspan: 6,
+    colspan: 12,
     conditional: true,
   },
   {
-    id: "floor",
-    label: "Floor Number",
+    id: "floorNumber",
+    label: "Floor No.",
     type: "number",
     required: true,
     placeholder: "Enter floor number",
@@ -97,27 +92,31 @@ export const coWorkingSpaceFields: FormField[] = [
     },
     dependsOn: {
       field: "commercialSubType",
-      values: ["Co-working Space"],
+      values: ["Co-Working Space"],
     },
     colspan: 6,
     conditional: true,
   },
   {
     id: "totalFloors",
-    label: "Total Floors in Building",
+    label: "Total Floors",
     type: "number",
     required: false,
     placeholder: "Enter total floors",
+    validation: {
+      min: 1,
+      message: "Total floors must be at least 1",
+    },
     dependsOn: {
       field: "commercialSubType",
-      values: ["Co-working Space"],
+      values: ["Co-Working Space"],
     },
     colspan: 6,
     conditional: true,
   },
   {
     id: "furnishing",
-    label: "Furnishing Status",
+    label: "Furnishing",
     type: "select",
     required: true,
     placeholder: "Select furnishing status",
@@ -128,9 +127,9 @@ export const coWorkingSpaceFields: FormField[] = [
     ],
     dependsOn: {
       field: "commercialSubType",
-      values: ["Co-working Space"],
+      values: ["Co-Working Space"],
     },
-    colspan: 6,
+    colspan: 12,
     conditional: true,
   },
   {
@@ -144,10 +143,88 @@ export const coWorkingSpaceFields: FormField[] = [
       { label: "Under Construction", value: "Under Construction" },
     ],
     dependsOn: {
-      field: "commercialSubType",
-      values: ["Co-working Space"],
+      conditions: [
+        {
+          field: "commercialSubType",
+          values: ["Co-Working Space"],
+        },
+        {
+          field: "listingType",
+          values: ["resale"],
+        },
+      ],
+      logicOperator: "AND",
     },
-    colspan: 6,
+    colspan: 12,
+    conditional: true,
+  },
+  {
+    id: "handoverDate",
+    label: "Handover Date",
+    type: "date",
+    required: true,
+    placeholder: "MM/YYYY",
+    dependsOn: {
+      conditions: [
+        {
+          field: "commercialSubType",
+          values: ["Co-Working Space"],
+        },
+        {
+          field: "listingType",
+          values: ["resale"],
+        },
+        {
+          field: "possession",
+          values: ["Under Construction"],
+        },
+      ],
+      logicOperator: "AND",
+    },
+    colspan: 12,
+    conditional: true,
+  },
+  {
+    id: "readyToMove",
+    label: "Ready-To-Move",
+    type: "boolean",
+    required: true,
+    dependsOn: {
+      conditions: [
+        {
+          field: "commercialSubType",
+          values: ["Co-Working Space"],
+        },
+        {
+          field: "listingType",
+          values: ["rental"],
+        },
+      ],
+      logicOperator: "AND",
+    },
+    colspan: 12,
+    conditional: true,
+  },
+  {
+    id: "availableFrom",
+    label: "Available From",
+    type: "date",
+    required: true,
+    placeholder: "MM/YYYY",
+    dependsOn: {
+      conditions: [
+        {
+          field: "commercialSubType",
+          values: ["Co-Working Space"],
+        },
+        {
+          field: "listingType",
+          values: ["rental"],
+        },
+      ],
+      logicOperator: "AND",
+    },
+    colspan: 12,
     conditional: true,
   },
   {
@@ -164,10 +241,52 @@ export const coWorkingSpaceFields: FormField[] = [
       { label: "15+ Years", value: "15+ Years" },
     ],
     dependsOn: {
-      field: "commercialSubType",
-      values: ["Co-working Space"],
+      conditions: [
+        {
+          field: "commercialSubType",
+          values: ["Co-Working Space"],
+        },
+        {
+          field: "possession",
+          values: ["Ready to Move"],
+        },
+        {
+          field: "listingType",
+          values: ["resale"],
+        },
+      ],
+      logicOperator: "AND",
     },
-    colspan: 6,
+    colspan: 12,
+    conditional: true,
+  },
+  {
+    id: "ageOfTheBuilding",
+    label: "Age of Building",
+    type: "select",
+    required: true,
+    placeholder: "Select building age",
+    options: [
+      { label: "New", value: "New" },
+      { label: "1-5 years", value: "1-5 years" },
+      { label: "6-10 years", value: "6-10 years" },
+      { label: "11-15 years", value: "11-15 years" },
+      { label: "15+ Years", value: "15+ Years" },
+    ],
+    dependsOn: {
+      conditions: [
+        {
+          field: "commercialSubType",
+          values: ["Co-Working Space"],
+        },
+        {
+          field: "listingType",
+          values: ["rental"],
+        },
+      ],
+      logicOperator: "AND",
+    },
+    colspan: 12,
     conditional: true,
   },
 ];

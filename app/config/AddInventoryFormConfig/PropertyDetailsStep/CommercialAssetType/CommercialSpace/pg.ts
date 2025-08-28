@@ -3,7 +3,7 @@ import { FormField } from "@/types/FormConfig";
 export const pgGuestHouseFields: FormField[] = [
   {
     id: "sbua",
-    label: "Super Built-up Area (sqft)",
+    label: "SBUA",
     type: "number",
     required: true,
     placeholder: "Enter SBUA in square feet",
@@ -20,7 +20,7 @@ export const pgGuestHouseFields: FormField[] = [
   },
   {
     id: "carpetArea",
-    label: "Carpet Area (sqft)",
+    label: "Carpet Area",
     type: "number",
     required: false,
     placeholder: "Enter carpet area in square feet",
@@ -33,7 +33,7 @@ export const pgGuestHouseFields: FormField[] = [
   },
   {
     id: "plotArea",
-    label: "Plot Area (sqft)",
+    label: "Plot Area",
     type: "number",
     required: true,
     placeholder: "Enter plot area",
@@ -47,7 +47,7 @@ export const pgGuestHouseFields: FormField[] = [
   {
     id: "facing",
     label: "Facing",
-    type: "select",
+    type: "dropdown",
     required: true,
     placeholder: "Select facing direction",
     options: [
@@ -60,7 +60,7 @@ export const pgGuestHouseFields: FormField[] = [
       field: "commercialSubType",
       values: ["PG/Guest-House"],
     },
-    colspan: 6,
+    colspan: 23,
     conditional: true,
   },
   {
@@ -73,7 +73,7 @@ export const pgGuestHouseFields: FormField[] = [
       field: "commercialSubType",
       values: ["PG/Guest-House"],
     },
-    colspan: 6,
+    colspan: 12,
     conditional: true,
   },
   {
@@ -90,9 +90,10 @@ export const pgGuestHouseFields: FormField[] = [
       field: "commercialSubType",
       values: ["PG/Guest-House"],
     },
-    colspan: 6,
+    colspan: 12,
     conditional: true,
   },
+  // Resale Possession
   {
     id: "possession",
     label: "Possession",
@@ -104,10 +105,30 @@ export const pgGuestHouseFields: FormField[] = [
       { label: "Under Construction", value: "Under Construction" },
     ],
     dependsOn: {
-      field: "commercialSubType",
-      values: ["PG/Guest-House"],
+      conditions: [
+        { field: "commercialSubType", values: ["PG/Guest-House"] },
+        { field: "listingType", values: ["resale"] },
+      ],
+      logicOperator: "AND",
     },
-    colspan: 6,
+    colspan: 12,
+    conditional: true,
+  },
+  {
+    id: "handoverDate",
+    label: "Handover Date",
+    type: "date",
+    required: true,
+    placeholder: "MM/YYYY",
+    dependsOn: {
+      conditions: [
+        { field: "commercialSubType", values: ["PG/Guest-House"] },
+        { field: "listingType", values: ["resale"] },
+        { field: "possession", values: ["Under Construction"] },
+      ],
+      logicOperator: "AND",
+    },
+    colspan: 12,
     conditional: true,
   },
   {
@@ -124,10 +145,46 @@ export const pgGuestHouseFields: FormField[] = [
       { label: "15+ Years", value: "15+ Years" },
     ],
     dependsOn: {
-      field: "commercialSubType",
-      values: ["PG/Guest-House"],
+      conditions: [
+        { field: "commercialSubType", values: ["PG/Guest-House"] },
+        { field: "listingType", values: ["resale"] },
+        { field: "possession", values: ["Ready to Move"] },
+      ],
+      logicOperator: "AND",
     },
-    colspan: 6,
+    colspan: 12,
+    conditional: true,
+  },
+  // Rental
+  {
+    id: "readyToMove",
+    label: "Ready-To-Move",
+    type: "boolean",
+    required: true,
+    dependsOn: {
+      conditions: [
+        { field: "commercialSubType", values: ["PG/Guest-House"] },
+        { field: "listingType", values: ["rental"] },
+      ],
+      logicOperator: "AND",
+    },
+    colspan: 12,
+    conditional: true,
+  },
+  {
+    id: "availableFrom",
+    label: "Available From",
+    type: "date",
+    required: true,
+    placeholder: "MM/YYYY",
+    dependsOn: {
+      conditions: [
+        { field: "commercialSubType", values: ["PG/Guest-House"] },
+        { field: "listingType", values: ["rental"] },
+      ],
+      logicOperator: "AND",
+    },
+    colspan: 12,
     conditional: true,
   },
   {
