@@ -7,6 +7,7 @@ import {
   FlatList,
   ActivityIndicator,
   Keyboard,
+  Image,
 } from "react-native";
 import Slider from "@react-native-community/slider";
 import { Ionicons } from "@expo/vector-icons";
@@ -17,6 +18,8 @@ import { logEvent } from "@react-native-firebase/analytics";
 import { useSelector } from "react-redux";
 import { RootState } from "@/store/store";
 import LocationSearchBarIcon from "@/assets/icons/svg/PropertiesPage/locationSearchBarIcon";
+import InfoIcon from "@/assets/icons/propertiesMoreFilters/info-icon.svg";
+
 // import { PLACES_API_KEY } from '@env';
 
 // Define types for API responses
@@ -375,40 +378,37 @@ const LandmarkDropdownFilters = ({
 
       {/* Slider section */}
       {selectedLandmark && (
-        <View className="mt-4 mb-4">
+        <View className="my-4">
+          {/* Title with info icon */}
           <View className="flex-row space-x-2 items-center mb-2">
-            <Text className="font-semibold text-sm text-gray-700">
+            <Text
+              className="font-semibold text-sm text-gray-700"
+              style={{ fontFamily: "Montserrat_600SemiBold" }}
+            >
               Search Radius
             </Text>
-            <Ionicons
-              name="information-circle-outline"
-              size={24}
-              color="#6B7280"
-              style={{ marginTop: 2 }}
-            />
+            <InfoIcon width={18} height={18} />
           </View>
 
-          <View className="flex-row items-center justify-between my-1.5">
-            <Text className="text-sm text-gray-700 font-medium mb-2">1 km</Text>
-            <Text className="text-sm text-gray-700 font-medium mb-2">
-              {formatRadius(sliderTempValue)} km
-            </Text>
-            <Text className="text-sm text-gray-700 font-medium mb-2">
-              10 km
-            </Text>
+          {/* Labels above slider */}
+          <View className="flex-row justify-between px-1 mb-1">
+            <Text className="text-xs text-gray-500">1 Km</Text>
+            <Text className="text-xs text-gray-500">5 Km</Text>
+            <Text className="text-xs text-gray-500">10 Km</Text>
           </View>
 
+          {/* Slider */}
           <Slider
-            className="h-8 mb-3"
+            style={{ height: 40 }}
             minimumValue={1000}
             maximumValue={10000}
             step={100}
             value={sliderValue}
             onValueChange={handleSliderChange}
             onSlidingComplete={handleSlidingComplete}
-            minimumTrackTintColor="#333333"
-            maximumTrackTintColor="#DDDDDD"
-            thumbTintColor="#FFFFFF"
+            minimumTrackTintColor="#184C43" // dark green like screenshot
+            maximumTrackTintColor="#E5E5E5" // light gray
+            thumbTintColor="#FFFFFF" // white thumb
           />
         </View>
       )}
