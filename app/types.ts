@@ -399,11 +399,6 @@ export interface Property {
   // Orientation
   facing: direction; // Unified from doorFacing/facing
 
-  // Property Characteristics
-  propertyCategory?: propertyType; // Added for better categorization
-  commercialPropertyType?: PropertyType;
-  commercialSubType?: commercialSubType;
-
   // Residential Specific Fields
   apartmentType?: apartmentType;
   structure?: string; // For villas, villaments, etc.
@@ -420,7 +415,6 @@ export interface Property {
 
   // Commercial Specific Fields
   noOfSeats?: number;
-  totalRooms?: number;
   waterSupply?: boolean;
   typeOfWaterSupply?: "Borewell" | "Cauvery";
 

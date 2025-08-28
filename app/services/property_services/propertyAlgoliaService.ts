@@ -2,11 +2,11 @@ import algoliasearch from "algoliasearch";
 import type { SearchResponse } from "@algolia/client-search";
 
 const searchClient = algoliasearch(
-  "CGRV5YKD8Y",
-  "6790dabe95e962dcb64be2a64106c5b2"
+  "1F93ZRBESW",
+  "b9023694178852d83995620a6c9ba933"
 );
 
-const INDEX_NAME = "acnTest";
+const INDEX_NAME = "properties";
 
 export interface SearchFilters {
   type?: string[];
@@ -163,7 +163,6 @@ class AlgoliaInfiniteSearchService {
     hitsPerPage: number = 20,
     options?: { aroundLatLng?: string; aroundRadius?: number }
   ): Promise<InfiniteScrollState> => {
-    
     // Cancel any ongoing requests
     if (this.currentRequest) {
       this.currentRequest.abort();

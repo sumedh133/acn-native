@@ -12,7 +12,7 @@ export const useAlgoliaSearch = () => {
     algoliaInfiniteSearch.getInitialState()
   );
   const [query, setQuery] = useState("");
-  const [filters, setFilters] = useState<SearchFilters>({ type: ["resale"] });
+  const [filters, setFilters] = useState<SearchFilters>({ });
   const [selectedLandmark, setSelectedLandmark] = useState<Landmark | null>(
     null
   );
