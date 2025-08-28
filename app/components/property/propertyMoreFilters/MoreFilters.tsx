@@ -20,6 +20,7 @@ import BackButtonIcon from "@/assets/icons/svg/PropertiesPage/BackButtonIcon";
 import FilterChipList from "./FilterChipList";
 import {
   apartmentTypes,
+  availabilityOptions,
   bedroomOptions,
   commercialPropertyTypes,
   commercialSubTypes,
@@ -590,6 +591,20 @@ const MoreFilters = ({
                 titleClassName="text-sm"
               />
             )}
+            {localFilters.listingType?.includes("rental") && (
+              <FilterChipList
+                title={`Availability`}
+                items={availabilityOptions}
+                attribute="availableFrom"
+                localFilters={localFilters}
+                onToggleFilterValue={(attr, val) =>
+                  toggleFilterValue(attr, val)
+                }
+                containerClassName="gap-2 flex-wrap"
+                chipClassName="px-3 py-1.5 rounded-lg"
+                titleClassName="text-sm"
+              />
+            )}
             <FilterChipList
               title={`Area`}
               items={zoneOptions}
@@ -610,7 +625,8 @@ const MoreFilters = ({
               onChangeRange={(attr, range) => {
                 toggleFilterValue(attr, range);
               }}
-            />)}
+            />
+          )}
         </ScrollView>
 
         {/* Footer */}
