@@ -7,7 +7,7 @@ import {
   View,
 } from "react-native";
 import LinearGradient from "react-native-linear-gradient";
-import FreeIcon from "@/assets/icons/free.svg"
+import FreeIcon from "@/assets/icons/free.svg";
 
 interface PopupItem {
   id: string | number;
@@ -18,6 +18,7 @@ interface PopupItem {
   iconColor?: string; // Optional, only used if icon is provided
   onPress: () => void; // Custom functionality instead of just linking
   free?: boolean; // Optional, if true shows "Free" badge
+  selected?: boolean; // Optional, if true shows "Selected" badge
 }
 
 interface ModularPopupProps {
@@ -85,12 +86,10 @@ const ModularPopup = ({
         style={{
           transform: [{ translateY: slideAnimation }, { translateY: dragY }],
         }}
+        {...panResponder.panHandlers} // 👈 attach here
       >
         {/* Drag Handle */}
-        <View
-          className="pt-3 w-full mb-4 flex items-center justify-center"
-          {...panResponder.panHandlers}
-        >
+        <View className="pt-3 w-full mb-4 flex items-center justify-center">
           <View className="w-32 h-1 rounded bg-black/60" />
         </View>
 
@@ -103,7 +102,11 @@ const ModularPopup = ({
               activeOpacity={0.8}
             >
               <LinearGradient
-                colors={item.colors || ["#FFFFFF", "#FFFFFF"]} // Default to white
+                colors={
+                  item.selected
+                    ? ["#E6F4EA", "#C8E6C9"] // light green gradient for selected
+                    : item.colors || ["#FFFFFF", "#FFFFFF"] // default
+                } // Default to white
                 start={{ x: 0, y: 0 }}
                 end={{ x: 1, y: 0 }}
                 className="px-4 py-3 rounded-2xl border border-[#F2F2F2]"
@@ -113,8 +116,8 @@ const ModularPopup = ({
                   {item.icon && (
                     <View
                       className="p-3.5 rounded-full"
-                      style={{ 
-                        backgroundColor: item.iconColor || "#E5E5E5" // Default gray if no color
+                      style={{
+                        backgroundColor: item.iconColor || "#E5E5E5", // Default gray if no color
                       }}
                     >
                       {item.icon}
@@ -126,7 +129,10 @@ const ModularPopup = ({
                     <View className="flex-1">
                       <Text
                         className="text-[#0C0C0C] text-sm font-bold leading-5"
-                        style={{ fontFamily: "Lato_700Bold", marginBottom: item.subText ? 2 : 0 }}
+                        style={{
+                          fontFamily: "Lato_700Bold",
+                          marginBottom: item.subText ? 2 : 0,
+                        }}
                       >
                         {item.text}
                       </Text>
@@ -139,7 +145,7 @@ const ModularPopup = ({
                         </Text>
                       )}
                     </View>
-                    
+
                     {/* Free Badge */}
                     {/* {item.free && (
                       <View className="absolute top-0 right-0 bg-[#FFB800] px-3 py-1 rounded-full ml-2">

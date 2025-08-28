@@ -64,7 +64,7 @@ const menuItems: MenuItem[] = [
   },
   {
     title: "My Business",
-    path: "/(pages)/ComingSoon",
+    path: "/(tabs)/NotificationPage",
     icon: <MyBusiness width={24} height={24} />,
     activeIcon: <ActiveNotificationIcon width={24} height={24} />,
   },
@@ -95,7 +95,14 @@ const FooterNavigation = () => {
   const rotateAnimation = useRef(new Animated.Value(0)).current;
   const slideAnimation = useRef(new Animated.Value(height)).current;
   const opacityAnimation = useRef(new Animated.Value(0)).current;
-  const { footerTranslateY, resetFooterPosition } = useContext(ScrollContext);
+  const {
+    footerTranslateY,
+    resetFooterPosition,
+    showSortPopup,
+    selectedSort,
+    closeSortPopup,
+    setSelectedSort,
+  } = useContext(ScrollContext);
 
   const rotate = rotateAnimation.interpolate({
     inputRange: [0, 1],
@@ -129,6 +136,58 @@ const FooterNavigation = () => {
       },
     },
   ];
+
+  // inside FooterNavigation component
+
+  const sortItems = [
+    {
+      id: "relevance",
+      text: "Most Relevant",
+      onPress: () => handleSortSelection("relevance"),
+    },
+    {
+      id: "price_asc",
+      text: "Price: Low to High",
+      onPress: () => handleSortSelection("price_asc"),
+    },
+    {
+      id: "price_desc",
+      text: "Price: High to Low",
+      onPress: () => handleSortSelection("price_desc"),
+    },
+    {
+      id: "date_desc",
+      text: "Newest First",
+      onPress: () => handleSortSelection("date_desc"),
+    },
+    {
+      id: "date_asc",
+      text: "Oldest First",
+      onPress: () => handleSortSelection("date_asc"),
+    },
+  ].map((item) => ({
+    ...item,
+    selected: item.id === selectedSort, // ✅ mark as selected if matches context value
+  }));
+
+  // 4. Add sort handler function (add this after handleCardPress function)
+  const handleSortSelection = (value: string) => {
+    try {
+      logEvent(analytics, "property_sort_change", {
+        event_category: "sort",
+        event_label: "property",
+        sort_value: value,
+        user_type: userType,
+      });
+    } catch (error) {
+      console.error("Error logging sort change:", error);
+    }
+    setSelectedSort(value);
+    closeSortPopup();
+  };
+  const [showSortModal, setShowSortModal] = useState<boolean>(false);
+  const sortSlideAnimation = useRef(new Animated.Value(height)).current;
+  const sortOpacityAnimation = useRef(new Animated.Value(0)).current;
 
   const handleCardPress = (item: any) => {
     try {
@@ -290,6 +349,30 @@ const FooterNavigation = () => {
     });
   }, [popupAnimationFlag, rotateAnimation, slideAnimation, height]);
 
+  useEffect(() => {
+    if (showSortPopup) setShowSortModal(true);
+
+    const sortSlideAnimationTemp = Animated.timing(sortSlideAnimation, {
+      toValue: showSortPopup ? 0 : height,
+      duration: 300,
+      easing: Easing.linear,
+      useNativeDriver: true,
+    });
+
+    const sortOpacityAnimationTemp = Animated.timing(sortOpacityAnimation, {
+      toValue: showSortPopup ? 1 : 0,
+      duration: 300,
+      easing: Easing.linear,
+      useNativeDriver: true,
+    });
+
+    Animated.parallel([sortSlideAnimationTemp, sortOpacityAnimationTemp]).start(
+      (finished) => {
+        if (!showSortPopup && finished.finished) setShowSortModal(false);
+      }
+    );
+  }, [showSortPopup, sortSlideAnimation, sortOpacityAnimation, height]);
+
   if (params?.showFooter === false) return null;
 
   return (
@@ -308,17 +391,38 @@ const FooterNavigation = () => {
             style={styles.popupTouch}
             onPress={(e) => handlePopupClick()}
           >
-            {/* <AddPopup
-              handlePopupCardPress={handlePopupCardClick}
-              slideAnimation={slideAnimation}
-              onDragDown={() => handlePopupClick()}
-            /> */}
             <ModularPopup
               items={popupItems}
               slideAnimation={slideAnimation} // Your existing animation value
               onDragDown={() => handlePopupClick()}
               onItemPress={handleCardPress} // Analytics logging
               dragThreshold={10} // Same as original DRAG_THRESHOLD
+            />
+          </TouchableOpacity>
+        </Animated.View>
+      )}
+      {showSortModal && (
+        <Animated.View
+          style={[
+            styles.popupContainer,
+            {
+              opacity: sortOpacityAnimation,
+            },
+          ]}
+        >
+          <TouchableOpacity
+            activeOpacity={1}
+            style={styles.popupTouch}
+            onPress={closeSortPopup}
+          >
+            <ModularPopup
+              items={sortItems}
+              slideAnimation={sortSlideAnimation}
+              onDragDown={closeSortPopup}
+              onItemPress={(item) => {
+                // Optional: Add any additional logging here
+              }}
+              dragThreshold={10}
             />
           </TouchableOpacity>
         </Animated.View>
