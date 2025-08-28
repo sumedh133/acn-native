@@ -34,7 +34,7 @@ export const pricingDetailsStep: FormStep = {
         field: "listingType",
         values: ["rental"],
       },
-      colspan: 6,
+      colspan: 12,
     },
     {
       id: "rentalInfo.deposit",
@@ -46,7 +46,7 @@ export const pricingDetailsStep: FormStep = {
         field: "listingType",
         values: ["rental"],
       },
-      colspan: 6,
+      colspan: 12,
     },
     {
       id: "rentalInfo.maintenance",
@@ -62,7 +62,7 @@ export const pricingDetailsStep: FormStep = {
         field: "listingType",
         values: ["rental"],
       },
-      colspan: 6,
+      colspan: 12,
     },
     {
       id: "rentalInfo.maintenanceAmount",
@@ -74,7 +74,7 @@ export const pricingDetailsStep: FormStep = {
         field: "rentalInfo.maintenance",
         values: ["Not Included"],
       },
-      colspan: 6,
+      colspan: 12,
     },
     {
       id: "rentalInfo.commissionType",
@@ -94,10 +94,14 @@ export const pricingDetailsStep: FormStep = {
 
     // ----------- Rental Info for Resale Properties (optional) -----------
     {
-      id: "rentalInfo.rentalIncome",
-      label: "Rental Income",
-      type: "number",
+      id: "isPreLeased",
+      label: "PreL-Leased / Pre-Rented",
+      type: "select",
       required: false,
+      options: [
+        { label: "Yes", value: true },
+        { label: "No", value: false },
+      ],
       placeholder: "Enter rental income (if rented)",
       dependsOn: {
         field: "listingType",
@@ -106,36 +110,69 @@ export const pricingDetailsStep: FormStep = {
       colspan: 12,
     },
     {
-      id: "rentalInfo.currentDeposit",
-      label: "Current Deposit",
+      id: "rentalInfo.rentalIncome",
+      label: "Rental Income (per month)",
       type: "number",
       required: false,
-      placeholder: "Enter current deposit",
+      placeholder: "Enter rental income (if rented)",
       dependsOn: {
-        field: "listingType",
-        values: ["resale"],
+        conditions: [
+          {
+            field: "listingType",
+            values: ["resale"],
+          },
+          {
+            field: "isPreLeased",
+            values: [true],
+          },
+        ],
+        logicOperator: "AND",
       },
       colspan: 12,
     },
     {
-      id: "rentalInfo.startDate",
-      label: "Lease Start Date",
-      type: "date",
+      id: "rentalInfo.currentDeposit",
+      label: "Current Deposit Taken",
+      type: "number",
       required: false,
+      placeholder: "Enter current deposit",
       dependsOn: {
-        field: "listingType",
-        values: ["resale"],
+        conditions: [
+          {
+            field: "listingType",
+            values: ["resale"],
+          },
+          {
+            field: "isPreLeased",
+            values: [true],
+          },
+        ],
+        logicOperator: "AND",
       },
-      colspan: 6,
+      colspan: 12,
     },
+
     {
-      id: "rentalInfo.endDate",
-      label: "Lease End Date",
-      type: "date",
+      id: "rentalInfo",
+      label: "Current Lease Tenure",
+      type: "dateRange",
       required: false,
+      dateFields: [
+        { label: "Lease Start Date", value: "rentalInfo.startDate" },
+        { label: "Lease End Date", value: "rentalInfo.endDate" },
+      ],
       dependsOn: {
-        field: "listingType",
-        values: ["resale"],
+        conditions: [
+          {
+            field: "listingType",
+            values: ["resale"],
+          },
+          {
+            field: "isPreLeased",
+            values: [true],
+          },
+        ],
+        logicOperator: "AND",
       },
       colspan: 6,
     },

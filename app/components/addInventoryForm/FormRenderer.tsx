@@ -418,9 +418,9 @@ export const FormRenderer: React.FC<FormRendererProps> = ({
             <>
               {commonLabel}
               <DropdownWithInput
-                options={field.options || []} 
+                options={field.options || []}
                 placeholder={field.placeholder || "Select a field"}
-                onChange={(selectedField:string, inputValue:string) => {
+                onChange={(selectedField: string, inputValue: string) => {
                   setFieldValue(field.id, { selectedField, inputValue });
                 }}
               />
@@ -447,11 +447,75 @@ export const FormRenderer: React.FC<FormRendererProps> = ({
               {errorMessage}
             </>
           );
+        case "dateRange":
+          const startDate = getFieldValue(formData, field?.dateFields?.[0]?.value || "");
+          const endDate = getFieldValue(formData, field?.dateFields?.[1]?.value || "");
+
+          return (
+            <>
+              {commonLabel}
+              <View className="flex-row items-center justify-between gap-1 w-full">
+                {/* Start Date Picker */}
+                <MonthYearPicker
+                  value={startDate}
+                  setValue={(val: string) => {
+                    if (field?.dateFields?.[0]?.value) {
+                      setFieldValue(field.dateFields[0].value, val);
+                    }
+                  }}
+                  placeholder={field.dateFields?.[0]?.label || "Start (MM/YYYY)"}
+                  required={field.required}
+                  minYear={1900}
+                  maxYear={2100}
+                  disabled={false}
+                  width={"48%"}
+                />
+
+                <Text className="mx-2">to</Text>
+
+                {/* End Date Picker */}
+                <MonthYearPicker
+                  value={endDate}
+                  setValue={(val: string) => {
+                    if (field?.dateFields?.[1]?.value) {
+                      const [startMonth, startYear] = startDate
+                        ? startDate.split("/").map(Number)
+                        : [null, null];
+                      const [endMonth, endYear] = val.split("/").map(Number);
+
+                      if (
+                        startDate &&
+                        (endYear < startYear ||
+                          (endYear === startYear && endMonth < startMonth))
+                      ) {
+                        alert("End date cannot be earlier than start date");
+                        return;
+                      }
+
+                      setFieldValue(field.dateFields[1].value, val);
+                    }
+                  }}
+                  placeholder={field.dateFields?.[1]?.label || "End (MM/YYYY)"}
+                  required={field.required}
+                  minYear={1900}
+                  maxYear={2100}
+                  width={"48%"}
+                  disabled={!startDate} // Disable until start date is selected
+                />
+              </View>
+
+              {errorMessage}
+            </>
+          );
+
+
 
         default:
           return null;
       }
     };
+
+
 
     return (
       <View

@@ -9,11 +9,13 @@ export interface FormField {
     | "number"
     | "boolean"
     | "date"
-  | "textarea"
-  |"dropdownWithInput";
+    | "textarea"
+    | "dropdownWithInput"
+    | "dateRange";
   required?: boolean;
   placeholder?: string;
   options?: { label: string; value: any }[];
+  dateFields?: { label: string; value: any }[];
   dependsOn?:
     | {
         field: string;
@@ -24,7 +26,7 @@ export interface FormField {
           field: string;
           values: any[];
         }>;
-        logicOperator: "AND"; 
+        logicOperator: "AND";
       };
   validation?: {
     min?: number;
