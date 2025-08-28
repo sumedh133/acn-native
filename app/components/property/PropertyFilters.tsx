@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useContext } from "react";
 import {
   View,
   Text,
@@ -15,8 +15,8 @@ import FilterIcon from "@/assets/icons/svg/PropertiesPage/FilterIcon";
 import NewSearchIcon from "@/assets/icons/svg/PropertiesPage/NewSearchIcon";
 import { SearchFilters } from "../../services/property_services/propertyAlgoliaService";
 import CustomCurrentRefinements from "./propertyMoreFilters/newCustomCurrentRefinements";
-import DropdownTailwind from "../DropdownTailwind";
 import ToggleTabs from "../ToggleTabs";
+import { ScrollContext } from "@/app/ScrollContext";
 
 interface PropertyFiltersProps {
   handleToggleMoreFilters: () => void;
@@ -42,13 +42,19 @@ export default function PropertyFilters({
   onFiltersChange,
   sortBy,
   onSortChange,
-  loading = false,
 }: PropertyFiltersProps) {
   const [searchText, setSearchText] = useState(query);
   const [activeTab, setActiveTab] = useState<"resale" | "rental">("resale");
   const slideAnim = useRef(
     new Animated.Value(activeTab === "rental" ? 1 : 0)
   ).current;
+  const {
+    selectedSort,
+    openSortPopup,
+    setSelectedSort,
+  } = useContext(ScrollContext);
+    const prevSortByRef = useRef(sortBy);
+  const prevSelectedSortRef = useRef(selectedSort);
 
   const userType =
     useSelector((state: RootState) => state?.agent?.docData?.userType) ||
@@ -92,27 +98,10 @@ export default function PropertyFilters({
     };
   }, [searchText, query, onQueryChange, userType]);
 
-  // Handle sort changes
-  const handleSortChange = (value: string | null) => {
-    if (value) {
-      try {
-        logEvent(analytics, "property_sort_change", {
-          event_category: "sort",
-          event_label: "property",
-          sort_value: value,
-          user_type: userType,
-        });
-      } catch (error) {
-        console.error("Error logging sort change:", error);
-      }
-      onSortChange(value); // <-- this comes from the hook
-    }
-  };
-
   // Handle property type tab change
   const handleTabChange = (tab: "resale" | "rental") => {
     setActiveTab(tab);
-    onFiltersChange({ ...filters, type: [tab] });
+    onFiltersChange({ ...filters, listingType: [tab] });
 
     try {
       logEvent(analytics, "property_type_change", {
@@ -149,6 +138,39 @@ export default function PropertyFilters({
   };
 
   useEffect(() => {
+    // Sync selectedSort with sortBy prop (when sortBy changes from parent)
+    if (sortBy && sortBy !== prevSortByRef.current && sortBy !== selectedSort) {
+      setSelectedSort(sortBy);
+      prevSortByRef.current = sortBy;
+      return;
+    }
+
+    // Handle sort changes from context (when selectedSort changes from modal)
+    if (
+      selectedSort &&
+      selectedSort !== prevSelectedSortRef.current &&
+      selectedSort !== sortBy
+    ) {
+      try {
+        logEvent(analytics, "property_sort_change", {
+          event_category: "sort",
+          event_label: "property",
+          sort_value: selectedSort,
+          user_type: userType,
+        });
+      } catch (error) {
+        console.error("Error logging sort change:", error);
+      }
+      onSortChange(selectedSort);
+      prevSelectedSortRef.current = selectedSort;
+    }
+
+    // Update refs
+    prevSortByRef.current = sortBy;
+    prevSelectedSortRef.current = selectedSort;
+  }, [sortBy, selectedSort]);
+
+  useEffect(() => {
     Animated.timing(slideAnim, {
       toValue: activeTab === "rental" ? 1 : 0,
       duration: 200,
@@ -173,67 +195,62 @@ export default function PropertyFilters({
   };
 
   return (
-    <View className="px-4 pt-3">
-      <View className="mb-3">
-        <ToggleTabs
-          tabs={[
-            { label: "Resale", value: "resale" },
-            { label: "Rental", value: "rental" },
-          ]}
-          activeTab={activeTab}
-          onChange={(val) =>
-            handleTabChange(
-              val == "resale" ? ("resale" as const) : ("rental" as const)
-            )
-          }
-        />
-      </View>
-
-      {/* Search + Sort + Filters */}
-      <View className="flex-row items-center space-x-2">
-        {/* Search Input */}
-        <View className="flex-1 flex-row items-center bg-white border border-[#B5B3B3] rounded-lg px-3 h-10 mr-3">
-          <NewSearchIcon style={{ marginRight: 8 }} />
-          <TextInput
-            className="flex-1 text-xs text-gray-700"
-            placeholder="Search by project, micro market"
-            value={searchText}
-            onChangeText={setSearchText}
-            placeholderTextColor="#9CA3AF"
+    <>
+      <View className="px-4 pt-3">
+        <View className="mb-3">
+          <ToggleTabs
+            tabs={[
+              { label: "Resale", value: "resale" },
+              { label: "Rental", value: "rental" },
+            ]}
+            activeTab={activeTab}
+            onChange={(val) =>
+              handleTabChange(
+                val == "resale" ? ("resale" as const) : ("rental" as const)
+              )
+            }
           />
         </View>
 
-        {/* Sort Dropdown */}
-        <DropdownTailwind
-          value={sortBy ?? null}
-          setValue={handleSortChange}
-          options={sortOptions}
-          placeholder="Sort"
-          forcePlaceholder={true}
-          searchable={false}
-          containerClassName="w-20"
-          buttonClassName="px-4 border border-[#B5B3B3] rounded-lg bg-white flex-row items-center justify-between"
-          placeholderClassName="text-sm text-black font-medium "
-          dropdownClassName=" bg-white w-36"
-        />
+        {/* Search + Sort + Filters */}
+        <View className="flex-row items-center space-x-2">
+          {/* Search Input */}
+          <View className="flex-1 flex-row items-center bg-white border border-[#B5B3B3] rounded-lg px-3 h-10 ">
+            <NewSearchIcon style={{ marginRight: 8 }} />
+            <TextInput
+              className="flex-1 text-xs text-gray-700 "
+              placeholder="Search by project, micro market"
+              value={searchText}
+              onChangeText={setSearchText}
+              placeholderTextColor="#9CA3AF"
+            />
+          </View>
 
-        {/* Filter Button */}
-        <TouchableOpacity
-          onPress={handleMoreFilters}
-          className="h-10 w-10 items-center justify-center rounded-lg border border-[#B5B3B3] bg-white"
-        >
-          <FilterIcon />
-        </TouchableOpacity>
-      </View>
+          <TouchableOpacity
+            onPress={openSortPopup}
+            className="h-10 w-fit items-center justify-center rounded-lg border border-[#B5B3B3] bg-white"
+          >
+            <Text className="px-4">Sort</Text>
+          </TouchableOpacity>
 
-      <View className="mt-2 flex-row -ml-3">
-        <CustomCurrentRefinements
-          selectedLandmark={selectedLandmark}
-          setSelectedLandmark={setSelectedLandmark}
-          filters={filters}
-          onFiltersChange={onFiltersChange}
-        />
+          {/* Filter Button */}
+          <TouchableOpacity
+            onPress={handleMoreFilters}
+            className="h-10 w-10 items-center justify-center rounded-lg border border-[#B5B3B3] bg-white"
+          >
+            <FilterIcon />
+          </TouchableOpacity>
+        </View>
+
+        <View className="mt-2 flex-row -ml-3">
+          <CustomCurrentRefinements
+            selectedLandmark={selectedLandmark}
+            setSelectedLandmark={setSelectedLandmark}
+            filters={filters}
+            onFiltersChange={onFiltersChange}
+          />
+        </View>
       </View>
-    </View>
+    </>
   );
 }
