@@ -22,7 +22,6 @@ import {
   BackHandler,
 } from "react-native";
 import { StyleSheet, View, Dimensions } from "react-native";
-import type { PopupItem } from "./AddPopup";
 import { useFocusEffect } from "@react-navigation/native";
 import { analytics } from "@/app/config/firebase";
 import { logEvent } from "@react-native-firebase/analytics";
@@ -33,7 +32,7 @@ import { ScrollContext } from "@/app/ScrollContext";
 
 // icons import
 import MyBusiness from "@/assets/icons/svg/Footer/MyBuisness.svg";
-import ModularPopup from "./AddPopup";
+import ModularPopup from "./ModularPopup";
 import AddInventoryIcon from "@/assets/icons/svg/Footer/AddInventoryIcon";
 import AddRequirementsIcon from "@/assets/icons/svg/Footer/AddRequirementsIcon";
 
@@ -111,6 +110,7 @@ const FooterNavigation = () => {
       icon: <AddInventoryIcon width={24} height={24} />,
       colors: ["#FFFCEC", "#FFFFFF"],
       iconColor: "#FFE86A",
+      free: true,
       onPress: () => {
         // Navigation logic
         handlePopupCardClick("(pages)/Drafts");

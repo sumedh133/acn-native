@@ -17,6 +17,7 @@ import { SearchFilters } from "../../services/property_services/propertyAlgoliaS
 import CustomCurrentRefinements from "./propertyMoreFilters/newCustomCurrentRefinements";
 import DropdownTailwind from "../DropdownTailwind";
 import ToggleTabs from "../ToggleTabs";
+import ModularPopup from "@/components/ModularPopup";
 
 interface PropertyFiltersProps {
   handleToggleMoreFilters: () => void;
@@ -49,6 +50,18 @@ export default function PropertyFilters({
   const slideAnim = useRef(
     new Animated.Value(activeTab === "rental" ? 1 : 0)
   ).current;
+  const [showPopup, setShowPopup] = useState(false);
+  const popupSlideAnim = useRef(new Animated.Value(300)).current;
+  const popupItems = [
+  { id: "sort1", text: "Most Relevant", onPress: () => handleSortChange("relevance") },
+  { id: "sort2", text: "Price: Low to High", onPress: () => handleSortChange("price_asc") },
+  { id: "sort3", text: "Price: High to Low", onPress: () => handleSortChange("price_desc") },
+  { id: "sort4", text: "Newest First", onPress: () => handleSortChange("date_desc") },
+  { id: "sort5", text: "Oldest First", onPress: () => handleSortChange("date_asc") },
+];
+
+const openPopup = () => setShowPopup(true);
+const closePopup = () => setShowPopup(false);
 
   const userType =
     useSelector((state: RootState) => state?.agent?.docData?.userType) ||
@@ -173,6 +186,7 @@ export default function PropertyFilters({
   };
 
   return (
+    <>
     <View className="px-4 pt-3">
       <View className="mb-3">
         <ToggleTabs
@@ -204,7 +218,7 @@ export default function PropertyFilters({
         </View>
 
         {/* Sort Dropdown */}
-        <DropdownTailwind
+        {/* <DropdownTailwind
           value={sortBy ?? null}
           setValue={handleSortChange}
           options={sortOptions}
@@ -215,7 +229,13 @@ export default function PropertyFilters({
           buttonClassName="px-4 border border-[#B5B3B3] rounded-lg bg-white flex-row items-center justify-between"
           placeholderClassName="text-sm text-black font-medium "
           dropdownClassName=" bg-white w-36"
-        />
+        /> */}
+        <TouchableOpacity
+  onPress={openPopup}
+  className="px-4 border border-[#B5B3B3] rounded-lg bg-white h-10 flex-row items-center justify-center"
+>
+  <Text className="text-sm text-black font-medium">Sort</Text>
+</TouchableOpacity>
 
         {/* Filter Button */}
         <TouchableOpacity
@@ -235,5 +255,28 @@ export default function PropertyFilters({
         />
       </View>
     </View>
+    {showPopup && (
+  <Animated.View
+    style={{
+      position: "absolute",
+      left: 0,
+      right: 0,
+      zIndex:9999,
+      backgroundColor: "rgba(0,0,0,0.3)", // optional semi-transparent overlay
+    }}
+  >
+    <ModularPopup
+      items={popupItems}
+      slideAnimation={popupSlideAnim}
+      onDragDown={closePopup}
+      onItemPress={(item) => {
+        item.onPress();
+        closePopup();
+      }}
+    />
+  </Animated.View>
+)}
+
+</>
   );
 }

@@ -7,8 +7,9 @@ import {
   View,
 } from "react-native";
 import LinearGradient from "react-native-linear-gradient";
+import FreeIcon from "@/assets/icons/free.svg"
 
-export interface PopupItem {
+interface PopupItem {
   id: string | number;
   text: string;
   subText?: string; // Optional
@@ -16,6 +17,7 @@ export interface PopupItem {
   colors?: string[]; // Optional, defaults to white
   iconColor?: string; // Optional, only used if icon is provided
   onPress: () => void; // Custom functionality instead of just linking
+  free?: boolean; // Optional, if true shows "Free" badge
 }
 
 interface ModularPopupProps {
@@ -93,7 +95,7 @@ const ModularPopup = ({
         </View>
 
         {/* Menu Items */}
-        <View className="px-3 gap-2">
+        <View className="px-3 gap-2 relative">
           {items.map((item) => (
             <TouchableOpacity
               key={item.id}
@@ -111,8 +113,8 @@ const ModularPopup = ({
                   {item.icon && (
                     <View
                       className="p-3.5 rounded-full"
-                      style={{
-                        backgroundColor: item.iconColor || "#E5E5E5", // Default gray if no color
+                      style={{ 
+                        backgroundColor: item.iconColor || "#E5E5E5" // Default gray if no color
                       }}
                     >
                       {item.icon}
@@ -120,24 +122,30 @@ const ModularPopup = ({
                   )}
 
                   {/* Text Content */}
-                  <View className="flex-1">
-                    <Text
-                      className="text-[#0C0C0C] text-sm font-bold leading-5"
-                      style={{
-                        fontFamily: "Lato_700Bold",
-                        marginBottom: item.subText ? 2 : 0,
-                      }}
-                    >
-                      {item.text}
-                    </Text>
-                    {item.subText && (
+                  <View className="flex-1 flex-row items-center justify-between">
+                    <View className="flex-1">
                       <Text
-                        className="text-[#575757] text-sm font-medium leading-5"
-                        style={{ fontFamily: "Lato_400Regular" }}
+                        className="text-[#0C0C0C] text-sm font-bold leading-5"
+                        style={{ fontFamily: "Lato_700Bold", marginBottom: item.subText ? 2 : 0 }}
                       >
-                        {item.subText}
+                        {item.text}
                       </Text>
-                    )}
+                      {item.subText && (
+                        <Text
+                          className="text-[#575757] text-sm font-medium leading-5"
+                          style={{ fontFamily: "Lato_400Regular" }}
+                        >
+                          {item.subText}
+                        </Text>
+                      )}
+                    </View>
+                    
+                    {/* Free Badge */}
+                    {/* {item.free && (
+                      <View className="absolute top-0 right-0 bg-[#FFB800] px-3 py-1 rounded-full ml-2">
+                        <Text>Free</Text>
+                      </View>
+                    )} */}
                   </View>
                 </View>
               </LinearGradient>

@@ -7,7 +7,7 @@ import {
   FlatList,
   ActivityIndicator,
   Keyboard,
-  Image
+  Image,
 } from "react-native";
 import Slider from "@react-native-community/slider";
 import { Ionicons } from "@expo/vector-icons";
@@ -378,41 +378,40 @@ const LandmarkDropdownFilters = ({
 
       {/* Slider section */}
       {selectedLandmark && (
-  <View className="my-4">
-    {/* Title with info icon */}
-    <View className="flex-row space-x-2 items-center mb-2">
-      <Text
-        className="font-semibold text-sm text-gray-700"
-        style={{ fontFamily: "Montserrat_600SemiBold" }}
-      >
-        Search Radius
-      </Text>
-      <InfoIcon width={18} height={18} />
-    </View>
+        <View className="my-4">
+          {/* Title with info icon */}
+          <View className="flex-row space-x-2 items-center mb-2">
+            <Text
+              className="font-semibold text-sm text-gray-700"
+              style={{ fontFamily: "Montserrat_600SemiBold" }}
+            >
+              Search Radius
+            </Text>
+            <InfoIcon width={18} height={18} />
+          </View>
 
-    {/* Labels above slider */}
-    <View className="flex-row justify-between px-1 mb-1">
-      <Text className="text-xs text-gray-500">1 Km</Text>
-      <Text className="text-xs text-gray-500">5 Km</Text>
-      <Text className="text-xs text-gray-500">10 Km</Text>
-    </View>
+          {/* Labels above slider */}
+          <View className="flex-row justify-between px-1 mb-1">
+            <Text className="text-xs text-gray-500">1 Km</Text>
+            <Text className="text-xs text-gray-500">5 Km</Text>
+            <Text className="text-xs text-gray-500">10 Km</Text>
+          </View>
 
-    {/* Slider */}
-    <Slider
-      style={{ height: 40 }}
-      minimumValue={1000}
-      maximumValue={10000}
-      step={100}
-      value={sliderValue}
-      onValueChange={handleSliderChange}
-      onSlidingComplete={handleSlidingComplete}
-      minimumTrackTintColor="#184C43"  // dark green like screenshot
-      maximumTrackTintColor="#E5E5E5"  // light gray
-      thumbTintColor="#FFFFFF"         // white thumb
-    />
-  </View>
-)}
-
+          {/* Slider */}
+          <Slider
+            style={{ height: 40 }}
+            minimumValue={1000}
+            maximumValue={10000}
+            step={100}
+            value={sliderValue}
+            onValueChange={handleSliderChange}
+            onSlidingComplete={handleSlidingComplete}
+            minimumTrackTintColor="#184C43" // dark green like screenshot
+            maximumTrackTintColor="#E5E5E5" // light gray
+            thumbTintColor="#FFFFFF" // white thumb
+          />
+        </View>
+      )}
     </View>
   );
 };
