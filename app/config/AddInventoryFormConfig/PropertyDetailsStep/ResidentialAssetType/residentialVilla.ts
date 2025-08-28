@@ -226,6 +226,28 @@ export const residentialVillaFields: FormField[] = [
     colspan: 12,
     conditional: true,
   },
+    {
+    id: "availableFrom",
+    label: "Available From",
+    type: "date",
+    required: true,
+    placeholder: "MM/YYYY",
+    dependsOn: {
+      conditions: [
+        {
+          field: "assetType",
+          values: ["villa"],
+        },
+        {
+          field: "possession",
+          values: ["Under Construction"],
+        },
+      ],
+      logicOperator: "AND",
+    },
+    colspan: 12,
+    conditional: true,
+  },
   {
     id: "ageOfTheBuilding",
     label: "Age of Building",

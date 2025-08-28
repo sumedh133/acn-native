@@ -16,7 +16,7 @@ export const pricingDetailsStep: FormStep = {
         field: "listingType",
         values: ["resale"],
       },
-      colspan: 6,
+      colspan: 12,
     },
     {
       id: "pricing.pricePerSqft",
