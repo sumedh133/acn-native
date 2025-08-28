@@ -39,3 +39,21 @@ export const getDaysFrom = (timestamp: number): string => {
   if (diffDays === 1) return "1 day";
   return `${diffDays} days`;
 };
+
+
+export const convertMonthYearToUnix = (input: string): number => {
+  if (!input) return 0;
+
+  const [monthStr, yearStr] = input.split("/");
+  const month = parseInt(monthStr, 10) - 1; // JS months are 0-indexed
+  const year = parseInt(yearStr, 10);
+
+  if (isNaN(month) || isNaN(year)) {
+    console.warn("Invalid handoverDate format:", input);
+    return 0;
+  }
+
+  const date = new Date(year, month, 1); // first day of month
+  console.log('dtae', Math.floor(date.getTime() / 1000))
+  return Math.floor(date.getTime() / 1000); // convert ms -> seconds
+};

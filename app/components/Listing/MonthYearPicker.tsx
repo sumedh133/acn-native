@@ -10,8 +10,8 @@ import DatePicker from "react-native-date-picker";
 import { Ionicons } from "@expo/vector-icons";
 
 interface MonthYearPickerProps {
-  value: string;
-  setValue: (value: string) => void;
+  value: number | undefined; 
+  setValue: (value: number) => void;
   title: string;
   placeholder?: string;
   required?: boolean;
@@ -35,25 +35,24 @@ const MonthYearPicker = ({
   const [date, setDate] = useState<Date>(new Date());
 
   // Parse the current value to initialize date when opening picker
+  const formattedValue =
+    typeof value === "number"
+      ? `${String(new Date(value * 1000).getMonth() + 1).padStart(2, "0")}/${new Date(
+          value * 1000
+        ).getFullYear()}`
+      : "";
+
   useEffect(() => {
-    if (value && value.includes("/")) {
-      const parts = value.split("/");
-      if (parts.length === 2) {
-        const month = parseInt(parts[0], 10) - 1; // JS months are 0-indexed
-        const year = parseInt(parts[1], 10);
-        if (!isNaN(month) && !isNaN(year)) {
-          const newDate = new Date();
-          newDate.setMonth(month);
-          newDate.setFullYear(year);
-          setDate(newDate);
-        }
-      }
+    if (typeof value === "number") {
+      setDate(new Date(value * 1000));
     }
   }, [value]);
 
   const handleFocus = () => {
-    setIsFocused(true);
-    setOpen(true);
+    if (!disabled) {
+      setIsFocused(true);
+      setOpen(true);
+    }
   };
 
   const handleConfirm = (selectedDate: Date) => {
@@ -61,10 +60,9 @@ const MonthYearPicker = ({
     setIsFocused(false);
     setDate(selectedDate);
 
-    // Format month to ensure it's two digits (adding 1 because JS months are 0-indexed)
-    const month = (selectedDate.getMonth() + 1).toString().padStart(2, "0");
-    const year = selectedDate.getFullYear();
-    setValue(`${month}/${year}`);
+    // store timestamp (seconds)
+    const timestamp = Math.floor(selectedDate.getTime() / 1000);
+    setValue(timestamp);
   };
 
   const handleCancel = () => {
@@ -90,18 +88,18 @@ const MonthYearPicker = ({
       disabled={disabled} // Disable the touchable when disabled is true
     >
       <TextInput
-        style={[styles.inputField, disabled && styles.disabledText]}
-        value={value}
-        placeholder={placeholder}
-        placeholderTextColor="#A0A0A0"
-        editable={false}
-        pointerEvents="none"
-      />
-      <Ionicons 
-        name="calendar-outline" 
-        size={18} 
-        color={disabled ? "#BBBBBB" : "#757575"} // Lighter color when disabled
-      />
+          style={[styles.inputField, disabled && styles.disabledText]}
+          value={formattedValue}
+          placeholder={placeholder}
+          placeholderTextColor="#A0A0A0"
+          editable={false}
+          pointerEvents="none"
+        />
+        <Ionicons
+          name="calendar-outline"
+          size={18}
+          color={disabled ? "#BBBBBB" : "#757575"}
+        />
     </TouchableOpacity>
 
     <DatePicker

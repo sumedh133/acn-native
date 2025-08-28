@@ -13,6 +13,8 @@ import CustomSelectDropdown from "../CustomSelectDropdown";
 import MonthYearPicker from "../Listing/MonthYearPicker";
 import Checkbox from "../Listing/CheckBox";
 import { FormField } from "@/types/FormConfig";
+import { getUnixDateTime } from "@/app/helpers/getUnixDateTime";
+import { convertMonthYearToUnix } from "../../helpers/format/format";
 
 // Extend FormField to include our internal properties
 interface FormFieldWithMeta extends FormField {
@@ -44,7 +46,7 @@ export const FormRenderer: React.FC<FormRendererProps> = ({
   onFormUpdate,
   onErrorsUpdate,
   onNext,
-  onBack
+  onBack,
 }) => {
   /**
    * Get nested field value by path (dot notation).
@@ -64,7 +66,13 @@ export const FormRenderer: React.FC<FormRendererProps> = ({
       if (!current[keys[i]]) current[keys[i]] = {};
       current = current[keys[i]];
     }
-    current[keys[keys.length - 1]] = value;
+
+    // store timestamp directly for handoverDate
+    if (fieldPath === "handoverDate" && typeof value === "number") {
+      current[keys[keys.length - 1]] = value;
+    } else {
+      current[keys[keys.length - 1]] = value;
+    }
 
     resetDependentFields(fieldPath, newData);
     onFormUpdate(newData);
@@ -73,18 +81,21 @@ export const FormRenderer: React.FC<FormRendererProps> = ({
   /**
    * Check if a field depends on the changed field.
    */
-  const isDependentField = (field: FormField, changedFieldId: string): boolean => {
+  const isDependentField = (
+    field: FormField,
+    changedFieldId: string
+  ): boolean => {
     if (!field.dependsOn) return false;
 
     // Case 1: Simple dependency
-    if ('field' in field.dependsOn) {
+    if ("field" in field.dependsOn) {
       return field.dependsOn.field === changedFieldId;
     }
 
     // Case 2: Multiple dependencies with AND
-    if ('conditions' in field.dependsOn) {
-      return field.dependsOn.conditions.some(condition =>
-        condition.field === changedFieldId
+    if ("conditions" in field.dependsOn) {
+      return field.dependsOn.conditions.some(
+        (condition) => condition.field === changedFieldId
       );
     }
 
@@ -125,17 +136,29 @@ export const FormRenderer: React.FC<FormRendererProps> = ({
     if (!field.dependsOn) return true;
 
     // Case 1: Simple dependency
-    if ('field' in field.dependsOn) {
+    if ("field" in field.dependsOn) {
       const fieldValue = getFieldValue(formData, field.dependsOn.field);
-      return field.dependsOn.values.includes(fieldValue);
+      const values = field.dependsOn.values;
+
+      if (Array.isArray(values)) {
+        return values.includes(fieldValue);
+      }
+      return false; // default: hide field if values missing
     }
 
     // Case 2: Multiple dependencies with AND
-    if ('conditions' in field.dependsOn && field.dependsOn.logicOperator === 'AND') {
-      // All conditions must be satisfied
-      return field.dependsOn.conditions.every(condition => {
+    if (
+      "conditions" in field.dependsOn &&
+      field.dependsOn.logicOperator === "AND"
+    ) {
+      return field.dependsOn.conditions.every((condition) => {
         const fieldValue = getFieldValue(formData, condition.field);
-        return condition.values.includes(fieldValue);
+        const values = condition.values;
+
+        if (Array.isArray(values)) {
+          return values.includes(fieldValue);
+        }
+        return false;
       });
     }
 
@@ -146,13 +169,16 @@ export const FormRenderer: React.FC<FormRendererProps> = ({
    * Filters visible fields based on conditional logic.
    */
   const getVisibleFields = (fields: FormField[]): FormFieldWithMeta[] =>
-    fields.filter(field => isFieldVisible(field)) as FormFieldWithMeta[];
+    fields.filter((field) => isFieldVisible(field)) as FormFieldWithMeta[];
 
   /**
    * Validate a single field.
    */
   const validateField = (field: FormField, value: any): string | null => {
-    if (field.required && (value === "" || value === undefined || value === null)) {
+    if (
+      field.required &&
+      (value === "" || value === undefined || value === null)
+    ) {
       return `${field.label} is required`;
     }
 
@@ -196,19 +222,22 @@ export const FormRenderer: React.FC<FormRendererProps> = ({
   };
 
   /**
-  * Organize fields into rows based on colspan.
-  * - Each row has a maximum total width of TOTAL_COLS.
-  * - Single fields in a row take full width.
-  */
-  const organizeFieldsIntoRows = (fields: FormFieldWithMeta[]): FormFieldWithMeta[][] => {
+   * Organize fields into rows based on colspan.
+   * - Each row has a maximum total width of TOTAL_COLS.
+   * - Single fields in a row take full width.
+   */
+  const organizeFieldsIntoRows = (
+    fields: FormFieldWithMeta[]
+  ): FormFieldWithMeta[][] => {
     const rows: FormFieldWithMeta[][] = [];
     let currentRow: FormFieldWithMeta[] = [];
     let currentWidth = 0;
 
     fields.forEach((field) => {
-      const colspan = field.colspan && field.colspan > 0 && field.colspan <= TOTAL_COLS
-        ? field.colspan
-        : TOTAL_COLS;
+      const colspan =
+        field.colspan && field.colspan > 0 && field.colspan <= TOTAL_COLS
+          ? field.colspan
+          : TOTAL_COLS;
 
       // If adding this field exceeds the limit, finalize current row
       if (currentWidth + colspan > TOTAL_COLS && currentRow.length) {
@@ -267,8 +296,9 @@ export const FormRenderer: React.FC<FormRendererProps> = ({
 
     const commonTextInput = (props: any) => (
       <TextInput
-        className={`border rounded-[5px] py-2 px-3 text-sm text-[#9E9E9E] font-normal bg-white ${error ? "border-[#d32f2f]" : "border-[#ddd]"
-          }`}
+        className={`border rounded-[5px] py-2 px-3 text-sm text-[#9E9E9E] font-normal bg-white ${
+          error ? "border-[#d32f2f]" : "border-[#ddd]"
+        }`}
         value={value?.toString() || ""}
         onChangeText={(text) =>
           setFieldValue(field.id, field.type === "number" ? Number(text) : text)
@@ -290,7 +320,7 @@ export const FormRenderer: React.FC<FormRendererProps> = ({
             <>
               {commonLabel}
               {commonTextInput({
-                keyboardType: field.type === "number" ? "numeric" : "default"
+                keyboardType: field.type === "number" ? "numeric" : "default",
               })}
               {errorMessage}
             </>
@@ -301,8 +331,9 @@ export const FormRenderer: React.FC<FormRendererProps> = ({
             <>
               {commonLabel}
               <TextInput
-                className={`border rounded-lg p-3 text-base bg-white min-h-[100px] ${error ? "border-[#d32f2f]" : "border-[#ddd]"
-                  }`}
+                className={`border rounded-lg p-3 text-base bg-white min-h-[100px] ${
+                  error ? "border-[#d32f2f]" : "border-[#ddd]"
+                }`}
                 style={{ textAlignVertical: "top" }}
                 value={value?.toString() || ""}
                 onChangeText={(text) => setFieldValue(field.id, text)}
@@ -322,16 +353,25 @@ export const FormRenderer: React.FC<FormRendererProps> = ({
                 {field.options?.map((option) => (
                   <TouchableOpacity
                     key={option.value}
-                    className={`px-[12px] py-[10px] border ${currentStep ? "rounded-[8px]" : "rounded-[30px]"
-                      } ${value === option.value
+                    className={`px-[12px] py-[10px] border ${
+                      currentStep ? "rounded-[8px]" : "rounded-[30px]"
+                    } ${
+                      value === option.value
                         ? `bg-[#F0FFFE] border-[#153E3B]`
-                        : `${currentStep ? "bg-[#FAFAFA]" : "bg-white"} border-[#BABABA]`
-                      }`}
+                        : `${
+                            currentStep ? "bg-[#FAFAFA]" : "bg-white"
+                          } border-[#BABABA]`
+                    }`}
                     onPress={() => setFieldValue(field.id, option.value)}
                   >
                     <Text
-                      className={`${currentStep ? "" : "px-[10px]"} text-sm font-medium ${value === option.value ? "text-[#153E3B] font-bold" : "text-[#2B2928]"
-                        }`}
+                      className={`${
+                        currentStep ? "" : "px-[10px]"
+                      } text-sm font-medium ${
+                        value === option.value
+                          ? "text-[#153E3B] font-bold"
+                          : "text-[#2B2928]"
+                      }`}
                     >
                       {option.label}
                     </Text>
@@ -353,12 +393,14 @@ export const FormRenderer: React.FC<FormRendererProps> = ({
 
                   // Same logic as single-select
                   const baseStyle = "px-[12px] py-[10px] border";
-                  const borderRadius = currentStep ? "rounded-[8px]" : "rounded-[30px]";
+                  const borderRadius = currentStep
+                    ? "rounded-[8px]"
+                    : "rounded-[30px]";
                   const bgColor = isSelected
                     ? "bg-[#F0FFFE] border-[#153E3B]"
                     : currentStep
-                      ? "bg-[#FAFAFA] border-[#BABABA]"
-                      : "bg-white border-[#BABABA]";
+                    ? "bg-[#FAFAFA] border-[#BABABA]"
+                    : "bg-white border-[#BABABA]";
 
                   return (
                     <TouchableOpacity
@@ -372,8 +414,13 @@ export const FormRenderer: React.FC<FormRendererProps> = ({
                       }}
                     >
                       <Text
-                        className={`${currentStep ? "" : "px-[10px]"} text-sm font-medium ${isSelected ? "text-[#153E3B] font-bold" : "text-[#2B2928]"
-                          }`}
+                        className={`${
+                          currentStep ? "" : "px-[10px]"
+                        } text-sm font-medium ${
+                          isSelected
+                            ? "text-[#153E3B] font-bold"
+                            : "text-[#2B2928]"
+                        }`}
                       >
                         {option.label}
                       </Text>
@@ -385,13 +432,14 @@ export const FormRenderer: React.FC<FormRendererProps> = ({
             </>
           );
 
-
         case "boolean":
           return (
             <View className="flex-row justify-between items-center">
               <Checkbox
                 checked={value || false}
-                setChecked={(newValue: boolean) => setFieldValue(field.id, newValue)}
+                setChecked={(newValue: boolean) =>
+                  setFieldValue(field.id, newValue)
+                }
                 label={field.label}
                 required={field.required}
               />
@@ -405,7 +453,9 @@ export const FormRenderer: React.FC<FormRendererProps> = ({
               {commonLabel}
               <CustomSelectDropdown
                 selectedValue={value} // Current selected value
-                onValueChange={(selected: string) => setFieldValue(field.id, selected)} // Update form value
+                onValueChange={(selected: string) =>
+                  setFieldValue(field.id, selected)
+                } // Update form value
                 options={field.options || []} // Options from your field config
                 placeholder={field.placeholder || "Select an option"} // Default placeholder
               />
@@ -413,20 +463,18 @@ export const FormRenderer: React.FC<FormRendererProps> = ({
             </>
           );
 
-
         case "date":
           return (
             <>
               <MonthYearPicker
-                value={value}
-                setValue={(val: string) => setFieldValue(field.id, val)}
+                value={value as number | undefined} // pass timestamp
+                setValue={(val: number) => setFieldValue(field.id, val)} // ✅ now number
                 title={field.label}
                 placeholder={field.placeholder || "MM/YYYY"}
                 required={field.required}
                 minYear={1900}
                 maxYear={2100}
                 disabled={false}
-
               />
               {errorMessage}
             </>
@@ -438,11 +486,7 @@ export const FormRenderer: React.FC<FormRendererProps> = ({
     };
 
     return (
-      <View
-        key={field.id}
-        style={{ width: fieldWidth }}
-        className="mb-6 px-2"
-      >
+      <View key={field.id} style={{ width: fieldWidth }} className="mb-6 px-2">
         {fieldContent()}
       </View>
     );

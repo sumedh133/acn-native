@@ -52,12 +52,19 @@ export const PropertyFormScreen: React.FC<PropertyFormScreenProps> = ({
    * Filter steps based on conditions defined in the form configuration.
    */
   const getVisibleSteps = () => {
-    return inventoryFormConfig.steps.filter((step) => {
-      if (!step.dependsOn) return true;
-      const fieldValue = getFieldValue(formData, step.dependsOn.field);
-      return step.dependsOn.values.includes(fieldValue);
-    });
-  };
+  return inventoryFormConfig.steps.filter((step) => {
+    if (!step.dependsOn) return true;
+
+    const fieldValue = getFieldValue(formData, step.dependsOn.field);
+    const values = step.dependsOn.values;
+
+    if (Array.isArray(values)) {
+      return values.includes(fieldValue);
+    }
+    return false; 
+  });
+};
+
 
   // -------------------- Event Handlers --------------------
 

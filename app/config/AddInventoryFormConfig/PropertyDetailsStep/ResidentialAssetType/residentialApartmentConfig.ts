@@ -246,7 +246,7 @@ export const residentialApartmentFields: FormField[] = [
     conditional: true,
   },
   {
-    id: "handoverDate",
+    id: "handOverDate",
     label: "Handover Date",
     type: "date",
     required: true,

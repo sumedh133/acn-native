@@ -11,25 +11,29 @@ import {
 export const BasicPropertyInfo: React.FC<{ data: Partial<Property> }> = ({
   data,
 }) => {
+  console.log("data", data);
   const getFieldValue = (obj: any, path: string) =>
     path.split(".").reduce((acc, key) => acc?.[key], obj);
 
   const communityOrCommercial =
     (typeof data.communityType === "string" && data.communityType.trim()) ||
-    (typeof data.commercialSubType === "string" &&
-      data.commercialSubType) ||
-    "-";
+    (typeof data.commercialSubType === "string" && data.commercialSubType) ||
+    "";
 
   const propertyType =
     (typeof data.commercialPropertyType === "string" &&
       data.commercialPropertyType.trim()) ||
     (typeof data.assetType === "string" && data.assetType.trim()) ||
-    "-";
+    "";
 
   const market =
-    (typeof data.micromarket === "string" && data.micromarket.trim()) || "-";
+    (typeof data.micromarket === "string" && data.micromarket.trim()) || "";
 
-  const title = `${communityOrCommercial} ${propertyType} in ${market}`;
+  let title = [communityOrCommercial, propertyType].filter(Boolean).join(" ");
+
+  if (market) {
+    title = `${title} in ${market}`;
+  }
 
   const price = "1.34 Lakh";
 
@@ -47,8 +51,18 @@ export const BasicPropertyInfo: React.FC<{ data: Partial<Property> }> = ({
   const balconies = data?.noOfBalconies ? `${data.noOfBalconies}B` : "";
 
   const configParts = [bedrooms, bathrooms, balconies].filter(Boolean);
-  const configurationLabel =
-    configParts.length > 0 ? configParts.join(" + ") : "-";
+
+  let configurationLabel = "-";
+
+  if (configParts.length > 0) {
+    configurationLabel = configParts.join(" + ");
+  } else if (data?.plotLength && data?.plotBreadth) {
+    configurationLabel = `${data.plotLength} x ${data.plotBreadth} Sqft`;
+  } else if (data?.noOfSeats) {
+    configurationLabel = `${data.noOfSeats} Seats`;
+  } else if (data?.sbua) {
+    configurationLabel = `${data.sbua} Sqft`;
+  }
 
   const basicInfo = [
     {
@@ -57,13 +71,16 @@ export const BasicPropertyInfo: React.FC<{ data: Partial<Property> }> = ({
     },
     {
       key: "assetType",
-      label: data?.assetType || "-",
+      label:
+        data?.assetType?.trim() || data?.commercialPropertyType?.trim() || "-",
     },
     {
       key: "handover",
       label: data?.readyToMove
         ? "Ready to Move"
-        : formatUnixDate(getFieldValue(data, "handOverDate")),
+        : data?.handOverDate
+        ? formatUnixDate(data.handOverDate) // ✅ use correct key + formatting
+        : "-",
     },
     {
       key: "configuration",
@@ -105,7 +122,7 @@ export const BasicPropertyInfo: React.FC<{ data: Partial<Property> }> = ({
               index % 2 === 0 ? "pr-6" : "pl-6"
             }`}
           >
-            <View className="mr-3">{getIcon(item.key)}</View>
+            <View className="mr-2">{getIcon(item.key)}</View>
             <Text className="text-[12px] font-[Lato] font-medium leading-[18px] text-[#433F3E]">
               {item.label}
             </Text>
