@@ -41,10 +41,46 @@ export const basicDetailsStep: FormStep = {
         { label: "Row House", value: "row house" },
         { label: "Villament", value: "villament" },
         { label: "Independent Building", value: "independent house" },
+      ],dependsOn: {
+        conditions: [
+        {
+            field: "propertyType",
+            values: ["residential"],
+          },
+          {
+            field: "listingType",
+            values: ["resale"],
+          },
+        ],
+        logicOperator: "AND",
+      },
+      colspan: 12,
+      conditional: true,
+    },
+    {
+      id: "assetType",
+      label: "Select property type",
+      type: "select",
+      required: true,
+      options: [
+        { label: "Apartment", value: "apartment" },
+        { label: "Villa", value: "villa" },
+        { label: "Row House", value: "row house" },
+        { label: "Villament", value: "villament" },
+        { label: "Independent Building", value: "independent house" },
       ],
       dependsOn: {
-        field: "propertyType",
-        values: ["residential"],
+        conditions: [
+        {
+            field: "propertyType",
+            values: ["residential"],
+          },
+          {
+            field: "listingType",
+            values: ["rental"],
+          },
+        ],
+        logicOperator: "AND",
       },
       colspan: 12,
       conditional: true,

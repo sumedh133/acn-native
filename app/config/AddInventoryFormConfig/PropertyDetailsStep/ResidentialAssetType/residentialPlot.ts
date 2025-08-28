@@ -34,7 +34,7 @@ export const residentialPlot: FormField[] = [
   {
     id: "facing",
     label: "Facing",
-    type: "select",
+    type: "dropdown",
     required: true,
     placeholder: "Select facing direction",
     options: [
