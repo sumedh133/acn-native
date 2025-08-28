@@ -5,7 +5,7 @@ import { logEvent } from "@react-native-firebase/analytics";
 import { useSelector } from "react-redux";
 import { RootState } from "@/store/store";
 import NewSearchIcon from "@/assets/icons/svg/PropertiesPage/NewSearchIcon";
-import { SearchFilters } from "../services/property_services/propertyAlgoliaService";
+import { SearchFilters } from "../../../services/property_services/propertyAlgoliaService";
 
 const MAX_VISIBLE = 7;
 
@@ -79,10 +79,10 @@ const SearchableRefinementList: React.FC<SearchableRefinementListProps> = ({
   return (
     <View className="w-full mb-2">
       {attribute === "micromarket" && (
-        <View className="flex-row items-center w-full border px-2 border-gray-300 rounded-md h-11 pl-3 bg-white mb-2">
+        <View className="flex-row items-center w-full border px-2 border-gray-300 rounded-md h-11 pl-3 bg-[#FAFAFA] mb-2">
           <NewSearchIcon strokeColor="#726C6C" />
           <TextInput
-            className="text-[12px] ml-2"
+            className="text-xs ml-2"
             placeholder="Search micromarket..."
             value={searchQuery}
             onChangeText={handleSearch}
@@ -91,7 +91,7 @@ const SearchableRefinementList: React.FC<SearchableRefinementListProps> = ({
         </View>
       )}
 
-      <View className="flex-row flex-wrap gap-2">
+      <View className="flex-row flex-wrap gap-2 ">
         {filteredItems
           ?.slice(0, Math.min(MAX_VISIBLE, filteredItems.length))
           ?.map((item) => {
@@ -102,7 +102,7 @@ const SearchableRefinementList: React.FC<SearchableRefinementListProps> = ({
             return (
               <TouchableOpacity
                 key={item.value}
-                className={`py-2 px-3 border border-gray-300 rounded-md bg-white ${
+                className={`py-2 px-3 border border-[#B5B3B3] rounded-lg bg-[#FAFAFA] ${
                   isRefined ? "bg-[#DFF4F3] border-[#153E3B]" : ""
                 }`}
                 onPress={() => handleRefine(item.value)}
@@ -110,7 +110,7 @@ const SearchableRefinementList: React.FC<SearchableRefinementListProps> = ({
                 <View className="flex-row justify-between items-center">
                   <Text
                     style={{ fontFamily: "Lato_400Regular" }}
-                    className={`text-sm ${
+                    className={`text-xs leading-[150%] ${
                       isRefined ? "text-[#10302D] font-semibold" : "text-black"
                     }`}
                   >
@@ -123,8 +123,11 @@ const SearchableRefinementList: React.FC<SearchableRefinementListProps> = ({
 
         {/* Show "+X" chip if there are more items */}
         {filteredItems.length > MAX_VISIBLE && (
-          <View className="py-2 px-3 bg-gray-200 rounded-md">
-            <Text className="text-sm text-gray-600 font-bold">
+          <View className="py-2 px-2 bg-[#9E9E9E] rounded-lg">
+            <Text
+              className="text-xs text-[#FAFAFA]"
+              style={{ fontFamily: "Lato_400Regular" }}
+            >
               +{filteredItems.length - MAX_VISIBLE}
             </Text>
           </View>

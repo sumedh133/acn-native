@@ -72,6 +72,7 @@ import Maintenance from "./maintainance";
 import VersionChecker from "./VersionChecker";
 import { doc, onSnapshot } from "firebase/firestore";
 import { db } from "@/app/config/firebase";
+import { ScrollContext, ScrollProvider } from "./ScrollContext";
 
 // Custom header component to apply the desired styling
 const CustomHeader = ({
@@ -123,10 +124,11 @@ const CustomHeader = ({
 export default function LayoutApp() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isMaintenanceMode, setIsMaintenanceMode] = useState(false);
-
+  const [isScrolling, setIsScrolling] = useState(false);
   const [showOnboarding, setShowOnboarding] = useState(true);
   const colorScheme = useColorScheme();
   const [topMargin, setTopMargin] = useState(10);
+  
   const [fontsLoaded] = useFonts({
     Montserrat_400Regular,
     Montserrat_500Medium,
@@ -384,9 +386,8 @@ export default function LayoutApp() {
 
   if (!isConnectedToInternet) return <Offline />;
 
-  const scrollY = new Animated.Value(0);
-
   return (
+    <ScrollProvider >
     <View style={{ flex: 1 }} onLayout={onLayoutRootView}>
       <VersionChecker />
       {showOnboarding && isAuthenticated && (
@@ -445,7 +446,7 @@ export default function LayoutApp() {
         />
         <Stack.Screen
           name="(tabs)/properties"
-          options={{ title: "Resale Inventories" }}
+          options={{ title: "Properties" }}
           initialParams={{ showNotificationBanner: true }}
         />
         <Stack.Screen
@@ -616,6 +617,7 @@ export default function LayoutApp() {
 
       {isAuthenticated && <FooterNavigation />}
     </View>
+    </ScrollProvider>
   );
 }
 

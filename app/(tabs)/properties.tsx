@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { View, Keyboard } from "react-native";
-import PropertyFilters from "../components/PropertyFilters";
+import PropertyFilters from "../components/property/PropertyFilters";
 // import MoreFilters from "../components/MoreFilters";
 import { useDoubleBackPressExit } from "@/hooks/useDoubleBackPressExit";
 import Offline from "../components/Offline";
@@ -10,13 +10,20 @@ import { analytics } from "../config/firebase";
 import { logEvent } from "@react-native-firebase/analytics";
 import { MobileHits } from "../components/property/MobileHits";
 import { useAlgoliaSearch } from "@/hooks/propertyHooks/useAlgoliaSearchProperties";
-import MoreFilters from "../components/MoreFilters";
+import MoreFilters from "../components/property/propertyMoreFilters/MoreFilters";
+
+// At the top of RequirementsPage, create simple context
 
 
 export default function PropertiesScreen() {
   const [isMoreFiltersModalOpen, setIsMoreFiltersModalOpen] = useState(false);
   const agentData = useSelector((state: RootState) => state?.agent?.docData);
   const userType = agentData?.userType || "free";
+  const [isScrolling, setIsScrolling] = useState(false);
+  const ScrollContext = React.createContext({
+  isScrolling: false,
+  setIsScrolling: (scrolling: boolean) => {},
+});
 
   const isConnectedToInternet = useSelector(
     (state: RootState) => state.app.isConnectedToInternet
@@ -34,6 +41,7 @@ export default function PropertiesScreen() {
     updateFilters,
     updateLandmark,
     updateSort,
+    refresh,
     loadMore,
   } = useAlgoliaSearch();
 
@@ -156,6 +164,7 @@ export default function PropertiesScreen() {
             error={searchState.error}
             totalHits={searchState.totalHits}
             onLoadMore={loadMore}
+            onRefresh={refresh}
           />
         </View>
       </View>

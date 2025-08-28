@@ -9,7 +9,21 @@ const searchClient = algoliasearch(
 const INDEX_NAME = "acnTest";
 
 export interface SearchFilters {
-  type?: string[];
+  type?: string[]; //listing type in real
+  propertyType?: string[];
+  assetType?: string[];
+  commercialSubType?: string[];
+  apartmentType?: string[];
+  posession?: string[];
+  facing?: string[];
+  floor?: string[];
+  furnishing?: string[];
+  preferredTenants?: string[];
+  availability?: string[];
+  zone?: string[];
+  petsAllowed?: string[];
+  nonVegAllowed?: string[];
+
   // Add more filters as needed
   micromarket?: string[];
 }
@@ -70,23 +84,43 @@ class AlgoliaInfiniteSearchService {
     filters: {},
   });
 
-  // Build filter string (same as before)
+  private buildFilterGroup = (
+    values: string[] | undefined,
+    fieldName: string
+  ): string | null => {
+    if (!values || values.length === 0) {
+      return null;
+    }
+
+    const filters = values
+      .map((value) => `${fieldName}:'${value}'`)
+      .join(" OR ");
+
+    return `(${filters})`;
+  };
+
   private buildFilterString = (filters: SearchFilters): string => {
-    const filterParts: string[] = [];
+    const filterConfigs = [
+      { values: filters.type, fieldName: "type" },
+      { values: filters.propertyType, fieldName: "propertyType" },
+      { values: filters.assetType, fieldName: "assetType" },
+      { values: filters.commercialSubType, fieldName: "commercialSubType" },
+      { values: filters.apartmentType, fieldName: "apartmentType" },
+      { values: filters.micromarket, fieldName: "micromarket" },
+      { values: filters.facing, fieldName: "facing" },
+      { values: filters.floor, fieldName: "floor" },// likely change
+      { values: filters.furnishing, fieldName: "furnishing" },
+      { values: filters.preferredTenants, fieldName: "tenantPreferences.preferredTenants" },
+      { values: filters.petsAllowed, fieldName: "tenantPreferences.petsAllowed" },
+      { values: filters.nonVegAllowed, fieldName: "tenantPreferences.nonVegAllowed" },
+      { values: filters.posession, fieldName: "posession" },
+      { values: filters.availability, fieldName: "availability" },
+      { values: filters.zone, fieldName: "zone" },
+    ];
 
-    if (filters.type && filters.type.length > 0) {
-      const typeFilters = filters.type
-        .map((type) => `type:'${type}'`)
-        .join(" OR ");
-      filterParts.push(`(${typeFilters})`);
-    }
-
-    if (filters.micromarket && filters.micromarket.length > 0) {
-      const micromarketFilters = filters.micromarket
-        .map((micromarket) => `micromarket:'${micromarket}'`)
-        .join(" OR ");
-      filterParts.push(`(${micromarketFilters})`);
-    }
+    const filterParts = filterConfigs
+      .map((config) => this.buildFilterGroup(config.values, config.fieldName))
+      .filter((filter) => filter !== null) as string[];
 
     return filterParts.join(" AND ");
   };
@@ -163,7 +197,6 @@ class AlgoliaInfiniteSearchService {
     hitsPerPage: number = 20,
     options?: { aroundLatLng?: string; aroundRadius?: number }
   ): Promise<InfiniteScrollState> => {
-    
     // Cancel any ongoing requests
     if (this.currentRequest) {
       this.currentRequest.abort();
