@@ -13,6 +13,7 @@ import CustomSelectDropdown from "../CustomSelectDropdown";
 import MonthYearPicker from "../Listing/MonthYearPicker";
 import Checkbox from "../Listing/CheckBox";
 import { FormField } from "@/types/FormConfig";
+import DropdownWithInput from "../DropdownInput";
 
 // Extend FormField to include our internal properties
 interface FormFieldWithMeta extends FormField {
@@ -412,6 +413,21 @@ export const FormRenderer: React.FC<FormRendererProps> = ({
               {errorMessage}
             </>
           );
+        case "dropdownWithInput":
+          return (
+            <>
+              {commonLabel}
+              <DropdownWithInput
+                options={field.options || []} 
+                placeholder={field.placeholder || "Select a field"}
+                onChange={(selectedField:string, inputValue:string) => {
+                  setFieldValue(field.id, { selectedField, inputValue });
+                }}
+              />
+              {errorMessage}
+            </>
+          );
+
 
 
         case "date":

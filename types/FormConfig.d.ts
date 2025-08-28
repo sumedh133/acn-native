@@ -9,7 +9,8 @@ export interface FormField {
     | "number"
     | "boolean"
     | "date"
-    | "textarea";
+  | "textarea"
+  |"dropdownWithInput";
   required?: boolean;
   placeholder?: string;
   options?: { label: string; value: any }[];

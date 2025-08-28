@@ -9,26 +9,18 @@ export const pricingDetailsStep: FormStep = {
     {
       id: "pricing.totalAskPrice",
       label: "Total Ask Price",
-      type: "number",
+      type: "dropdownWithInput",
       required: true,
       placeholder: "Enter total asking price",
+      options: [
+        { label: "Ask Price", value: "pricing.totalAskPrice" },
+        { label: "Sq/ft", value: "pricing.pricePerSqft" },
+      ],
       dependsOn: {
         field: "listingType",
         values: ["resale"],
       },
       colspan: 12,
-    },
-    {
-      id: "pricing.pricePerSqft",
-      label: "Price per Sqft",
-      type: "number",
-      required: false,
-      placeholder: "Enter price per sqft",
-      dependsOn: {
-        field: "listingType",
-        values: ["resale"],
-      },
-      colspan: 6,
     },
 
     // ----------- Rental Pricing -----------
@@ -111,7 +103,7 @@ export const pricingDetailsStep: FormStep = {
         field: "listingType",
         values: ["resale"],
       },
-      colspan: 6,
+      colspan: 12,
     },
     {
       id: "rentalInfo.currentDeposit",
@@ -123,7 +115,7 @@ export const pricingDetailsStep: FormStep = {
         field: "listingType",
         values: ["resale"],
       },
-      colspan: 6,
+      colspan: 12,
     },
     {
       id: "rentalInfo.startDate",
