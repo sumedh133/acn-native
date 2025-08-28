@@ -76,8 +76,6 @@ const menuItems: MenuItem[] = [
   },
 ];
 
-const FOOTER_HEIGHT = 59;
-
 const FooterNavigation = () => {
   const pathname = usePathname();
   const router = useRouter();

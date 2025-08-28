@@ -2,11 +2,11 @@ import algoliasearch from "algoliasearch";
 import type { SearchResponse } from "@algolia/client-search";
 
 const searchClient = algoliasearch(
-  "1F93ZRBESW",
-  "b9023694178852d83995620a6c9ba933"
+  "CGRV5YKD8Y",
+  "6790dabe95e962dcb64be2a64106c5b2"
 );
 
-const INDEX_NAME = "properties";
+const INDEX_NAME = "acnTest";
 
 export interface SearchFilters {
   listingType?: string[]; //listing type in real

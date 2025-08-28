@@ -16,7 +16,7 @@ interface ScrollContextType {
   setSelectedSort: (value: string) => void;
 }
 
-const FOOTER_HEIGHT = 77;
+const FOOTER_HEIGHT = 100;
 
 export const ScrollContext = createContext<ScrollContextType>({
   scrollY: new Animated.Value(0),
