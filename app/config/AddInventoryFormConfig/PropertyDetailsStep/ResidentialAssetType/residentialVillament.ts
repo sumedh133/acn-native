@@ -58,6 +58,25 @@ export const residentialVillamentFields: FormField[] = [
     conditional: true,
   },
   {
+    id: "facing",
+    label: "Door Facing",
+    type: "dropdown",
+    required: true,
+    placeholder: "Select facing direction",
+    options: [
+      { label: "North", value: "North" },
+      { label: "South", value: "South" },
+      { label: "East", value: "East" },
+      { label: "West", value: "West" },
+    ],
+    dependsOn: {
+      field: "assetType",
+      values: ["villament"],
+    },
+    colspan: 12,
+    conditional: true,
+  },
+  {
     id: "structure",
     label: "Structure",
     type: "text",
@@ -202,6 +221,28 @@ export const residentialVillamentFields: FormField[] = [
     dependsOn: {
       field: "assetType",
       values: ["villament"],
+    },
+    colspan: 12,
+    conditional: true,
+  },
+  {
+    id: "availableFrom",
+    label: "Available From",
+    type: "date",
+    required: true,
+    placeholder: "MM/YYYY",
+    dependsOn: {
+      conditions: [
+        {
+          field: "assetType",
+          values: ["villament"],
+        },
+        {
+          field: "possession",
+          values: ["Under Construction"],
+        },
+      ],
+      logicOperator: "AND",
     },
     colspan: 12,
     conditional: true,
