@@ -4,7 +4,7 @@ import { analytics } from "@/app/config/firebase";
 import { logEvent } from "@react-native-firebase/analytics";
 import { useSelector } from "react-redux";
 import { RootState } from "@/store/store";
-import { SearchFilters } from "../services/property_services/propertyAlgoliaService";
+import { SearchFilters } from "../../../services/property_services/propertyAlgoliaService";
 
 interface CustomCurrentRefinementsProps {
   selectedLandmark?: any;
@@ -86,7 +86,7 @@ export default function CustomCurrentRefinements({
       showsHorizontalScrollIndicator={false}
       className="flex-row"
     >
-      <View className="flex-row items-center px-4 space-x-2">
+      <View className="flex-row items-center px-4 space-x-2 mb-2">
         {selectedLandmark && (
           <TouchableOpacity
             onPress={() => {

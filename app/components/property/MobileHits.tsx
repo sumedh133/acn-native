@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect, useCallback } from "react";
+import React, { useState, useRef, useEffect, useCallback, useContext } from "react";
 import {
   View,
   Text,
@@ -6,13 +6,15 @@ import {
   RefreshControl,
   FlatList,
   ViewabilityConfig,
-  TouchableOpacity
+  TouchableOpacity,
+  Animated
 } from "react-native";
 import PropertyCard from "../../components/property/PropertyCard";
 import { useSelector } from "react-redux";
 import { RootState } from "@/store/store";
 import { analytics } from "../../config/firebase";
 import { logEvent } from "@react-native-firebase/analytics";
+import { ScrollContext } from "@/app/ScrollContext";
 
 interface MobileHitsProps {
   results: any[]; // All accumulated results from infinite scroll
@@ -44,11 +46,14 @@ export const MobileHits = ({
   const [totalPropertiesViewed, setTotalPropertiesViewed] = useState(0);
   const [refreshing, setRefreshing] = useState(false);
   const [isRendered, setIsRendered] = useState(false);
+  const { scrollY, onScrollEndDrag, onMomentumScrollEnd } = useContext(ScrollContext);
 
   const viewabilityConfig = useRef<ViewabilityConfig>({
     itemVisiblePercentThreshold: 50, // Item is considered viewed when 50% visible
     minimumViewTime: 500, // Must be visible for at least 500ms
   });
+
+
 
   // Track search results when they change
   useEffect(() => {
@@ -261,7 +266,7 @@ export const MobileHits = ({
   }, []);
 
   // Show initial loading state
-  if (!isRendered || (loading)) {
+  if (!isRendered || (loading && !refreshing)) {
     return (
       <View className="flex items-center justify-center h-64 gap-10 mt-20">
         <ActivityIndicator size="large" color="#153E3B" />
@@ -363,12 +368,17 @@ export const MobileHits = ({
 
   // Render the property list
   return (
-    <FlatList
+    <Animated.FlatList
       data={results}
       renderItem={renderItem}
       keyExtractor={keyExtractor}
-      onScroll={handleScroll}
+      onScroll={Animated.event(
+        [{ nativeEvent: { contentOffset: { y: scrollY } } }],
+        { useNativeDriver: false, listener: handleScroll }
+      )}
       scrollEventThrottle={16}
+      onScrollEndDrag={onScrollEndDrag}      // ← This fixes partial visibility
+  onMomentumScrollEnd={onMomentumScrollEnd}
       onViewableItemsChanged={handleViewableItemsChanged}
       viewabilityConfig={viewabilityConfig.current}
       refreshControl={
