@@ -31,6 +31,7 @@ import {
   zoneOptions,
 } from "./moreFilterOptions";
 import DropdownTailwind from "../../DropdownTailwind";
+import NumberRangeFilter from "./NumberRangeFilter";
 
 export interface RangeState {
   start: (number | undefined)[];
@@ -466,6 +467,16 @@ const MoreFilters = ({
                   titleClassName="text-sm"
                 />
               )}
+
+            <NumberRangeFilter
+              attribute="sbua"
+              title="SBUA (sqft)"
+              localFilters={localFilters}
+              onChangeRange={(attr, range) => {
+                toggleFilterValue(attr, range);
+              }}
+            />
+
             <View className="flex-row mb-9">
               <DropdownTailwind
                 multiSelect={true}
@@ -508,48 +519,62 @@ const MoreFilters = ({
                 />
               )}
             </View>
-            
-            {filters.type?.includes("rental") && (<View className="mb-4 mt-2">
-              <TouchableOpacity
-                className="flex-row items-center pb-2"
-                onPress={() => toggleFilterValue("nonVegAllowed", "true", true)}
-              >
-                <View
-                  className={`w-4 h-4 rounded border mr-3 ${
-                    localFilters.nonVegAllowed?.includes("true")
-                      ? "bg-[#153E3B] border-[#153E3B]"
-                      : "bg-white border-gray-400"
-                  }`}
-                >
-                  {localFilters.nonVegAllowed?.includes("true") && (
-                    <Text className="text-white text-xs text-center leading-4">
-                      ✓
-                    </Text>
-                  )}
-                </View>
-                <Text className="text-[#2B2928] text-base" style={{fontFamily :"Lato_400Regular"}}>Non Veg Allowed</Text>
-              </TouchableOpacity>
 
-              <TouchableOpacity
-                className="flex-row items-center py-2"
-                onPress={() => toggleFilterValue("petsAllowed", "true", true)}
-              >
-                <View
-                  className={`w-4 h-4 rounded border mr-3 ${
-                    localFilters.petsAllowed?.includes("true")
-                      ? "bg-[#153E3B] border-[#153E3B]"
-                      : "bg-white border-gray-400"
-                  }`}
+            {filters.type?.includes("rental") && (
+              <View className="mb-4 mt-2">
+                <TouchableOpacity
+                  className="flex-row items-center pb-2"
+                  onPress={() =>
+                    toggleFilterValue("nonVegAllowed", "true", true)
+                  }
                 >
-                  {localFilters.petsAllowed?.includes("true") && (
-                    <Text className="text-white text-xs text-center leading-4">
-                      ✓
-                    </Text>
-                  )}
-                </View>
-                <Text className="text-[#2B2928] text-base" style={{fontFamily :"Lato_400Regular"}}>Pets Allowed</Text>
-              </TouchableOpacity>
-            </View>)}
+                  <View
+                    className={`w-4 h-4 rounded border mr-3 ${
+                      localFilters.nonVegAllowed?.includes("true")
+                        ? "bg-[#153E3B] border-[#153E3B]"
+                        : "bg-white border-gray-400"
+                    }`}
+                  >
+                    {localFilters.nonVegAllowed?.includes("true") && (
+                      <Text className="text-white text-xs text-center leading-4">
+                        ✓
+                      </Text>
+                    )}
+                  </View>
+                  <Text
+                    className="text-[#2B2928] text-base"
+                    style={{ fontFamily: "Lato_400Regular" }}
+                  >
+                    Non Veg Allowed
+                  </Text>
+                </TouchableOpacity>
+
+                <TouchableOpacity
+                  className="flex-row items-center py-2"
+                  onPress={() => toggleFilterValue("petsAllowed", "true", true)}
+                >
+                  <View
+                    className={`w-4 h-4 rounded border mr-3 ${
+                      localFilters.petsAllowed?.includes("true")
+                        ? "bg-[#153E3B] border-[#153E3B]"
+                        : "bg-white border-gray-400"
+                    }`}
+                  >
+                    {localFilters.petsAllowed?.includes("true") && (
+                      <Text className="text-white text-xs text-center leading-4">
+                        ✓
+                      </Text>
+                    )}
+                  </View>
+                  <Text
+                    className="text-[#2B2928] text-base"
+                    style={{ fontFamily: "Lato_400Regular" }}
+                  >
+                    Pets Allowed
+                  </Text>
+                </TouchableOpacity>
+              </View>
+            )}
 
             {filters.type?.includes("resale") && (
               <FilterChipList
@@ -576,6 +601,16 @@ const MoreFilters = ({
               titleClassName="text-sm"
             />
           </View>
+
+          {localFilters.type?.includes("resale") && (
+            <NumberRangeFilter
+              attribute="carpetArea"
+              title="Carpet Area (sqft)"
+              localFilters={localFilters}
+              onChangeRange={(attr, range) => {
+                toggleFilterValue(attr, range);
+              }}
+            />)}
         </ScrollView>
 
         {/* Footer */}

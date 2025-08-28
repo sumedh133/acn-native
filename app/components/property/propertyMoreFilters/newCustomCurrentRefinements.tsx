@@ -23,20 +23,56 @@ export default function CustomCurrentRefinements({
     useSelector((state: RootState) => state.agent?.docData?.userType) || "free";
 
   // Convert filters object into an array of {key, value}
+  // Convert filters object into an array of {key, value, isRange?}
   const allRefinements = Object.entries(filters)
-    .filter(([key]) => key !== "type") // exclude "type"
-    .flatMap(([key, values]) =>
-      (values || []).map((val: any) => ({
-        attribute: key,
-        value: val,
-      }))
-    );
+    .filter(([key]) => key !== "type")
+    .flatMap(([key, values]) => {
+      if (!values) return [];
+
+      if (key === "sbua" || key === "carpetArea") {
+        const [min, max] = values;
+
+        let label = "";
+        if (min && max) {
+          label = `${min} - ${max}`;
+        } else if (min) {
+          label = `> ${min}`;
+        } else if (max) {
+          label = `< ${max}`;
+        }
+
+        if (label) {
+          return [
+            {
+              attribute: key,
+              value: label,
+              isRange: true,
+              raw: values, // keep original [min,max] for removal
+            },
+          ];
+        }
+        return [];
+      }
+
+      // for normal multi-select filters, filter out empties
+      return values
+        .filter((val: any) => val && val.trim() !== "")
+        .map((val: any) => ({
+          attribute: key,
+          value: val,
+          isRange: false,
+        }));
+    });
 
   if (allRefinements.length === 0 && !selectedLandmark) {
     return null;
   }
 
-  const handleRefinementRemove = (attribute: string, value: string) => {
+  const handleRefinementRemove = (
+    attribute: string,
+    value: string,
+    raw?: string[]
+  ) => {
     try {
       logEvent(analytics, "remove_refinement", {
         event_category: "filters",
@@ -49,12 +85,21 @@ export default function CustomCurrentRefinements({
       console.error("Error logging refinement removal:", error);
     }
 
-    const newFilters: SearchFilters = {
-      ...filters,
-      [attribute]: (filters[attribute as keyof SearchFilters] || []).filter(
-        (v) => v !== value
-      ),
-    };
+    let newFilters: SearchFilters;
+
+    if (attribute === "sbua" || attribute === "carpetArea") {
+      newFilters = {
+        ...filters,
+        [attribute]: [],
+      };
+    } else {
+      newFilters = {
+        ...filters,
+        [attribute]: (filters[attribute as keyof SearchFilters] || []).filter(
+          (v) => v !== value
+        ),
+      };
+    }
 
     onFiltersChange(newFilters);
   };

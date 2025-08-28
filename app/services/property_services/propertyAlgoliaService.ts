@@ -23,6 +23,8 @@ export interface SearchFilters {
   zone?: string[];
   petsAllowed?: string[];
   nonVegAllowed?: string[];
+  sbua?: string[]; //number range
+  carpetArea?: string[]; //number range
 
   // Add more filters as needed
   micromarket?: string[];
@@ -99,6 +101,26 @@ class AlgoliaInfiniteSearchService {
     return `(${filters})`;
   };
 
+  private buildRangeFilter = (
+    values: string[] | undefined,
+    fieldName: string
+  ): string | null => {
+    if (!values || values.length !== 2) return null;
+
+    const [min, max] = values;
+
+    const parts: string[] = [];
+    if (min && !isNaN(Number(min))) {
+      parts.push(`${fieldName} >= ${min}`);
+    }
+    if (max && !isNaN(Number(max))) {
+      parts.push(`${fieldName} <= ${max}`);
+    }
+
+    if (parts.length === 0) return null;
+    return parts.join(" AND ");
+  };
+
   private buildFilterString = (filters: SearchFilters): string => {
     const filterConfigs = [
       { values: filters.type, fieldName: "type" },
@@ -108,11 +130,20 @@ class AlgoliaInfiniteSearchService {
       { values: filters.apartmentType, fieldName: "apartmentType" },
       { values: filters.micromarket, fieldName: "micromarket" },
       { values: filters.facing, fieldName: "facing" },
-      { values: filters.floor, fieldName: "floor" },// likely change
+      { values: filters.floor, fieldName: "floor" }, // likely change
       { values: filters.furnishing, fieldName: "furnishing" },
-      { values: filters.preferredTenants, fieldName: "tenantPreferences.preferredTenants" },
-      { values: filters.petsAllowed, fieldName: "tenantPreferences.petsAllowed" },
-      { values: filters.nonVegAllowed, fieldName: "tenantPreferences.nonVegAllowed" },
+      {
+        values: filters.preferredTenants,
+        fieldName: "tenantPreferences.preferredTenants",
+      },
+      {
+        values: filters.petsAllowed,
+        fieldName: "tenantPreferences.petsAllowed",
+      },
+      {
+        values: filters.nonVegAllowed,
+        fieldName: "tenantPreferences.nonVegAllowed",
+      },
       { values: filters.posession, fieldName: "posession" },
       { values: filters.availability, fieldName: "availability" },
       { values: filters.zone, fieldName: "zone" },
@@ -122,7 +153,13 @@ class AlgoliaInfiniteSearchService {
       .map((config) => this.buildFilterGroup(config.values, config.fieldName))
       .filter((filter) => filter !== null) as string[];
 
-    return filterParts.join(" AND ");
+    // Add number range filters
+    const rangeFilters = [
+      this.buildRangeFilter(filters.sbua, "sbua"),
+      this.buildRangeFilter(filters.carpetArea, "carpetArea"),
+    ].filter((f) => f !== null) as string[];
+
+    return [...filterParts, ...rangeFilters].join(" AND ");
   };
 
   // Get client and index (same as before)
