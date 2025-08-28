@@ -1,98 +1,73 @@
-import AddInventoryIcon from "@/assets/icons/svg/Footer/AddInventoryIcon";
 import React, { ReactNode, useRef } from "react";
 import {
   Animated,
   PanResponder,
-  StyleSheet,
   Text,
   TouchableOpacity,
   View,
 } from "react-native";
-import AddRequirementsIcon from "../assets/icons/svg/Footer/AddRequirementsIcon";
 import LinearGradient from "react-native-linear-gradient";
-import { analytics } from "@/app/config/firebase";
-import { logEvent } from "@react-native-firebase/analytics";
-import { useSelector } from "react-redux";
-import { RootState } from "@/store/store";
 
-interface popupItems {
-  slug: string;
-  icon: ReactNode;
+export interface PopupItem {
+  id: string | number;
   text: string;
-  subText: string;
-  colors: string[];
-  iconColor: string;
-  deeplink: string;
+  subText?: string; // Optional
+  icon?: ReactNode; // Optional
+  colors?: string[]; // Optional, defaults to white
+  iconColor?: string; // Optional, only used if icon is provided
+  onPress: () => void; // Custom functionality instead of just linking
 }
-const items: popupItems[] = [
-  {
-    slug: "add_inventory",
-    icon: <AddInventoryIcon width={24} height={24} />,
-    text: "Add Inventory",
-    subText: "Add your inventory to increase visibility",
-    colors: ["#FFFCEC", "#FFFFFF"],
-    iconColor: "#FFE86A",
-    deeplink: "(pages)/Drafts",
-  },
-  {
-    slug: "add_requirement",
-    icon: <AddRequirementsIcon width={24} height={24} />,
-    text: "Add Requirement",
-    subText: "Add your requirements to find inventory.",
-    colors: ["#F1FFFE", "#FFFFFF"],
-    iconColor: "#BFE9E6",
-    deeplink: "(tabs)/UserRequirementForm",
-  },
-];
-const AddPopup = ({
-  handlePopupCardPress,
-  slideAnimation,
-  onDragDown,
-}: {
-  handlePopupCardPress: (deeplink: string) => void;
+
+interface ModularPopupProps {
+  items: PopupItem[];
   slideAnimation: Animated.Value;
   onDragDown: () => void;
-}) => {
-  const DRAG_THRESHOLD = 10;
-  const userType = useSelector((state: RootState) => state?.agent?.docData?.userType) || "free";
+  onItemPress?: (item: PopupItem) => void; // Optional global handler
+  dragThreshold?: number; // Optional, defaults to 10
+}
+
+const ModularPopup = ({
+  items,
+  slideAnimation,
+  onDragDown,
+  onItemPress,
+  dragThreshold = 10,
+}: ModularPopupProps) => {
+  const dragY = useRef(new Animated.Value(0)).current;
 
   const panResponder = useRef(
     PanResponder.create({
       onStartShouldSetPanResponder: () => true,
       onMoveShouldSetPanResponder: () => true,
 
+      onPanResponderMove: (evt, gestureState) => {
+        // Only allow downward dragging
+        if (gestureState.dy > 0) {
+          dragY.setValue(gestureState.dy);
+        }
+      },
+
       onPanResponderRelease: (evt, gestureState) => {
-        if (gestureState.dy > DRAG_THRESHOLD) {
-          try {
-            logEvent(analytics, 'popup_drag_dismiss', {
-              event_category: 'interaction',
-              event_label: 'gesture',
-              action: 'drag_down',
-              drag_distance: gestureState.dy,
-              user_type: userType
-            });
-          } catch (error) {
-            console.error('Error logging drag dismiss:', error);
-          }
+        if (gestureState.dy > dragThreshold) {
           onDragDown && onDragDown();
+        } else {
+          // Snap back to original position if drag wasn't enough
+          Animated.spring(dragY, {
+            toValue: 0,
+            useNativeDriver: true,
+            tension: 100,
+            friction: 8,
+          }).start();
         }
       },
     })
   ).current;
 
-  const handleCardPress = (item: popupItems) => {
-    try {
-      logEvent(analytics, 'add_popup_selection', {
-        event_category: 'interaction',
-        event_label: 'selection',
-        selected_option: item.slug,
-        destination: item.deeplink,
-        user_type: userType
-      });
-    } catch (error) {
-      console.error('Error logging popup selection:', error);
-    }
-    handlePopupCardPress(item.deeplink);
+  const handleItemPress = (item: PopupItem) => {
+    // Call global handler if provided
+    onItemPress && onItemPress(item);
+    // Call item's specific handler
+    item.onPress();
   };
 
   return (
@@ -101,121 +76,77 @@ const AddPopup = ({
         e.stopPropagation();
       }}
       activeOpacity={1}
-      style={styles.popupTouch}
+      className="w-full"
     >
       <Animated.View
-        style={[styles.popup, { transform: [{ translateY: slideAnimation }] }]}
+        className="w-full bg-[#FBFCFB] rounded-t-3xl pb-9"
+        style={{
+          transform: [{ translateY: slideAnimation }, { translateY: dragY }],
+        }}
       >
-        <View style={styles.dragDownBarContainer} {...panResponder.panHandlers}>
-          <View style={styles.dragDownBar}></View>
+        {/* Drag Handle */}
+        <View
+          className="pt-3 w-full mb-4 flex items-center justify-center"
+          {...panResponder.panHandlers}
+        >
+          <View className="w-32 h-1 rounded bg-black/60" />
         </View>
-        {items?.map((item, idx) => {
-          return (
+
+        {/* Menu Items */}
+        <View className="px-3 gap-2">
+          {items.map((item) => (
             <TouchableOpacity
-              key={idx}
-              onPress={() => handleCardPress(item)}
+              key={item.id}
+              onPress={() => handleItemPress(item)}
+              activeOpacity={0.8}
             >
               <LinearGradient
-                colors={item?.colors}
+                colors={item.colors || ["#FFFFFF", "#FFFFFF"]} // Default to white
                 start={{ x: 0, y: 0 }}
                 end={{ x: 1, y: 0 }}
-                style={styles.card}
+                className="px-4 py-3 rounded-2xl border border-[#F2F2F2]"
               >
-                <View
-                  style={[styles?.icon, { backgroundColor: item?.iconColor }]}
-                >
-                  {item?.icon}
-                </View>
-                <View style={styles.textContainer}>
-                  <Text style={styles.text}>{item?.text}</Text>
-                  <Text style={styles.subText}>{item?.subText}</Text>
+                <View className="flex flex-row items-center gap-4">
+                  {/* Optional Icon */}
+                  {item.icon && (
+                    <View
+                      className="p-3.5 rounded-full"
+                      style={{
+                        backgroundColor: item.iconColor || "#E5E5E5", // Default gray if no color
+                      }}
+                    >
+                      {item.icon}
+                    </View>
+                  )}
+
+                  {/* Text Content */}
+                  <View className="flex-1">
+                    <Text
+                      className="text-[#0C0C0C] text-sm font-bold leading-5"
+                      style={{
+                        fontFamily: "Lato_700Bold",
+                        marginBottom: item.subText ? 2 : 0,
+                      }}
+                    >
+                      {item.text}
+                    </Text>
+                    {item.subText && (
+                      <Text
+                        className="text-[#575757] text-sm font-medium leading-5"
+                        style={{ fontFamily: "Lato_400Regular" }}
+                      >
+                        {item.subText}
+                      </Text>
+                    )}
+                  </View>
                 </View>
               </LinearGradient>
             </TouchableOpacity>
-          );
-        })}
+          ))}
+        </View>
       </Animated.View>
     </TouchableOpacity>
   );
 };
 
-const styles = StyleSheet.create({
-  container: {
-    position: "absolute",
-    zIndex: 100,
-    width: "100%",
-    height: "100%",
-    backgroundColor: "#00000033",
-    display: "flex",
-    flexDirection: "column",
-    alignItems: "center",
-    justifyContent: "flex-end",
-    gap: 12,
-    paddingBottom: 59,
-  },
-  dragDownBarContainer: {
-    paddingTop: 12,
-    width: "100%",
-    marginBottom: 4,
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  dragDownBar: {
-    width: 124,
-    height: 2,
-    borderRadius: 4,
-    backgroundColor: "#00000099",
-  },
-  popupTouch: {
-    width: "100%",
-  },
-  popup: {
-    width: "100%",
-    backgroundColor: "#FBFCFB",
-    borderTopLeftRadius: 24,
-    borderTopRightRadius: 24,
-    paddingBottom: 36,
-    paddingHorizontal: 12,
-    display: "flex",
-    flexDirection: "column",
-    alignItems: "center",
-    gap: 8,
-  },
-  card: {
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: "#F2F2F2",
-    display: "flex",
-    flexDirection: "row",
-    gap: 16,
-    alignItems: "center",
-  },
-  textContainer: {
-    display: "flex",
-    flexDirection: "column",
-    gap: 2,
-  },
-  text: {
-    fontFamily: "Lato",
-    fontWeight: 700,
-    fontSize: 14,
-    lineHeight: 21,
-    color: "#0C0C0C",
-  },
-  subText: {
-    fontFamily: "Lato",
-    fontWeight: 500,
-    fontSize: 14,
-    lineHeight: 21,
-    color: "#575757",
-  },
-  icon: {
-    padding: 14,
-    borderRadius: 50,
-  },
-});
-
-export default AddPopup;
+export default ModularPopup;

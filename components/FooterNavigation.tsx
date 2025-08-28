@@ -22,7 +22,7 @@ import {
   BackHandler,
 } from "react-native";
 import { StyleSheet, View, Dimensions } from "react-native";
-import AddPopup from "./AddPopup";
+import type { PopupItem } from "./AddPopup";
 import { useFocusEffect } from "@react-navigation/native";
 import { analytics } from "@/app/config/firebase";
 import { logEvent } from "@react-native-firebase/analytics";
@@ -33,6 +33,9 @@ import { ScrollContext } from "@/app/ScrollContext";
 
 // icons import
 import MyBusiness from "@/assets/icons/svg/Footer/MyBuisness.svg";
+import ModularPopup from "./AddPopup";
+import AddInventoryIcon from "@/assets/icons/svg/Footer/AddInventoryIcon";
+import AddRequirementsIcon from "@/assets/icons/svg/Footer/AddRequirementsIcon";
 
 interface MenuItem {
   title: string;
@@ -93,14 +96,64 @@ const FooterNavigation = () => {
   const rotateAnimation = useRef(new Animated.Value(0)).current;
   const slideAnimation = useRef(new Animated.Value(height)).current;
   const opacityAnimation = useRef(new Animated.Value(0)).current;
-const { footerTranslateY, resetFooterPosition } = useContext(ScrollContext);
-
+  const { footerTranslateY, resetFooterPosition } = useContext(ScrollContext);
 
   const rotate = rotateAnimation.interpolate({
     inputRange: [0, 1],
     outputRange: ["0deg", "45deg"],
   });
 
+  const popupItems = [
+    {
+      id: "add_inventory",
+      text: "Add Inventory",
+      subText: "Add your inventory to increase visibility",
+      icon: <AddInventoryIcon width={24} height={24} />,
+      colors: ["#FFFCEC", "#FFFFFF"],
+      iconColor: "#FFE86A",
+      onPress: () => {
+        // Navigation logic
+        handlePopupCardClick("(pages)/Drafts");
+      },
+    },
+    {
+      id: "add_requirement",
+      text: "Add Requirement",
+      subText: "Add your requirements to find inventory.",
+      icon: <AddRequirementsIcon width={24} height={24} />,
+      colors: ["#F1FFFE", "#FFFFFF"],
+      iconColor: "#BFE9E6",
+      onPress: () => {
+        // Navigation logic
+        handlePopupCardClick("(tabs)/UserRequirementForm");
+      },
+    },
+  ];
+
+  const handleCardPress = (item: any) => {
+    try {
+      const getDestinationFromId = (id: string) => {
+        switch (id) {
+          case "add_inventory":
+            return "(pages)/Drafts";
+          case "add_requirement":
+            return "(tabs)/UserRequirementForm";
+          default:
+            return "";
+        }
+      };
+
+      logEvent(analytics, "add_popup_selection", {
+        event_category: "interaction",
+        event_label: "selection",
+        selected_option: item.id, // Changed from item.slug
+        destination: getDestinationFromId(item.id), // Helper function
+        user_type: userType,
+      });
+    } catch (error) {
+      console.error("Error logging popup selection:", error);
+    }
+  };
 
   const handleNavigation = (path: string) => {
     if (popupAnimationFlag) {
@@ -147,11 +200,11 @@ const { footerTranslateY, resetFooterPosition } = useContext(ScrollContext);
   };
 
   useEffect(() => {
-  // Reset footer position when pathname changes (navigation occurs)
-  if (resetFooterPosition) {
-    resetFooterPosition();
-  }
-}, [pathname, resetFooterPosition]);
+    // Reset footer position when pathname changes (navigation occurs)
+    if (resetFooterPosition) {
+      resetFooterPosition();
+    }
+  }, [pathname, resetFooterPosition]);
 
   const handlePopupClick = () => {
     const newState = !popupAnimationFlag;
@@ -255,22 +308,29 @@ const { footerTranslateY, resetFooterPosition } = useContext(ScrollContext);
             style={styles.popupTouch}
             onPress={(e) => handlePopupClick()}
           >
-            <AddPopup
+            {/* <AddPopup
               handlePopupCardPress={handlePopupCardClick}
               slideAnimation={slideAnimation}
               onDragDown={() => handlePopupClick()}
+            /> */}
+            <ModularPopup
+              items={popupItems}
+              slideAnimation={slideAnimation} // Your existing animation value
+              onDragDown={() => handlePopupClick()}
+              onItemPress={handleCardPress} // Analytics logging
+              dragThreshold={10} // Same as original DRAG_THRESHOLD
             />
           </TouchableOpacity>
         </Animated.View>
       )}
       <Animated.View
-      style={[
-        styles.footer,
-        {
-          transform: [{ translateY: footerTranslateY }],
-        },
-      ]}
-    >
+        style={[
+          styles.footer,
+          {
+            transform: [{ translateY: footerTranslateY }],
+          },
+        ]}
+      >
         {menuItems?.map((item, idx) => {
           const active = item?.path === pathname;
           if (item?.path === "/add") {

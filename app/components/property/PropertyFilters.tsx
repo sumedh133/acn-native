@@ -195,7 +195,7 @@ export default function PropertyFilters({
         <View className="flex-1 flex-row items-center bg-white border border-[#B5B3B3] rounded-lg px-3 h-10 mr-3">
           <NewSearchIcon style={{ marginRight: 8 }} />
           <TextInput
-            className="flex-1 text-xs text-gray-700"
+            className="flex-1 text-xs text-gray-700 "
             placeholder="Search by project, micro market"
             value={searchText}
             onChangeText={setSearchText}
