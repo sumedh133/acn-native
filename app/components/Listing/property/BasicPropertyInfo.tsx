@@ -6,6 +6,7 @@ import {
   formatUnixDate,
   getDaysDifference,
   getDaysFrom,
+  formatPrice,
 } from "../../../helpers/format/format";
 
 type UIProperty = Omit<Property, "handOverDate"> & {
@@ -39,7 +40,16 @@ export const BasicPropertyInfo: React.FC<{ data: Partial<UIProperty> }> = ({
     title = `${title} in ${market}`;
   }
 
-  const price = "1.34 Lakh";
+  let priceLabel = "";
+  let showMonthSuffix = false;
+  if (data?.pricing?.totalAskPrice) {
+    priceLabel = formatPrice(data.pricing.totalAskPrice);
+  } else if (data?.pricing?.pricePerSqft) {
+    priceLabel = formatPrice(data.pricing.pricePerSqft);
+  } else if (data?.rentalInfo?.rent) {
+    priceLabel = formatPrice(data.rentalInfo.rent);
+    showMonthSuffix = true;
+  }
 
   const daysSinceAdded = data?.dateOfLastChecked
     ? getDaysDifference(data.dateOfLastChecked, Math.floor(Date.now() / 1000))
@@ -106,9 +116,16 @@ export const BasicPropertyInfo: React.FC<{ data: Partial<UIProperty> }> = ({
 
       {/* Price + Updated Time */}
       <View className="flex-row justify-between items-center mb-4">
-        <Text className="text-[20px] font-bold text-[#153E3B] font-[Montserrat] leading-6">
-          ₹ {price}
-        </Text>
+        <View className="flex-row items-baseline">
+          <Text className="text-[20px] font-bold text-[#153E3B] font-[Montserrat] leading-6">
+            ₹ {priceLabel}
+          </Text>
+          {showMonthSuffix && (
+            <Text className="text-[14px] font-[Lato] text-gray-500 ">
+              /Month
+            </Text>
+          )}
+        </View>
         {daysSinceAdded > 10 ? (
           <Text className="text-[12px] font-[Lato] font-medium leading-[18px] text-brand-tertiary text-opacity-70 overflow-hidden">
             {updatedText}

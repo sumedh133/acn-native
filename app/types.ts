@@ -499,4 +499,8 @@ export interface Property {
   // Additional Information
   extraDetails?: string;
   unitNumber?: string;
+
+
+  commercialSubType?: commercialSubType
+  commercialPropertyType?: PropertyType
 }
