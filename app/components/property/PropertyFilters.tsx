@@ -100,23 +100,30 @@ export default function PropertyFilters({
 
   // Handle property type tab change
   const handleTabChange = (tab: "resale" | "rental") => {
-    setActiveTab(tab);
-    onFiltersChange({ ...filters, listingType: [tab] });
+  setActiveTab(tab);
 
-    try {
-      logEvent(analytics, "property_type_change", {
-        event_category: "navigation",
-        event_label: "property_type",
-        property_type: tab,
-        user_type: userType,
-      });
-    } catch (error) {
-      console.error("Error logging property type change:", error);
-    }
+  // Remove totalAskPrice and rent from filters
+  const { totalAskPrice, rent, ...restFilters } = filters;
 
-    // You might want to trigger a new search or update filters based on property type
-    // For now, this just changes the UI. You can extend this to affect the actual search.
-  };
+  onFiltersChange({ 
+    ...restFilters, 
+    listingType: [tab] 
+  });
+
+  try {
+    logEvent(analytics, "property_type_change", {
+      event_category: "navigation",
+      event_label: "property_type",
+      property_type: tab,
+      user_type: userType,
+    });
+  } catch (error) {
+    console.error("Error logging property type change:", error);
+  }
+
+  // Optional: trigger a new search here
+};
+
 
   const handleClear = () => {
     try {

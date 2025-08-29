@@ -5,6 +5,7 @@ import { logEvent } from "@react-native-firebase/analytics";
 import { useSelector } from "react-redux";
 import { RootState } from "@/store/store";
 import { SearchFilters } from "../../../services/property_services/propertyAlgoliaService";
+import { formatCostSuffix } from "@/app/helpers/common";
 
 interface CustomCurrentRefinementsProps {
   selectedLandmark?: any;
@@ -25,48 +26,73 @@ export default function CustomCurrentRefinements({
   // Convert filters object into an array of {key, value}
   // Convert filters object into an array of {key, value, isRange?}
   const allRefinements = Object.entries(filters)
-    .filter(([key]) => key !== "listingType")
-    .flatMap(([key, values]) => {
-      if (!values) return [];
+  .filter(([key]) => key !== "listingType")
+  .flatMap(([key, values]) => {
+    if (!values) return [];
 
-      if (key === "sbua" || key === "carpetArea") {
-        const [min, max] = values;
-
-        let label = "";
-        if (min && max) {
-          label = `${min} - ${max}`;
-        } else if (min) {
-          label = `> ${min}`;
-        } else if (max) {
-          label = `< ${max}`;
-        }
-
-        if (label) {
-          return [
-            {
-              attribute: key,
-              value: label,
-              isRange: true,
-              raw: values, // keep original [min,max] for removal
-            },
-          ];
-        }
-        return [];
+    // Range filters without formatting
+    if (key === "sbua" || key === "carpetArea") {
+      const [min, max] = values;
+      let label = "";
+      if (min && max) {
+        label = `${min} - ${max}`;
+      } else if (min) {
+        label = `> ${min}`;
+      } else if (max) {
+        label = `< ${max}`;
       }
 
-      // for normal multi-select filters, filter out empties
-      return values
-        .filter((val: any) => val && val.trim() !== "")
-        .map((val: any) => ({
-          attribute: key,
-          value: val,
-          isRange: false,
-        }));
-    });
+      if (label) {
+        return [
+          {
+            attribute: key,
+            value: label,
+            isRange: true,
+            raw: values, // keep original [min,max] for removal
+          },
+        ];
+      }
+      return [];
+    }
 
-  if (allRefinements.length === 0 && !selectedLandmark) {
-    return null;
-  }
+    // Range filters with formatting
+    if (key === "rent" || key === "totalAskPrice") {
+      const [min, max] = values;
+      let label = "";
+      if (min && max) {
+        label = `${formatCostSuffix(Number(min))} - ${formatCostSuffix(
+          Number(max)
+        )}`;
+      } else if (min) {
+        label = `> ${formatCostSuffix(Number(min))}`;
+      } else if (max) {
+        label = `< ${formatCostSuffix(Number(max))}`;
+      }
+
+      if (label) {
+        return [
+          {
+            attribute: key,
+            value: label,
+            isRange: true,
+            raw: values,
+          },
+        ];
+      }
+      return [];
+    }
+
+    // Default multi-select filters
+    return values
+      .filter((val: any) => val && val.trim() !== "")
+      .map((val: any) => ({
+        attribute: key,
+        value: val,
+        isRange: false,
+      }));
+  });
+
+
 
   const handleRefinementRemove = (
     attribute: string,
@@ -87,7 +113,7 @@ export default function CustomCurrentRefinements({
 
     let newFilters: SearchFilters;
 
-    if (attribute === "sbua" || attribute === "carpetArea") {
+    if (attribute === "sbua" || attribute === "carpetArea" || attribute === "rent" || attribute === "totalAskPrice") {
       newFilters = {
         ...filters,
         [attribute]: [],

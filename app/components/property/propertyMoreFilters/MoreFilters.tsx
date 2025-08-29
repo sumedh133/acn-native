@@ -33,6 +33,8 @@ import {
 } from "./moreFilterOptions";
 import DropdownTailwind from "../../DropdownTailwind";
 import NumberRangeFilter from "./NumberRangeFilter";
+import BudgetRangeFilter from "./BudgetFilter";
+import FilterRangeSlider from "./BudgetFilter";
 
 export interface RangeState {
   start: (number | undefined)[];
@@ -154,7 +156,7 @@ const MoreFilters = ({
   };
 
   const handleReset = () => {
-    setLocalFilters({});
+    setLocalFilters({listingType: filters.listingType || []});
     // setViewMode("residential");
     setLocalSelectedLandmark(null);
   };
@@ -468,6 +470,17 @@ const MoreFilters = ({
                   titleClassName="text-sm"
                 />
               )}
+
+            {/* Budget Filter */}
+            <BudgetRangeFilter
+              title="Budget"
+              attribute={filters.listingType?.includes("rental") ? "rent" : "totalAskPrice"}
+              localFilters={localFilters}
+              onChangeRange={(attr, range) => {
+                toggleFilterValue(attr, range);
+              }}
+              type={filters.listingType?.includes("rental") ? "rental" : "resale"}
+            />
 
             <NumberRangeFilter
               attribute="sbua"

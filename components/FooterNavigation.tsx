@@ -84,8 +84,6 @@ const FooterNavigation = () => {
   const userType =
     useSelector((state: RootState) => state?.agent?.docData?.userType) ||
     "free";
-  const { unreadCount } = useNotification();
-
   const [popupAnimationFlag, setPopupAnimationFlag] = useState<boolean>(false);
   const [showPopup, setShowPopup] = useState<boolean>(false);
   const navigateAtEndOfAnimation = useRef<string | null>(null);
@@ -100,6 +98,8 @@ const FooterNavigation = () => {
     selectedSort,
     closeSortPopup,
     setSelectedSort,
+    setFooterHeight,
+    footerHeight,
   } = useContext(ScrollContext);
 
   const rotate = rotateAnimation.interpolate({
@@ -435,6 +435,12 @@ const FooterNavigation = () => {
       )}
 
       <Animated.View
+        onLayout={(e) => {
+          const { height } = e.nativeEvent.layout;
+          if (footerHeight === null) {
+            setFooterHeight(height + 25);
+          }
+        }}
         style={[
           styles.footer,
           {
@@ -509,7 +515,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "flex-end",
     gap: 12,
-    paddingBottom: 59, // 👈 keeps Add popup above footer
+    paddingBottom: 59,
   },
   popupTouchOverFooter: {
     width: "100%",
@@ -530,7 +536,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
-    height: 59,
+    // height: 99,
     paddingHorizontal: 9.5,
     backgroundColor: "#FFFFFF",
     borderTopWidth: 1,

@@ -1,6 +1,7 @@
 import React, {
   forwardRef,
   useCallback,
+  useContext,
   useEffect,
   useRef,
   useState,
@@ -15,6 +16,7 @@ import {
   RefreshControl,
   FlatList,
   ViewabilityConfig,
+  Animated,
 } from "react-native";
 import RequirementFilters from "../components/requirement/RequirementFilters";
 import RequirementCard from "../components/requirement/RequirementCard";
@@ -31,12 +33,13 @@ import {
 import algoliasearch from "algoliasearch";
 import RequirementDetailsModal from "../components/requirement/RequirementDetailsModal";
 import { Requirement } from "../types";
-import Animated from "react-native-reanimated";
+// import Animated from "react-native-reanimated";
 import { useSelector } from "react-redux";
 import { RootState } from "@/store/store";
 import Offline from "../components/Offline";
 import { analytics } from "../config/firebase";
 import { logEvent } from "@react-native-firebase/analytics";
+import { ScrollContext } from "../ScrollContext";
 
 const searchClient = algoliasearch(
   "YXMDFDHYEO",
@@ -49,6 +52,7 @@ const MobileHits = React.memo(() => {
   const { query } = useSearchBox();
   const agentData = useSelector((state: RootState) => state?.agent?.docData);
   const userType = agentData?.userType || "free";
+  const { scrollY, onScrollEndDrag, onMomentumScrollEnd } = useContext(ScrollContext);
 
   // Add state for tracking loading states
   const [refreshing, setRefreshing] = useState(false);
@@ -265,7 +269,13 @@ const MobileHits = React.memo(() => {
       data={items}
       keyExtractor={keyExtractor}
       renderItem={renderItem}
-      onScroll={handleScroll}
+      // onScroll={handleScroll}
+      onScroll={Animated.event(
+              [{ nativeEvent: { contentOffset: { y: scrollY } } }],
+              { useNativeDriver: false, listener: handleScroll }
+            )}
+            onScrollEndDrag={onScrollEndDrag}      // ← This fixes partial visibility
+      onMomentumScrollEnd={onMomentumScrollEnd}
       scrollEventThrottle={16}
       onViewableItemsChanged={handleViewableItemsChanged}
       viewabilityConfig={viewabilityConfig.current}

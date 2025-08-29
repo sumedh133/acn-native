@@ -7,10 +7,11 @@ interface ScrollContextType {
   resetFooterPosition: () => void;
   onScrollEndDrag: () => void;
   onMomentumScrollEnd: () => void;
- 
+  setFooterHeight: (h: number) => void;
+  footerHeight: number | null;
   notificationHeight: Animated.AnimatedInterpolation<number>;
 
-  // New sort popup state
+  // Sort popup state
   showSortPopup: boolean;
   selectedSort: string | null;
   openSortPopup: () => void;
@@ -18,8 +19,7 @@ interface ScrollContextType {
   setSelectedSort: (value: string) => void;
 }
 
-const FOOTER_HEIGHT = 77;
-const NOTIFICATION_HEIGHT = 80; 
+const NOTIFICATION_HEIGHT = 80;
 
 export const ScrollContext = createContext<ScrollContextType>({
   scrollY: new Animated.Value(0),
@@ -27,15 +27,14 @@ export const ScrollContext = createContext<ScrollContextType>({
   resetFooterPosition: () => {},
   onScrollEndDrag: () => {},
   onMomentumScrollEnd: () => {},
-
+  setFooterHeight: () => {},
+  footerHeight: null,
   notificationHeight: new Animated.Value(0),
-
-  // New sort popup state
   showSortPopup: false,
   selectedSort: null,
   openSortPopup: () => {},
   closeSortPopup: () => {},
-  setSelectedSort: (value: string) => {},
+  setSelectedSort: () => {},
 });
 
 export const ScrollProvider: React.FC<{ children: React.ReactNode }> = ({
@@ -47,23 +46,29 @@ export const ScrollProvider: React.FC<{ children: React.ReactNode }> = ({
   const currentClampedValue = useRef(0);
   const scrollDirection = useRef<"up" | "down">("down");
 
+  const [footerHeight, setFooterHeight] = React.useState<number | null>(null);
+
+  // sort popup
   const [showSortPopup, setShowSortPopup] = React.useState(false);
   const [selectedSort, setSelectedSort] = React.useState<string | null>("relevance");
 
   const openSortPopup = () => setShowSortPopup(true);
   const closeSortPopup = () => setShowSortPopup(false);
 
+  // Use a safe fallback so animations don’t break before layout
+  const safeFooterHeight = footerHeight ?? 60;
+
   const footerTranslateY = clampedScrollY.interpolate({
-    inputRange: [0, FOOTER_HEIGHT],
-    outputRange: [0, FOOTER_HEIGHT],
+    inputRange: [0, safeFooterHeight],
+    outputRange: [0, safeFooterHeight],
     extrapolate: "clamp",
   });
 
   const notificationHeight = clampedScrollY.interpolate({
-  inputRange: [0, FOOTER_HEIGHT], // start and end scroll
-  outputRange: [NOTIFICATION_HEIGHT, 0], // full height → collapsed
-  extrapolate: "clamp",
-});
+    inputRange: [0, safeFooterHeight],
+    outputRange: [NOTIFICATION_HEIGHT, 0],
+    extrapolate: "clamp",
+  });
 
   const updateClampedValue = useCallback(
     (currentScroll: number) => {
@@ -72,14 +77,13 @@ export const ScrollProvider: React.FC<{ children: React.ReactNode }> = ({
       if (Math.abs(diff) > 0.5) {
         scrollDirection.current = diff > 0 ? "down" : "up";
 
-        // Damping factor - reduce sensitivity
-        const dampingFactor = 0.3; // Adjust this: 0.5 = half speed, 0.3 = very slow, 0.8 = faster
+        const dampingFactor = 0.3;
         const dampedDiff = Math.abs(diff) * dampingFactor;
 
         let newClampedValue;
         if (scrollDirection.current === "down") {
           newClampedValue = Math.min(
-            FOOTER_HEIGHT,
+            safeFooterHeight,
             currentClampedValue.current + dampedDiff
           );
         } else {
@@ -95,7 +99,7 @@ export const ScrollProvider: React.FC<{ children: React.ReactNode }> = ({
 
       lastScrollValue.current = currentScroll;
     },
-    [clampedScrollY]
+    [clampedScrollY, safeFooterHeight] // include footer height
   );
 
   React.useEffect(() => {
@@ -108,30 +112,20 @@ export const ScrollProvider: React.FC<{ children: React.ReactNode }> = ({
 
   const snapToNearest = useCallback(() => {
     const currentValue = currentClampedValue.current;
-    const thresholdShow = 0.15 * FOOTER_HEIGHT; // 11.55 - very easy to show (just a tiny scroll up)
-    const thresholdHide = 0.8 * FOOTER_HEIGHT; // 61.6 - much harder to hide (need significant scroll down)
+    const thresholdShow = 0.15 * safeFooterHeight;
+    const thresholdHide = 0.8 * safeFooterHeight;
 
     let targetValue: number;
 
-    // Biased toward showing:
-    // 0 to 11.55: Always show
-    // 11.55 to 61.6: Show unless user was scrolling down aggressively
-    // 61.6 to 77: Hide only when mostly sure
-
     if (currentValue <= thresholdShow) {
-      // Footer barely moved - always show
       targetValue = 0;
     } else if (currentValue >= thresholdHide) {
-      // Footer almost completely hidden - hide it
-      targetValue = FOOTER_HEIGHT;
+      targetValue = safeFooterHeight;
     } else {
-      // Large middle zone - bias toward showing
       if (scrollDirection.current === "up") {
-        // Any upward scroll in middle zone = show
         targetValue = 0;
       } else {
-        // Downward scroll in middle zone - only hide if past 50%
-        targetValue = currentValue > 0.5 * FOOTER_HEIGHT ? FOOTER_HEIGHT : 0;
+        targetValue = currentValue > 0.5 * safeFooterHeight ? safeFooterHeight : 0;
       }
     }
 
@@ -141,15 +135,10 @@ export const ScrollProvider: React.FC<{ children: React.ReactNode }> = ({
       duration: 200,
       useNativeDriver: false,
     }).start();
-  }, [clampedScrollY]);
+  }, [clampedScrollY, safeFooterHeight]);
 
-  const onScrollEndDrag = useCallback(() => {
-    snapToNearest();
-  }, [snapToNearest]);
-
-  const onMomentumScrollEnd = useCallback(() => {
-    snapToNearest();
-  }, [snapToNearest]);
+  const onScrollEndDrag = useCallback(snapToNearest, [snapToNearest]);
+  const onMomentumScrollEnd = useCallback(snapToNearest, [snapToNearest]);
 
   const resetFooterPosition = useCallback(() => {
     scrollY.setValue(0);
@@ -166,10 +155,9 @@ export const ScrollProvider: React.FC<{ children: React.ReactNode }> = ({
         resetFooterPosition,
         onScrollEndDrag,
         onMomentumScrollEnd,
-
+        setFooterHeight,
+        footerHeight,
         notificationHeight,
-
-        // sort popup state
         showSortPopup,
         selectedSort,
         openSortPopup,
