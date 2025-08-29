@@ -41,7 +41,7 @@ const MyBusinessPage = () => {
     updateSort,
     refresh,
     loadMore,
-  } = useAlgoliaSearch();
+  } = useAlgoliaSearch({ listingType: [""] });
 
   return (
     <View className="bg-white w-full h-full">

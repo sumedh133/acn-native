@@ -30,6 +30,8 @@ interface PropertyFiltersProps {
   sortBy?: string;
   onSortChange: (sortBy: string) => void;
   loading?: boolean;
+  activeTab: "resale" | "rental";
+  setActiveTab: (tab: "resale" | "rental") => void;
 }
 
 export default function PropertyFilters({
@@ -42,9 +44,10 @@ export default function PropertyFilters({
   onFiltersChange,
   sortBy,
   onSortChange,
+  activeTab,
+  setActiveTab,
 }: PropertyFiltersProps) {
   const [searchText, setSearchText] = useState(query);
-  const [activeTab, setActiveTab] = useState<"resale" | "rental">("resale");
   const slideAnim = useRef(
     new Animated.Value(activeTab === "rental" ? 1 : 0)
   ).current;

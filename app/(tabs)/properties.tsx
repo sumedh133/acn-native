@@ -14,16 +14,16 @@ import MoreFilters from "../components/property/propertyMoreFilters/MoreFilters"
 
 // At the top of RequirementsPage, create simple context
 
-
 export default function PropertiesScreen() {
   const [isMoreFiltersModalOpen, setIsMoreFiltersModalOpen] = useState(false);
   const agentData = useSelector((state: RootState) => state?.agent?.docData);
   const userType = agentData?.userType || "free";
   const [isScrolling, setIsScrolling] = useState(false);
   const ScrollContext = React.createContext({
-  isScrolling: false,
-  setIsScrolling: (scrolling: boolean) => {},
-});
+    isScrolling: false,
+    setIsScrolling: (scrolling: boolean) => {},
+  });
+  const [activeTab, setActiveTab] = useState<"resale" | "rental">("resale");
 
   const isConnectedToInternet = useSelector(
     (state: RootState) => state.app.isConnectedToInternet
@@ -43,7 +43,7 @@ export default function PropertiesScreen() {
     updateSort,
     refresh,
     loadMore,
-  } = useAlgoliaSearch();
+  } = useAlgoliaSearch({ listingType: [`${activeTab}`] });
 
   // Track page view
   useEffect(() => {
@@ -153,6 +153,8 @@ export default function PropertiesScreen() {
             onFiltersChange={updateFilters}
             sortBy={sortBy}
             onSortChange={updateSort}
+            activeTab={activeTab}
+            setActiveTab={setActiveTab}
           />
         </View>
         <View className="w-full flex-1">
