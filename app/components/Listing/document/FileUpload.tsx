@@ -16,7 +16,7 @@ import { addInventoryDocumentTypes } from "@/app/constants/DocumentConstants";
 
 interface FileUploadProps {
   docsToUpload: DocsToUpload;
-  setDocsToUpload: React.Dispatch<React.SetStateAction<DocsToUpload>>;
+  setDocsToUpload: (docsToUpload: DocsToUpload) => void;
 }
 
 const FileUpload: React.FC<FileUploadProps> = ({
@@ -58,7 +58,7 @@ const FileUpload: React.FC<FileUploadProps> = ({
     if (file.canceled) {
       return {};
     }
-    
+
     // Get the first selected asset
     const asset = file.assets?.[0];
     if (!asset) {
@@ -72,7 +72,7 @@ const FileUpload: React.FC<FileUploadProps> = ({
       uri: asset.uri,
     };
 
-    const mimeType = asset.mimeType || '';
+    const mimeType = asset.mimeType || "";
     if (mimeType.startsWith("image/")) {
       return { category: "photo", fileObject };
     } else if (mimeType.startsWith("video/")) {
@@ -100,25 +100,26 @@ const FileUpload: React.FC<FileUploadProps> = ({
         type: addInventoryDocumentTypes.allowedTypes,
         copyToCacheDirectory: true,
       });
-      
+
       if (result.canceled) {
         return;
       }
-      
+
       const newDocsToUpload = { ...docsToUpload };
-      
+
       for (const asset of result.assets || []) {
         // Check if the file type is allowed
-        const mimeType = asset.mimeType || '';
+        const mimeType = asset.mimeType || "";
         const isValidType = addInventoryDocumentTypes.allowedTypes.some(
-          type => mimeType.startsWith(type.split('/')[0] + '/') || type.includes('*')
+          (type) =>
+            mimeType.startsWith(type.split("/")[0] + "/") || type.includes("*")
         );
-        
+
         if (!isValidType) {
           showToast("error", `Invalid file type of ${asset.name}`);
           continue;
         }
-        
+
         // Check file size
         const maxSizeInMB =
           addInventoryDocumentTypes?.allowedSizes?.filter((allowedSize) =>
@@ -126,16 +127,19 @@ const FileUpload: React.FC<FileUploadProps> = ({
           )?.[0]?.maxFileSizesInMB ?? 10;
 
         if (asset.size && asset.size > maxSizeInMB * 1024 * 1024) {
-          showToast("error", `${asset.name} exceeds the ${maxSizeInMB}MB limit`);
+          showToast(
+            "error",
+            `${asset.name} exceeds the ${maxSizeInMB}MB limit`
+          );
           continue;
         }
-        
+
         const fileObject: FileObject = {
           name: asset.name,
           size: asset.size,
           uri: asset.uri,
         };
-        
+
         // Categorize the file
         let category: string;
         if (mimeType.startsWith("image/")) {
@@ -145,7 +149,7 @@ const FileUpload: React.FC<FileUploadProps> = ({
         } else {
           category = "document";
         }
-        
+
         newDocsToUpload[category].push(fileObject);
       }
       
@@ -263,4 +267,3 @@ const styles = StyleSheet.create({
 });
 
 export default FileUpload;
-

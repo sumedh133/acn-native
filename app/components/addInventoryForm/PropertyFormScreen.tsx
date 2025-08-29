@@ -10,7 +10,7 @@ import {
 } from "react-native";
 import { FormRenderer } from "./FormRenderer";
 import { inventoryFormConfig } from "@/app/config/AddInventoryFormConfig/inventoryFormConfig";
-import { Places, Property } from "@/app/types";
+import { DocsToUpload, Places, Property } from "@/app/types";
 import ArrowLeftIcon from "@/assets/icons/svg/Common/ArrowLeftIcon";
 import { LinearGradient } from "expo-linear-gradient";
 import { FormPreview } from "../Listing/listingPropertyDetails";
@@ -44,6 +44,11 @@ export const PropertyFormScreen: React.FC<PropertyFormScreenProps> = ({
     initialData || {}
   );
   const [selectedPlace, setSelectedPlace] = useState<Places>();
+  const [docsToUpload, setDocsToUpload] = useState<DocsToUpload>({
+    photo: [],
+    video: [],
+    document: [],
+  });
   const [currentStepIndex, setCurrentStepIndex] = useState<number>(0);
   const [maxStepIndex, setMaxStepIndex] = useState<number>(-1);
   const [isFormEmpty, setIsFormEmpty] = useState<boolean>(
@@ -93,8 +98,8 @@ export const PropertyFormScreen: React.FC<PropertyFormScreenProps> = ({
   };
 
   /**
-    * Validate a single field.
-    */
+   * Validate a single field.
+   */
   const validateField = (field: FormField, value: any): string | null => {
     if (field.required) {
       const isEmpty =
@@ -122,8 +127,8 @@ export const PropertyFormScreen: React.FC<PropertyFormScreenProps> = ({
   };
 
   /**
-     * Filters visible fields based on conditional logic.
-     */
+   * Filters visible fields based on conditional logic.
+   */
   const getVisibleFields = (fields: FormField[]): FormFieldWithMeta[] =>
     fields.filter((field) => isFieldVisible(field)) as FormFieldWithMeta[];
 
@@ -188,8 +193,8 @@ export const PropertyFormScreen: React.FC<PropertyFormScreenProps> = ({
     }
   }, [selectedPlace]);
   /**
- * Validate all fields in the current step.
- */
+   * Validate all fields in the current step.
+   */
   const validateCurrentStep = (): boolean => {
     const step = visibleSteps[currentStepIndex];
     if (!step) return false;
@@ -210,7 +215,6 @@ export const PropertyFormScreen: React.FC<PropertyFormScreenProps> = ({
     return isValid;
   };
 
-
   // -------------------- Event Handlers --------------------
 
   const handleNext = () => {
@@ -220,14 +224,14 @@ export const PropertyFormScreen: React.FC<PropertyFormScreenProps> = ({
 
     const visibleSteps = getVisibleSteps();
     if (currentStepIndex < visibleSteps.length - 1) {
-      if (currentStepIndex > maxStepIndex) { setMaxStepIndex(currentStepIndex) }
+      if (currentStepIndex > maxStepIndex) {
+        setMaxStepIndex(currentStepIndex);
+      }
       setCurrentStepIndex((prev) => prev + 1);
     } else {
       setShowPreview(true);
     }
-
   };
-
 
   const handleBack = () => {
     setErrors({});
@@ -271,7 +275,9 @@ export const PropertyFormScreen: React.FC<PropertyFormScreenProps> = ({
 
   const handleStepChange = (index: number) => {
     setErrors({});
-    if (currentStepIndex <= maxStepIndex) { if (!validateCurrentStep()) return }
+    if (currentStepIndex <= maxStepIndex) {
+      if (!validateCurrentStep()) return;
+    }
     const visibleSteps = getVisibleSteps();
     if (index <= maxStepIndex || index < visibleSteps.length) {
       setCurrentStepIndex(index);
@@ -293,7 +299,7 @@ export const PropertyFormScreen: React.FC<PropertyFormScreenProps> = ({
 
         {/* Back & Submit buttons */}
 
-        <View className="flex-row items-center justify-between gap-[13px] px-4 py-[14px] gap-3 bg-white border-t border-t-[#EEEEEE]">
+        <View className="flex-row items-center justify-between gap-[13px] px-4 py-[14px] bg-white border-t border-t-[#EEEEEE]">
           <TouchableOpacity
             className="flex-1 py-2 px-5 rounded-[4px] bg-white border border-[#153E3B]"
             onPress={() => {
@@ -342,8 +348,9 @@ export const PropertyFormScreen: React.FC<PropertyFormScreenProps> = ({
             onPress={handleClear}
           >
             <Text
-              className={`font-montserrat text-base font-bold underline ${isFormEmpty ? "text-[#9E9E9E]" : "text-[#D92D20]"
-                }`}
+              className={`font-montserrat text-base font-bold underline ${
+                isFormEmpty ? "text-[#9E9E9E]" : "text-[#D92D20]"
+              }`}
             >
               Clear
             </Text>
@@ -437,14 +444,16 @@ export const PropertyFormScreen: React.FC<PropertyFormScreenProps> = ({
             getVisibleFields={getVisibleFields}
             selectedPlace={selectedPlace}
             setSelectedPlace={setSelectedPlace}
+            docsToUpload={docsToUpload}
+            setDocsToUpload={setDocsToUpload}
           />
         </View>
 
         {/* Navigation Buttons */}
-        <View className="flex-row items-center justify-between gap-[13px] px-4 py-[14px] gap-3 bg-white border-t border-t-[#EEEEEE]">
+        <View className="flex-row items-center justify-between gap-[13px] px-4 py-[14px] bg-white border-t border-t-[#EEEEEE]">
           {currentStepIndex && (
             <TouchableOpacity
-              className="flex-1 py-2 px-5 rounded-[4px] bg-white border border-[#153E3B]"
+              className="flex-1 py-2 px-5 rounded-[4px] bg-white border border-[#153E3B] w-full"
               onPress={handleBack}
             >
               <Text className="text-center text-base font-semibold text-black">
@@ -453,7 +462,7 @@ export const PropertyFormScreen: React.FC<PropertyFormScreenProps> = ({
             </TouchableOpacity>
           )}
           <TouchableOpacity
-            className="flex-1 py-2 px-5 rounded-[4px] bg-[#153E3B] border border-[#153E3B]"
+            className="flex-1 py-2 px-5 rounded-[4px] bg-[#153E3B] border border-[#153E3B] w-full"
             onPress={handleNext}
           >
             <Text className="text-center text-base font-semibold text-white">
