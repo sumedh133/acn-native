@@ -37,8 +37,9 @@ interface FormRendererProps {
   visibleSteps: FormStep[];
   onFormUpdate: (data: Partial<UIProperty>) => void;
   onErrorsUpdate: (errors: Record<string, string>) => void;
-  onNext: () => void;
-  onBack: () => void;
+  getFieldValue: (data: Record<string, any>, fieldPath: string) => any;
+  getVisibleFields: (fields: FormField[]) => FormField[];
+
   selectedPlace?: Places;
   setSelectedPlace: (place?: Places) => void;
 }
@@ -53,17 +54,12 @@ export const FormRenderer: React.FC<FormRendererProps> = ({
   currentStep,
   visibleSteps,
   onFormUpdate,
-  onErrorsUpdate,
-  onNext,
-  onBack,
+  getFieldValue,
+  getVisibleFields,
   selectedPlace,
   setSelectedPlace,
 }) => {
-  /**
-   * Get nested field value by path (dot notation).
-   */
-  const getFieldValue = (data: Record<string, any>, path: string): any =>
-    path.split(".").reduce((obj, key) => obj?.[key], data);
+
 
   /**
    * Set nested field value in formData.
@@ -136,47 +132,6 @@ export const FormRenderer: React.FC<FormRendererProps> = ({
     current[keys[keys.length - 1]] = undefined;
   };
 
-  /**
-   * Check if a field should be visible based on its dependencies.
-   */
-  const isFieldVisible = (field: FormField): boolean => {
-    if (!field.dependsOn) return true;
-
-    // Case 1: Simple dependency
-    if ("field" in field.dependsOn) {
-      const fieldValue = getFieldValue(formData, field.dependsOn.field);
-      const values = field.dependsOn.values;
-
-      if (Array.isArray(values)) {
-        return values.includes(fieldValue);
-      }
-      return false; // default: hide field if values missing
-    }
-
-    // Case 2: Multiple dependencies with AND
-    if (
-      "conditions" in field.dependsOn &&
-      field.dependsOn.logicOperator === "AND"
-    ) {
-      return field.dependsOn.conditions.every((condition) => {
-        const fieldValue = getFieldValue(formData, condition.field);
-        const values = condition.values;
-
-        if (Array.isArray(values)) {
-          return values.includes(fieldValue);
-        }
-        return false;
-      });
-    }
-
-    return false;
-  };
-
-  /**
-   * Filters visible fields based on conditional logic.
-   */
-  const getVisibleFields = (fields: FormField[]): FormFieldWithMeta[] =>
-    fields.filter((field) => isFieldVisible(field)) as FormFieldWithMeta[];
 
   /**
    * Validate a single field.
@@ -203,29 +158,6 @@ export const FormRenderer: React.FC<FormRendererProps> = ({
     }
 
     return null;
-  };
-
-  /**
-   * Validate all fields in the current step.
-   */
-  const validateCurrentStep = (): boolean => {
-    const step = visibleSteps[currentStep];
-    if (!step) return false;
-
-    const stepErrors: Record<string, string> = {};
-    let isValid = true;
-
-    getVisibleFields(step.fields).forEach((field) => {
-      const value = getFieldValue(formData, field.id);
-      const error = validateField(field, value);
-      if (error) {
-        stepErrors[field.id] = error;
-        isValid = false;
-      }
-    });
-
-    onErrorsUpdate(stepErrors);
-    return isValid;
   };
 
   /**
@@ -303,9 +235,8 @@ export const FormRenderer: React.FC<FormRendererProps> = ({
 
     const commonTextInput = (props: any) => (
       <TextInput
-        className={`border rounded-[5px] py-2 px-3 text-sm text-[#9E9E9E] font-normal bg-white ${
-          error ? "border-[#d32f2f]" : "border-[#ddd]"
-        }`}
+        className={`border rounded-[5px] py-2 px-3 text-sm text-[#9E9E9E] font-normal bg-white ${error ? "border-[#d32f2f]" : "border-[#ddd]"
+          }`}
         value={value?.toString() || ""}
         onChangeText={(text) =>
           setFieldValue(field.id, field.type === "number" ? Number(text) : text)
@@ -348,9 +279,8 @@ export const FormRenderer: React.FC<FormRendererProps> = ({
             <>
               {commonLabel}
               <TextInput
-                className={`border rounded-lg p-3 text-base bg-white min-h-[100px] ${
-                  error ? "border-[#d32f2f]" : "border-[#ddd]"
-                }`}
+                className={`border rounded-lg p-3 text-base bg-white min-h-[100px] ${error ? "border-[#d32f2f]" : "border-[#ddd]"
+                  }`}
                 style={{ textAlignVertical: "top" }}
                 value={value?.toString() || ""}
                 onChangeText={(text) => setFieldValue(field.id, text)}
@@ -388,25 +318,20 @@ export const FormRenderer: React.FC<FormRendererProps> = ({
                 {field.options?.map((option) => (
                   <TouchableOpacity
                     key={option.value}
-                    className={`px-[12px] py-[10px] border ${
-                      currentStep ? "rounded-[8px]" : "rounded-[30px]"
-                    } ${
-                      value === option.value
+                    className={`px-[12px] py-[10px] border ${currentStep ? "rounded-[8px]" : "rounded-[30px]"
+                      } ${value === option.value
                         ? `bg-[#F0FFFE] border-[#153E3B]`
-                        : `${
-                            currentStep ? "bg-[#FAFAFA]" : "bg-white"
-                          } border-[#BABABA]`
-                    }`}
+                        : `${currentStep ? "bg-[#FAFAFA]" : "bg-white"
+                        } border-[#BABABA]`
+                      }`}
                     onPress={() => setFieldValue(field.id, option.value)}
                   >
                     <Text
-                      className={`${
-                        currentStep ? "" : "px-[10px]"
-                      } text-sm font-medium ${
-                        value === option.value
+                      className={`${currentStep ? "" : "px-[10px]"
+                        } text-sm font-medium ${value === option.value
                           ? "text-[#153E3B] font-bold"
                           : "text-[#2B2928]"
-                      }`}
+                        }`}
                     >
                       {option.label}
                     </Text>
@@ -434,8 +359,8 @@ export const FormRenderer: React.FC<FormRendererProps> = ({
                   const bgColor = isSelected
                     ? "bg-[#F0FFFE] border-[#153E3B]"
                     : currentStep
-                    ? "bg-[#FAFAFA] border-[#BABABA]"
-                    : "bg-white border-[#BABABA]";
+                      ? "bg-[#FAFAFA] border-[#BABABA]"
+                      : "bg-white border-[#BABABA]";
 
                   return (
                     <TouchableOpacity
@@ -449,13 +374,11 @@ export const FormRenderer: React.FC<FormRendererProps> = ({
                       }}
                     >
                       <Text
-                        className={`${
-                          currentStep ? "" : "px-[10px]"
-                        } text-sm font-medium ${
-                          isSelected
+                        className={`${currentStep ? "" : "px-[10px]"
+                          } text-sm font-medium ${isSelected
                             ? "text-[#153E3B] font-bold"
                             : "text-[#2B2928]"
-                        }`}
+                          }`}
                       >
                         {option.label}
                       </Text>
@@ -526,13 +449,12 @@ export const FormRenderer: React.FC<FormRendererProps> = ({
               {errorMessage}
             </>
           );
-
         case "date":
           return (
             <>
               <MonthYearPicker
-                value={value as string | undefined} // pass timestamp
-                setValue={(val: string) => setFieldValue(field.id, val)} // ✅ now number
+                value={value as string | undefined}
+                setValue={(val: string) => setFieldValue(field.id, val)}
                 title={field.label}
                 placeholder={field.placeholder || "MM/YYYY"}
                 required={field.required}
@@ -611,7 +533,6 @@ export const FormRenderer: React.FC<FormRendererProps> = ({
               {errorMessage}
             </>
           );
-
         default:
           return null;
       }
