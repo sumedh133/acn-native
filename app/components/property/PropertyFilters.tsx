@@ -62,7 +62,7 @@ export default function PropertyFilters({
   onSortChange,
   activeTab,
   setActiveTab,
-  showTabs = true, // 👈 default to true for backwards compatibility
+  showTabs = true, 
 }: PropertyFiltersProps) {
   const [searchText, setSearchText] = useState(query);
   const slideAnim = useRef(

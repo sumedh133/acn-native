@@ -4,8 +4,6 @@ import { useState } from "react";
 
 // Page Components Import
 import Header from "../components/MyBusinessPage/Header";
-import Search from "../components/MyBusinessPage/Search";
-import Filters from "../components/MyBusinessPage/Filters";
 import Listings from "../components/MyBusinessPage/Listings";
 import { useAlgoliaSearch } from "@/hooks/propertyHooks/useAlgoliaSearchProperties";
 import { useSelector } from "react-redux";
@@ -80,7 +78,6 @@ const MyBusinessPage = () => {
         onSortChange={updateSort}
         showTabs={false}
       />
-      <Filters />
       <PropertiesUnderReviewCard />
       <Listings data={searchState} loadMore={loadMore} refresh={refresh} />
       <MoreFilters
