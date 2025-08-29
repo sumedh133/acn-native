@@ -19,6 +19,7 @@ interface FormPreviewProps {
 }
 
 export const FormPreview: React.FC<FormPreviewProps> = ({ config, data }) => {
+  
   const getFieldValue = (obj: any, path: string) =>
     path.split(".").reduce((acc, key) => acc?.[key], obj);
 
