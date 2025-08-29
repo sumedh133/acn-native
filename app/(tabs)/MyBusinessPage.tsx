@@ -11,6 +11,9 @@ import { useAlgoliaSearch } from "@/hooks/propertyHooks/useAlgoliaSearchProperti
 import { useSelector } from "react-redux";
 import UnderReviewProperties from "../(pages)/UnderReviewProperties";
 import PropertiesUnderReviewCard from "../components/MyBusinessPage/UnderReviewPropertiesButton";
+import PropertyFilters from "../components/property/PropertyFilters";
+import { logEvent } from "@react-native-firebase/analytics";
+import MoreFilters from "../components/property/propertyMoreFilters/MoreFilters";
 
 // Icons Import
 
@@ -23,6 +26,7 @@ const MyBusinessPage = () => {
   const [activeTab, setActiveTab] = useState<"property" | "requirement">(
     "property"
   );
+  const [isMoreFiltersModalOpen, setIsMoreFiltersModalOpen] = useState(false);
   const cpId = useSelector((state: any) => state?.agent?.docData?.cpId);
 
   // Services Call
@@ -44,17 +48,52 @@ const MyBusinessPage = () => {
     updateSort,
     refresh,
     loadMore,
-  // } = useAlgoliaSearch({ cpId: [`${cpId}`] });
-  } = useAlgoliaSearch({ cpId: ["CPA452"] });
+  } = useAlgoliaSearch({});
 
+  const handleToggleMoreFilters = () => {
+    // try {
+    //   logEvent(analytics, "property_filters_toggle", {
+    //     event_category: "interaction",
+    //     event_label: "filters",
+    //     filter_state: !isMoreFiltersModalOpen ? "open" : "close",
+    //     user_type: userType,
+    //   });
+    // } catch (error) {
+    //   console.error("Error logging filter toggle:", error);
+    // }
+    setIsMoreFiltersModalOpen((prev) => !prev);
+    // Keyboard.dismiss();
+  };
 
   return (
     <View className="bg-white w-full h-full">
       <Header activeCard={activeTab} setActiveCard={setActiveTab} />
-      <Search />
+      <PropertyFilters
+        handleToggleMoreFilters={handleToggleMoreFilters}
+        selectedLandmark={selectedLandmark}
+        setSelectedLandmark={updateLandmark}
+        query={query}
+        onQueryChange={updateQuery}
+        filters={filters}
+        onFiltersChange={updateFilters}
+        sortBy={sortBy}
+        onSortChange={updateSort}
+        showTabs={false}
+      />
       <Filters />
-      <PropertiesUnderReviewCard  />
+      <PropertiesUnderReviewCard />
       <Listings data={searchState} loadMore={loadMore} refresh={refresh} />
+      <MoreFilters
+        isOpen={isMoreFiltersModalOpen}
+        setIsOpen={setIsMoreFiltersModalOpen}
+        handleToggle={handleToggleMoreFilters}
+        isMobile={true}
+        selectedLandmark={selectedLandmark}
+        setSelectedLandmark={updateLandmark}
+        filters={filters}
+        onFiltersChange={updateFilters}
+        facets={facets}
+      />
     </View>
   );
 };
