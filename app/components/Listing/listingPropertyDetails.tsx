@@ -2,6 +2,7 @@ import React from "react";
 import { ScrollView, View } from "react-native";
 import { FormConfig, FormField } from "@/types/FormConfig";
 import { Property } from "@/app/types";
+import { MediaUploadData } from "../../services/media_services/imageService";
 
 import { PropertyImages } from "./property/PropertyImages";
 import { BasicPropertyInfo } from "./property/BasicPropertyInfo";
@@ -11,14 +12,24 @@ import { ExtraDetailsSection } from "./property/ExtraDetailsSection";
 
 type UIProperty = Omit<Property, "handOverDate"> & {
   handOverDate?: string;
+  media?: MediaUploadData;
 };
 
 interface FormPreviewProps {
   config: FormConfig;
-  data: Partial<UIProperty>; // ✅ flexible here
+  data: Partial<UIProperty>;
+  onMediaUpdate?: (media: MediaUploadData) => void;
+  agentData?: any;
+  propId?: string;
 }
 
-export const FormPreview: React.FC<FormPreviewProps> = ({ config, data }) => {
+export const FormPreview: React.FC<FormPreviewProps> = ({ 
+  config, 
+  data, 
+  onMediaUpdate,
+  agentData,
+  propId 
+}) => {
   
   const getFieldValue = (obj: any, path: string) =>
     path.split(".").reduce((acc, key) => acc?.[key], obj);
@@ -64,9 +75,19 @@ export const FormPreview: React.FC<FormPreviewProps> = ({ config, data }) => {
     })
     .filter((s) => s.stepValues.length > 0);
 
+  // Get legacy images (if any) and current media
+  const legacyImages: string[] = []; // Add any legacy image handling here if needed
+  const currentMedia: MediaUploadData = data.media || { photos: [], videos: [], documents: [] };
+
   return (
     <ScrollView className="flex-1 bg-gray-50">
-      <PropertyImages images={[]} />
+      <PropertyImages 
+        images={legacyImages}
+        currentMedia={currentMedia}
+        onMediaUpdate={onMediaUpdate}
+        propId={propId}
+        agentData={agentData}
+      />
       <BasicPropertyInfo data={data} />
 
       {processedSteps.map((step) => {

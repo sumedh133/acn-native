@@ -42,6 +42,9 @@ interface FormRendererProps {
 
   selectedPlace?: Places;
   setSelectedPlace: (place?: Places) => void;
+  onMediaUpdate: (media?: any) => void;
+  agentData?: any;
+  propId?: any;
 }
 
 // Total number of columns in our grid system

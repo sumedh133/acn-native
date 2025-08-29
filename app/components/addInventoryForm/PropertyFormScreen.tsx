@@ -24,6 +24,11 @@ interface FormFieldWithMeta extends FormField {
 
 type UIProperty = Omit<Property, "handOverDate"> & {
   handOverDate?: string;
+  media?: {
+    photos: string[];
+    videos: string[];
+    documents: string[];
+  };
 };
 
 interface PropertyFormScreenProps {
@@ -31,6 +36,7 @@ interface PropertyFormScreenProps {
   onComplete: (data: Partial<UIProperty>) => void;
   onCancel: () => void;
   isEdit?: boolean;
+  agentData?: any; // Add agent data for upload metadata
 }
 
 export const PropertyFormScreen: React.FC<PropertyFormScreenProps> = ({
@@ -38,11 +44,23 @@ export const PropertyFormScreen: React.FC<PropertyFormScreenProps> = ({
   onComplete,
   onCancel,
   isEdit = false,
+  agentData,
 }) => {
   // -------------------- State Management --------------------
-  const [formData, setFormData] = useState<Partial<UIProperty>>(
-    initialData || {}
-  );
+  const [formData, setFormData] = useState<Partial<UIProperty>>(() => {
+    // Initialize with proper media structure
+    const defaultMedia = {
+      photos: [],
+      videos: [],
+      documents: [],
+    };
+    
+    return {
+      ...initialData,
+      media: initialData?.media || defaultMedia,
+    };
+  });
+  
   const [selectedPlace, setSelectedPlace] = useState<Places>();
   const [currentStepIndex, setCurrentStepIndex] = useState<number>(0);
   const [maxStepIndex, setMaxStepIndex] = useState<number>(-1);
@@ -53,6 +71,15 @@ export const PropertyFormScreen: React.FC<PropertyFormScreenProps> = ({
   const [showPreview, setShowPreview] = useState<boolean>(false);
 
   console.log("Form Data:", formData);
+
+  // -------------------- Media Upload Handler --------------------
+  const handleMediaUpdate = (media: { photos: string[], videos: string[], documents: string[] }) => {
+    setFormData(prevData => ({
+      ...prevData,
+      media,
+    }));
+    setIsFormEmpty(false);
+  };
 
   // -------------------- Utility Functions --------------------
 
@@ -187,6 +214,7 @@ export const PropertyFormScreen: React.FC<PropertyFormScreenProps> = ({
       }));
     }
   }, [selectedPlace]);
+  
   /**
  * Validate all fields in the current step.
  */
@@ -210,7 +238,6 @@ export const PropertyFormScreen: React.FC<PropertyFormScreenProps> = ({
     return isValid;
   };
 
-
   // -------------------- Event Handlers --------------------
 
   const handleNext = () => {
@@ -225,9 +252,7 @@ export const PropertyFormScreen: React.FC<PropertyFormScreenProps> = ({
     } else {
       setShowPreview(true);
     }
-
   };
-
 
   const handleBack = () => {
     setErrors({});
@@ -257,7 +282,13 @@ export const PropertyFormScreen: React.FC<PropertyFormScreenProps> = ({
           {
             text: "Clear",
             onPress: () => {
-              setFormData({});
+              setFormData({
+                media: {
+                  photos: [],
+                  videos: [],
+                  documents: [],
+                },
+              });
               setIsFormEmpty(true);
               setCurrentStepIndex(0);
               setErrors({});
@@ -278,6 +309,9 @@ export const PropertyFormScreen: React.FC<PropertyFormScreenProps> = ({
     }
   };
 
+  // Generate unique prop ID for uploads
+  const propId = formData.propertyId || `temp-${Date.now()}`;
+
   // -------------------- Derived Values --------------------
   const visibleSteps = getVisibleSteps();
 
@@ -288,11 +322,16 @@ export const PropertyFormScreen: React.FC<PropertyFormScreenProps> = ({
 
         {/* Preview */}
         <View className="flex-1">
-          <FormPreview config={inventoryFormConfig} data={formData} />
+          <FormPreview 
+            config={inventoryFormConfig} 
+            data={formData}
+            onMediaUpdate={handleMediaUpdate}
+            agentData={agentData}
+            propId={propId}
+          />
         </View>
 
         {/* Back & Submit buttons */}
-
         <View className="flex-row items-center justify-between gap-[13px] px-4 py-[14px] gap-3 bg-white border-t border-t-[#EEEEEE]">
           <TouchableOpacity
             className="flex-1 py-2 px-5 rounded-[4px] bg-white border border-[#153E3B]"
@@ -437,6 +476,10 @@ export const PropertyFormScreen: React.FC<PropertyFormScreenProps> = ({
             getVisibleFields={getVisibleFields}
             selectedPlace={selectedPlace}
             setSelectedPlace={setSelectedPlace}
+            // Pass media upload handler
+            onMediaUpdate={handleMediaUpdate}
+            agentData={agentData}
+            propId={propId}
           />
         </View>
 
