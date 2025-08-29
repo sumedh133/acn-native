@@ -190,12 +190,16 @@ const BudgetRangeFilter: React.FC<BudgetRangeFilterProps> = ({
                 borderRadius: 10,
                 backgroundColor: "white",
                 borderWidth: 2,
-                borderColor: "#0f766e",
+                borderColor: "#F2F2F2",
+
+                // iOS shadow
                 shadowColor: "#000",
-                shadowOffset: { width: 0, height: 1 },
-                shadowOpacity: 0.3,
-                shadowRadius: 2,
-                elevation: 3,
+                shadowOffset: { width: 0, height: 4 },
+                shadowOpacity: 0.36,
+                shadowRadius: 6,
+
+                // Android shadow
+                elevation: 6,
               }}
             />
           )}
@@ -204,7 +208,8 @@ const BudgetRangeFilter: React.FC<BudgetRangeFilterProps> = ({
               style={{
                 flex: 1,
                 height: 4,
-                backgroundColor: "#e5e7eb",
+                flexShrink: 0,
+                backgroundColor: "#E1E1E1",
                 borderRadius: 2,
               }}
             />
@@ -214,7 +219,8 @@ const BudgetRangeFilter: React.FC<BudgetRangeFilterProps> = ({
               style={{
                 flex: 1,
                 height: 4,
-                backgroundColor: "#0f766e",
+                flexShrink: 0,
+                backgroundColor: "#153E3B",
                 borderRadius: 2,
               }}
             />
