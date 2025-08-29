@@ -13,8 +13,10 @@ import CustomSelectDropdown from "../CustomSelectDropdown";
 import MonthYearPicker from "../Listing/MonthYearPicker";
 import Checkbox from "../Listing/CheckBox";
 import { FormField } from "@/types/FormConfig";
-import { getUnixDateTime } from "@/app/helpers/getUnixDateTime";
-import { convertMonthYearToUnix } from "../../helpers/format/format";
+
+type UIProperty = Omit<Property, "handOverDate"> & {
+  handOverDate?: string;
+};
 
 // Extend FormField to include our internal properties
 interface FormFieldWithMeta extends FormField {
@@ -23,12 +25,12 @@ interface FormFieldWithMeta extends FormField {
 
 interface FormRendererProps {
   config: FormConfig;
-  formData: Partial<Property>;
+  formData: Partial<UIProperty>;
   errors: Record<string, string>;
   currentStep: number;
   isEdit: boolean;
   visibleSteps: FormStep[];
-  onFormUpdate: (data: Partial<Property>) => void;
+  onFormUpdate: (data: Partial<UIProperty>) => void;
   onErrorsUpdate: (errors: Record<string, string>) => void;
   onNext: () => void;
   onBack: () => void;
@@ -68,11 +70,7 @@ export const FormRenderer: React.FC<FormRendererProps> = ({
     }
 
     // store timestamp directly for handoverDate
-    if (fieldPath === "handoverDate" && typeof value === "number") {
-      current[keys[keys.length - 1]] = value;
-    } else {
-      current[keys[keys.length - 1]] = value;
-    }
+    current[keys[keys.length - 1]] = value;
 
     resetDependentFields(fieldPath, newData);
     onFormUpdate(newData);
@@ -467,8 +465,8 @@ export const FormRenderer: React.FC<FormRendererProps> = ({
           return (
             <>
               <MonthYearPicker
-                value={value as number | undefined} // pass timestamp
-                setValue={(val: number) => setFieldValue(field.id, val)} // ✅ now number
+                value={value as string | undefined} // pass timestamp
+                setValue={(val: string) => setFieldValue(field.id, val)}  // ✅ now number
                 title={field.label}
                 placeholder={field.placeholder || "MM/YYYY"}
                 required={field.required}

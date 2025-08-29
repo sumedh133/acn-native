@@ -10,8 +10,8 @@ import DatePicker from "react-native-date-picker";
 import { Ionicons } from "@expo/vector-icons";
 
 interface MonthYearPickerProps {
-  value: number | undefined; 
-  setValue: (value: number) => void;
+  value: string | undefined;
+  setValue: (value: string) => void;
   title: string;
   placeholder?: string;
   required?: boolean;
@@ -35,16 +35,14 @@ const MonthYearPicker = ({
   const [date, setDate] = useState<Date>(new Date());
 
   // Parse the current value to initialize date when opening picker
-  const formattedValue =
-    typeof value === "number"
-      ? `${String(new Date(value * 1000).getMonth() + 1).padStart(2, "0")}/${new Date(
-          value * 1000
-        ).getFullYear()}`
-      : "";
+  const formattedValue = value || "";
 
   useEffect(() => {
-    if (typeof value === "number") {
-      setDate(new Date(value * 1000));
+    if (value) {
+      const [mm, yyyy] = value.split("/");
+      if (mm && yyyy) {
+        setDate(new Date(Number(yyyy), Number(mm) - 1, 1));
+      }
     }
   }, [value]);
 
@@ -61,8 +59,9 @@ const MonthYearPicker = ({
     setDate(selectedDate);
 
     // store timestamp (seconds)
-    const timestamp = Math.floor(selectedDate.getTime() / 1000);
-    setValue(timestamp);
+    const month = String(selectedDate.getMonth() + 1).padStart(2, "0");
+    const year = selectedDate.getFullYear();
+    setValue(`${month}/${year}`);
   };
 
   const handleCancel = () => {
@@ -72,22 +71,22 @@ const MonthYearPicker = ({
 
   return (
     <View style={styles.section}>
-    <View style={styles.headingContainer}>
-      <Text style={styles.sectionHeading}>{title}</Text>
-      {required && <Text style={styles.compulsoryStar}>*</Text>}
-    </View>
+      <View style={styles.headingContainer}>
+        <Text style={styles.sectionHeading}>{title}</Text>
+        {required && <Text style={styles.compulsoryStar}>*</Text>}
+      </View>
 
-    <TouchableOpacity
-      style={[
-        styles.inputContainer,
-        isFocused && styles.focusedInputContainer,
-        disabled && styles.disabledInputContainer, // Apply disabled style
-      ]}
-      onPress={handleFocus}
-      activeOpacity={disabled ? 1 : 0.7} // Adjust opacity based on disabled state
-      disabled={disabled} // Disable the touchable when disabled is true
-    >
-      <TextInput
+      <TouchableOpacity
+        style={[
+          styles.inputContainer,
+          isFocused && styles.focusedInputContainer,
+          disabled && styles.disabledInputContainer, // Apply disabled style
+        ]}
+        onPress={handleFocus}
+        activeOpacity={disabled ? 1 : 0.7} // Adjust opacity based on disabled state
+        disabled={disabled} // Disable the touchable when disabled is true
+      >
+        <TextInput
           style={[styles.inputField, disabled && styles.disabledText]}
           value={formattedValue}
           placeholder={placeholder}
@@ -100,22 +99,22 @@ const MonthYearPicker = ({
           size={18}
           color={disabled ? "#BBBBBB" : "#757575"}
         />
-    </TouchableOpacity>
+      </TouchableOpacity>
 
-    <DatePicker
-      modal
-      open={open}
-      date={date}
-      mode="date"
-      title="Select Month and Year"
-      minimumDate={new Date(minYear, 0, 1)}
-      maximumDate={new Date(maxYear, 11, 31)}
-      onConfirm={handleConfirm}
-      onCancel={handleCancel}
-      locale="en"
-      theme="light"
-    />
-  </View>
+      <DatePicker
+        modal
+        open={open}
+        date={date}
+        mode="date"
+        title="Select Month and Year"
+        minimumDate={new Date(minYear, 0, 1)}
+        maximumDate={new Date(maxYear, 11, 31)}
+        onConfirm={handleConfirm}
+        onCancel={handleCancel}
+        locale="en"
+        theme="light"
+      />
+    </View>
   );
 };
 
@@ -164,11 +163,11 @@ const styles = StyleSheet.create({
     padding: 0,
   },
   disabledText: {
-    color: '#999999',
+    color: "#999999",
   },
   disabledInputContainer: {
-    backgroundColor: '#F5F5F5',
-    borderColor: '#DDDDDD',
+    backgroundColor: "#F5F5F5",
+    borderColor: "#DDDDDD",
   },
 });
 

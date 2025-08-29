@@ -15,9 +15,14 @@ import ArrowLeftIcon from "@/assets/icons/svg/Common/ArrowLeftIcon";
 import { LinearGradient } from "expo-linear-gradient";
 import { FormPreview } from "../Listing/listingPropertyDetails";
 
+type UIProperty = Omit<Property, "handOverDate"> & {
+  handOverDate?: string;
+};
+
+
 interface PropertyFormScreenProps {
-  initialData?: Partial<Property>;
-  onComplete: (data: Partial<Property>) => void;
+  initialData?: Partial<UIProperty>;
+  onComplete: (data: Partial<UIProperty>) => void;
   onCancel: () => void;
   isEdit?: boolean;
 }
@@ -29,7 +34,7 @@ export const PropertyFormScreen: React.FC<PropertyFormScreenProps> = ({
   isEdit = false,
 }) => {
   // -------------------- State Management --------------------
-  const [formData, setFormData] = useState<Partial<Property>>(
+  const [formData, setFormData] = useState<Partial<UIProperty>>(
     initialData || {}
   );
   const [currentStepIndex, setCurrentStepIndex] = useState<number>(0);
@@ -86,7 +91,7 @@ export const PropertyFormScreen: React.FC<PropertyFormScreenProps> = ({
     }
   };
 
-  const handleFormUpdate = (updatedData: Partial<Property>) => {
+  const handleFormUpdate = (updatedData: Partial<UIProperty>) => {
     setFormData(updatedData);
     setIsFormEmpty(false);
   };

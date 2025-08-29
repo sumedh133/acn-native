@@ -2,8 +2,12 @@ import React from "react";
 import { View, Text, TouchableOpacity } from "react-native";
 import { Property } from "@/app/types";
 
+type UIProperty = Omit<Property, "handOverDate"> & {
+  handOverDate?: string;
+};
+
 interface LocationSectionProps {
-  data: Partial<Property>;
+  data: Partial<UIProperty>;
 }
 
 export const LocationSection: React.FC<LocationSectionProps> = ({ data }) => {

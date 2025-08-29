@@ -8,7 +8,11 @@ import {
   getDaysFrom,
 } from "../../../helpers/format/format";
 
-export const BasicPropertyInfo: React.FC<{ data: Partial<Property> }> = ({
+type UIProperty = Omit<Property, "handOverDate"> & {
+  handOverDate?: string;
+};
+
+export const BasicPropertyInfo: React.FC<{ data: Partial<UIProperty> }> = ({
   data,
 }) => {
   console.log("data", data);
@@ -79,7 +83,12 @@ export const BasicPropertyInfo: React.FC<{ data: Partial<Property> }> = ({
       label: data?.readyToMove
         ? "Ready to Move"
         : data?.handOverDate
-        ? formatUnixDate(data.handOverDate) // ✅ use correct key + formatting
+        ? (() => {
+            // convert "MM/YYYY" -> timestamp (seconds)
+            const [mm, yyyy] = data.handOverDate.split("/");
+            const parsedDate = new Date(Number(yyyy), Number(mm) - 1, 1);
+            return formatUnixDate(Math.floor(parsedDate.getTime() / 1000));
+          })()
         : "-",
     },
     {

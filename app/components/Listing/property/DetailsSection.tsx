@@ -2,12 +2,15 @@ import React, { useState } from "react";
 import { View, Text, TouchableOpacity } from "react-native";
 import { Property } from "@/app/types";
 import { getIcon } from "../../../../utils/iconUtils";
-import { formatUnixDate } from "../../../helpers/format/format";
+
+type UIProperty = Omit<Property, "handOverDate"> & {
+  handOverDate?: string;
+};
 
 interface DetailsSectionProps {
   title: string;
   stepValues: Array<{ id: string; label: string }>;
-  data: Partial<Property>;
+  data: Partial<UIProperty>;
   defaultVisible?: number;
   displayType?: "list" | "tags";
 }
@@ -24,18 +27,11 @@ export const DetailsSection: React.FC<DetailsSectionProps> = ({
   const getFieldValue = (obj: any, path: string) =>
     path.split(".").reduce((acc, key) => acc?.[key], obj);
 
-  const formatValue = (value: any, fieldId?: string): string => {
-    if (!value) return "N/A";
-
+  const formatValue = (value: any): string => {
+    if (!value) return 'N/A';
     if (Array.isArray(value)) {
-      return value.length > 0 ? value.join(", ") : "N/A";
+      return value.length > 0 ? value.join(", ") : 'N/A';
     }
-
-    // Special case: handoverDate (stored as UNIX timestamp)
-    if (fieldId === "handOverDate" && typeof value === "number") {
-      return formatUnixDate(value);
-    }
-
     return String(value);
   };
 
@@ -57,26 +53,16 @@ export const DetailsSection: React.FC<DetailsSectionProps> = ({
 
     return (
       <View className="bg-white px-4 py-4">
-        <Text className="text-lg font-semibold text-gray-900 mb-3">
-          {title}
-        </Text>
+        <Text className="text-lg font-semibold text-gray-900 mb-3">{title}</Text>
         <View className="flex-row flex-wrap -m-1">
           {visibleTags.map((tag, i) => (
-            <View
-              key={i}
-              className="bg-emerald-50 border border-emerald-100 px-3 py-2 rounded-lg m-1"
-            >
-              <Text className="text-emerald-700 text-sm font-medium">
-                {tag}
-              </Text>
+            <View key={i} className="bg-emerald-50 border border-emerald-100 px-3 py-2 rounded-lg m-1">
+              <Text className="text-emerald-700 text-sm font-medium">{tag}</Text>
             </View>
           ))}
         </View>
         {tags.length > 8 && (
-          <TouchableOpacity
-            onPress={() => setShowAll(!showAll)}
-            className="mt-3 py-2"
-          >
+          <TouchableOpacity onPress={() => setShowAll(!showAll)} className="mt-3 py-2">
             <Text className="text-emerald-600 font-medium">
               {showAll ? "Show Less" : `+${tags.length - 8} More`}
             </Text>
@@ -92,28 +78,20 @@ export const DetailsSection: React.FC<DetailsSectionProps> = ({
       const value = getFieldValue(data, field.id);
       return {
         ...field,
-        value: formatValue(value, field.id), // ✅ pass fieldId
-        hasValue:
-          value &&
-          (Array.isArray(value)
-            ? value.length > 0
-            : String(value).trim() !== ""),
+        value: formatValue(value),
+        hasValue: value && (Array.isArray(value) ? value.length > 0 : String(value).trim() !== '')
       };
     })
-    .filter((field) => field.hasValue);
+    .filter(field => field.hasValue);
 
   if (fieldsWithValues.length === 0) return null;
 
-  const visibleFields = showAll
-    ? fieldsWithValues
-    : fieldsWithValues.slice(0, defaultVisible);
+  const visibleFields = showAll ? fieldsWithValues : fieldsWithValues.slice(0, defaultVisible);
 
   return (
     <View className="bg-white px-5 py-4">
-      <Text className="text-[14px] leading-[21px] font-bold text-black font-[Montserrat] mb-4">
-        {title}
-      </Text>
-
+      <Text className="text-[14px] leading-[21px] font-bold text-black font-[Montserrat] mb-4">{title}</Text>
+      
       {/* Grid Layout - 2 columns */}
       <View className="flex-row flex-wrap -mx-1">
         {visibleFields.map((field, index) => (
@@ -121,9 +99,9 @@ export const DetailsSection: React.FC<DetailsSectionProps> = ({
             <View className="flex-row items-start">
               {/* Icon Container */}
               <View className="inline-flex p-[6px] items-center justify-center rounded-[6px] bg-[#E0F7F4] mr-3">
-                <Text className="text-base">{getIcon(field.label)}</Text>
+                <Text className="text-base">{getIcon(field.id)}</Text>
               </View>
-
+              
               {/* Content */}
               <View className="flex-1">
                 <Text className="text-[14px] leading-[21px] font-medium text-[#5A5555] font-[Lato] mb-1">
