@@ -1,5 +1,4 @@
 import ActiveDashboardIcon from "@/assets/icons/svg/Footer/ActiveDashboardIcon";
-import ActiveNotificationIcon from "@/assets/icons/svg/Footer/ActiveNotificationsIcon";
 import ActivePropertiesIcon from "@/assets/icons/svg/Footer/ActivePropertiesIcon";
 import ActiveRequirementsIcon from "@/assets/icons/svg/Footer/ActiveRequirementsIcon";
 import DashboardIcon from "@/assets/icons/svg/Footer/DashboardIcon";
@@ -27,7 +26,6 @@ import { analytics } from "@/app/config/firebase";
 import { logEvent } from "@react-native-firebase/analytics";
 import { useSelector } from "react-redux";
 import { RootState } from "@/store/store";
-import useNotification from "@/app/components/Notification/useNotification";
 import { ScrollContext } from "@/app/ScrollContext";
 
 // icons import
@@ -35,6 +33,7 @@ import MyBusiness from "@/assets/icons/svg/Footer/MyBuisness.svg";
 import ModularPopup from "./ModularPopup";
 import AddInventoryIcon from "@/assets/icons/svg/Footer/AddInventoryIcon";
 import AddRequirementsIcon from "@/assets/icons/svg/Footer/AddRequirementsIcon";
+import ActiveMyBusiness from "@/assets/icons/ActiveMyBusiness.svg";
 
 interface MenuItem {
   title: string;
@@ -64,9 +63,9 @@ const menuItems: MenuItem[] = [
   },
   {
     title: "My Business",
-    path: "/(tabs)/NotificationPage",
+    path: "/MyBusinessPage",
     icon: <MyBusiness width={24} height={24} />,
-    activeIcon: <ActiveNotificationIcon width={24} height={24} />,
+    activeIcon: <ActiveMyBusiness width={24} height={24} />,
   },
   {
     title: "Dashboard",

@@ -21,7 +21,7 @@ import deductMonthlyCredit from "@/app/helpers/deductCredit";
 import { showErrorToast, showSuccessToast } from "@/utils/toastUtils";
 import { useDispatch } from "react-redux";
 import { AnyAction, ThunkDispatch } from "@reduxjs/toolkit";
-import { router } from "expo-router";
+import { router, usePathname } from "expo-router";
 import { setPropertyDataThunk } from "@/store/slices/propertySlice";
 import {
   getDaysDifference,
@@ -80,6 +80,8 @@ const PropertyCard: React.FC<PropertyCardProps> = ({ property }) => {
     "free";
 
   const enquiryConfirmed = useRef<Boolean>(false);
+
+  const pathname = usePathname();
 
   const getIcon = () => {
     switch (property.assetType) {
@@ -341,12 +343,18 @@ const PropertyCard: React.FC<PropertyCardProps> = ({ property }) => {
 
     if (property) {
       dispatch(setPropertyDataThunk(property));
-      router.push({
-        pathname: "/components/property/PropertyDetailsScreen",
-        params: {
-          parent: "properties",
-        },
-      });
+      if (pathname === "/MyBusinessPage") {
+        router.push({
+          pathname: "/(pages)/MyBusiness/PropertiesDetailsScreen",
+        });
+      } else {
+        router.push({
+          pathname: "/components/property/PropertyDetailsScreen",
+          params: {
+            parent: "properties",
+          },
+        });
+      }
     }
   };
 
