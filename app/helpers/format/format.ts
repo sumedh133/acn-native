@@ -57,3 +57,20 @@ export const convertMonthYearToUnix = (input: string): number => {
   console.log('dtae', Math.floor(date.getTime() / 1000))
   return Math.floor(date.getTime() / 1000); // convert ms -> seconds
 };
+
+export const formatPrice = (value?: number | string) => {
+  if (!value) return "-";
+
+  const num = Number(value);
+  if (isNaN(num)) return value.toString();
+
+  if (num >= 10000000) {
+    return `${(num / 10000000).toFixed(2)} Cr`;
+  } else if (num >= 100000) {
+    return `${(num / 100000).toFixed(2)} Lakh`;
+  } else if (num >= 1000) {
+    return `${(num / 1000).toFixed(2)} K`;
+  } else {
+    return `${num}`;
+  }
+};
