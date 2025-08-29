@@ -7,6 +7,8 @@ interface ScrollContextType {
   resetFooterPosition: () => void;
   onScrollEndDrag: () => void;
   onMomentumScrollEnd: () => void;
+ 
+  notificationHeight: Animated.AnimatedInterpolation<number>;
 
   // New sort popup state
   showSortPopup: boolean;
@@ -17,6 +19,7 @@ interface ScrollContextType {
 }
 
 const FOOTER_HEIGHT = 77;
+const NOTIFICATION_HEIGHT = 80; 
 
 export const ScrollContext = createContext<ScrollContextType>({
   scrollY: new Animated.Value(0),
@@ -24,6 +27,8 @@ export const ScrollContext = createContext<ScrollContextType>({
   resetFooterPosition: () => {},
   onScrollEndDrag: () => {},
   onMomentumScrollEnd: () => {},
+
+  notificationHeight: new Animated.Value(0),
 
   // New sort popup state
   showSortPopup: false,
@@ -53,6 +58,12 @@ export const ScrollProvider: React.FC<{ children: React.ReactNode }> = ({
     outputRange: [0, FOOTER_HEIGHT],
     extrapolate: "clamp",
   });
+
+  const notificationHeight = clampedScrollY.interpolate({
+  inputRange: [0, FOOTER_HEIGHT], // start and end scroll
+  outputRange: [NOTIFICATION_HEIGHT, 0], // full height → collapsed
+  extrapolate: "clamp",
+});
 
   const updateClampedValue = useCallback(
     (currentScroll: number) => {
@@ -128,7 +139,7 @@ export const ScrollProvider: React.FC<{ children: React.ReactNode }> = ({
     Animated.timing(clampedScrollY, {
       toValue: targetValue,
       duration: 200,
-      useNativeDriver: true,
+      useNativeDriver: false,
     }).start();
   }, [clampedScrollY]);
 
@@ -155,6 +166,8 @@ export const ScrollProvider: React.FC<{ children: React.ReactNode }> = ({
         resetFooterPosition,
         onScrollEndDrag,
         onMomentumScrollEnd,
+
+        notificationHeight,
 
         // sort popup state
         showSortPopup,
