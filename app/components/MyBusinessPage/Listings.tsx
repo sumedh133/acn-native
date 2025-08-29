@@ -6,7 +6,6 @@ interface MyBusinessListingsProps {
 }
 
 const MyBusinessListings = ({ data }: MyBusinessListingsProps) => {
-  console.log("siofhsaujiauidh", data);
   return (
     <View className="w-full flex-1">
       <MobileHits

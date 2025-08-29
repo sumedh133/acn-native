@@ -28,6 +28,7 @@ export interface SearchFilters {
   availableFrom?: string[]; // string like winthin 1 month, within 2 months
   totalAskPrice?: string[];
   rent?: string[];
+  stage?: string[];
 
   // Add more filters as needed
   micromarket?: string[];
