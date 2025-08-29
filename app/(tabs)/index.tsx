@@ -165,7 +165,7 @@ export default function TabOneScreen() {
     console.log("", remoteMessage);
   });
 
-  if (!isConnectedToInternet) return <Offline />;
+  // if (!isConnectedToInternet) return <Offline />;
 
   // For unauthenticated users, show landing page
   return (

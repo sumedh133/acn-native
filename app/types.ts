@@ -1,6 +1,6 @@
 export interface GeoLocation {
-  lat: number | null;
-  lng: number | null;
+  lat?: number;
+  lng?: number;
 }
 
 // export interface Property {
@@ -131,11 +131,11 @@ export interface Landmark {
 }
 
 export interface Places {
-  name: string | null;
-  lat: number | null;
-  lng: number | null;
-  address: string | null;
-  mapLocation: string | null;
+  name: string;
+  lat: number;
+  lng: number;
+  address: string;
+  mapLocation: string;
 }
 
 export interface UploadedFileUrls {
@@ -146,9 +146,9 @@ export interface UploadedFileUrls {
 }
 
 export interface FileObject {
-  name?: string | null;
+  name?: string;
   size?: number | null;
-  uri?: string | null;
+  uri: string;
   firebaseUri?: string | null;
 }
 
@@ -164,36 +164,72 @@ export interface IdGenerationResult {
   nextId: string;
 }
 
-// export interface ListingProperty extends Property {
-//   agentName: string | null;
-//   agentPhoneNumber: string | null;
-//   address?: string | null;
-//   biappaApproved?: boolean | null;
-//   bdaApproved?: boolean | null;
-//   carPark?: number | null;
-//   communityType?: string | null;
-//   cornerUnit?: boolean | null;
-//   eKhata?: boolean | null;
-//   exactFloor?: number | null;
-//   exclusive?: boolean | null;
-//   furnishing?: string | null;
-//   balconyFacing?: string | null;
-//   kamId?: string | null;
-//   kamStatus?: string | null;
-//   noOfBalconies?: number | null;
-//   noOfBathrooms?: number | null;
-//   qcStatus?: string | null;
-//   rentalIncome?: number | null;
-//   stage?: string | null; //stage
-//   structure?: number | null;
-//   subType: string | null | undefined;
-//   uds?: number | null;
-//   unitNo?: string | null;
-//   lastModified?: number | null;
-//   extraRoom?: string[] | null;
-//   plotFacing?: string | null;
-//   // [key: string]: any;
-// }
+export interface ListingProperty {
+  _geoloc: GeoLocation;
+  id: string;
+  address: string | null;
+  ageOfInventory: number;
+  agentName: string | null;
+  agentPhoneNumber: string | null;
+  ageOfStatus: number;
+  area: string | null;
+  askPricePerSqft: number;
+  assetType: string | null;
+  builerName: string | null;
+  builderCategory: string | null;
+  builderName: string | null;
+  biappaApproved: boolean;
+  bdaApproved: boolean;
+  buildingAge: string | null;
+  buildingKhata: string | null;
+  carPark: number | null;
+  carpet: number | null;
+  communityType: string | null;
+  cornerUnit: boolean;
+  cpId: string | null;
+  currentStatus: string | null;
+  dateOfInventoryAdded: number;
+  dateOfStatusLastChecked: number;
+  driveLink: string | null;
+  eKhata: boolean;
+  exactFloor: number | null;
+  extraRoom: string[] | null;
+  exclusive: boolean;
+  extraDetails: string | null;
+  facing: string | null;
+  floorNo: string | null;
+  furnishing: string | null;
+  handoverDate: string | number | null;
+  balconyFacing: string | null;
+  kamId: string | null;
+  kamStatus: string | null;
+  landKhata: string | null;
+  mapLocation: string | null;
+  micromarket: string | null;
+  propertyName: string | null;
+  noOfBalconies: number | null;
+  noOfBathrooms: number | null;
+  ocReceived: boolean;
+  plotFacing: string | null;
+  plotSize: number | null;
+  propertyId: string | null;
+  qcStatus: string | null;
+  rentalIncome: number | null;
+  sbua: number | null;
+  stage: string | null;
+  status: string | null;
+  structure: string | null;
+  subType: string | null;
+  tenanted: boolean;
+  totalAskPrice: number | null;
+  uds: number | null;
+  unitNo: string | null;
+  unitType: string | null;
+  photo: string[];
+  video: string[];
+  document: string[];
+  lastModified?: number | null;
+}
 
 export interface NotificationItem {
   id: string;
@@ -349,9 +385,9 @@ export interface Property {
 
   // Location Information
   propertyName: string;
-  micromarket: string;
-  area: string;
-  zone: string;
+  micromarket: string | null;
+  mapLocation: string;
+  zone: string | null;
   communityType: communityType;
   _geoloc: GeoLocation;
 
@@ -362,11 +398,6 @@ export interface Property {
 
   // Orientation
   facing: direction; // Unified from doorFacing/facing
-
-  // Property Characteristics
-  propertyCategory?: propertyType; // Added for better categorization
-  commercialPropertyType?: PropertyType;
-  commercialSubType?: commercialSubType;
 
   // Residential Specific Fields
   apartmentType?: apartmentType;
@@ -384,7 +415,6 @@ export interface Property {
 
   // Commercial Specific Fields
   noOfSeats?: number;
-  totalRooms?: number;
   waterSupply?: boolean;
   typeOfWaterSupply?: "Borewell" | "Cauvery";
 

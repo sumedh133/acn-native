@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
   SafeAreaView,
   StatusBar,
@@ -10,15 +10,21 @@ import {
 } from "react-native";
 import { FormRenderer } from "./FormRenderer";
 import { inventoryFormConfig } from "@/app/config/AddInventoryFormConfig/inventoryFormConfig";
-import { Property } from "@/app/types";
+import { Places, Property } from "@/app/types";
 import ArrowLeftIcon from "@/assets/icons/svg/Common/ArrowLeftIcon";
 import { LinearGradient } from "expo-linear-gradient";
 import { FormPreview } from "../Listing/listingPropertyDetails";
+import { getMicromarketFromCoordinates } from "@/app/helpers/getMicromarketFromCoordinates";
+import { FormField } from "@/types/FormConfig";
+
+// Extend FormField to include our internal properties
+interface FormFieldWithMeta extends FormField {
+  _actualColspan?: number;
+}
 
 type UIProperty = Omit<Property, "handOverDate"> & {
   handOverDate?: string;
 };
-
 
 interface PropertyFormScreenProps {
   initialData?: Partial<UIProperty>;
@@ -37,14 +43,89 @@ export const PropertyFormScreen: React.FC<PropertyFormScreenProps> = ({
   const [formData, setFormData] = useState<Partial<UIProperty>>(
     initialData || {}
   );
+  const [selectedPlace, setSelectedPlace] = useState<Places>();
   const [currentStepIndex, setCurrentStepIndex] = useState<number>(0);
+  const [maxStepIndex, setMaxStepIndex] = useState<number>(-1);
   const [isFormEmpty, setIsFormEmpty] = useState<boolean>(
     Object.keys(initialData || {}).length === 0
   );
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [showPreview, setShowPreview] = useState<boolean>(false);
 
+  console.log("Form Data:", formData);
+
   // -------------------- Utility Functions --------------------
+
+  /**
+   * Check if a field should be visible based on its dependencies.
+   */
+  const isFieldVisible = (field: FormField): boolean => {
+    if (!field.dependsOn) return true;
+
+    // Case 1: Simple dependency
+    if ("field" in field.dependsOn) {
+      const fieldValue = getFieldValue(formData, field.dependsOn.field);
+      const values = field.dependsOn.values;
+
+      if (Array.isArray(values)) {
+        return values.includes(fieldValue);
+      }
+      return false; // default: hide field if values missing
+    }
+
+    // Case 2: Multiple dependencies with AND
+    if (
+      "conditions" in field.dependsOn &&
+      field.dependsOn.logicOperator === "AND"
+    ) {
+      return field.dependsOn.conditions.every((condition) => {
+        const fieldValue = getFieldValue(formData, condition.field);
+        const values = condition.values;
+
+        if (Array.isArray(values)) {
+          return values.includes(fieldValue);
+        }
+        return false;
+      });
+    }
+
+    return false;
+  };
+
+  /**
+    * Validate a single field.
+    */
+  const validateField = (field: FormField, value: any): string | null => {
+    if (field.required) {
+      const isEmpty =
+        value === "" ||
+        value === undefined ||
+        value === null ||
+        (Array.isArray(value) && value.length === 0);
+      if (isEmpty) return `${field.label} is required`;
+    }
+
+    if (field.validation) {
+      const { min, max, pattern, message } = field.validation;
+      if (min !== undefined && Number(value) < min) {
+        return message || `${field.label} must be at least ${min}`;
+      }
+      if (max !== undefined && Number(value) > max) {
+        return message || `${field.label} must be at most ${max}`;
+      }
+      if (pattern && !pattern.test(String(value))) {
+        return message || `${field.label} format is invalid`;
+      }
+    }
+
+    return null;
+  };
+
+  /**
+     * Filters visible fields based on conditional logic.
+     */
+  const getVisibleFields = (fields: FormField[]): FormFieldWithMeta[] =>
+    fields.filter((field) => isFieldVisible(field)) as FormFieldWithMeta[];
 
   /**
    * Get the value of a nested field in an object based on dot notation.
@@ -57,33 +138,99 @@ export const PropertyFormScreen: React.FC<PropertyFormScreenProps> = ({
    * Filter steps based on conditions defined in the form configuration.
    */
   const getVisibleSteps = () => {
-  return inventoryFormConfig.steps.filter((step) => {
-    if (!step.dependsOn) return true;
+    return inventoryFormConfig.steps.filter((step) => {
+      if (!step.dependsOn) return true;
 
-    const fieldValue = getFieldValue(formData, step.dependsOn.field);
-    const values = step.dependsOn.values;
+      const fieldValue = getFieldValue(formData, step.dependsOn.field);
+      const values = step.dependsOn.values;
 
-    if (Array.isArray(values)) {
-      return values.includes(fieldValue);
+      if (Array.isArray(values)) {
+        return values.includes(fieldValue);
+      }
+      return false;
+    });
+  };
+
+  /**
+   * Update the format data from Places API
+   */
+  useEffect(() => {
+    if (selectedPlace) {
+      const mm = getMicromarketFromCoordinates(selectedPlace);
+
+      if (mm === null) return;
+
+      setFormData((prevProperty) => ({
+        ...prevProperty,
+        propertyName: selectedPlace.name,
+        address: selectedPlace.address,
+        mapLocation: selectedPlace.mapLocation,
+        micromarket: mm[0],
+        zone: mm[1],
+        _geoloc: {
+          lat: selectedPlace.lat,
+          lng: selectedPlace.lng,
+        },
+      }));
+    } else {
+      setFormData((prevProperty) => ({
+        ...prevProperty,
+        propertyName: undefined,
+        address: undefined,
+        mapLocation: undefined,
+        micromarket: undefined,
+        zone: undefined,
+        _geoloc: {
+          lat: undefined,
+          lng: undefined,
+        },
+      }));
     }
-    return false; 
-  });
-};
+  }, [selectedPlace]);
+  /**
+ * Validate all fields in the current step.
+ */
+  const validateCurrentStep = (): boolean => {
+    const step = visibleSteps[currentStepIndex];
+    if (!step) return false;
+
+    const stepErrors: Record<string, string> = {};
+    let isValid = true;
+
+    getVisibleFields(step.fields).forEach((field) => {
+      const value = getFieldValue(formData, field.id);
+      const error = validateField(field, value);
+      if (error) {
+        stepErrors[field.id] = error;
+        isValid = false;
+      }
+    });
+
+    handleErrorsUpdate(stepErrors);
+    return isValid;
+  };
 
 
   // -------------------- Event Handlers --------------------
 
   const handleNext = () => {
+    if (!validateCurrentStep()) {
+      return;
+    }
+
     const visibleSteps = getVisibleSteps();
     if (currentStepIndex < visibleSteps.length - 1) {
+      if (currentStepIndex > maxStepIndex) { setMaxStepIndex(currentStepIndex) }
       setCurrentStepIndex((prev) => prev + 1);
     } else {
-      //onComplete(formData);
       setShowPreview(true);
     }
+
   };
 
+
   const handleBack = () => {
+    setErrors({});
     if (currentStepIndex > 0) {
       setCurrentStepIndex((prev) => prev - 1);
     } else {
@@ -123,8 +270,10 @@ export const PropertyFormScreen: React.FC<PropertyFormScreenProps> = ({
   };
 
   const handleStepChange = (index: number) => {
+    setErrors({});
+    if (currentStepIndex <= maxStepIndex) { if (!validateCurrentStep()) return }
     const visibleSteps = getVisibleSteps();
-    if (index <= currentStepIndex || index < visibleSteps.length) {
+    if (index <= maxStepIndex || index < visibleSteps.length) {
       setCurrentStepIndex(index);
     }
   };
@@ -193,9 +342,8 @@ export const PropertyFormScreen: React.FC<PropertyFormScreenProps> = ({
             onPress={handleClear}
           >
             <Text
-              className={`font-montserrat text-base font-bold underline ${
-                isFormEmpty ? "text-[#9E9E9E]" : "text-[#D92D20]"
-              }`}
+              className={`font-montserrat text-base font-bold underline ${isFormEmpty ? "text-[#9E9E9E]" : "text-[#D92D20]"
+                }`}
             >
               Clear
             </Text>
@@ -285,8 +433,10 @@ export const PropertyFormScreen: React.FC<PropertyFormScreenProps> = ({
             visibleSteps={visibleSteps}
             onFormUpdate={handleFormUpdate}
             onErrorsUpdate={handleErrorsUpdate}
-            onNext={handleNext}
-            onBack={handleBack}
+            getFieldValue={getFieldValue}
+            getVisibleFields={getVisibleFields}
+            selectedPlace={selectedPlace}
+            setSelectedPlace={setSelectedPlace}
           />
         </View>
 
