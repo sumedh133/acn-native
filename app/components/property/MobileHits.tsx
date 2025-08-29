@@ -1,4 +1,10 @@
-import React, { useState, useRef, useEffect, useCallback, useContext } from "react";
+import React, {
+  useState,
+  useRef,
+  useEffect,
+  useCallback,
+  useContext,
+} from "react";
 import {
   View,
   Text,
@@ -7,7 +13,7 @@ import {
   FlatList,
   ViewabilityConfig,
   TouchableOpacity,
-  Animated
+  Animated,
 } from "react-native";
 import PropertyCard from "../../components/property/PropertyCard";
 import { useSelector } from "react-redux";
@@ -15,6 +21,7 @@ import { RootState } from "@/store/store";
 import { analytics } from "../../config/firebase";
 import { logEvent } from "@react-native-firebase/analytics";
 import { ScrollContext } from "@/app/ScrollContext";
+import { usePathname } from "expo-router";
 
 interface MobileHitsProps {
   results: any[]; // All accumulated results from infinite scroll
@@ -46,14 +53,15 @@ export const MobileHits = ({
   const [totalPropertiesViewed, setTotalPropertiesViewed] = useState(0);
   const [refreshing, setRefreshing] = useState(false);
   const [isRendered, setIsRendered] = useState(false);
-  const { scrollY, onScrollEndDrag, onMomentumScrollEnd } = useContext(ScrollContext);
+  const { scrollY, onScrollEndDrag, onMomentumScrollEnd } =
+    useContext(ScrollContext);
 
   const viewabilityConfig = useRef<ViewabilityConfig>({
     itemVisiblePercentThreshold: 50, // Item is considered viewed when 50% visible
     minimumViewTime: 500, // Must be visible for at least 500ms
   });
 
-
+  const pathname = usePathname();
 
   // Track search results when they change
   useEffect(() => {
@@ -87,9 +95,9 @@ export const MobileHits = ({
       } catch (error) {
         console.error("Error logging refresh:", error);
       }
-      
+
       onRefresh();
-      
+
       // Reset refresh state after a delay
       setTimeout(() => {
         setRefreshing(false);
@@ -111,14 +119,23 @@ export const MobileHits = ({
       } catch (error) {
         console.error("Error logging pagination:", error);
       }
-      
+
       onLoadMore();
     }
-  }, [hasMore, loadingMore, loading, onLoadMore, results.length, totalHits, userType]);
+  }, [
+    hasMore,
+    loadingMore,
+    loading,
+    onLoadMore,
+    results.length,
+    totalHits,
+    userType,
+  ]);
 
   // Key extractor for FlatList
   const keyExtractor = useCallback(
-    (item: any, index: number) => item.propertyId || item.objectID || String(index),
+    (item: any, index: number) =>
+      item.propertyId || item.objectID || String(index),
     []
   );
 
@@ -214,9 +231,9 @@ export const MobileHits = ({
             return false;
           }}
         >
-          <PropertyCard 
-            key={item.propertyId || item.objectID || index} 
-            property={item} 
+          <PropertyCard
+            key={item.propertyId || item.objectID || index}
+            property={item}
           />
         </View>
       );
@@ -230,7 +247,7 @@ export const MobileHits = ({
       return (
         <View className="flex items-center justify-center py-4">
           <ActivityIndicator size="large" color="#153E3B" />
-          <Text 
+          <Text
             className="text-gray-500 mt-2 text-sm"
             style={{ fontFamily: "Montserrat_400Regular" }}
           >
@@ -239,11 +256,11 @@ export const MobileHits = ({
         </View>
       );
     }
-    
+
     if (!hasMore && results.length > 0) {
       return (
         <View className="flex items-center justify-center py-8">
-          <Text 
+          <Text
             className="text-gray-500 text-sm"
             style={{ fontFamily: "Montserrat_400Regular" }}
           >
@@ -252,7 +269,7 @@ export const MobileHits = ({
         </View>
       );
     }
-    
+
     return null;
   }, [loadingMore, hasMore, results.length, totalHits]);
 
@@ -299,11 +316,11 @@ export const MobileHits = ({
           Error loading properties: {error}
         </Text>
         {onRefresh && (
-          <TouchableOpacity 
+          <TouchableOpacity
             onPress={handleRefresh}
             className="mt-4 px-4 py-2 bg-[#153E3B] rounded-lg"
           >
-            <Text 
+            <Text
               className="text-white text-sm"
               style={{ fontFamily: "Montserrat_400Regular" }}
             >
@@ -327,7 +344,7 @@ export const MobileHits = ({
     } catch (error) {
       console.error("Error logging no results:", error);
     }
-    
+
     return (
       <View className="flex items-center justify-center h-64 px-8">
         <Text
@@ -377,7 +394,7 @@ export const MobileHits = ({
         { useNativeDriver: false, listener: handleScroll }
       )}
       scrollEventThrottle={16}
-      onScrollEndDrag={onScrollEndDrag}      // ← This fixes partial visibility
+      onScrollEndDrag={onScrollEndDrag} // ← This fixes partial visibility
       onMomentumScrollEnd={onMomentumScrollEnd}
       onViewableItemsChanged={handleViewableItemsChanged}
       viewabilityConfig={viewabilityConfig.current}

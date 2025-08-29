@@ -79,16 +79,19 @@ import VersionChecker from "./VersionChecker";
 import { doc, onSnapshot } from "firebase/firestore";
 import { db } from "@/app/config/firebase";
 import { ScrollContext, ScrollProvider } from "./ScrollContext";
+import NotificationIcon from "@/assets/icons/notificationIcon.svg";
 
 // Custom header component to apply the desired styling
 const CustomHeader = ({
   title,
   onMenuPress,
   headerBackVisible,
+  unreadCount,
 }: {
   title: string;
   onMenuPress: (backHeader: boolean) => void;
   headerBackVisible: boolean;
+  unreadCount: number;
 }) => {
   const { headerHeight, setHeaderHeight } = useContext(ScrollContext)!;
   const [measured, setMeasured] = useState(false);
@@ -130,16 +133,32 @@ const CustomHeader = ({
           </View>
 
           {!headerBackVisible && (
+            <View className="flex flex-row items-center gap-2">
             <TouchableOpacity
-              style={styles.headerRight}
-              onPress={() => router.push("/(pages)/Credits")}
+              className="relative border p-[6px] rounded-md border-[#9F9C9C]"
+              onPress={() => {
+                router.push("/(tabs)/NotificationPage");
+              }}
             >
-              <Text style={styles.creditsText}>
-                {monthlyCredits + boosterCredits}
-              </Text>
-              <CoinIcon width={18} height={18} />
+              {unreadCount > 0 && (
+                <Text className="absolute text-white top-[2px] right-[3px] bg-[#EB5757] rounded-full px-[4px] py-[1px] text-[10px] z-10">
+                  {unreadCount}
+                </Text>
+              )}
+              <NotificationIcon width={21} height={21} className="z-0" />
             </TouchableOpacity>
-          )}
+
+            <TouchableOpacity
+                style={styles.headerRight}
+                onPress={() => router.push("/(pages)/Credits")}
+              >
+                <Text style={styles.creditsText}>
+                  {monthlyCredits + boosterCredits}
+                </Text>
+                <CoinIcon width={18} height={18} />
+              </TouchableOpacity>
+            </View>
+        )}
         </View>
       </View>
     </Animated.View>
@@ -153,6 +172,7 @@ export default function LayoutApp() {
   const [showOnboarding, setShowOnboarding] = useState(true);
   const colorScheme = useColorScheme();
   const [topMargin, setTopMargin] = useState(10);
+  const [unreadCount, setUnreadCount] = useState(0);
 
   const [fontsLoaded] = useFonts({
     Montserrat_400Regular,
@@ -390,6 +410,10 @@ export default function LayoutApp() {
     }
   }, [isAuthenticated, cpId]);
 
+  useEffect(() => {
+    setUnreadCount(notification.unreadCount);
+  }, [notification]);
+
   useCustomBackBehavior();
   if (!fontsLoaded) {
     return null;
@@ -444,6 +468,7 @@ export default function LayoutApp() {
                     title={title}
                     onMenuPress={onMenuPress}
                     headerBackVisible={headerBackVisible}
+                    unreadCount={unreadCount}
                   />
 
                   {params.showNotificationBanner &&
@@ -632,6 +657,17 @@ export default function LayoutApp() {
           <Stack.Screen
             name="components/Notification/ArchivedNotifications"
             options={{ headerShown: false }}
+            initialParams={{ showFooter: false }}
+          />
+          <Stack.Screen
+            name="(tabs)/MyBusinessPage"
+            options={{
+              title: "My Business",
+            }}
+          />
+          <Stack.Screen
+            name="(pages)/MyBusiness/PropertiesDetailsScreen"
+            options={{ headerShown: false, title: "Property Details" }}
             initialParams={{ showFooter: false }}
           />
         </Stack>
