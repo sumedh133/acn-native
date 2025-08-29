@@ -1,5 +1,11 @@
 import React, { useState, useEffect, useContext } from "react";
-import { View, Text, TouchableOpacity, ViewStyle, Animated } from "react-native";
+import {
+  View,
+  Text,
+  TouchableOpacity,
+  ViewStyle,
+  Animated,
+} from "react-native";
 import {
   Feather,
   FontAwesome,
@@ -71,11 +77,13 @@ const TrialStatusNotification: React.FC<TrialStatusNotificationProps> = ({
   const userType =
     useSelector((state: RootState) => state?.agent?.docData?.userType) ||
     "free";
-  const [dismissHeightAnim] = useState(new Animated.Value(1)); 
-  const [contentHeight, setContentHeight] = useState(0);
+  const [dismissHeightAnim] = useState(new Animated.Value(1));
+  const [fadeAnim] = useState(new Animated.Value(1));
   const { notificationHeight } = useContext(ScrollContext);
-  const combinedHeight = Animated.multiply(notificationHeight, dismissHeightAnim);
-
+  const combinedHeight = Animated.multiply(
+    notificationHeight,
+    dismissHeightAnim
+  );
 
   const calculateDaysLeft = (trialStartedAt: number): number => {
     try {
@@ -153,28 +161,28 @@ const TrialStatusNotification: React.FC<TrialStatusNotificationProps> = ({
   if (dismissed || !showNotification) return null;
 
   const handleDismiss = (): void => {
-  Animated.timing(dismissHeightAnim, {
-    toValue: 0,
-    duration: 300,
-    useNativeDriver: false, // layout property, cannot use native driver
-  }).start(() => {
-    // optional: remove from render if needed
-    setDismissed(true);
-  });
-
-  try {
-    logEvent(analytics, "dismiss_trial_notification", {
-      event_category: "trial",
-      event_label: "dismiss",
-      trial_status: status,
-      days_left: daysLeft,
-      credits_remaining: credits,
-      user_type: userType,
+    Animated.timing(dismissHeightAnim, {
+      toValue: 0,
+      duration: 300,
+      useNativeDriver: false, // layout property, cannot use native driver
+    }).start(() => {
+      // optional: remove from render if needed
+      setDismissed(true);
     });
-  } catch (error) {
-    console.error("Error logging notification dismiss:", error);
-  }
-};
+
+    try {
+      logEvent(analytics, "dismiss_trial_notification", {
+        event_category: "trial",
+        event_label: "dismiss",
+        trial_status: status,
+        days_left: daysLeft,
+        credits_remaining: credits,
+        user_type: userType,
+      });
+    } catch (error) {
+      console.error("Error logging notification dismiss:", error);
+    }
+  };
 
   const handleNotificationClick = () => {
     try {
@@ -314,65 +322,68 @@ const TrialStatusNotification: React.FC<TrialStatusNotificationProps> = ({
 
   return (
     <>
-    <Animated.View
-  style={{
-    height: combinedHeight,
-    overflow: "hidden",
-  }}
-  
->
-      <View
-        className="flex-row justify-between items-center pl-5 pr-10 py-3 border-b"
-        style={[
-          {
-            backgroundColor: config.bgColor,
-            borderColor: config.borderColor,
-          },
-          style,
-        ]}
+      <Animated.View
+        style={{
+          height: combinedHeight,
+          overflow: "hidden",
+        }}
       >
-        <TouchableOpacity
-          className="flex-row items-center"
-          onPress={handleNotificationClick}
-        >
+        <Animated.View style={{ opacity: fadeAnim }}>
           <View
-            className="rounded-full p-2 mr-3"
-            style={{ backgroundColor: config.iconBgColor, alignSelf: 'flex-start' }}
+            className="flex-row justify-between items-center pl-5 pr-10 py-3 border-b"
+            style={[
+              {
+                backgroundColor: config.bgColor,
+                borderColor: config.borderColor,
+              },
+              style,
+            ]}
           >
-            {config.icon}
-          </View>
-          <View className="flex-1">
-            <Text
-              className="text-sm text-[#0A0B0A]"
-              style={{ fontFamily: "Lato_700Bold" }}
+            <TouchableOpacity
+              className="flex-row items-center"
+              onPress={handleNotificationClick}
             >
-              {config.title}
-            </Text>
-            <Text
-              className="text-xs text-[#0A0B0A]"
-              style={{ fontFamily: "Lato_400Regular" }}
-            >
-              {config.message}
-            </Text>
-          </View>
-        </TouchableOpacity>
+              <View
+                className="rounded-full p-2 mr-3"
+                style={{
+                  backgroundColor: config.iconBgColor,
+                }}
+              >
+                {config.icon}
+              </View>
+              <View className="flex-1">
+                <Text
+                  className="text-sm text-[#0A0B0A]"
+                  style={{ fontFamily: "Lato_700Bold" }}
+                >
+                  {config.title}
+                </Text>
+                <Text
+                  className="text-xs text-[#0A0B0A]"
+                  style={{ fontFamily: "Lato_400Regular" }}
+                >
+                  {config.message}
+                </Text>
+              </View>
+            </TouchableOpacity>
 
-        {dismissible && (
-          <TouchableOpacity
-            onPress={handleDismiss}
-            accessibilityLabel="Dismiss notification"
-          >
-            <Feather name="x" size={25} color="#0A0B0A" />
-          </TouchableOpacity>
-        )}
-      </View>
-      {showOnboarding && (
-        <OnboardingFlow
-          visible={showOnboarding}
-          onComplete={handleOnboardingComplete}
-          onClose={handleOnboardingClose}
-        />
-      )}
+            {dismissible && (
+              <TouchableOpacity
+                onPress={handleDismiss}
+                accessibilityLabel="Dismiss notification"
+              >
+                <Feather name="x" size={25} color="#0A0B0A" />
+              </TouchableOpacity>
+            )}
+          </View>
+          {showOnboarding && (
+            <OnboardingFlow
+              visible={showOnboarding}
+              onComplete={handleOnboardingComplete}
+              onClose={handleOnboardingClose}
+            />
+          )}
+        </Animated.View>
       </Animated.View>
     </>
   );

@@ -28,6 +28,11 @@ export const residentialPropertyTypes: {
     icon: React.createElement(villaIcon, { width: 40, height: 40 }),
   },
   {
+    label: "Plot",
+    value: "plot",
+    icon: React.createElement(plotIcon, { width: 40, height: 40 }),
+  },
+  {
     label: "Villament",
     value: "villament",
     icon: React.createElement(villamentIcon, { width: 40, height: 40 }),
@@ -42,11 +47,7 @@ export const residentialPropertyTypes: {
     value: "row house",
     icon: React.createElement(rowHouseIcon, { width: 40, height: 40 }),
   },
-  {
-    label: "Plot",
-    value: "plot",
-    icon: React.createElement(plotIcon, { width: 40, height: 40 }),
-  },
+  
 ];
 
 export const commercialSubTypes: Record<string, FilterChipItem[]> = {
