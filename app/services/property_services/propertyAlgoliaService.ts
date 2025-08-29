@@ -25,6 +25,7 @@ export interface SearchFilters {
   nonVegAllowed?: string[];
   sbua?: string[]; //number range
   carpetArea?: string[]; //number range
+  availableFrom?: string[]; // string like winthin 1 month, within 2 months
 
   // Add more filters as needed
   micromarket?: string[];
@@ -101,6 +102,36 @@ class AlgoliaInfiniteSearchService {
     return `(${filters})`;
   };
 
+  private buildAvailableFromFilter = (
+    values: string[] | undefined,
+    fieldName: string
+  ): string | null => {
+    if (!values || values.length === 0) return null;
+
+    const value = values[0].toLowerCase();
+
+    let cutoffTimestamp: number | null = null;
+
+    if (value.includes("within 1 month")) {
+      cutoffTimestamp = Math.floor(
+        new Date().setMonth(new Date().getMonth() + 1) / 1000
+      );
+    } else if (value.includes("within 2 months")) {
+      cutoffTimestamp = Math.floor(
+        new Date().setMonth(new Date().getMonth() + 2) / 1000
+      );
+    } else if (value.includes("within 3 months")) {
+      cutoffTimestamp = Math.floor(
+        new Date().setMonth(new Date().getMonth() + 3) / 1000
+      );
+    }
+
+    if (!cutoffTimestamp) return null;
+
+    // Only need "less than" condition
+    return `${fieldName} <= ${cutoffTimestamp}`;
+  };
+
   private buildRangeFilter = (
     values: string[] | undefined,
     fieldName: string
@@ -159,7 +190,14 @@ class AlgoliaInfiniteSearchService {
       this.buildRangeFilter(filters.carpetArea, "carpetArea"),
     ].filter((f) => f !== null) as string[];
 
-    return [...filterParts, ...rangeFilters].join(" AND ");
+    const availableFromFilter = this.buildAvailableFromFilter(
+      filters.availableFrom,
+      "availableFrom"
+    );
+
+    return [...filterParts, ...rangeFilters, availableFromFilter]
+      .filter(Boolean)
+      .join(" AND ");
   };
 
   // Get client and index (same as before)

@@ -142,6 +142,7 @@ const FooterNavigation = () => {
       id: "relevance",
       text: "Most Relevant",
       onPress: () => handleSortSelection("relevance"),
+      selected: true, // Default selected
     },
     {
       id: "price_asc",

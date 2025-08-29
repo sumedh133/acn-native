@@ -43,7 +43,7 @@ export const ScrollProvider: React.FC<{ children: React.ReactNode }> = ({
   const scrollDirection = useRef<"up" | "down">("down");
 
   const [showSortPopup, setShowSortPopup] = React.useState(false);
-  const [selectedSort, setSelectedSort] = React.useState<string | null>(null);
+  const [selectedSort, setSelectedSort] = React.useState<string | null>("relevance");
 
   const openSortPopup = () => setShowSortPopup(true);
   const closeSortPopup = () => setShowSortPopup(false);

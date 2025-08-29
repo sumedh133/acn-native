@@ -87,10 +87,10 @@ const ModularPopup = ({
         style={{
           transform: [{ translateY: slideAnimation }, { translateY: dragY }],
         }}
-        {...panResponder.panHandlers} // 👈 attach here
+         // 👈 attach here
       >
         {/* Drag Handle */}
-        <View className="pt-3 w-full mb-4 flex items-center justify-center">
+        <View className="pt-3 w-full mb-4 flex items-center justify-center" {...panResponder.panHandlers}>
           <View className="w-32 h-1 rounded bg-black/60" />
         </View>
 
