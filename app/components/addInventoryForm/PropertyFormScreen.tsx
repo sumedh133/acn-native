@@ -12,6 +12,7 @@ import { FormRenderer } from "./FormRenderer";
 import { inventoryFormConfig } from "@/app/config/AddInventoryFormConfig/inventoryFormConfig";
 import { Places, Property } from "@/app/types";
 import ArrowLeftIcon from "@/assets/icons/svg/Common/ArrowLeftIcon";
+import { getStepIcon } from "@/utils/iconUtils";
 import { LinearGradient } from "expo-linear-gradient";
 import { FormPreview } from "../Listing/listingPropertyDetails";
 import { getMicromarketFromCoordinates } from "@/app/helpers/getMicromarketFromCoordinates";
@@ -359,67 +360,94 @@ export const PropertyFormScreen: React.FC<PropertyFormScreenProps> = ({
             showsHorizontalScrollIndicator={false}
             className="bg-white px-3 gap-4"
           >
-            {visibleSteps.map((step, index) => (
-              <TouchableOpacity
-                key={step.id}
-                onPress={() => handleStepChange(index)}
-                style={{ borderRadius: 10 }}
-              >
-                {currentStepIndex === index ? (
-                  <LinearGradient
-                    colors={["#10302D", "#32968D"]}
-                    start={{ x: 0, y: 0 }}
-                    end={{ x: 1, y: 0 }}
-                    style={{
-                      borderRadius: 10,
-                      padding: 2,
-                    }}
-                  >
-                    <View
+            {visibleSteps.map((step, index) => {
+              const isActive = currentStepIndex === index;
+              const isCompleted = index < currentStepIndex;
+
+              return (
+                <TouchableOpacity
+                  key={step.id}
+                  onPress={() => handleStepChange(index)}
+                  style={{
+                    borderRadius: 10,
+                    height: 48, // ✅ Fixed height
+                    justifyContent: "center",
+                  }}
+                >
+                  {isActive ? (
+                    <LinearGradient
+                      colors={["#10302D", "#32968D"]}
+                      start={{ x: 0, y: 0 }}
+                      end={{ x: 1, y: 0 }}
                       style={{
-                        borderRadius: 8,
-                        backgroundColor: "#FFFFFF",
-                        paddingVertical: 12,
-                        paddingHorizontal: 16,
+                        borderRadius: 10,
+                        padding: 2,
+                        height: "100%", // ✅ Full height
                       }}
                     >
-                      <Text className="font-['Montserrat_500Medium'] text-sm text-[#153E3B] font-semibold">
-                        {step.title}
-                      </Text>
+                      <View
+                        style={{
+                          borderRadius: 8,
+                          backgroundColor: "#FFFFFF",
+                          flexDirection: "row",
+                          alignItems: "center",
+                          justifyContent: "center",
+                          paddingHorizontal: 12,
+                          height: "100%", // ✅ Match parent height
+                          gap: 8,
+                        }}
+                      >
+                        {getStepIcon(currentStepIndex + 1, "gradient")}
+                        <Text
+                          style={{
+                            fontFamily: "Montserrat_500Medium",
+                            fontSize: 14,
+                            color: "#153E3B",
+                            fontWeight: "700",
+                          }}
+                        >
+                          {step.title}
+                        </Text>
+                      </View>
+                    </LinearGradient>
+                  ) : isCompleted ? (
+                    <LinearGradient
+                      colors={["#10302D", "#32968D"]}
+                      start={{ x: 0, y: 0 }}
+                      end={{ x: 1, y: 0 }}
+                      style={{
+                        borderRadius: 10,
+                        height: "100%", // ✅ Match height
+                        paddingHorizontal: 12,
+                        justifyContent: "center",
+                        alignItems: "center",
+                      }}
+                    >
+                      {getStepIcon(index + 1, "default")}
+                    </LinearGradient>
+                  ) : (
+                    <View
+                      style={{
+                        borderRadius: 10,
+                        borderColor: "#B5B3B3",
+                        borderWidth: 1,
+                        height: "100%",
+                        paddingHorizontal: 16,
+                        flexDirection: "row",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        gap: 8,
+                      }}
+                    >
+                      {getStepIcon(index + 1, "gray")}
+
                     </View>
-                  </LinearGradient>
-                ) : index < currentStepIndex ? (
-                  <LinearGradient
-                    colors={["#10302D", "#32968D"]}
-                    start={{ x: 0, y: 0 }}
-                    end={{ x: 1, y: 0 }}
-                    style={{
-                      borderRadius: 10,
-                      paddingVertical: 12,
-                      paddingHorizontal: 16,
-                    }}
-                  >
-                    <Text className="font-['Montserrat_500Medium'] text-sm text-white font-semibold">
-                      {step.title}
-                    </Text>
-                  </LinearGradient>
-                ) : (
-                  <View
-                    style={{
-                      borderRadius: 10,
-                      backgroundColor: "#F5F6F7",
-                      paddingVertical: 12,
-                      paddingHorizontal: 16,
-                    }}
-                  >
-                    <Text className="font-['Montserrat_500Medium'] text-sm text-[#153E3B] font-semibold">
-                      {step.title}
-                    </Text>
-                  </View>
-                )}
-              </TouchableOpacity>
-            ))}
+                  )}
+                </TouchableOpacity>
+              );
+            })}
           </ScrollView>
+
         </View>
 
         {/* Form Renderer */}
