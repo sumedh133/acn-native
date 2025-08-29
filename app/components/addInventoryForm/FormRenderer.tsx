@@ -55,9 +55,7 @@ export const FormRenderer: React.FC<FormRendererProps> = ({
   visibleSteps,
   onFormUpdate,
   getFieldValue,
-  getVisibleFields
-
-
+  getVisibleFields,
   selectedPlace,
   setSelectedPlace,
 }) => {
