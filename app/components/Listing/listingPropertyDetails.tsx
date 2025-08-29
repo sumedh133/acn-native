@@ -6,7 +6,8 @@ import { Property } from "@/app/types";
 import { PropertyImages } from "./property/PropertyImages";
 import { BasicPropertyInfo } from "./property/BasicPropertyInfo";
 import { DetailsSection } from "./property/DetailsSection";
-import {LocationSection} from "./property/LocationSection"
+import { LocationSection } from "./property/LocationSection";
+import { ExtraDetailsSection } from "./property/ExtraDetailsSection";
 
 type UIProperty = Omit<Property, "handOverDate"> & {
   handOverDate?: string;
@@ -69,11 +70,16 @@ export const FormPreview: React.FC<FormPreviewProps> = ({ config, data }) => {
 
       {processedSteps.map((step) => {
         if (step.title === "Basic Details") return;
-        const displayType =
+        let displayType: "list" | "tags" | "mixed" = "list";
+
+        if (step.title === "More Details") {
+          displayType = "mixed";
+        } else if (
           step.title.toLowerCase().includes("more") ||
           step.title.toLowerCase().includes("extra")
-            ? "tags"
-            : "list";
+        ) {
+          displayType = "list";
+        }
 
         if (step.title === "Pricing Details") {
           return (
@@ -83,10 +89,11 @@ export const FormPreview: React.FC<FormPreviewProps> = ({ config, data }) => {
                 title={step.title}
                 stepValues={step.stepValues}
                 data={data}
-                displayType={displayType as "list" | "tags"}
+                displayType={displayType}
               />
-              <View className="bg-white px-6 py-2 rounded-lg"><LocationSection data={data} /></View>
-              
+              <View className="bg-white px-6 py-2 rounded-lg">
+                <LocationSection data={data} />
+              </View>
             </>
           );
         }
@@ -96,10 +103,14 @@ export const FormPreview: React.FC<FormPreviewProps> = ({ config, data }) => {
             title={step.title}
             stepValues={step.stepValues}
             data={data}
-            displayType={displayType as "list" | "tags"}
+            displayType={displayType}
           />
         );
       })}
+
+      {data.extraDetails && (
+        <ExtraDetailsSection extraDetails={data.extraDetails} />
+      )}
     </ScrollView>
   );
 };
