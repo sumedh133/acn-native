@@ -28,6 +28,7 @@ export interface SearchFilters {
   availableFrom?: string[]; // string like winthin 1 month, within 2 months
   totalAskPrice?: string[];
   rent?: string[];
+  cpId?: string[];
   stage?: string[];
 
   // Add more filters as needed
@@ -181,6 +182,7 @@ class AlgoliaInfiniteSearchService {
       { values: filters.posession, fieldName: "posession" },
       { values: filters.availability, fieldName: "availability" },
       { values: filters.zone, fieldName: "zone" },
+      { values: filters.cpId, fieldName: "cpId" },
     ];
 
     const filterParts = filterConfigs

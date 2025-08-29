@@ -9,6 +9,7 @@ import Filters from "../components/MyBusinessPage/Filters";
 import UnderReview from "../components/MyBusinessPage/UnderReview";
 import Listings from "../components/MyBusinessPage/Listings";
 import { useAlgoliaSearch } from "@/hooks/propertyHooks/useAlgoliaSearchProperties";
+import { useSelector } from "react-redux";
 
 // Icons Import
 
@@ -21,6 +22,7 @@ const MyBusinessPage = () => {
   const [activeTab, setActiveTab] = useState<"property" | "requirement">(
     "property"
   );
+  const cpId = useSelector((state: any) => state?.agent?.docData?.cpId);
 
   // Services Call
 
@@ -41,7 +43,9 @@ const MyBusinessPage = () => {
     updateSort,
     refresh,
     loadMore,
-  } = useAlgoliaSearch({});
+  // } = useAlgoliaSearch({ cpId: [`${cpId}`] });
+  } = useAlgoliaSearch({ cpId: ["CPA452"] });
+
 
   return (
     <View className="bg-white w-full h-full">
@@ -49,7 +53,7 @@ const MyBusinessPage = () => {
       <Search />
       <Filters />
       <UnderReview />
-      <Listings data={searchState} />
+      <Listings data={searchState} loadMore={loadMore} refresh={refresh} />
     </View>
   );
 };

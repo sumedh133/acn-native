@@ -561,7 +561,7 @@ export default React.memo(PropertyCard);
 const styles = StyleSheet.create({
   // Property Card Container
   propertyCard: {
-    zIndex: -999,
+    zIndex: 999,
   },
 
   propertyCardTouchable: {
