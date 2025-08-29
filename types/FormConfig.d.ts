@@ -14,7 +14,9 @@ export interface FormField {
     | "dateRange"
     | "multiCheckbox"
     | "showStepper"
-    | "placesApi";
+    | "placesApi"
+    | "photos/videos"
+    | "documents";
   required?: boolean;
   placeholder?: string;
   options?: { label: string; value: any }[];

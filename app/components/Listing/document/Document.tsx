@@ -16,7 +16,7 @@ import FilePreview from "./FilePreview";
 
 interface DocumentProps {
   docsToUpload: DocsToUpload;
-  setDocsToUpload: React.Dispatch<React.SetStateAction<DocsToUpload>>;
+  setDocsToUpload: (docsToUpload: DocsToUpload) => void;
 }
 
 const Document: React.FC<DocumentProps> = ({

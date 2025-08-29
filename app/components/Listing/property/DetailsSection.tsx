@@ -2,6 +2,13 @@ import React, { useState } from "react";
 import { View, Text, TouchableOpacity } from "react-native";
 import { Property } from "@/app/types";
 import { getIcon } from "../../../../utils/iconUtils";
+import {
+  formatUnixDate,
+  getDaysDifference,
+  getDaysFrom,
+  formatPrice,
+} from "../../../helpers/format/format";
+import { ChevronIcon } from "../../../../assets/icons/svg/PropertyListing/ViewToggle";
 
 type UIProperty = Omit<Property, "handOverDate"> & {
   handOverDate?: string;
@@ -28,9 +35,9 @@ export const DetailsSection: React.FC<DetailsSectionProps> = ({
     path.split(".").reduce((acc, key) => acc?.[key], obj);
 
   const formatValue = (value: any): string => {
-    if (!value) return 'N/A';
+    if (!value) return "N/A";
     if (Array.isArray(value)) {
-      return value.length > 0 ? value.join(", ") : 'N/A';
+      return value.length > 0 ? value.join(", ") : "N/A";
     }
     return String(value);
   };
@@ -53,20 +60,38 @@ export const DetailsSection: React.FC<DetailsSectionProps> = ({
 
     return (
       <View className="bg-white px-4 py-4">
-        <Text className="text-lg font-semibold text-gray-900 mb-3">{title}</Text>
+        <Text className="text-lg font-semibold text-gray-900 mb-3">
+          {title}
+        </Text>
         <View className="flex-row flex-wrap -m-1">
           {visibleTags.map((tag, i) => (
-            <View key={i} className="bg-emerald-50 border border-emerald-100 px-3 py-2 rounded-lg m-1">
-              <Text className="text-emerald-700 text-sm font-medium">{tag}</Text>
+            <View
+              key={i}
+              className="bg-emerald-50 border border-emerald-100 px-3 py-2 rounded-lg m-1"
+            >
+              <Text className="text-emerald-700 text-sm font-medium">
+                {tag}
+              </Text>
             </View>
           ))}
         </View>
         {tags.length > 8 && (
-          <TouchableOpacity onPress={() => setShowAll(!showAll)} className="mt-3 py-2">
-            <Text className="text-emerald-600 font-medium">
-              {showAll ? "Show Less" : `+${tags.length - 8} More`}
-            </Text>
-          </TouchableOpacity>
+          <TouchableOpacity onPress={() => setShowAll(!showAll)} className="mt-1">
+          <View className="flex-row items-center">
+            {/* Text + custom underline */}
+            <View className="mr-1 self-start">
+              <Text className="text-[#10302D] text-[12px] font-bold font-[Lato] leading-[18px] text-center">
+                {showAll ? "View Less" : "View More"}
+              </Text>
+              {/* The underline with adjustable gap */}
+              <View className="h-[1px] bg-[#10302D] mt-[2px]" />
+              {/* tweak mt-[2px] to mt-[3px]/mt-[4px] for more gap */}
+            </View>
+
+            {/* Keep chevron direction consistent */}
+            <ChevronIcon direction={showAll ? "up" : "down"} />
+          </View>
+        </TouchableOpacity>
         )}
       </View>
     );
@@ -79,35 +104,43 @@ export const DetailsSection: React.FC<DetailsSectionProps> = ({
       return {
         ...field,
         value: formatValue(value),
-        hasValue: value && (Array.isArray(value) ? value.length > 0 : String(value).trim() !== '')
+        hasValue:
+          value &&
+          (Array.isArray(value)
+            ? value.length > 0
+            : String(value).trim() !== ""),
       };
     })
-    .filter(field => field.hasValue);
+    .filter((field) => field.hasValue);
 
   if (fieldsWithValues.length === 0) return null;
 
-  const visibleFields = showAll ? fieldsWithValues : fieldsWithValues.slice(0, defaultVisible);
+  const visibleFields = showAll
+    ? fieldsWithValues
+    : fieldsWithValues.slice(0, defaultVisible);
 
   return (
     <View className="bg-white px-5 py-4">
-      <Text className="text-[14px] leading-[21px] font-bold text-black font-[Montserrat] mb-4">{title}</Text>
-      
+      <Text className="text-[14px] leading-[21px] font-bold text-black font-[Montserrat] mb-4">
+        {title}
+      </Text>
+
       {/* Grid Layout - 2 columns */}
-      <View className="flex-row flex-wrap -mx-1">
+      <View className="flex-row flex-wrap -mx-1.5">
         {visibleFields.map((field, index) => (
           <View key={field.id} className="w-1/2 px-1 mb-4">
             <View className="flex-row items-start">
               {/* Icon Container */}
-              <View className="inline-flex p-[6px] items-center justify-center rounded-[6px] bg-[#E0F7F4] mr-3">
-                <Text className="text-base">{getIcon(field.id)}</Text>
+              <View className="inline-flex p-[4px] items-center justify-center rounded-[6px]  mt-1 mr-2">
+               {getIcon(field.id)}
               </View>
-              
+
               {/* Content */}
               <View className="flex-1">
-                <Text className="text-[14px] leading-[21px] font-medium text-[#5A5555] font-[Lato] mb-1">
+                <Text className="text-[14px] leading-[21px] font-medium text-[#5A5555] font-[Lato]">
                   {field.label}
                 </Text>
-                <Text className="text-[16px] leading-[24px] font-bold text-black font-[Lato]">
+                <Text className="text-[15px] leading-[24px] font-bold text-black font-[Lato]">
                   {field.value}
                 </Text>
               </View>
@@ -118,10 +151,21 @@ export const DetailsSection: React.FC<DetailsSectionProps> = ({
 
       {/* Show More/Less Button */}
       {fieldsWithValues.length > defaultVisible && (
-        <TouchableOpacity onPress={() => setShowAll(!showAll)} className="mt-2">
-          <Text className="text-teal-600 font-medium">
-            {showAll ? "View Less ↑" : "View More ↓"}
-          </Text>
+        <TouchableOpacity onPress={() => setShowAll(!showAll)} className="mt-1">
+          <View className="flex-row items-center">
+            {/* Text + custom underline */}
+            <View className="mr-1 self-start">
+              <Text className="text-[#10302D] text-[12px] font-bold font-[Lato] leading-[18px] text-center">
+                {showAll ? "View Less" : "View More"}
+              </Text>
+              {/* The underline with adjustable gap */}
+              <View className="h-[1px] bg-[#10302D] mt-[2px]" />
+              {/* tweak mt-[2px] to mt-[3px]/mt-[4px] for more gap */}
+            </View>
+
+            {/* Keep chevron direction consistent */}
+            <ChevronIcon direction={showAll ? "up" : "down"} />
+          </View>
         </TouchableOpacity>
       )}
     </View>
