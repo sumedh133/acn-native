@@ -8,16 +8,18 @@ import {
 } from "react-native";
 import DatePicker from "react-native-date-picker";
 import { Ionicons } from "@expo/vector-icons";
+import { DimensionValue } from "react-native";
 
 interface MonthYearPickerProps {
-  value: string;
+  value: string | undefined;
   setValue: (value: string) => void;
-  title: string;
+  title?: string;
   placeholder?: string;
   required?: boolean;
   minYear?: number;
   maxYear?: number;
   disabled: boolean;
+  width?: DimensionValue
 }
 
 const MonthYearPicker = ({
@@ -29,31 +31,29 @@ const MonthYearPicker = ({
   minYear = 1900,
   maxYear = 2100,
   disabled = false,
+  width
 }: MonthYearPickerProps) => {
   const [open, setOpen] = useState(false);
   const [isFocused, setIsFocused] = useState(false);
   const [date, setDate] = useState<Date>(new Date());
 
   // Parse the current value to initialize date when opening picker
+  const formattedValue = value || "";
+
   useEffect(() => {
-    if (value && value.includes("/")) {
-      const parts = value.split("/");
-      if (parts.length === 2) {
-        const month = parseInt(parts[0], 10) - 1; // JS months are 0-indexed
-        const year = parseInt(parts[1], 10);
-        if (!isNaN(month) && !isNaN(year)) {
-          const newDate = new Date();
-          newDate.setMonth(month);
-          newDate.setFullYear(year);
-          setDate(newDate);
-        }
+    if (value) {
+      const [mm, yyyy] = value.split("/");
+      if (mm && yyyy) {
+        setDate(new Date(Number(yyyy), Number(mm) - 1, 1));
       }
     }
   }, [value]);
 
   const handleFocus = () => {
-    setIsFocused(true);
-    setOpen(true);
+    if (!disabled) {
+      setIsFocused(true);
+      setOpen(true);
+    }
   };
 
   const handleConfirm = (selectedDate: Date) => {
@@ -61,8 +61,8 @@ const MonthYearPicker = ({
     setIsFocused(false);
     setDate(selectedDate);
 
-    // Format month to ensure it's two digits (adding 1 because JS months are 0-indexed)
-    const month = (selectedDate.getMonth() + 1).toString().padStart(2, "0");
+    // store timestamp (seconds)
+    const month = String(selectedDate.getMonth() + 1).padStart(2, "0");
     const year = selectedDate.getFullYear();
     setValue(`${month}/${year}`);
   };
@@ -72,52 +72,55 @@ const MonthYearPicker = ({
     setIsFocused(false);
   };
 
-  return (
-    <View style={styles.section}>
-    <View style={styles.headingContainer}>
-      <Text style={styles.sectionHeading}>{title}</Text>
-      {required && <Text style={styles.compulsoryStar}>*</Text>}
+  return (<>
+    <View style={[styles.section, { width: width }]}>
+      {title &&
+        (<View style={[styles.headingContainer]}>
+          <Text style={styles.sectionHeading}>{title}</Text>
+          {required && <Text style={styles.compulsoryStar}>*</Text>}
+        </View>)}
+
+      <TouchableOpacity
+        style={[
+          styles.inputContainer,
+          isFocused && styles.focusedInputContainer,
+          disabled && styles.disabledInputContainer,
+        ]}
+        onPress={handleFocus}
+        activeOpacity={disabled ? 1 : 0.7}
+        disabled={disabled}
+      >
+        <TextInput
+          style={[styles.inputField, disabled && styles.disabledText]}
+          value={value}
+          placeholder={placeholder}
+          placeholderTextColor="#A0A0A0"
+          editable={false}
+          pointerEvents="none"
+        />
+        <Ionicons
+          name="calendar-outline"
+          size={18}
+          color={disabled ? "#BBBBBB" : "#757575"} // Lighter color when disabled
+        />
+      </TouchableOpacity>
+
+      <DatePicker
+        modal
+        open={open}
+        date={date}
+        mode="date"
+        title="Select Month and Year"
+        minimumDate={new Date(minYear, 0, 1)}
+        maximumDate={new Date(maxYear, 11, 31)}
+        onConfirm={handleConfirm}
+        onCancel={handleCancel}
+        locale="en"
+        theme="light"
+      />
     </View>
 
-    <TouchableOpacity
-      style={[
-        styles.inputContainer,
-        isFocused && styles.focusedInputContainer,
-        disabled && styles.disabledInputContainer, // Apply disabled style
-      ]}
-      onPress={handleFocus}
-      activeOpacity={disabled ? 1 : 0.7} // Adjust opacity based on disabled state
-      disabled={disabled} // Disable the touchable when disabled is true
-    >
-      <TextInput
-        style={[styles.inputField, disabled && styles.disabledText]}
-        value={value}
-        placeholder={placeholder}
-        placeholderTextColor="#A0A0A0"
-        editable={false}
-        pointerEvents="none"
-      />
-      <Ionicons 
-        name="calendar-outline" 
-        size={18} 
-        color={disabled ? "#BBBBBB" : "#757575"} // Lighter color when disabled
-      />
-    </TouchableOpacity>
-
-    <DatePicker
-      modal
-      open={open}
-      date={date}
-      mode="date"
-      title="Select Month and Year"
-      minimumDate={new Date(minYear, 0, 1)}
-      maximumDate={new Date(maxYear, 11, 31)}
-      onConfirm={handleConfirm}
-      onCancel={handleCancel}
-      locale="en"
-      theme="light"
-    />
-  </View>
+  </>
   );
 };
 
@@ -131,6 +134,7 @@ const styles = StyleSheet.create({
     display: "flex",
     flexDirection: "row",
     gap: 6,
+    width: "100%",
   },
   sectionHeading: {
     fontFamily: "Montserrat_600SemiBold",
@@ -166,11 +170,11 @@ const styles = StyleSheet.create({
     padding: 0,
   },
   disabledText: {
-    color: '#999999',
+    color: '#999999'
   },
   disabledInputContainer: {
-    backgroundColor: '#F5F5F5',
-    borderColor: '#DDDDDD',
+    backgroundColor: "#F5F5F5",
+    borderColor: "#DDDDDD",
   },
 });
 

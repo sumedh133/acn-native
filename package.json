@@ -69,7 +69,7 @@
     "react": "18.3.1",
     "react-dom": "18.3.1",
     "react-instantsearch": "^7.15.5",
-    "react-native": "0.76.9",
+    "react-native": "^0.76.9",
     "react-native-confetti-cannon": "^1.5.2",
     "react-native-date-picker": "^5.0.12",
     "react-native-device-info": "^14.0.4",
@@ -91,6 +91,7 @@
     "react-native-svg": "15.8.0",
     "react-native-toast-message": "^2.3.0",
     "react-native-vector-icons": "^10.2.0",
+    "react-native-video": "^6.16.1",
     "react-native-web": "~0.19.13",
     "react-native-webp-format": "^1.2.1",
     "react-native-webview": "13.12.5",
@@ -100,7 +101,8 @@
     "redux-persist": "^6.0.0",
     "rn-range-slider": "^2.2.2",
     "sp-react-native-in-app-updates": "^1.5.0",
-    "tailwindcss": "^3.3.2"
+    "tailwindcss": "^3.3.2",
+    "tus-js-client": "^4.3.1"
   },
   "devDependencies": {
     "@babel/core": "^7.25.2",
