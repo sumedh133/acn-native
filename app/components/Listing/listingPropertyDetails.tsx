@@ -15,10 +15,11 @@ type UIProperty = Omit<Property, "handOverDate"> & {
 
 interface FormPreviewProps {
   config: FormConfig;
-  data: Partial<UIProperty>; // ✅ flexible here
+  data: Partial<UIProperty>;
+  previewType: string
 }
 
-export const FormPreview: React.FC<FormPreviewProps> = ({ config, data }) => {
+export const FormPreview: React.FC<FormPreviewProps> = ({ config, data, previewType }) => {
   const getFieldValue = (obj: any, path: string) =>
     path.split(".").reduce((acc, key) => acc?.[key], obj);
 
@@ -64,9 +65,11 @@ export const FormPreview: React.FC<FormPreviewProps> = ({ config, data }) => {
     .filter((s) => s.stepValues.length > 0);
 
   return (
-    <ScrollView className="flex-1 bg-gray-50">
+    <ScrollView className="flex-1 bg-white">
+      
+      <View></View>
       <PropertyImages images={[]} />
-      <BasicPropertyInfo data={data} />
+      <BasicPropertyInfo data={data} previewType={previewType} />
 
       {processedSteps.map((step) => {
         if (step.title === "Basic Details") return;
@@ -91,7 +94,7 @@ export const FormPreview: React.FC<FormPreviewProps> = ({ config, data }) => {
                 data={data}
                 displayType={displayType}
               />
-              <View className="bg-white px-6 py-2 rounded-lg">
+              <View className="bg-white px-6 py-4 rounded-lg">
                 <LocationSection data={data} />
               </View>
             </>

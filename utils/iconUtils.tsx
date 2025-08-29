@@ -30,6 +30,7 @@ import { plotLengthIcon } from "../assets/icons/svg/PropertyListing/PropertyDeta
 import { preferredTenantsIcon } from "../assets/icons/svg/PropertyListing/PropertyDetails/preferredTenantsIcon";
 import { sbuaIcon } from "../assets/icons/svg/PropertyListing/PropertyDetails/sbuaIcon";
 import { udsIcon } from "../assets/icons/svg/PropertyListing/PropertyDetails/udsIcon";
+import { DefaultPropertyIcon } from "@/assets/icons/svg/PropertyListing/PropertyDetails/defaultPropertyIcon";
 
 //Steps of form
 
@@ -92,6 +93,7 @@ const iconMap: Record<string, IconComponent> = {
   sbua: sbuaIcon,
   uds: udsIcon,
 
+
 };
 
 export const getIcon = (key: string): JSX.Element => {
@@ -104,7 +106,7 @@ export const getIcon = (key: string): JSX.Element => {
     }
   }
 
-  return <></>;
+  return  <DefaultPropertyIcon />;;
 };
 
 type StepType = "default" | "gradient" | "gray";

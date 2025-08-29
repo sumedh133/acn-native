@@ -295,7 +295,7 @@ export const PropertyFormScreen: React.FC<PropertyFormScreenProps> = ({
 
         {/* Preview */}
         <View className="flex-1">
-          <FormPreview config={inventoryFormConfig} data={formData} />
+          <FormPreview config={inventoryFormConfig} data={formData} previewType={isEdit ? "edit" : "add"} />
         </View>
 
         {/* Back & Submit buttons */}
@@ -349,9 +349,8 @@ export const PropertyFormScreen: React.FC<PropertyFormScreenProps> = ({
             onPress={handleClear}
           >
             <Text
-              className={`font-montserrat text-base font-bold underline ${
-                isFormEmpty ? "text-[#9E9E9E]" : "text-[#D92D20]"
-              }`}
+              className={`font-montserrat text-base font-bold underline ${isFormEmpty ? "text-[#9E9E9E]" : "text-[#D92D20]"
+                }`}
             >
               Clear
             </Text>

@@ -1,7 +1,7 @@
 import Svg, { Path } from "react-native-svg";
 
 export const HandoverIcon = () => (
-  <Svg width="18" height="18" viewBox="0 0 18 18" fill="none">
+  <Svg width="18" height="18" viewBox="0 0 z" fill="none">
     <Path
       d="M9.08935 2.33887C12.8154 2.33887 15.8394 5.36287 15.8394 9.08887C15.8394 12.8149 12.8154 15.8389 9.08936 15.8389C5.36336 15.8389 2.33936 12.8149 2.33936 9.08887C2.33936 5.36287 5.36335 2.33887 9.08935 2.33887Z"
       stroke="#10302D"

@@ -454,7 +454,7 @@ export const FormRenderer: React.FC<FormRendererProps> = ({
                 options={field.options || []}
                 placeholder={field.placeholder || "Select a field"}
                 onChange={(selectedField: string, inputValue: string) => {
-                  setFieldValue(field.id, { selectedField, inputValue });
+                  setFieldValue(field.id,  inputValue );
                 }}
               />
               {errorMessage}

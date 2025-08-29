@@ -77,6 +77,7 @@ export const DetailsSection: React.FC<DetailsSectionProps> = ({
 
     if (tags.length === 0) return null;
     const visibleTags = showAll ? tags : tags.slice(0, 8);
+    console.log("Hare Krishna is the key",)
 
     return (
       <View className="bg-white px-4 py-4">
@@ -185,7 +186,7 @@ export const DetailsSection: React.FC<DetailsSectionProps> = ({
 
     return (
       <View className="bg-white px-5 py-4">
-        <Text className="text-[14px] leading-[21px] font-bold text-black font-[Montserrat] mb-4">
+        <Text className="text-[14px] leading-[150%] font-bold text-black font-montserrat mb-4">
           {title}
         </Text>
 
@@ -219,9 +220,9 @@ export const DetailsSection: React.FC<DetailsSectionProps> = ({
               {visibleBooleanFields.map((field, i) => (
                 <View
                   key={i}
-                  className="bg-white border border-[#E0E0E0] px-3 py-2 rounded-full m-1"
+                  className="bg-white border border-[#2B2928] px-3 py-2 rounded-[28px] m-1"
                 >
-                  <Text className="text-[#333333] text-sm font-medium">
+                  <Text className="text-[#333333] text-sm font-medium leading-[150%]">
                     {field.label}
                   </Text>
                 </View>
@@ -233,16 +234,16 @@ export const DetailsSection: React.FC<DetailsSectionProps> = ({
         {/* 3. Array Fields with Headings */}
         {visibleArrayFields.map((field, index) => (
           <View key={field.id} className="mb-2">
-            <Text className="text-[14px] leading-[21px] font-bold text-black font-[Montserrat] mb-3">
+            <Text className="text-[14px] leading-[21px] font-bold text-[#5A5555] font-[Montserrat] mb-3">
               {field.label}
             </Text>
             <View className="flex-row flex-wrap -m-1">
               {field.items.map((item: string, i: number) => (
                 <View
                   key={i}
-                  className="bg-[#E6F7F4] px-3 py-2 rounded-full m-1"
+                  className="bg-[#E6F7F4] px-3 py-2 rounded-[28px] m-1"
                 >
-                  <Text className="text-[#2D5A52] text-sm font-medium">
+                  <Text className="text-black text-sm font-medium leading-[150%]">
                     {item}
                   </Text>
                 </View>
@@ -295,7 +296,7 @@ export const DetailsSection: React.FC<DetailsSectionProps> = ({
     : fieldsWithValues.slice(0, defaultVisible);
 
   return (
-    <View className="bg-white px-5 py-4">
+    <View className="bg-white px-5 py-4 pb-0">
       <Text className="text-[14px] leading-[21px] font-bold text-black font-[Montserrat] mb-4">
         {title}
       </Text>
@@ -311,7 +312,7 @@ export const DetailsSection: React.FC<DetailsSectionProps> = ({
                 <Text className="text-[14px] leading-[21px] font-medium text-[#5A5555] font-[Lato]">
                   {field.label}
                 </Text>
-                <Text className="text-[15px] leading-[24px] font-bold text-black font-[Lato]">
+                <Text className="text-[16px] leading-[24px] font-bold text-black font-[Lato]">
                   {field.value}
                 </Text>
               </View>
