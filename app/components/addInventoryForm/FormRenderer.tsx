@@ -8,7 +8,7 @@ import {
   DimensionValue,
 } from "react-native";
 import { FormConfig, FormStep } from "@/types/FormConfig";
-import { Property } from "@/app/types";
+import { Places, Property } from "@/app/types";
 import CustomSelectDropdown from "../CustomSelectDropdown";
 import MonthYearPicker from "../Listing/MonthYearPicker";
 import Checkbox from "../Listing/CheckBox";
@@ -17,6 +17,7 @@ import DropdownWithInput from "../DropdownInput";
 import TextInputField from "../Listing/TextInput";
 import MultiCheckbox from "../MultiCheckbox";
 import DropdownSelect from "../Listing/Dropdown";
+import PlacesSearch from "../Listing/PlacesSearch";
 
 type UIProperty = Omit<Property, "handOverDate"> & {
   handOverDate?: string;
@@ -38,6 +39,8 @@ interface FormRendererProps {
   onErrorsUpdate: (errors: Record<string, string>) => void;
   onNext: () => void;
   onBack: () => void;
+  selectedPlace?: Places;
+  setSelectedPlace: (place?: Places) => void;
 }
 
 // Total number of columns in our grid system
@@ -53,6 +56,8 @@ export const FormRenderer: React.FC<FormRendererProps> = ({
   onErrorsUpdate,
   onNext,
   onBack,
+  selectedPlace,
+  setSelectedPlace,
 }) => {
   /**
    * Get nested field value by path (dot notation).
@@ -316,6 +321,16 @@ export const FormRenderer: React.FC<FormRendererProps> = ({
 
     const fieldContent = () => {
       switch (field.type) {
+        case "placesApi":
+          return (
+            <View>
+              <PlacesSearch
+                selectedPlace={selectedPlace}
+                setSelectedPlace={setSelectedPlace}
+                communityType={formData.communityType}
+              />
+            </View>
+          );
         case "text":
         case "number":
           return (
@@ -362,7 +377,6 @@ export const FormRenderer: React.FC<FormRendererProps> = ({
 
                 {errorMessage}
               </View>
-
             </>
           );
 
@@ -474,7 +488,9 @@ export const FormRenderer: React.FC<FormRendererProps> = ({
               <MultiCheckbox
                 options={field.options || []}
                 selectedOptions={value || []}
-                setSelectedOptions={(selected: string[]) => setFieldValue(field.id, selected)}
+                setSelectedOptions={(selected: string[]) =>
+                  setFieldValue(field.id, selected)
+                }
               />
               {errorMessage}
             </>
@@ -491,7 +507,6 @@ export const FormRenderer: React.FC<FormRendererProps> = ({
                 options={field.options || []}
                 placeholder={field.placeholder || "Select an option"}
                 required={field.required}
-
               />
               {errorMessage}
             </>
@@ -512,14 +527,12 @@ export const FormRenderer: React.FC<FormRendererProps> = ({
             </>
           );
 
-
-
         case "date":
           return (
             <>
               <MonthYearPicker
                 value={value as string | undefined} // pass timestamp
-                setValue={(val: string) => setFieldValue(field.id, val)}  // ✅ now number
+                setValue={(val: string) => setFieldValue(field.id, val)} // ✅ now number
                 title={field.label}
                 placeholder={field.placeholder || "MM/YYYY"}
                 required={field.required}
@@ -531,8 +544,14 @@ export const FormRenderer: React.FC<FormRendererProps> = ({
             </>
           );
         case "dateRange":
-          const startDate = getFieldValue(formData, field?.dateFields?.[0]?.value || "");
-          const endDate = getFieldValue(formData, field?.dateFields?.[1]?.value || "");
+          const startDate = getFieldValue(
+            formData,
+            field?.dateFields?.[0]?.value || ""
+          );
+          const endDate = getFieldValue(
+            formData,
+            field?.dateFields?.[1]?.value || ""
+          );
 
           return (
             <>
@@ -546,7 +565,9 @@ export const FormRenderer: React.FC<FormRendererProps> = ({
                       setFieldValue(field.dateFields[0].value, val);
                     }
                   }}
-                  placeholder={field.dateFields?.[0]?.label || "Start (MM/YYYY)"}
+                  placeholder={
+                    field.dateFields?.[0]?.label || "Start (MM/YYYY)"
+                  }
                   required={field.required}
                   minYear={1900}
                   maxYear={2100}
@@ -590,8 +611,6 @@ export const FormRenderer: React.FC<FormRendererProps> = ({
               {errorMessage}
             </>
           );
-
-
 
         default:
           return null;

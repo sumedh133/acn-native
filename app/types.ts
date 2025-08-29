@@ -1,6 +1,6 @@
 export interface GeoLocation {
-  lat: number | null;
-  lng: number | null;
+  lat?: number;
+  lng?: number;
 }
 
 // export interface Property {
@@ -131,11 +131,11 @@ export interface Landmark {
 }
 
 export interface Places {
-  name: string | null;
-  lat: number | null;
-  lng: number | null;
-  address: string | null;
-  mapLocation: string | null;
+  name: string;
+  lat: number;
+  lng: number;
+  address: string;
+  mapLocation: string;
 }
 
 export interface UploadedFileUrls {
@@ -385,9 +385,9 @@ export interface Property {
 
   // Location Information
   propertyName: string;
-  micromarket: string;
-  area: string;
-  zone: string;
+  micromarket: string | null;
+  mapLocation: string;
+  zone: string | null;
   communityType: communityType;
   _geoloc: GeoLocation;
 
