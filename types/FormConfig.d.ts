@@ -11,7 +11,9 @@ export interface FormField {
     | "date"
     | "textarea"
     | "dropdownWithInput"
-    | "dateRange";
+    | "dateRange"
+    | "multiCheckbox"
+    | "showStepper";
   required?: boolean;
   placeholder?: string;
   options?: { label: string; value: any }[];

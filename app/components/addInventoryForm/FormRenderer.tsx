@@ -14,6 +14,9 @@ import MonthYearPicker from "../Listing/MonthYearPicker";
 import Checkbox from "../Listing/CheckBox";
 import { FormField } from "@/types/FormConfig";
 import DropdownWithInput from "../DropdownInput";
+import TextInputField from "../Listing/TextInput";
+import MultiCheckbox from "../MultiCheckbox";
+import DropdownSelect from "../Listing/Dropdown";
 
 // Extend FormField to include our internal properties
 interface FormFieldWithMeta extends FormField {
@@ -314,6 +317,25 @@ export const FormRenderer: React.FC<FormRendererProps> = ({
               {errorMessage}
             </>
           );
+        case "showStepper":
+          return (
+            <>
+              <View className="flex-row items-center justify-between w-[100%]">
+                <View className="w-32">{commonLabel}</View>
+
+                <TextInputField
+                  value={value as number}
+                  setValue={(val) => setFieldValue(field.id, val)}
+                  title={""} // hide internal title
+                  keyboardType="number-pad"
+                  showStepper={true} // enables + / - buttons
+                />
+
+                {errorMessage}
+              </View>
+
+            </>
+          );
 
         case "select":
           return (
@@ -399,20 +421,36 @@ export const FormRenderer: React.FC<FormRendererProps> = ({
               {errorMessage}
             </View>
           );
+        case "multiCheckbox":
+          return (
+            <>
+              {commonLabel}
+              <MultiCheckbox
+                options={field.options || []}
+                selectedOptions={value || []}
+                setSelectedOptions={(selected: string[]) => setFieldValue(field.id, selected)}
+              />
+              {errorMessage}
+            </>
+          );
 
         case "dropdown":
           return (
             <>
               {commonLabel}
-              <CustomSelectDropdown
-                selectedValue={value} // Current selected value
-                onValueChange={(selected: string) => setFieldValue(field.id, selected)} // Update form value
-                options={field.options || []} // Options from your field config
-                placeholder={field.placeholder || "Select an option"} // Default placeholder
+              <DropdownSelect
+                value={value as string | null}
+                setValue={(val: string | null) => setFieldValue(field.id, val)}
+                title={field.label || ""}
+                options={field.options || []}
+                placeholder={field.placeholder || "Select an option"}
+                required={field.required}
+
               />
               {errorMessage}
             </>
           );
+
         case "dropdownWithInput":
           return (
             <>
@@ -500,7 +538,7 @@ export const FormRenderer: React.FC<FormRendererProps> = ({
                   minYear={1900}
                   maxYear={2100}
                   width={"48%"}
-                  disabled={!startDate} // Disable until start date is selected
+                  disabled={!startDate}
                 />
               </View>
 
@@ -514,8 +552,6 @@ export const FormRenderer: React.FC<FormRendererProps> = ({
           return null;
       }
     };
-
-
 
     return (
       <View
