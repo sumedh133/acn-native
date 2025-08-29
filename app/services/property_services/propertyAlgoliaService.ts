@@ -26,6 +26,8 @@ export interface SearchFilters {
   sbua?: string[]; //number range
   carpetArea?: string[]; //number range
   availableFrom?: string[]; // string like winthin 1 month, within 2 months
+  totalAskPrice?: string[];
+  rent?: string[];
 
   // Add more filters as needed
   micromarket?: string[];
@@ -188,6 +190,8 @@ class AlgoliaInfiniteSearchService {
     const rangeFilters = [
       this.buildRangeFilter(filters.sbua, "sbua"),
       this.buildRangeFilter(filters.carpetArea, "carpetArea"),
+      this.buildRangeFilter(filters.totalAskPrice, "pricing.totalAskPrice"),
+      this.buildRangeFilter(filters.rent, "rentalInfo.rent "),
     ].filter((f) => f !== null) as string[];
 
     const availableFromFilter = this.buildAvailableFromFilter(
