@@ -72,7 +72,7 @@ const MonthYearPicker = ({
     setIsFocused(false);
   };
 
-  return (
+  return (<>
     <View style={[styles.section, { width: width }]}>
       {title &&
         (<View style={[styles.headingContainer]}>
@@ -119,20 +119,8 @@ const MonthYearPicker = ({
         theme="light"
       />
     </View>
-      <DatePicker
-        modal
-        open={open}
-        date={date}
-        mode="date"
-        title="Select Month and Year"
-        minimumDate={new Date(minYear, 0, 1)}
-        maximumDate={new Date(maxYear, 11, 31)}
-        onConfirm={handleConfirm}
-        onCancel={handleCancel}
-        locale="en"
-        theme="light"
-      />
-    </View>
+
+  </>
   );
 };
 
