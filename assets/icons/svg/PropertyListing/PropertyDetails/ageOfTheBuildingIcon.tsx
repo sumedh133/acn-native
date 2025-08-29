@@ -1,7 +1,7 @@
 import React from "react";
 import Svg, { Path, Defs, ClipPath, Rect, G } from "react-native-svg";
 
-export const AgeOfTheBuilding = () => (
+export const ageOfTheBuildingIcon = () => (
   <Svg width={32} height={32} viewBox="0 0 32 32" fill="none">
     <Path
       d="M0 6C0 2.68629 2.68629 0 6 0H26C29.3137 0 32 2.68629 32 6V26C32 29.3137 29.3137 32 26 32H6C2.68629 32 0 29.3137 0 26V6Z"

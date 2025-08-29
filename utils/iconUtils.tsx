@@ -13,8 +13,26 @@ import {totalAskPriceIcon} from "../assets/icons/svg/PropertyListing/PriceDetail
 import {rentIcon} from "../assets/icons/svg/PropertyListing/PriceDetails/rentIcon";
 
 
-
+//properties
+import {ageOfTheBuildingIcon} from "../assets/icons/svg/PropertyListing/PropertyDetails/ageOfTheBuildingIcon";
+import {carpetAreaIcon} from "../assets/icons/svg/PropertyListing/PropertyDetails/carpetAreaIcon";
+import {extraRoomsIcon} from "../assets/icons/svg/PropertyListing/PropertyDetails/extraRoomsIcon";
+import {facingIcon} from "../assets/icons/svg/PropertyListing/PropertyDetails/facingIcon";
+import {floorNumberIcon} from "../assets/icons/svg/PropertyListing/PropertyDetails/floorNumberIcon";
+import {furnishingIcon} from "../assets/icons/svg/PropertyListing/PropertyDetails/furnishingIcon";
+import {MaintenanceIcon} from "../assets/icons/svg/PropertyListing/PropertyDetails/maintenanceIcon";
+import {nonVegAllowedIcon} from "../assets/icons/svg/PropertyListing/PropertyDetails/nonVegAllowedIcon";
+import {noOfBalconiesIcon} from "../assets/icons/svg/PropertyListing/PropertyDetails/noOfBalconiesIcon";
+import {parkingIcon} from "../assets/icons/svg/PropertyListing/PropertyDetails/parkingIcon";
+import {petsAllowedIcon} from "../assets/icons/svg/PropertyListing/PropertyDetails/petsAllowedIcon";
 import {plotBreadthIcon} from "../assets/icons/svg/PropertyListing/PropertyDetails/plotBreadthIcon";
+import {plotLengthIcon} from "../assets/icons/svg/PropertyListing/PropertyDetails/PlotLengthIcon";
+import {preferredTenantsIcon} from "../assets/icons/svg/PropertyListing/PropertyDetails/preferredTenantsIcon";
+import {sbuaIcon} from "../assets/icons/svg/PropertyListing/PropertyDetails/sbuaIcon";
+import {udsIcon} from "../assets/icons/svg/PropertyListing/PropertyDetails/udsIcon";
+
+
+
 type IconComponent = React.FC<React.SVGProps<SVGSVGElement>>;
 
 const iconMap: Record<string, IconComponent> = {
@@ -26,7 +44,6 @@ const iconMap: Record<string, IconComponent> = {
   possession: HandoverIcon, 
   configuration: ConfigurationIcon,
   bedrooms: ConfigurationIcon, 
-  plotBreadth: plotBreadthIcon,
   //price
 
   commissionType: commissionTypeIcon,
@@ -34,11 +51,26 @@ const iconMap: Record<string, IconComponent> = {
   pricePerSqft: pricePerSqftIcon,
   rentalIncome: rentalIncomeIcon,
   totalAskPrice: totalAskPriceIcon,
-  rent: rentIcon
+  rent: rentIcon,
 
   //property
 
-  
+  ageOfTheBuilding: ageOfTheBuildingIcon,
+  carpetArea: carpetAreaIcon,
+  extraRooms: extraRoomsIcon,
+  facing: facingIcon,
+  floorNumber: floorNumberIcon,
+  furnishing: furnishingIcon,
+  Maintenance: MaintenanceIcon,
+  nonVegAllowed: nonVegAllowedIcon,
+  noOfBalconies: noOfBalconiesIcon,
+  parking: parkingIcon,
+  petsAllowed: petsAllowedIcon,
+  plotBreadth: plotBreadthIcon,
+  plotLength: plotLengthIcon,
+  preferredTenants: preferredTenantsIcon,
+  sbua: sbuaIcon,
+  uds: udsIcon,
 
 };
 
