@@ -378,7 +378,7 @@ export const MobileHits = ({
       )}
       scrollEventThrottle={16}
       onScrollEndDrag={onScrollEndDrag}      // ← This fixes partial visibility
-  onMomentumScrollEnd={onMomentumScrollEnd}
+      onMomentumScrollEnd={onMomentumScrollEnd}
       onViewableItemsChanged={handleViewableItemsChanged}
       viewabilityConfig={viewabilityConfig.current}
       refreshControl={

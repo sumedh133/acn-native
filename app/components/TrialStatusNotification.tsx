@@ -319,6 +319,7 @@ const TrialStatusNotification: React.FC<TrialStatusNotificationProps> = ({
     height: combinedHeight,
     overflow: "hidden",
   }}
+  
 >
       <View
         className="flex-row justify-between items-center pl-5 pr-10 py-3 border-b"
@@ -336,7 +337,7 @@ const TrialStatusNotification: React.FC<TrialStatusNotificationProps> = ({
         >
           <View
             className="rounded-full p-2 mr-3"
-            style={{ backgroundColor: config.iconBgColor }}
+            style={{ backgroundColor: config.iconBgColor, alignSelf: 'flex-start' }}
           >
             {config.icon}
           </View>
