@@ -12,6 +12,7 @@ import { Ionicons } from "@expo/vector-icons";
 import ImageViewing from "react-native-image-viewing";
 import { analytics } from "@/app/config/firebase";
 import { logEvent } from "@react-native-firebase/analytics";
+import Video from "react-native-video";
 
 interface ImageCarouselProps {
   images: string[];
@@ -50,15 +51,15 @@ const ImageCarousel: React.FC<ImageCarouselProps> = ({
 
   const handleImagePress = () => {
     try {
-      logEvent(analytics, 'property_image_fullscreen', {
-        event_category: 'property',
-        event_label: 'interaction',
+      logEvent(analytics, "property_image_fullscreen", {
+        event_category: "property",
+        event_label: "interaction",
         property_id: propertyId,
         image_index: activeIndex,
-        total_images: images.length
+        total_images: images.length,
       });
     } catch (error) {
-      console.error('Error logging image fullscreen:', error);
+      console.error("Error logging image fullscreen:", error);
     }
     setIsImageViewVisible(true);
   };
@@ -71,11 +72,22 @@ const ImageCarousel: React.FC<ImageCarouselProps> = ({
           activeOpacity={0.9}
           onPress={handleImagePress}
         >
-          <Image
-            source={{ uri: item }}
-            style={styles.image}
-            resizeMode="cover"
-          />
+          
+          {item.includes(".mp4") ? (
+            <Video
+              source={{ uri: item }}
+              style={{ width: "100%", aspectRatio: 16 / 9 }}
+              resizeMode="cover"
+              paused={true} // Video is paused by default
+              controls={true}
+            />
+          ) : (
+            <Image
+              source={{ uri: item }}
+              style={styles.image}
+              resizeMode="cover"
+            />
+          )}
         </TouchableOpacity>
       </View>
     );
@@ -84,17 +96,17 @@ const ImageCarousel: React.FC<ImageCarouselProps> = ({
   const handlePageChange = (index: number) => {
     if (index >= 0 && index < images.length) {
       try {
-        logEvent(analytics, 'property_image_change', {
-          event_category: 'property',
-          event_label: 'interaction',
+        logEvent(analytics, "property_image_change", {
+          event_category: "property",
+          event_label: "interaction",
           property_id: propertyId,
           previous_index: activeIndex,
           new_index: index,
           total_images: images.length,
-          navigation_method: 'dot_click'
+          navigation_method: "dot_click",
         });
       } catch (error) {
-        console.error('Error logging image change:', error);
+        console.error("Error logging image change:", error);
       }
 
       setActiveIndex(index);
@@ -111,23 +123,19 @@ const ImageCarousel: React.FC<ImageCarouselProps> = ({
     const contentOffsetX = event.nativeEvent.contentOffset.x;
     const newIndex = Math.floor(contentOffsetX / width + 0.5);
 
-    if (
-      newIndex >= 0 &&
-      newIndex < images.length &&
-      newIndex !== activeIndex
-    ) {
+    if (newIndex >= 0 && newIndex < images.length && newIndex !== activeIndex) {
       try {
-        logEvent(analytics, 'property_image_change', {
-          event_category: 'property',
-          event_label: 'interaction',
+        logEvent(analytics, "property_image_change", {
+          event_category: "property",
+          event_label: "interaction",
           property_id: propertyId,
           previous_index: activeIndex,
           new_index: newIndex,
           total_images: images.length,
-          navigation_method: 'swipe'
+          navigation_method: "swipe",
         });
       } catch (error) {
-        console.error('Error logging image change:', error);
+        console.error("Error logging image change:", error);
       }
       setActiveIndex(newIndex);
     }
@@ -137,17 +145,17 @@ const ImageCarousel: React.FC<ImageCarouselProps> = ({
   const handlePrevious = () => {
     const newIndex = Math.max(0, activeIndex - 1);
     try {
-      logEvent(analytics, 'property_image_change', {
-        event_category: 'property',
-        event_label: 'interaction',
+      logEvent(analytics, "property_image_change", {
+        event_category: "property",
+        event_label: "interaction",
         property_id: propertyId,
         previous_index: activeIndex,
         new_index: newIndex,
         total_images: images.length,
-        navigation_method: 'arrow_previous'
+        navigation_method: "arrow_previous",
       });
     } catch (error) {
-      console.error('Error logging image change:', error);
+      console.error("Error logging image change:", error);
     }
     handlePageChange(newIndex);
   };
@@ -155,17 +163,17 @@ const ImageCarousel: React.FC<ImageCarouselProps> = ({
   const handleNext = () => {
     const newIndex = Math.min(images.length - 1, activeIndex + 1);
     try {
-      logEvent(analytics, 'property_image_change', {
-        event_category: 'property',
-        event_label: 'interaction',
+      logEvent(analytics, "property_image_change", {
+        event_category: "property",
+        event_label: "interaction",
         property_id: propertyId,
         previous_index: activeIndex,
         new_index: newIndex,
         total_images: images.length,
-        navigation_method: 'arrow_next'
+        navigation_method: "arrow_next",
       });
     } catch (error) {
-      console.error('Error logging image change:', error);
+      console.error("Error logging image change:", error);
     }
     handlePageChange(newIndex);
   };
