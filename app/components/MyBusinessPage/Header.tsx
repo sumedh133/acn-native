@@ -62,7 +62,7 @@ const MyBusinessHeader = ({
                 {item.count}
               </Text>
             </View>
-            <View className="absolute bottom-0 right-0 z-[-5] overflow-hidden rounded-br-xl">
+            <View className="absolute bottom-0 right-[-1] z-[-5] overflow-hidden rounded-br-xl">
               {item.img}
             </View>
           </View>
