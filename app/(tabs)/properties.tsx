@@ -155,6 +155,7 @@ export default function PropertiesScreen() {
             onSortChange={updateSort}
             activeTab={activeTab}
             setActiveTab={setActiveTab}
+            showTabs={true}
           />
         </View>
         <View className="w-full flex-1">
