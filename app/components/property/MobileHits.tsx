@@ -10,7 +10,6 @@ import {
   Text,
   ActivityIndicator,
   RefreshControl,
-  FlatList,
   ViewabilityConfig,
   TouchableOpacity,
   Animated,

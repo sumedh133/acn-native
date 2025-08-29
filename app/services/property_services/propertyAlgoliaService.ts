@@ -28,6 +28,8 @@ export interface SearchFilters {
   availableFrom?: string[]; // string like winthin 1 month, within 2 months
   totalAskPrice?: string[];
   rent?: string[];
+  cpId?: string[];
+  stage?: string[];
 
   // Add more filters as needed
   micromarket?: string[];
@@ -180,6 +182,8 @@ class AlgoliaInfiniteSearchService {
       { values: filters.posession, fieldName: "posession" },
       { values: filters.availability, fieldName: "availability" },
       { values: filters.zone, fieldName: "zone" },
+      { values: filters.cpId, fieldName: "cpId" },
+      { values: filters.stage, fieldName: "stage" },
     ];
 
     const filterParts = filterConfigs
@@ -237,6 +241,7 @@ class AlgoliaInfiniteSearchService {
 
     const { searchClient, indexName } = this.getClientAndIndex(sortBy);
     const filterString = this.buildFilterString(filters);
+    console.log(filterString)
 
     const response = await searchClient.search([
       {

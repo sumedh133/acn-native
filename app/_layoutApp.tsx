@@ -134,21 +134,21 @@ const CustomHeader = ({
 
           {!headerBackVisible && (
             <View className="flex flex-row items-center gap-2">
-            <TouchableOpacity
-              className="relative border p-[6px] rounded-md border-[#9F9C9C]"
-              onPress={() => {
-                router.push("/(tabs)/NotificationPage");
-              }}
-            >
-              {unreadCount > 0 && (
-                <Text className="absolute text-white top-[2px] right-[3px] bg-[#EB5757] rounded-full px-[4px] py-[1px] text-[10px] z-10">
-                  {unreadCount}
-                </Text>
-              )}
-              <NotificationIcon width={21} height={21} className="z-0" />
-            </TouchableOpacity>
+              <TouchableOpacity
+                className="relative border p-[6px] rounded-md border-[#9F9C9C]"
+                onPress={() => {
+                  router.push("/(tabs)/NotificationPage");
+                }}
+              >
+                {unreadCount > 0 && (
+                  <Text className="absolute text-white top-[2px] right-[3px] bg-[#EB5757] rounded-full px-[4px] py-[1px] text-[10px] z-10">
+                    {unreadCount}
+                  </Text>
+                )}
+                <NotificationIcon width={21} height={21} className="z-0" />
+              </TouchableOpacity>
 
-            <TouchableOpacity
+              <TouchableOpacity
                 style={styles.headerRight}
                 onPress={() => router.push("/(pages)/Credits")}
               >
@@ -158,7 +158,7 @@ const CustomHeader = ({
                 <CoinIcon width={18} height={18} />
               </TouchableOpacity>
             </View>
-        )}
+          )}
         </View>
       </View>
     </Animated.View>
@@ -581,6 +581,14 @@ export default function LayoutApp() {
             name="(pages)/Profile"
             options={{
               title: "Settings",
+              headerBackVisible: true,
+            }}
+            initialParams={{ showFooter: false }}
+          />
+          <Stack.Screen
+            name="(pages)/UnderReviewProperties"
+            options={{
+              title: "Properties Under Review",
               headerBackVisible: true,
             }}
             initialParams={{ showFooter: false }}

@@ -6,20 +6,24 @@ import {
   type SearchFilters,
 } from "../../app/services/property_services/propertyAlgoliaService";
 
-export const useAlgoliaSearch = () => {
+export const useAlgoliaSearch = (basicFilter: SearchFilters) => {
   const [searchState, setSearchState] = useState<InfiniteScrollState>(
     algoliaInfiniteSearch.getInitialState()
   );
   const [query, setQuery] = useState("");
-  const [filters, setFilters] = useState<SearchFilters>({ listingType: ["resale"] });
-  const [selectedLandmark, setSelectedLandmark] = useState<Landmark | null>(null);
+  const [filters, setFilters] = useState<SearchFilters>(basicFilter);
+  const [selectedLandmark, setSelectedLandmark] = useState<Landmark | null>(
+    null
+  );
   const [sortBy, setSortBy] = useState<string>("relevance");
 
   // 🔑 facet states
-  const [facets, setFacets] = useState<Record<string, Record<string, number>>>({});
-  const [masterFacets, setMasterFacets] = useState<
-    Record<string, Set<string>>
-  >({});
+  const [facets, setFacets] = useState<Record<string, Record<string, number>>>(
+    {}
+  );
+  const [masterFacets, setMasterFacets] = useState<Record<string, Set<string>>>(
+    {}
+  );
 
   // --- bootstrap master facets once ---
   useEffect(() => {
@@ -34,7 +38,9 @@ export const useAlgoliaSearch = () => {
         );
 
         const mf: Record<string, Set<string>> = {};
-        for (const [facetKey, values] of Object.entries(initialState.facets ?? {})) {
+        for (const [facetKey, values] of Object.entries(
+          initialState.facets ?? {}
+        )) {
           mf[facetKey] = new Set(Object.keys(values));
         }
 
@@ -48,7 +54,9 @@ export const useAlgoliaSearch = () => {
   }, []);
 
   // --- debounced search ---
-  const [searchTimeout, setSearchTimeout] = useState<NodeJS.Timeout | null>(null);
+  const [searchTimeout, setSearchTimeout] = useState<NodeJS.Timeout | null>(
+    null
+  );
 
   const performSearch = useCallback(
     async (
@@ -122,14 +130,16 @@ export const useAlgoliaSearch = () => {
   // helpers
   const updateQuery = useCallback((q: string) => setQuery(q), []);
   const updateFilters = useCallback((f: SearchFilters) => setFilters(f), []);
-  const updateLandmark = useCallback((lm: Landmark | null) => setSelectedLandmark(lm), []);
+  const updateLandmark = useCallback(
+    (lm: Landmark | null) => setSelectedLandmark(lm),
+    []
+  );
   const updateSort = useCallback((s: string) => setSortBy(s), []);
 
   // --- add inside your hook
   const refresh = useCallback(async () => {
     await performSearch(query, filters, selectedLandmark, sortBy);
   }, [performSearch, query, filters, selectedLandmark, sortBy]);
-
 
   const loadMore = useCallback(async () => {
     if (!searchState.hasMore || searchState.loadingMore) return;
@@ -156,7 +166,7 @@ export const useAlgoliaSearch = () => {
   useEffect(() => {
     performSearch(query, filters, selectedLandmark, sortBy);
     return () => algoliaInfiniteSearch.cleanup();
-  }, []); 
+  }, []);
 
   return {
     searchState,
