@@ -32,8 +32,8 @@ interface PlaceDetails {
 }
 
 interface PlacesSearchProps {
-  selectedPlace: Places | null;
-  setSelectedPlace: (place: Places | null) => void;
+  selectedPlace?: Places;
+  setSelectedPlace: (place?: Places) => void;
   communityType: string | null | undefined;
 }
 
@@ -174,12 +174,12 @@ const PlacesSearch = ({
   const handleSearchInputChange = (text: string) => {
     setSearchQuery(text);
     setUserInitiatedSearch(true);
-    setSelectedPlace(null);
+    setSelectedPlace(undefined);
     setBlurredAndNotSelected(false);
     // If user clears the input, reset everything
     if (!text.trim()) {
       setBlurredAndNotSelected(false);
-      setSelectedPlace(null);
+      setSelectedPlace(undefined);
       setSearchResults([]);
       setShowResults(false);
     }
@@ -218,7 +218,7 @@ const PlacesSearch = ({
   // Clear search
   const handleClearSearch = useCallback(() => {
     setSearchQuery("");
-    setSelectedPlace(null);
+    setSelectedPlace(undefined);
     setSearchResults([]);
     setShowResults(false);
     setUserInitiatedSearch(false);
@@ -292,6 +292,7 @@ const PlacesSearch = ({
           <View style={styles.resultsContainer}>
             <FlatList
               data={searchResults}
+              onScroll={() => Keyboard.dismiss()}
               keyExtractor={(item) => item.place_id}
               renderItem={({ item }) => (
                 <TouchableOpacity
@@ -306,7 +307,9 @@ const PlacesSearch = ({
               keyboardShouldPersistTaps="handled"
               scrollEnabled={true}
               nestedScrollEnabled={true}
+              showsVerticalScrollIndicator={true} // Shows scroll indicator
               style={styles.resultsList}
+              contentContainerStyle={styles.resultsListContent} // Add this
             />
           </View>
         )}
@@ -374,8 +377,8 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
   },
   resultsContainer: {
-     position: "absolute",
-    bottom: 50,
+    position: "absolute",
+    top: 50,
     left: 0,
     right: 0,
     backgroundColor: "white",
@@ -389,6 +392,10 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.15,
     shadowRadius: 4,
+  },
+  resultsListContent: {
+    flexGrow: 1,
+    paddingBottom: 10, // Add some bottom padding
   },
   resultsList: {
     width: "100%",

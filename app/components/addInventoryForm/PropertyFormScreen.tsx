@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
   SafeAreaView,
   StatusBar,
@@ -10,10 +10,11 @@ import {
 } from "react-native";
 import { FormRenderer } from "./FormRenderer";
 import { inventoryFormConfig } from "@/app/config/AddInventoryFormConfig/inventoryFormConfig";
-import { Property } from "@/app/types";
+import { Places, Property } from "@/app/types";
 import ArrowLeftIcon from "@/assets/icons/svg/Common/ArrowLeftIcon";
 import { LinearGradient } from "expo-linear-gradient";
 import { FormPreview } from "../Listing/listingPropertyDetails";
+import { getMicromarketFromCoordinates } from "@/app/helpers/getMicromarketFromCoordinates";
 import { FormField } from "@/types/FormConfig";
 
 // Extend FormField to include our internal properties
@@ -24,7 +25,6 @@ interface FormFieldWithMeta extends FormField {
 type UIProperty = Omit<Property, "handOverDate"> & {
   handOverDate?: string;
 };
-
 
 interface PropertyFormScreenProps {
   initialData?: Partial<UIProperty>;
@@ -43,6 +43,7 @@ export const PropertyFormScreen: React.FC<PropertyFormScreenProps> = ({
   const [formData, setFormData] = useState<Partial<UIProperty>>(
     initialData || {}
   );
+  const [selectedPlace, setSelectedPlace] = useState<Places>();
   const [currentStepIndex, setCurrentStepIndex] = useState<number>(0);
   const [maxStepIndex, setMaxStepIndex] = useState<number>(-1);
   const [isFormEmpty, setIsFormEmpty] = useState<boolean>(
@@ -50,6 +51,8 @@ export const PropertyFormScreen: React.FC<PropertyFormScreenProps> = ({
   );
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [showPreview, setShowPreview] = useState<boolean>(false);
+
+  console.log("Form Data:", formData);
 
   // -------------------- Utility Functions --------------------
 
@@ -148,6 +151,42 @@ export const PropertyFormScreen: React.FC<PropertyFormScreenProps> = ({
     });
   };
 
+  /**
+   * Update the format data from Places API
+   */
+  useEffect(() => {
+    if (selectedPlace) {
+      const mm = getMicromarketFromCoordinates(selectedPlace);
+
+      if (mm === null) return;
+
+      setFormData((prevProperty) => ({
+        ...prevProperty,
+        propertyName: selectedPlace.name,
+        address: selectedPlace.address,
+        mapLocation: selectedPlace.mapLocation,
+        micromarket: mm[0],
+        zone: mm[1],
+        _geoloc: {
+          lat: selectedPlace.lat,
+          lng: selectedPlace.lng,
+        },
+      }));
+    } else {
+      setFormData((prevProperty) => ({
+        ...prevProperty,
+        propertyName: undefined,
+        address: undefined,
+        mapLocation: undefined,
+        micromarket: undefined,
+        zone: undefined,
+        _geoloc: {
+          lat: undefined,
+          lng: undefined,
+        },
+      }));
+    }
+  }, [selectedPlace]);
   /**
  * Validate all fields in the current step.
  */
@@ -396,6 +435,8 @@ export const PropertyFormScreen: React.FC<PropertyFormScreenProps> = ({
             onErrorsUpdate={handleErrorsUpdate}
             getFieldValue={getFieldValue}
             getVisibleFields={getVisibleFields}
+            selectedPlace={selectedPlace}
+            setSelectedPlace={setSelectedPlace}
           />
         </View>
 

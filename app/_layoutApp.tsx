@@ -384,7 +384,7 @@ export default function LayoutApp() {
     setShowOnboarding(false);
   };
 
-  if (!isConnectedToInternet) return <Offline />;
+  // if (!isConnectedToInternet) return <Offline />;
 
   return (
     <ScrollProvider >

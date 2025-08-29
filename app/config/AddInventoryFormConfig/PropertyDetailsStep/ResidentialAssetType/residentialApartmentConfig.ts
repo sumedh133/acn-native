@@ -4,7 +4,7 @@ export const residentialApartmentFields: FormField[] = [
   {
     id: "propertyName",
     label: "Project Name",
-    type: "text",
+    type: "placesApi",
     required: true,
     placeholder: "Enter property name",
     colspan: 12,

@@ -13,7 +13,8 @@ export interface FormField {
     | "dropdownWithInput"
     | "dateRange"
     | "multiCheckbox"
-    | "showStepper";
+    | "showStepper"
+    | "placesApi";
   required?: boolean;
   placeholder?: string;
   options?: { label: string; value: any }[];
