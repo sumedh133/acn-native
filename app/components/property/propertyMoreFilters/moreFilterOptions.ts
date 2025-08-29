@@ -132,3 +132,8 @@ export const possessionOptions: FilterChipItem[] = [
   { label: "Ready To Move", value: "Ready To Move" },
   { label: "Under Construction", value: "Under Construction" },
 ];
+export const availabilityOptions: FilterChipItem[] = [
+  { label: "Ready To Move", value: "Ready To Move" },
+  { label: "Within 1 Month", value: "Within 1 Month" },
+  { label: "Within 2 Months", value: "Within 2 Months" },
+];
