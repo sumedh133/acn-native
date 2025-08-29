@@ -1,64 +1,138 @@
 import React from "react";
 import { View, Text } from "react-native";
 import { Property } from "@/app/types";
+import { getIcon } from "../../../../utils/iconUtils";
+import {
+  formatUnixDate,
+  getDaysDifference,
+  getDaysFrom,
+} from "../../../helpers/format/format";
 
-export const BasicPropertyInfo: React.FC<{ data: Partial<Property> }> = ({ data }) => {
+type UIProperty = Omit<Property, "handOverDate"> & {
+  handOverDate?: string;
+};
+
+export const BasicPropertyInfo: React.FC<{ data: Partial<UIProperty> }> = ({
+  data,
+}) => {
+  console.log("data", data);
   const getFieldValue = (obj: any, path: string) =>
     path.split(".").reduce((acc, key) => acc?.[key], obj);
 
-  const title = "Independent Apartment in HSR Layout";
+  const communityOrCommercial =
+    (typeof data.communityType === "string" && data.communityType.trim()) ||
+    (typeof data.commercialSubType === "string" && data.commercialSubType) ||
+    "";
+
+  const propertyType =
+    (typeof data.commercialPropertyType === "string" &&
+      data.commercialPropertyType.trim()) ||
+    (typeof data.assetType === "string" && data.assetType.trim()) ||
+    "";
+
+  const market =
+    (typeof data.micromarket === "string" && data.micromarket.trim()) || "";
+
+  let title = [communityOrCommercial, propertyType].filter(Boolean).join(" ");
+
+  if (market) {
+    title = `${title} in ${market}`;
+  }
+
   const price = "1.34 Lakh";
-  const updatedTime = "2 days ago";
+
+  const daysSinceAdded = data?.dateOfLastChecked
+    ? getDaysDifference(data.dateOfLastChecked, Math.floor(Date.now() / 1000))
+    : 0;
+
+  const updatedText =
+    data?.dateOfLastChecked !== undefined
+      ? `Updated ${getDaysFrom(data.dateOfLastChecked)} ago`
+      : "-";
+
+  const bedrooms = data?.noOfBedrooms ? `${data.noOfBedrooms}BHK` : "";
+  const bathrooms = data?.noOfBathrooms ? `${data.noOfBathrooms}T` : "";
+  const balconies = data?.noOfBalconies ? `${data.noOfBalconies}B` : "";
+
+  const configParts = [bedrooms, bathrooms, balconies].filter(Boolean);
+
+  let configurationLabel = "-";
+
+  if (configParts.length > 0) {
+    configurationLabel = configParts.join(" + ");
+  } else if (data?.plotLength && data?.plotBreadth) {
+    configurationLabel = `${data.plotLength} x ${data.plotBreadth} Sqft`;
+  } else if (data?.noOfSeats) {
+    configurationLabel = `${data.noOfSeats} Seats`;
+  } else if (data?.sbua) {
+    configurationLabel = `${data.sbua} Sqft`;
+  }
 
   const basicInfo = [
     {
-      icon: "📍",
-      label: getFieldValue(data, "location") || "Micromarket",
+      key: "micromarket",
+      label: data?.micromarket || "-",
     },
     {
-      icon: "🏢",
-      label: getFieldValue(data, "propertyType") || "Apartment",
+      key: "assetType",
+      label:
+        data?.assetType?.trim() || data?.commercialPropertyType?.trim() || "-",
     },
     {
-      icon: "🕐",
-      label: getFieldValue(data, "possession") || "Handover",
+      key: "handover",
+      label: data?.readyToMove
+        ? "Ready to Move"
+        : data?.handOverDate
+        ? (() => {
+            // convert "MM/YYYY" -> timestamp (seconds)
+            const [mm, yyyy] = data.handOverDate.split("/");
+            const parsedDate = new Date(Number(yyyy), Number(mm) - 1, 1);
+            return formatUnixDate(Math.floor(parsedDate.getTime() / 1000));
+          })()
+        : "-",
     },
     {
-      icon: "🛏️",
-      label: getFieldValue(data, "configuration") || "3BHK + 3T + 2B",
+      key: "configuration",
+      label: configurationLabel,
     },
   ];
 
   return (
-    <View className="px-4 py-4 bg-white border-b border-gray-100">
+    <View className="px-5 py-4 bg-white border-b border-gray-100">
       {/* Property Title */}
-      <Text className="text-xl font-bold text-gray-900 mb-3">
+      <Text className="text-[18px] font-bold text-[#0A0B0A] font-[Montserrat] leading-6 mb-4">
         {title}
       </Text>
 
       {/* Price + Updated Time */}
       <View className="flex-row justify-between items-center mb-4">
-        {/* Price */}
-        <Text className="text-[20px] leading-6 font-bold text-[#153E3B] font-[Montserrat]">
+        <Text className="text-[20px] font-bold text-[#153E3B] font-[Montserrat] leading-6">
           ₹ {price}
         </Text>
-
-        {/* Updated Time */}
-        <Text
-          numberOfLines={1}
-          ellipsizeMode="tail"
-          className="text-[12px] leading-[18px] font-medium font-[Lato] text-brand-tertiary"
-        >
-          Updated {updatedTime}
-        </Text>
+        {daysSinceAdded > 10 ? (
+          <Text className="text-[12px] font-[Lato] font-medium leading-[18px] text-brand-tertiary text-opacity-70 overflow-hidden">
+            {updatedText}
+          </Text>
+        ) : (
+          <View className="px-2 py-1 bg-[#E5F8F6] rounded-md">
+            <Text className="text-[12px] font-[Lato] font-bold text-[#153E3B]">
+              Newly Added
+            </Text>
+          </View>
+        )}
       </View>
 
       {/* Basic Info Grid */}
       <View className="flex-row flex-wrap">
         {basicInfo.map((item, index) => (
-          <View key={index} className="w-1/2 flex-row items-center mb-3">
-            <Text className="text-lg mr-3">{item.icon}</Text>
-            <Text className="text-[12px] leading-[18px] font-medium text-[#433F3E] font-[Lato]">
+          <View
+            key={index}
+            className={`w-1/2 flex-row items-center mb-3 ${
+              index % 2 === 0 ? "pr-6" : "pl-6"
+            }`}
+          >
+            <View className="mr-2">{getIcon(item.key)}</View>
+            <Text className="text-[12px] font-[Lato] font-medium leading-[18px] text-[#433F3E]">
               {item.label}
             </Text>
           </View>

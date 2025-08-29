@@ -15,9 +15,14 @@ import ArrowLeftIcon from "@/assets/icons/svg/Common/ArrowLeftIcon";
 import { LinearGradient } from "expo-linear-gradient";
 import { FormPreview } from "../Listing/listingPropertyDetails";
 
+type UIProperty = Omit<Property, "handOverDate"> & {
+  handOverDate?: string;
+};
+
+
 interface PropertyFormScreenProps {
-  initialData?: Partial<Property>;
-  onComplete: (data: Partial<Property>) => void;
+  initialData?: Partial<UIProperty>;
+  onComplete: (data: Partial<UIProperty>) => void;
   onCancel: () => void;
   isEdit?: boolean;
 }
@@ -29,7 +34,7 @@ export const PropertyFormScreen: React.FC<PropertyFormScreenProps> = ({
   isEdit = false,
 }) => {
   // -------------------- State Management --------------------
-  const [formData, setFormData] = useState<Partial<Property>>(
+  const [formData, setFormData] = useState<Partial<UIProperty>>(
     initialData || {}
   );
   const [currentStepIndex, setCurrentStepIndex] = useState<number>(0);
@@ -52,12 +57,19 @@ export const PropertyFormScreen: React.FC<PropertyFormScreenProps> = ({
    * Filter steps based on conditions defined in the form configuration.
    */
   const getVisibleSteps = () => {
-    return inventoryFormConfig.steps.filter((step) => {
-      if (!step.dependsOn) return true;
-      const fieldValue = getFieldValue(formData, step.dependsOn.field);
-      return step.dependsOn.values.includes(fieldValue);
-    });
-  };
+  return inventoryFormConfig.steps.filter((step) => {
+    if (!step.dependsOn) return true;
+
+    const fieldValue = getFieldValue(formData, step.dependsOn.field);
+    const values = step.dependsOn.values;
+
+    if (Array.isArray(values)) {
+      return values.includes(fieldValue);
+    }
+    return false; 
+  });
+};
+
 
   // -------------------- Event Handlers --------------------
 
@@ -79,7 +91,7 @@ export const PropertyFormScreen: React.FC<PropertyFormScreenProps> = ({
     }
   };
 
-  const handleFormUpdate = (updatedData: Partial<Property>) => {
+  const handleFormUpdate = (updatedData: Partial<UIProperty>) => {
     setFormData(updatedData);
     setIsFormEmpty(false);
   };

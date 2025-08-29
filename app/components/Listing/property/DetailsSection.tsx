@@ -3,10 +3,14 @@ import { View, Text, TouchableOpacity } from "react-native";
 import { Property } from "@/app/types";
 import { getIcon } from "../../../../utils/iconUtils";
 
+type UIProperty = Omit<Property, "handOverDate"> & {
+  handOverDate?: string;
+};
+
 interface DetailsSectionProps {
   title: string;
   stepValues: Array<{ id: string; label: string }>;
-  data: Partial<Property>;
+  data: Partial<UIProperty>;
   defaultVisible?: number;
   displayType?: "list" | "tags";
 }
@@ -95,7 +99,7 @@ export const DetailsSection: React.FC<DetailsSectionProps> = ({
             <View className="flex-row items-start">
               {/* Icon Container */}
               <View className="inline-flex p-[6px] items-center justify-center rounded-[6px] bg-[#E0F7F4] mr-3">
-                <Text className="text-base">{getIcon(field.label)}</Text>
+                <Text className="text-base">{getIcon(field.id)}</Text>
               </View>
               
               {/* Content */}

@@ -8,9 +8,13 @@ import { BasicPropertyInfo } from "./property/BasicPropertyInfo";
 import { DetailsSection } from "./property/DetailsSection";
 import {LocationSection} from "./property/LocationSection"
 
+type UIProperty = Omit<Property, "handOverDate"> & {
+  handOverDate?: string;
+};
+
 interface FormPreviewProps {
   config: FormConfig;
-  data: Partial<Property>;
+  data: Partial<UIProperty>; // ✅ flexible here
 }
 
 export const FormPreview: React.FC<FormPreviewProps> = ({ config, data }) => {
