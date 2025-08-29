@@ -1,38 +1,42 @@
 import React, { useState, useEffect } from "react";
-import { View, Keyboard } from "react-native";
+import { View, Keyboard, Text } from "react-native";
 import { useDoubleBackPressExit } from "@/hooks/useDoubleBackPressExit";
 import Offline from "../components/Offline";
 import { useSelector } from "react-redux";
 import { RootState } from "@/store/store";
 import { analytics } from "../config/firebase";
 import { logEvent } from "@react-native-firebase/analytics";
-import { MobileHits } from "../components/property/MobileHits";
-import { useAlgoliaSearch } from "@/hooks/propertyHooks/useAlgoliaSearchProperties";
+import PropertyCard from "../components/property/PropertyCard";
+import { searchProperties } from "../services/property_services/propertyService";
+import { Property } from "../types";
 
 const UnderReviewProperties = () => {
   const [isMoreFiltersModalOpen, setIsMoreFiltersModalOpen] = useState(false);
   const agentData = useSelector((state: RootState) => state?.agent?.docData);
   const userType = agentData?.userType || "free";
+  const [property, setProperty] = useState<any>(null);
 
   const isConnectedToInternet = useSelector(
     (state: RootState) => state.app.isConnectedToInternet
   );
 
-  // Use custom Algolia search hook
-  const {
-    searchState,
-    query,
-    filters,
-    facets,
-    selectedLandmark,
-    sortBy,
-    updateQuery,
-    updateFilters,
-    updateLandmark,
-    updateSort,
-    refresh,
-    loadMore,
-  } = useAlgoliaSearch({ stage: ["-live"] });
+  useEffect(() => {
+    const fetchProperty = async () => {
+      try {
+        const property: Property[] = await searchProperties(
+          "agentPhoneNumber",
+          "+918118823650"
+        );
+        console.log(property, "sdfga");
+        if (!property || property.length === 0) return;
+        setProperty(property[0]);
+      } catch (error) {
+        console.error("Error fetching property:", error);
+      }
+    };
+
+    fetchProperty();
+  }, []);
 
   // Track page view
   useEffect(() => {
@@ -62,18 +66,17 @@ const UnderReviewProperties = () => {
     return <Offline />;
   }
 
+  if (!property) {
+    return (
+      <View className="flex-1 justify-center items-center">
+        <Text>Loading</Text>
+      </View>
+    );
+  }
+
   return (
     <View className="flex-1 bg-[#F5F6F7] py-4">
-      <MobileHits
-        results={searchState.allResults}
-        loading={searchState.loading}
-        loadingMore={searchState.loadingMore}
-        hasMore={searchState.hasMore}
-        error={searchState.error}
-        totalHits={searchState.totalHits}
-        onLoadMore={loadMore}
-        onRefresh={refresh}
-      />
+      <PropertyCard property={property} />
     </View>
   );
 };

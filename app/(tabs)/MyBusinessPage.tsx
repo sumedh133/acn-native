@@ -6,10 +6,11 @@ import { useState } from "react";
 import Header from "../components/MyBusinessPage/Header";
 import Search from "../components/MyBusinessPage/Search";
 import Filters from "../components/MyBusinessPage/Filters";
-import UnderReview from "../components/MyBusinessPage/UnderReview";
 import Listings from "../components/MyBusinessPage/Listings";
 import { useAlgoliaSearch } from "@/hooks/propertyHooks/useAlgoliaSearchProperties";
 import { useSelector } from "react-redux";
+import UnderReviewProperties from "../(pages)/UnderReviewProperties";
+import PropertiesUnderReviewCard from "../components/MyBusinessPage/UnderReviewPropertiesButton";
 
 // Icons Import
 
@@ -52,7 +53,7 @@ const MyBusinessPage = () => {
       <Header activeCard={activeTab} setActiveCard={setActiveTab} />
       <Search />
       <Filters />
-      <UnderReview />
+      <PropertiesUnderReviewCard  />
       <Listings data={searchState} loadMore={loadMore} refresh={refresh} />
     </View>
   );

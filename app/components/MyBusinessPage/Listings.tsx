@@ -12,7 +12,6 @@ const MyBusinessListings = ({
   loadMore,
   refresh,
 }: MyBusinessListingsProps) => {
-  console.log("siofhsaujiauidh", data.cpId);
   return (
     <View className="w-full flex-1">
       <MobileHits

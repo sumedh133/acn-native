@@ -3,11 +3,12 @@ import { View, Text, TouchableOpacity } from "react-native";
 import LinearGradient from "react-native-linear-gradient";
 import HourglassIcon from "@/assets/icons/MyBusinessPage/hourglass.svg"
 import RightArrow from "@/assets/icons/arrowRightt.svg"
+import { router } from "expo-router";
 
 
 const PropertiesUnderReviewCard = () => {
   return (
-    <TouchableOpacity activeOpacity={0.8}>
+    <TouchableOpacity activeOpacity={0.8} onPress={() => {router.push("/(pages)/UnderReviewProperties")}} className="mx-4 my-3">
       <LinearGradient
         colors={["#E6FAF7", "#DFF7F5"]} // light teal gradient
         start={{ x: 0, y: 0 }}
