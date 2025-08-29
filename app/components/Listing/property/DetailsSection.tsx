@@ -19,7 +19,7 @@ interface DetailsSectionProps {
   stepValues: Array<{ id: string; label: string }>;
   data: Partial<UIProperty>;
   defaultVisible?: number;
-  displayType?: "list" | "tags";
+  displayType?: "list" | "tags" | "mixed";
 }
 
 export const DetailsSection: React.FC<DetailsSectionProps> = ({
@@ -40,6 +40,26 @@ export const DetailsSection: React.FC<DetailsSectionProps> = ({
       return value.length > 0 ? value.join(", ") : "N/A";
     }
     return String(value);
+  };
+
+  // Helper function to determine if a field should be displayed as a pill
+  const shouldDisplayAsPill = (field: any, value: any): boolean => {
+    // If it's amenities or similar array fields, show as pills
+    if (Array.isArray(value) && value.length > 0) return true;
+
+    // If it's a boolean field that's true, show as pill
+    if (typeof value === "boolean" && value === true) return true;
+
+    // If it's a string that represents a boolean-like value
+    if (
+      typeof value === "string" &&
+      ["yes", "true", "approved", "available", "received"].some((keyword) =>
+        value.toLowerCase().includes(keyword)
+      )
+    )
+      return true;
+
+    return false;
   };
 
   if (displayType === "tags") {
@@ -76,28 +96,183 @@ export const DetailsSection: React.FC<DetailsSectionProps> = ({
           ))}
         </View>
         {tags.length > 8 && (
-          <TouchableOpacity onPress={() => setShowAll(!showAll)} className="mt-1">
-          <View className="flex-row items-center">
-            {/* Text + custom underline */}
-            <View className="mr-1 self-start">
-              <Text className="text-[#10302D] text-[12px] font-bold font-[Lato] leading-[18px] text-center">
-                {showAll ? "View Less" : "View More"}
-              </Text>
-              {/* The underline with adjustable gap */}
-              <View className="h-[1px] bg-[#10302D] mt-[2px]" />
-              {/* tweak mt-[2px] to mt-[3px]/mt-[4px] for more gap */}
+          <TouchableOpacity
+            onPress={() => setShowAll(!showAll)}
+            className="mt-1"
+          >
+            <View className="flex-row items-center">
+              <View className="mr-1 self-start">
+                <Text className="text-[#10302D] text-[12px] font-bold font-[Lato] leading-[18px] text-center">
+                  {showAll ? "View Less" : "View More"}
+                </Text>
+                <View className="h-[1px] bg-[#10302D] mt-[2px]" />
+              </View>
+              <ChevronIcon direction={showAll ? "down" : "up"} />
             </View>
-
-            {/* Keep chevron direction consistent */}
-            <ChevronIcon direction={showAll ? "up" : "down"} />
-          </View>
-        </TouchableOpacity>
+          </TouchableOpacity>
         )}
       </View>
     );
   }
 
-  // Grid view for Property Details and Pricing Details
+  // Mixed display for "More Details" - pills for booleans/amenities, grid for others
+  if (displayType === "mixed") {
+    const fieldsWithValues = stepValues
+      .map((field) => {
+        const value = getFieldValue(data, field.id);
+        return {
+          ...field,
+          value,
+          formattedValue: formatValue(value),
+          hasValue:
+            value &&
+            (Array.isArray(value)
+              ? value.length > 0
+              : typeof value === "boolean"
+              ? value
+              : String(value).trim() !== ""),
+        };
+      })
+      .filter((field) => field.hasValue);
+
+    if (fieldsWithValues.length === 0) return null;
+
+    // Separate fields into different categories
+    const gridFields: any[] = [];
+    const booleanFields: any[] = [];
+    const arrayFields: any[] = [];
+
+    fieldsWithValues.forEach((field) => {
+      if (Array.isArray(field.value) && field.value.length > 0) {
+        // For arrays, keep the field info with label
+        arrayFields.push({
+          ...field,
+          items: field.value,
+        });
+      } else if (typeof field.value === "boolean" && field.value === true) {
+        // For boolean fields
+        booleanFields.push(field);
+      } else if (
+        typeof field.value === "string" &&
+        ["yes", "true", "approved", "available", "received"].some((keyword) =>
+          field.value.toLowerCase().includes(keyword)
+        )
+      ) {
+        // For string boolean-like fields
+        booleanFields.push(field);
+      } else {
+        // Regular grid fields
+        gridFields.push(field);
+      }
+    });
+
+    // Combine all fields and limit to 4 total initially
+    const allFieldsCombined = [...gridFields, ...booleanFields, ...arrayFields];
+    const visibleAllFields = showAll
+      ? allFieldsCombined
+      : allFieldsCombined.slice(0, 4);
+
+    // Separate back into types from visible fields
+    const visibleGridFields = visibleAllFields.filter((field) =>
+      gridFields.includes(field)
+    );
+    const visibleBooleanFields = visibleAllFields.filter((field) =>
+      booleanFields.includes(field)
+    );
+    const visibleArrayFields = visibleAllFields.filter((field) =>
+      arrayFields.includes(field)
+    );
+
+    return (
+      <View className="bg-white px-5 py-4">
+        <Text className="text-[14px] leading-[21px] font-bold text-black font-[Montserrat] mb-4">
+          {title}
+        </Text>
+
+        {/* 1. Grid Layout for normal label/value fields */}
+        {visibleGridFields.length > 0 && (
+          <View className="flex-row flex-wrap -mx-1.5 ">
+            {visibleGridFields.map((field, index) => (
+              <View key={field.id} className="w-1/2 px-1 mb-2">
+                <View className="flex-row items-start">
+                  <View className="inline-flex p-[4px] items-center justify-center rounded-[6px] mt-1 mr-2">
+                    {getIcon(field.id)}
+                  </View>
+                  <View className="flex-1">
+                    <Text className="text-[14px] leading-[21px] font-medium text-[#5A5555] font-[Lato]">
+                      {field.label}
+                    </Text>
+                    <Text className="text-[15px] leading-[24px] font-bold text-black font-[Lato]">
+                      {field.formattedValue}
+                    </Text>
+                  </View>
+                </View>
+              </View>
+            ))}
+          </View>
+        )}
+
+        {/* 2. Boolean Pills */}
+        {visibleBooleanFields.length > 0 && (
+          <View className="mb-2">
+            <View className="flex-row flex-wrap -m-1">
+              {visibleBooleanFields.map((field, i) => (
+                <View
+                  key={i}
+                  className="bg-white border border-[#E0E0E0] px-3 py-2 rounded-full m-1"
+                >
+                  <Text className="text-[#333333] text-sm font-medium">
+                    {field.label}
+                  </Text>
+                </View>
+              ))}
+            </View>
+          </View>
+        )}
+
+        {/* 3. Array Fields with Headings */}
+        {visibleArrayFields.map((field, index) => (
+          <View key={field.id} className="mb-2">
+            <Text className="text-[14px] leading-[21px] font-bold text-black font-[Montserrat] mb-3">
+              {field.label}
+            </Text>
+            <View className="flex-row flex-wrap -m-1">
+              {field.items.map((item: string, i: number) => (
+                <View
+                  key={i}
+                  className="bg-[#E6F7F4] px-3 py-2 rounded-full m-1"
+                >
+                  <Text className="text-[#2D5A52] text-sm font-medium">
+                    {item}
+                  </Text>
+                </View>
+              ))}
+            </View>
+          </View>
+        ))}
+
+        {/* Show More/Less Button */}
+        {(allFieldsCombined.length > 4) && (
+          <TouchableOpacity
+            onPress={() => setShowAll(!showAll)}
+            className="mt-1"
+          >
+            <View className="flex-row items-center">
+              <View className="mr-1 self-start">
+                <Text className="text-[#10302D] text-[12px] font-bold font-[Lato] leading-[18px] text-center">
+                  {showAll ? "View Less" : "View More"}
+                </Text>
+                <View className="h-[1px] bg-[#10302D] mt-[2px]" />
+              </View>
+              <ChevronIcon direction={showAll ? "down" : "up"} />
+            </View>
+          </TouchableOpacity>
+        )}
+      </View>
+    );
+  }
+
+  // Original grid view for other sections
   const fieldsWithValues = stepValues
     .map((field) => {
       const value = getFieldValue(data, field.id);
@@ -125,17 +300,13 @@ export const DetailsSection: React.FC<DetailsSectionProps> = ({
         {title}
       </Text>
 
-      {/* Grid Layout - 2 columns */}
       <View className="flex-row flex-wrap -mx-1.5">
         {visibleFields.map((field, index) => (
           <View key={field.id} className="w-1/2 px-1 mb-4">
             <View className="flex-row items-start">
-              {/* Icon Container */}
-              <View className="inline-flex p-[4px] items-center justify-center rounded-[6px]  mt-1 mr-2">
-               {getIcon(field.id)}
+              <View className="inline-flex p-[4px] items-center justify-center rounded-[6px] mt-1 mr-2">
+                {getIcon(field.id)}
               </View>
-
-              {/* Content */}
               <View className="flex-1">
                 <Text className="text-[14px] leading-[21px] font-medium text-[#5A5555] font-[Lato]">
                   {field.label}
@@ -149,22 +320,16 @@ export const DetailsSection: React.FC<DetailsSectionProps> = ({
         ))}
       </View>
 
-      {/* Show More/Less Button */}
       {fieldsWithValues.length > defaultVisible && (
         <TouchableOpacity onPress={() => setShowAll(!showAll)} className="mt-1">
           <View className="flex-row items-center">
-            {/* Text + custom underline */}
             <View className="mr-1 self-start">
               <Text className="text-[#10302D] text-[12px] font-bold font-[Lato] leading-[18px] text-center">
                 {showAll ? "View Less" : "View More"}
               </Text>
-              {/* The underline with adjustable gap */}
               <View className="h-[1px] bg-[#10302D] mt-[2px]" />
-              {/* tweak mt-[2px] to mt-[3px]/mt-[4px] for more gap */}
             </View>
-
-            {/* Keep chevron direction consistent */}
-            <ChevronIcon direction={showAll ? "up" : "down"} />
+            <ChevronIcon direction={showAll ? "down" : "up"} />
           </View>
         </TouchableOpacity>
       )}

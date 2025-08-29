@@ -214,9 +214,9 @@ export const PropertyFormScreen: React.FC<PropertyFormScreenProps> = ({
   // -------------------- Event Handlers --------------------
 
   const handleNext = () => {
-    if (!validateCurrentStep()) {
-      return;
-    }
+    // if (!validateCurrentStep()) {
+    //   return;
+    // }
 
     const visibleSteps = getVisibleSteps();
     if (currentStepIndex < visibleSteps.length - 1) {
@@ -271,7 +271,7 @@ export const PropertyFormScreen: React.FC<PropertyFormScreenProps> = ({
 
   const handleStepChange = (index: number) => {
     setErrors({});
-    if (currentStepIndex <= maxStepIndex) { if (!validateCurrentStep()) return }
+    // if (currentStepIndex <= maxStepIndex) { if (!validateCurrentStep()) return }
     const visibleSteps = getVisibleSteps();
     if (index <= maxStepIndex || index < visibleSteps.length) {
       setCurrentStepIndex(index);
