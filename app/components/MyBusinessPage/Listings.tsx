@@ -3,10 +3,16 @@ import { MobileHits } from "../property/MobileHits";
 
 interface MyBusinessListingsProps {
   data: any;
+  loadMore: any;
+  refresh: any;
 }
 
-const MyBusinessListings = ({ data }: MyBusinessListingsProps) => {
-  console.log("siofhsaujiauidh", data);
+const MyBusinessListings = ({
+  data,
+  loadMore,
+  refresh,
+}: MyBusinessListingsProps) => {
+  console.log("siofhsaujiauidh", data.cpId);
   return (
     <View className="w-full flex-1">
       <MobileHits
@@ -16,8 +22,8 @@ const MyBusinessListings = ({ data }: MyBusinessListingsProps) => {
         hasMore={data.hasMore}
         error={data.error}
         totalHits={data.totalHits}
-        onLoadMore={data.onLoadMore}
-        onRefresh={data.onRefresh}
+        onLoadMore={loadMore}
+        onRefresh={refresh}
       />
     </View>
   );
