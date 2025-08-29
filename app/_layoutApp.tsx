@@ -5,7 +5,13 @@ import {
   useNavigation,
   useRouter,
 } from "expo-router";
-import React, { useCallback, useEffect, useState } from "react";
+import React, {
+  useCallback,
+  useContext,
+  useEffect,
+  useRef,
+  useState,
+} from "react";
 import Toast from "react-native-toast-message";
 import { StatusBar } from "expo-status-bar";
 import { toastConfig } from "@/utils/toastUtils";
@@ -87,7 +93,9 @@ const CustomHeader = ({
   headerBackVisible: boolean;
   unreadCount: number;
 }) => {
-  const insets = useSafeAreaInsets();
+  const { headerHeight, setHeaderHeight } = useContext(ScrollContext)!;
+  const [measured, setMeasured] = useState(false);
+
   const monthlyCredits = useSelector(
     (state: RootState) => state?.agent?.docData?.monthlyCredits
   );
@@ -96,20 +104,36 @@ const CustomHeader = ({
     0;
 
   return (
-    <View style={styles.headerContainer}>
-      <View style={styles.headerContent}>
-        <View style={styles.headerLeft}>
-          <TouchableOpacity onPress={() => onMenuPress(headerBackVisible)}>
-            {headerBackVisible ? (
-              <ArrowLeftIcon />
-            ) : (
-              <UserIcon width={32} height={32} />
-            )}
-          </TouchableOpacity>
-          <Text style={styles.headerTitle}>{title}</Text>
-        </View>
-        {!headerBackVisible && (
-          <View className="flex flex-row items-center gap-2">
+    <Animated.View
+      style={{
+        height: headerHeight, // <- animated height from context
+        zIndex: 10,
+        overflow: "hidden", // hide collapsing content
+      }}
+    >
+      <View
+        style={styles.headerContainer}
+        //         onLayout={(event) => {
+        //   if (!measured.current) {
+        //     setHeaderHeight(event.nativeEvent.layout.height);
+        //     measured.current = true;
+        //   }
+        // }}
+      >
+        <View style={styles.headerContent}>
+          <View style={styles.headerLeft}>
+            <TouchableOpacity onPress={() => onMenuPress(headerBackVisible)}>
+              {headerBackVisible ? (
+                <ArrowLeftIcon />
+              ) : (
+                <UserIcon width={32} height={32} />
+              )}
+            </TouchableOpacity>
+            <Text style={styles.headerTitle}>{title}</Text>
+          </View>
+
+          {!headerBackVisible && (
+            <View className="flex flex-row items-center gap-2">
             <TouchableOpacity
               className="relative border p-[6px] rounded-md border-[#9F9C9C]"
               onPress={() => {
@@ -125,18 +149,19 @@ const CustomHeader = ({
             </TouchableOpacity>
 
             <TouchableOpacity
-              style={styles.headerRight}
-              onPress={() => router.push("/(pages)/Credits")}
-            >
-              <Text style={styles.creditsText}>
-                {monthlyCredits + boosterCredits}
-              </Text>
-              <CoinIcon width={18} height={18} />
-            </TouchableOpacity>
-          </View>
+                style={styles.headerRight}
+                onPress={() => router.push("/(pages)/Credits")}
+              >
+                <Text style={styles.creditsText}>
+                  {monthlyCredits + boosterCredits}
+                </Text>
+                <CoinIcon width={18} height={18} />
+              </TouchableOpacity>
+            </View>
         )}
+        </View>
       </View>
-    </View>
+    </Animated.View>
   );
 };
 
