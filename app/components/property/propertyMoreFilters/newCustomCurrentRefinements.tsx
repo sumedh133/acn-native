@@ -27,6 +27,7 @@ export default function CustomCurrentRefinements({
   // Convert filters object into an array of {key, value, isRange?}
   const allRefinements = Object.entries(filters)
     .filter(([key]) => key !== "listingType")
+    .filter(([key]) => key !== "cpId")
     .flatMap(([key, values]) => {
       if (!values) return [];
 

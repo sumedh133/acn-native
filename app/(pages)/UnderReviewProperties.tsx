@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from "react";
-import { View, Keyboard, Text } from "react-native";
+import React, { useState, useEffect, useCallback, useRef } from "react";
+import { View, Keyboard, Text, RefreshControl } from "react-native"; // Import RefreshControl from react-native
 import { useDoubleBackPressExit } from "@/hooks/useDoubleBackPressExit";
 import Offline from "../components/Offline";
 import { useSelector } from "react-redux";
@@ -9,34 +9,51 @@ import { logEvent } from "@react-native-firebase/analytics";
 import PropertyCard from "../components/property/PropertyCard";
 import { searchProperties } from "../services/property_services/propertyService";
 import { Property } from "../types";
+import Animated, {
+  useSharedValue,
+  useAnimatedScrollHandler,
+} from "react-native-reanimated";
 
 const UnderReviewProperties = () => {
+  // ALL HOOKS MUST BE CALLED FIRST - before any conditional logic
   const [isMoreFiltersModalOpen, setIsMoreFiltersModalOpen] = useState(false);
-  const agentData = useSelector((state: RootState) => state?.agent?.docData);
-  const userType = agentData?.userType || "free";
-  const [property, setProperty] = useState<any>(null);
+  const [properties, setProperties] = useState<Property[]>([]);
+  const [refreshing, setRefreshing] = useState(false);
+  const [loading, setLoading] = useState(true);
 
+  const agentData = useSelector((state: RootState) => state?.agent?.docData);
   const isConnectedToInternet = useSelector(
     (state: RootState) => state.app.isConnectedToInternet
   );
 
-  useEffect(() => {
-    const fetchProperty = async () => {
-      try {
-        const property: Property[] = await searchProperties(
-          "agentPhoneNumber",
-          "+918118823650"
-        );
-        console.log(property, "sdfga");
-        if (!property || property.length === 0) return;
-        setProperty(property[0]);
-      } catch (error) {
-        console.error("Error fetching property:", error);
-      }
-    };
+  const userType = agentData?.userType || "free";
+  const scrollY = useSharedValue(0);
+  const viewabilityConfig = useRef({
+    itemVisiblePercentThreshold: 50,
+  });
 
-    fetchProperty();
+  // Call useDoubleBackPressExit IMMEDIATELY after other hooks
+  useDoubleBackPressExit();
+
+  const cpId = useSelector((state: RootState) => state?.agent?.docData.cpId);
+
+  const fetchProperties = useCallback(async () => {
+    try {
+      setLoading(true);
+      const propertyResults: Property[] = await searchProperties("cpId", cpId);
+      console.log(propertyResults, "fetched properties");
+      setProperties(propertyResults || []);
+    } catch (error) {
+      console.error("Error fetching properties:", error);
+      setProperties([]);
+    } finally {
+      setLoading(false);
+    }
   }, []);
+
+  useEffect(() => {
+    fetchProperties();
+  }, [fetchProperties]);
 
   // Track page view
   useEffect(() => {
@@ -51,7 +68,85 @@ const UnderReviewProperties = () => {
     }
   }, [userType]);
 
-  useDoubleBackPressExit();
+  const handleRefresh = useCallback(async () => {
+    setRefreshing(true);
+    await fetchProperties();
+    setRefreshing(false);
+  }, [fetchProperties]);
+
+  const scrollHandler = useAnimatedScrollHandler({
+    onScroll: (event) => {
+      scrollY.value = event.contentOffset.y;
+    },
+  });
+
+  const onScrollEndDrag = useCallback(() => {
+    // Handle scroll end drag if needed
+  }, []);
+
+  const onMomentumScrollEnd = useCallback(() => {
+    // Handle momentum scroll end if needed
+  }, []);
+
+  const handleViewableItemsChanged = useCallback(({ viewableItems }: any) => {
+    // Handle viewable items changed if needed
+  }, []);
+
+  const handleEndReached = useCallback(() => {
+    // Handle pagination if needed
+    console.log("End reached");
+  }, []);
+
+  const renderFooter = useCallback(() => {
+    if (properties.length === 0) return null;
+    return (
+      <View style={{ height: 20 }}>
+        <Text style={{ textAlign: "center", color: "#666" }}>
+          End of results
+        </Text>
+      </View>
+    );
+  }, [properties.length]);
+
+  const keyExtractor = useCallback((item: Property, index: number) => {
+    return item.propertyId || item.propertyId || index.toString();
+  }, []);
+
+  const renderItem = useCallback(
+    ({ item, index }: { item: Property; index: number }) => {
+      const handlePropertyView = () => {
+        try {
+          logEvent(analytics, "property_card_view", {
+            event_category: "interaction",
+            event_label: "property_view",
+            property_id: item.propertyId || item.propertyId,
+            list_position: index + 1,
+            total_results: properties.length,
+            user_type: userType,
+          });
+        } catch (error) {
+          console.error("Error logging property view:", error);
+        }
+      };
+
+      return (
+        <View
+          onStartShouldSetResponder={() => {
+            handlePropertyView();
+            return false;
+          }}
+        >
+          <PropertyCard
+            key={item.propertyId || item.propertyId || index}
+            property={item}
+          />
+        </View>
+      );
+    },
+    [properties.length, userType]
+  );
+
+  // NOW conditional renders can happen - all hooks have been called
 
   if (!isConnectedToInternet) {
     try {
@@ -66,18 +161,58 @@ const UnderReviewProperties = () => {
     return <Offline />;
   }
 
-  if (!property) {
+  if (loading) {
     return (
       <View className="flex-1 justify-center items-center">
-        <Text>Loading</Text>
+        <Text>Loading...</Text>
+      </View>
+    );
+  }
+
+  if (properties.length === 0) {
+    return (
+      <View className="flex-1 justify-center items-center">
+        <Text>No properties found</Text>
       </View>
     );
   }
 
   return (
-    <View className="flex-1 bg-[#F5F6F7] py-4">
-      <PropertyCard property={property} />
-    </View>
+    <Animated.FlatList
+      data={properties}
+      renderItem={renderItem}
+      keyExtractor={keyExtractor}
+      ItemSeparatorComponent={() => <View style={{ height: 12 }} />}
+      onScroll={scrollHandler}
+      scrollEventThrottle={16}
+      onScrollEndDrag={onScrollEndDrag}
+      onMomentumScrollEnd={onMomentumScrollEnd}
+      onViewableItemsChanged={handleViewableItemsChanged}
+      viewabilityConfig={viewabilityConfig.current}
+      refreshControl={
+        <RefreshControl
+          refreshing={refreshing}
+          onRefresh={handleRefresh}
+          colors={["#153E3B"]}
+          tintColor="#153E3B"
+          title="Refreshing..."
+          titleColor="#153E3B"
+        />
+      }
+      contentContainerStyle={{
+        paddingHorizontal: 16,
+        width: "100%",
+        flexGrow: 1,
+      }}
+      style={{ flexGrow: 1, flexShrink: 1 }}
+      initialNumToRender={10}
+      maxToRenderPerBatch={5}
+      windowSize={10}
+      removeClippedSubviews={true}
+      onEndReached={handleEndReached}
+      onEndReachedThreshold={0.3}
+      ListFooterComponent={renderFooter}
+    />
   );
 };
 

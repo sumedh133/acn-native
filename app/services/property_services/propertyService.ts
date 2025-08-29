@@ -54,7 +54,9 @@ export const generatePropertyId = async (): Promise<string> => {
 /**
  * Create a new property in `acnQCInventories`.
  */
-export const createProperty = async (property: Omit<Property, "propertyId">) => {
+export const createProperty = async (
+  property: Omit<Property, "propertyId">
+) => {
   const propertyId = await generatePropertyId();
 
   const ref = doc(collection(db, INVENTORY_COLLECTION), propertyId);
@@ -75,7 +77,9 @@ export const createProperty = async (property: Omit<Property, "propertyId">) => 
 /**
  * Fetch a property by ID.
  */
-export const getPropertyById = async (propertyId: string): Promise<Property | null> => {
+export const getPropertyById = async (
+  propertyId: string
+): Promise<Property | null> => {
   const ref = doc(db, INVENTORY_COLLECTION, propertyId);
   const snapshot = await getDoc(ref);
 
@@ -94,8 +98,10 @@ export const getAllProperties = async (filters?: {
 
   // Apply filters dynamically
   const conditions: any[] = [];
-  if (filters?.listingType) conditions.push(where("listingType", "==", filters.listingType));
-  if (filters?.propertyType) conditions.push(where("propertyType", "==", filters.propertyType));
+  if (filters?.listingType)
+    conditions.push(where("listingType", "==", filters.listingType));
+  if (filters?.propertyType)
+    conditions.push(where("propertyType", "==", filters.propertyType));
   if (filters?.status) conditions.push(where("status", "==", filters.status));
 
   let queryRef = conditions.length > 0 ? query(q, ...conditions) : query(q);
@@ -108,7 +114,10 @@ export const getAllProperties = async (filters?: {
 /**
  * Update a property by ID.
  */
-export const updateProperty = async (propertyId: string, updates: Partial<Property>) => {
+export const updateProperty = async (
+  propertyId: string,
+  updates: Partial<Property>
+) => {
   const ref = doc(db, INVENTORY_COLLECTION, propertyId);
 
   await updateDoc(ref, {
@@ -151,7 +160,10 @@ export const updateQcStatus = async (
 /**
  * Search properties by agent phone number or property name.
  */
-export const searchProperties = async (field: "agentPhoneNumber" | "propertyName", value: string) => {
+export const searchProperties = async (
+  field: "agentPhoneNumber" | "propertyName" | "cpId",
+  value: string
+) => {
   const q = query(
     collection(db, INVENTORY_COLLECTION),
     where(field, "==", value)

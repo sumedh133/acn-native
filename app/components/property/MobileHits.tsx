@@ -20,7 +20,6 @@ import { RootState } from "@/store/store";
 import { analytics } from "../../config/firebase";
 import { logEvent } from "@react-native-firebase/analytics";
 import { ScrollContext } from "@/app/ScrollContext";
-import { usePathname } from "expo-router";
 
 interface MobileHitsProps {
   results: any[]; // All accumulated results from infinite scroll
@@ -59,8 +58,6 @@ export const MobileHits = ({
     itemVisiblePercentThreshold: 50, // Item is considered viewed when 50% visible
     minimumViewTime: 500, // Must be visible for at least 500ms
   });
-
-  const pathname = usePathname();
 
   // Track search results when they change
   useEffect(() => {
@@ -388,6 +385,7 @@ export const MobileHits = ({
       data={results}
       renderItem={renderItem}
       keyExtractor={keyExtractor}
+      ItemSeparatorComponent={() => <View style={{ height: 12 }} />}
       onScroll={Animated.event(
         [{ nativeEvent: { contentOffset: { y: scrollY } } }],
         { useNativeDriver: false, listener: handleScroll }
