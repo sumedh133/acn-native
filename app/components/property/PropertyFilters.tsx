@@ -7,6 +7,7 @@ import {
   Keyboard,
   Animated,
 } from "react-native";
+import { Ionicons } from '@expo/vector-icons'; // or 'react-native-vector-icons/Ionicons'
 import { analytics } from "@/app/config/firebase";
 import { logEvent } from "@react-native-firebase/analytics";
 import { useSelector } from "react-redux";
@@ -70,6 +71,11 @@ export default function PropertyFilters({
     new Animated.Value(activeTab === "rental" ? 1 : 0)
   ).current;
 
+  // Animation values for rotating arrows
+  const statusRotateAnim = useRef(new Animated.Value(0)).current;
+  const categoryRotateAnim = useRef(new Animated.Value(0)).current;
+  const sortRotateAnim = useRef(new Animated.Value(0)).current;
+
   const {
     selectedSort,
     openSortPopup,
@@ -83,6 +89,27 @@ export default function PropertyFilters({
     openCategoryPopup,
     setSelectedCategory,
   } = useContext(ScrollContext);
+
+  // Create rotation interpolations
+  const statusRotateInterpolate = statusRotateAnim.interpolate({
+    inputRange: [0, 1],
+    outputRange: ['0deg', '180deg'],
+  });
+
+  const categoryRotateInterpolate = categoryRotateAnim.interpolate({
+    inputRange: [0, 1],
+    outputRange: ['0deg', '180deg'],
+  });
+
+  const sortRotateInterpolate = sortRotateAnim.interpolate({
+    inputRange: [0, 1],
+    outputRange: ['0deg', '180deg'],
+  });
+
+  // Track popup states (you'll need to get these from your context or manage them locally)
+  const [isStatusPopupOpen, setIsStatusPopupOpen] = useState(false);
+  const [isCategoryPopupOpen, setIsCategoryPopupOpen] = useState(false);
+  const [isSortPopupOpen, setIsSortPopupOpen] = useState(false);
 
   const prevSortByRef = useRef(sortBy);
   const prevSelectedSortRef = useRef(selectedSort);
@@ -99,6 +126,51 @@ export default function PropertyFilters({
     { label: "Newest First", value: "date_desc" },
     { label: "Oldest First", value: "date_asc" },
   ];
+
+  // Animation effects for popup states
+  useEffect(() => {
+    Animated.timing(statusRotateAnim, {
+      toValue: isStatusPopupOpen ? 1 : 0,
+      duration: 200,
+      useNativeDriver: true,
+    }).start();
+  }, [isStatusPopupOpen]);
+
+  useEffect(() => {
+    Animated.timing(categoryRotateAnim, {
+      toValue: isCategoryPopupOpen ? 1 : 0,
+      duration: 200,
+      useNativeDriver: true,
+    }).start();
+  }, [isCategoryPopupOpen]);
+
+  useEffect(() => {
+    Animated.timing(sortRotateAnim, {
+      toValue: isSortPopupOpen ? 1 : 0,
+      duration: 200,
+      useNativeDriver: true,
+    }).start();
+  }, [isSortPopupOpen]);
+
+  // Modified popup handlers to track state
+  const handleOpenStatusPopup = () => {
+    setIsStatusPopupOpen(true);
+    openStatusPopup();
+    // You might need to set a timeout to close this or listen to popup close events
+    setTimeout(() => setIsStatusPopupOpen(false), 3000); // Adjust based on your popup behavior
+  };
+
+  const handleOpenCategoryPopup = () => {
+    setIsCategoryPopupOpen(true);
+    openCategoryPopup();
+    setTimeout(() => setIsCategoryPopupOpen(false), 3000);
+  };
+
+  const handleOpenSortPopup = () => {
+    setIsSortPopupOpen(true);
+    openSortPopup();
+    setTimeout(() => setIsSortPopupOpen(false), 3000);
+  };
 
   // Sync local search text with external query
   useEffect(() => {
@@ -247,40 +319,70 @@ export default function PropertyFilters({
 
         {/* Filter Buttons Row */}
         <View className="flex-row items-center space-x-2 mb-2">
-          {/* Status Dropdown */}
+          {/* Status Button */}
           <TouchableOpacity
-            onPress={openStatusPopup}
-            className="flex-row items-center justify-center rounded-lg border border-[#B5B3B3] bg-white px-4 h-10"
+            onPress={handleOpenStatusPopup}
+            className="flex-row items-center justify-center rounded-lg border border-[#B5B3B3] bg-white h-10 relative pr-8 pl-4 "
           >
-            <Text className="text-sm text-gray-700 mr-2">Status</Text>
-            <View className="rotate-90">
-              <Text className="text-gray-500">⌄</Text>
-            </View>
+            <Text className="text-sm text-black" style={{fontFamily: "Lato_400Regular"}}>Status</Text>
+            <Animated.View
+              style={{
+                position: "absolute",
+                right: 8,
+                top: "50%",
+                transform: [
+                  { translateY: -10 },
+                  { rotate: statusRotateInterpolate },
+                ],
+              }}
+            >
+              <Ionicons name="chevron-down" size={20} color="#555" />
+            </Animated.View>
           </TouchableOpacity>
 
-          {/* Category Dropdown */}
+          {/* Category Button */}
           <TouchableOpacity
-            onPress={openCategoryPopup}
-            className="flex-row items-center justify-center rounded-lg border border-[#B5B3B3] bg-white px-4 h-10"
+            onPress={handleOpenCategoryPopup}
+            className="flex-1 flex-row items-center justify-center rounded-lg border border-[#B5B3B3] bg-white h-10 relative pr-8 pl-4"
           >
-            <Text className="text-sm text-gray-700 mr-2">Category</Text>
-            <View className="rotate-90">
-              <Text className="text-gray-500">⌄</Text>
-            </View>
+            <Text className="text-sm text-black" style={{fontFamily: "Lato_400Regular"}}>Category</Text>
+            <Animated.View
+              style={{
+                position: "absolute",
+                right: 8,
+                top: "50%",
+                transform: [
+                  { translateY: -10 },
+                  { rotate: categoryRotateInterpolate },
+                ],
+              }}
+            >
+              <Ionicons name="chevron-down" size={20} color="#555" />
+            </Animated.View>
           </TouchableOpacity>
 
-          {/* Sort Dropdown */}
+          {/* Sort Button */}
           <TouchableOpacity
-            onPress={openSortPopup}
-            className="flex-row items-center justify-center rounded-lg border border-[#B5B3B3] bg-white px-4 h-10"
+            onPress={handleOpenSortPopup}
+            className="flex-row items-center justify-center rounded-lg border border-[#B5B3B3] bg-white h-10 relative pr-8 pl-4"
           >
-            <Text className="text-sm text-gray-700 mr-2">Sort</Text>
-            <View className="rotate-90">
-              <Text className="text-gray-500">⌄</Text>
-            </View>
+            <Text className="text-sm text-black" style={{fontFamily: "Lato_400Regular"}}>Sort</Text>
+            <Animated.View
+              style={{
+                position: "absolute",
+                right: 8,
+                top: "50%",
+                transform: [
+                  { translateY: -10 },
+                  { rotate: sortRotateInterpolate },
+                ],
+              }}
+            >
+              <Ionicons name="chevron-down" size={20} color="#555" />
+            </Animated.View>
           </TouchableOpacity>
 
-          {/* Filter Icon */}
+          {/* Filter Icon Button */}
           <TouchableOpacity
             onPress={handleMoreFilters}
             className="h-10 w-10 items-center justify-center rounded-lg border border-[#B5B3B3] bg-white"
@@ -338,10 +440,23 @@ export default function PropertyFilters({
         </View>
 
         <TouchableOpacity
-          onPress={openSortPopup}
-          className="h-10 w-fit items-center justify-center rounded-lg border border-[#B5B3B3] bg-white"
+          onPress={handleOpenSortPopup}
+          className="h-10 w-fit items-center justify-center rounded-lg border border-[#B5B3B3] bg-white relative pl-4 pr-8"
         >
-          <Text className="px-4">Sort</Text>
+          <Text className="text-sm text-black" style={{fontFamily: "Lato_400Regular"}}>Sort</Text>
+          <Animated.View
+            style={{
+              position: "absolute",
+              right: 8,
+              top: "50%",
+              transform: [
+                { translateY: -10 },
+                { rotate: sortRotateInterpolate },
+              ],
+            }}
+          >
+            <Ionicons name="chevron-down" size={20} color="#555" />
+          </Animated.View>
         </TouchableOpacity>
 
         {/* Filter Button */}

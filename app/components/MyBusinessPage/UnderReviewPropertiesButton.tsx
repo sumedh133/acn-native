@@ -12,7 +12,7 @@ const PropertiesUnderReviewCard = () => {
       onPress={() => {
         router.push("/(pages)/UnderReviewProperties");
       }}
-      className="mx-4 my-3"
+      className="mx-4 mb-3"
     >
       <LinearGradient
         colors={["#A6E5E0", "#BCEBE8", "#D5F2F0"]} // light teal gradient
