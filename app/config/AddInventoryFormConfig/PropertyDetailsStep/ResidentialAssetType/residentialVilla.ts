@@ -4,7 +4,7 @@ export const residentialVillaFields: FormField[] = [
   {
     id: "propertyName",
     label: "Project Name",
-    type: "text",
+    type: "placesApi",
     required: true,
     placeholder: "Enter property name",
     colspan: 12,
@@ -19,7 +19,7 @@ export const residentialVillaFields: FormField[] = [
     label: "SBUA",
     type: "number",
     required: true,
-    placeholder: "Enter SBUA in square feet",
+    placeholder: "1500",
     validation: {
       min: 100,
       message: "SBUA must be at least 100 sqft",
@@ -28,6 +28,8 @@ export const residentialVillaFields: FormField[] = [
       field: "assetType",
       values: ["villa"],
     },
+    suffix: "Sqft",
+    keyBoardType: "numeric",
     colspan: 12,
     conditional: true,
   },
@@ -36,11 +38,13 @@ export const residentialVillaFields: FormField[] = [
     label: "Carpet Area",
     type: "number",
     required: false,
-    placeholder: "Enter carpet area in square feet",
+    placeholder: "1500",
     dependsOn: {
       field: "assetType",
       values: ["villa"],
     },
+    suffix: "Sqft",
+    keyBoardType: "numeric",
     colspan: 12,
     conditional: true,
   },
@@ -48,12 +52,13 @@ export const residentialVillaFields: FormField[] = [
     id: "plotArea",
     label: "Plot Area",
     type: "number",
-    required: true,
-    placeholder: "Enter plot area in square feet",
+    placeholder: "1500",
     dependsOn: {
       field: "assetType",
       values: ["villa"],
     },
+    suffix: "Sqft",
+    keyBoardType: "numeric",
     colspan: 12,
     conditional: true,
   },
@@ -64,10 +69,10 @@ export const residentialVillaFields: FormField[] = [
     required: true,
     placeholder: "Select facing direction",
     options: [
-      { label: "North", value: "North" },
-      { label: "South", value: "South" },
-      { label: "East", value: "East" },
-      { label: "West", value: "West" },
+      { label: "North", value: "north" },
+      { label: "South", value: "south" },
+      { label: "East", value: "east" },
+      { label: "West", value: "west" },
     ],
     dependsOn: {
       field: "assetType",
@@ -79,13 +84,15 @@ export const residentialVillaFields: FormField[] = [
   {
     id: "structure",
     label: "Structure",
-    type: "text",
+    type: "number",
     required: true,
-    placeholder: "E.g., G+1, G+2",
+    placeholder: "0000",
     dependsOn: {
       field: "assetType",
       values: ["villa"],
     },
+    keyBoardType:"numeric",
+    prefix: "G+",
     colspan: 12,
     conditional: true,
   },
@@ -96,9 +103,9 @@ export const residentialVillaFields: FormField[] = [
     required: true,
     placeholder: "Select furnishing status",
     options: [
-      { label: "Unfurnished", value: "Unfurnished" },
-      { label: "Semi-Furnished", value: "Semi-Furnished" },
-      { label: "Furnished", value: "Furnished" },
+      { label: "Unfurnished", value: "unfurnished" },
+      { label: "Semi-Furnished", value: "semi-furnished" },
+      { label: "Furnished", value: "furnished" },
     ],
     dependsOn: {
       field: "assetType",
@@ -126,6 +133,7 @@ export const residentialVillaFields: FormField[] = [
       field: "assetType",
       values: ["villa"],
     },
+    labelNote: "Note: This excludes study rooms and servant rooms.",
     colspan: 12,
     conditional: true,
   },
@@ -136,10 +144,10 @@ export const residentialVillaFields: FormField[] = [
     required: false,
     placeholder: "Select extra rooms",
     options: [
-      { label: "Servant Room", value: "Servant Room" },
-      { label: "Study Room", value: "Study Room" },
-      { label: "Pooja Room", value: "Pooja Room" },
-      { label: "Other", value: "Other" },
+      { label: "Servant Room", value: "servant room" },
+      { label: "Study Room", value: "study room" },
+      { label: "Pooja Room", value: "pooja room" },
+      { label: "Other", value: "other" },
     ],
     dependsOn: {
       field: "assetType",
@@ -195,12 +203,11 @@ export const residentialVillaFields: FormField[] = [
     id: "balconyFacing",
     label: "Balcony Facing",
     type: "select",
-
     required: false,
     placeholder: "Select balcony facing",
     options: [
-      { label: "Inside", value: "Inside" },
-      { label: "Outside", value: "Outside" },
+      { label: "Inside", value: "inside" },
+      { label: "Outside", value: "outside" },
     ],
     dependsOn: {
       field: "assetType",
@@ -238,8 +245,8 @@ export const residentialVillaFields: FormField[] = [
     required: true,
     placeholder: "Select possession status",
     options: [
-      { label: "Ready to Move", value: "Ready to Move" },
-      { label: "Under Construction", value: "Under Construction" },
+      { label: "Ready to Move", value: "ready to move" },
+      { label: "Under Construction", value: "under construction" },
     ],
     dependsOn: {
       conditions: [
@@ -257,7 +264,6 @@ export const residentialVillaFields: FormField[] = [
     colspan: 12,
     conditional: true,
   },
-
   {
     id: "readyToMove",
     label: "Ready-To-Move",
@@ -280,7 +286,7 @@ export const residentialVillaFields: FormField[] = [
     conditional: true,
   },
   {
-    id: "availableFrom",
+    id: "handoverDate",
     label: "Available From",
     type: "date",
     required: true,
@@ -293,7 +299,7 @@ export const residentialVillaFields: FormField[] = [
         },
         {
           field: "possession",
-          values: ["Under Construction"],
+          values: ["under construction"],
         },
         {
           field: "listingType",
@@ -312,11 +318,11 @@ export const residentialVillaFields: FormField[] = [
     required: true,
     placeholder: "Select building age",
     options: [
-      { label: "New", value: "New" },
+      { label: "New", value: "new" },
       { label: "1-5 years", value: "1-5 years" },
       { label: "6-10 years", value: "6-10 years" },
       { label: "11-15 years", value: "11-15 years" },
-      { label: "15+ Years", value: "15+ Years" },
+      { label: "15+ Years", value: "15+ years" },
     ],
     dependsOn: {
       conditions: [
@@ -326,7 +332,7 @@ export const residentialVillaFields: FormField[] = [
         },
         {
           field: "possession",
-          values: ["Ready to Move"],
+          values: ["ready to move"],
         },
         {
           field: "listingType",
@@ -345,11 +351,11 @@ export const residentialVillaFields: FormField[] = [
     required: true,
     placeholder: "Select building age",
     options: [
-      { label: "New", value: "New" },
+      { label: "New", value: "new" },
       { label: "1-5 years", value: "1-5 years" },
       { label: "6-10 years", value: "6-10 years" },
       { label: "11-15 years", value: "11-15 years" },
-      { label: "15+ Years", value: "15+ Years" },
+      { label: "15+ Years", value: "15+ years" },
     ],
     dependsOn: {
       conditions: [

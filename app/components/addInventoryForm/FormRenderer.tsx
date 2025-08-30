@@ -9,7 +9,6 @@ import {
 } from "react-native";
 import { FormConfig, FormStep } from "@/types/FormConfig";
 import { DocsToUpload, Places, Property } from "@/app/types";
-import CustomSelectDropdown from "../CustomSelectDropdown";
 import MonthYearPicker from "../Listing/MonthYearPicker";
 import Checkbox from "../Listing/CheckBox";
 import { FormField } from "@/types/FormConfig";
@@ -235,20 +234,6 @@ export const FormRenderer: React.FC<FormRendererProps> = ({
       </Text>
     );
 
-    const commonTextInput = (props: any) => (
-      <TextInput
-        className={`border rounded-[5px] py-2 px-3 text-sm text-[#9E9E9E] font-normal bg-white ${
-          error ? "border-[#d32f2f]" : "border-[#ddd]"
-        }`}
-        value={value?.toString() || ""}
-        onChangeText={(text) =>
-          setFieldValue(field.id, field.type === "number" ? Number(text) : text)
-        }
-        placeholder={field.placeholder}
-        {...props}
-      />
-    );
-
     const errorMessage = error && (
       <Text className="text-[#d32f2f] text-sm mt-1">{error}</Text>
     );
@@ -265,15 +250,25 @@ export const FormRenderer: React.FC<FormRendererProps> = ({
               />
             </View>
           );
+
         case "text":
-        case "number":
+        case "number": // backward compatibility
           return (
             <>
               {commonLabel}
-              {commonTextInput({
-                keyboardType: field.type === "number" ? "numeric" : "default",
-              })}
-              {errorMessage}
+              <TextInputField
+                value={value}
+                setValue={(val) => setFieldValue(field.id, val)}
+                placeholder={field.placeholder}
+                required={field.required}
+                keyboardType={field.keyBoardType || "default"}
+                {...(field.prefix ? { prefix: field.prefix } : {})}
+                {...(field.suffix ? { suffix: field.suffix } : {})}
+                {...(field.numberToStringFooter ? { numberToStringFooter: field.numberToStringFooter } : {})}
+                {...(field.footer ? { footer: field.footer } : {})}
+              />
+
+              {error && <Text className="text-[#d32f2f] text-sm mt-1">{error}</Text>}
             </>
           );
 
@@ -282,9 +277,8 @@ export const FormRenderer: React.FC<FormRendererProps> = ({
             <>
               {commonLabel}
               <TextInput
-                className={`border rounded-lg p-3 text-base bg-white min-h-[100px] ${
-                  error ? "border-[#d32f2f]" : "border-[#ddd]"
-                }`}
+                className={`border rounded-lg p-3 text-base bg-white min-h-[100px] ${error ? "border-[#d32f2f]" : "border-[#ddd]"
+                  }`}
                 style={{ textAlignVertical: "top" }}
                 value={value?.toString() || ""}
                 onChangeText={(text) => setFieldValue(field.id, text)}
@@ -322,25 +316,20 @@ export const FormRenderer: React.FC<FormRendererProps> = ({
                 {field.options?.map((option) => (
                   <TouchableOpacity
                     key={option.value}
-                    className={`px-[12px] py-[10px] border ${
-                      currentStep ? "rounded-[8px]" : "rounded-[30px]"
-                    } ${
-                      value === option.value
+                    className={`px-[12px] py-[10px] border ${currentStep ? "rounded-[8px]" : "rounded-[30px]"
+                      } ${value === option.value
                         ? `bg-[#F0FFFE] border-[#153E3B]`
-                        : `${
-                            currentStep ? "bg-[#FAFAFA]" : "bg-white"
-                          } border-[#BABABA]`
-                    }`}
+                        : `${currentStep ? "bg-[#FAFAFA]" : "bg-white"
+                        } border-[#BABABA]`
+                      }`}
                     onPress={() => setFieldValue(field.id, option.value)}
                   >
                     <Text
-                      className={`${
-                        currentStep ? "" : "px-[10px]"
-                      } text-sm font-medium ${
-                        value === option.value
+                      className={`${currentStep ? "" : "px-[10px]"
+                        } text-sm font-medium ${value === option.value
                           ? "text-[#153E3B] font-bold"
                           : "text-[#2B2928]"
-                      }`}
+                        }`}
                     >
                       {option.label}
                     </Text>
@@ -368,8 +357,8 @@ export const FormRenderer: React.FC<FormRendererProps> = ({
                   const bgColor = isSelected
                     ? "bg-[#F0FFFE] border-[#153E3B]"
                     : currentStep
-                    ? "bg-[#FAFAFA] border-[#BABABA]"
-                    : "bg-white border-[#BABABA]";
+                      ? "bg-[#FAFAFA] border-[#BABABA]"
+                      : "bg-white border-[#BABABA]";
 
                   return (
                     <TouchableOpacity
@@ -383,13 +372,11 @@ export const FormRenderer: React.FC<FormRendererProps> = ({
                       }}
                     >
                       <Text
-                        className={`${
-                          currentStep ? "" : "px-[10px]"
-                        } text-sm font-medium ${
-                          isSelected
+                        className={`${currentStep ? "" : "px-[10px]"
+                          } text-sm font-medium ${isSelected
                             ? "text-[#153E3B] font-bold"
                             : "text-[#2B2928]"
-                        }`}
+                          }`}
                       >
                         {option.label}
                       </Text>
@@ -454,7 +441,7 @@ export const FormRenderer: React.FC<FormRendererProps> = ({
                 options={field.options || []}
                 placeholder={field.placeholder || "Select a field"}
                 onChange={(selectedField: string, inputValue: string) => {
-                  setFieldValue(field.id,  inputValue );
+                  setFieldValue(field.id, inputValue);
                 }}
               />
               {errorMessage}
@@ -548,7 +535,7 @@ export const FormRenderer: React.FC<FormRendererProps> = ({
         case "documents":
           return (
             <>
-              <Document 
+              <Document
                 docsToUpload={docsToUpload}
                 setDocsToUpload={setDocsToUpload}
               />

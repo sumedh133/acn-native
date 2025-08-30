@@ -29,11 +29,15 @@ export const pricingDetailsStep: FormStep = {
       label: "Rent/ month ",
       type: "number",
       required: true,
-      placeholder: "Enter monthly rent",
+      placeholder: "eg. 2,000",
       dependsOn: {
         field: "listingType",
         values: ["rental"],
       },
+      keyBoardType: "numeric",
+      prefix: "₹ ",
+      suffix: "/month",
+      numberToStringFooter: true,
       colspan: 12,
     },
     {
@@ -41,11 +45,15 @@ export const pricingDetailsStep: FormStep = {
       label: "Deposit",
       type: "number",
       required: true,
-      placeholder: "Enter deposit amount",
+      placeholder: "eg. 2,000",
       dependsOn: {
         field: "listingType",
         values: ["rental"],
       },
+      keyBoardType: "numeric",
+      prefix: "₹ ",
+      suffix: "Fixed",
+      numberToStringFooter: true,
       colspan: 12,
     },
     {
@@ -53,27 +61,30 @@ export const pricingDetailsStep: FormStep = {
       label: "Maintenance",
       type: "select",
       required: true,
-      placeholder: "Select maintenance type",
       options: [
-        { label: "Included", value: "Included" },
-        { label: "Not Included", value: "Not Included" },
+        { label: "Included", value: "included" },
+        { label: "Not Included", value: "not included" },
       ],
       dependsOn: {
         field: "listingType",
         values: ["rental"],
       },
+
       colspan: 12,
     },
     {
       id: "rentalInfo.maintenanceAmount",
       label: "Maintenance Amount",
       type: "number",
-      required: false,
-      placeholder: "Enter maintenance charges",
+      required: true,
+      placeholder: "eg. 2,000",
       dependsOn: {
         field: "rentalInfo.maintenance",
-        values: ["Not Included"],
+        values: ["not included"],
       },
+      keyBoardType: "numeric",
+      prefix: "₹ ",
+      numberToStringFooter: true,
       colspan: 12,
     },
     {
@@ -82,8 +93,8 @@ export const pricingDetailsStep: FormStep = {
       type: "select",
       required: true,
       options: [
-        { label: "Side by Side", value: "Side by Side" },
-        { label: "Commission Sharing", value: "Commission Sharing" },
+        { label: "Side by Side", value: "side by side" },
+        { label: "Commission Sharing", value: "commission sharing" },
       ],
       dependsOn: {
         field: "listingType",
@@ -114,7 +125,7 @@ export const pricingDetailsStep: FormStep = {
       label: "Rental Income (per month)",
       type: "number",
       required: false,
-      placeholder: "Enter rental income (if rented)",
+      placeholder: "eg. 2,00,000",
       dependsOn: {
         conditions: [
           {
@@ -128,6 +139,10 @@ export const pricingDetailsStep: FormStep = {
         ],
         logicOperator: "AND",
       },
+       keyBoardType: "numeric",
+      prefix: "₹ ",
+      suffix: "Per Month",
+      numberToStringFooter: true,
       colspan: 12,
     },
     {
@@ -135,7 +150,7 @@ export const pricingDetailsStep: FormStep = {
       label: "Current Deposit Taken",
       type: "number",
       required: false,
-      placeholder: "Enter current deposit",
+      placeholder: "eg. 50,00,000",
       dependsOn: {
         conditions: [
           {
@@ -149,6 +164,9 @@ export const pricingDetailsStep: FormStep = {
         ],
         logicOperator: "AND",
       },
+      keyBoardType: "numeric",
+      prefix: "₹ ",
+      numberToStringFooter: true,
       colspan: 12,
     },
 

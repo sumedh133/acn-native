@@ -39,7 +39,17 @@ export interface FormField {
     pattern?: RegExp;
     message?: string;
   };
-  unit?: string;
+  labelNote?:string
+  prefix?: string;
+  suffix?: string;
+  keyBoardType?:  "default"
+  | "number-pad"
+  | "decimal-pad"
+  | "numeric"
+  | "email-address"
+  | "phone-pad";
+  numberToStringFooter?: boolean;
+  footer?: string;
   colspan: number;
   conditional?: boolean;
 }
