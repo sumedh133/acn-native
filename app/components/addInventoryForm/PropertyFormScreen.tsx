@@ -32,18 +32,25 @@ interface FormFieldWithMeta extends FormField {
 
 type UIProperty = Omit<Property, "handOverDate"> & {
   handOverDate?: string;
+  media?: {
+    photos: string[];
+    videos: string[];
+    documents: string[];
+  };
 };
 
 interface PropertyFormScreenProps {
   initialData?: Partial<UIProperty>;
   onComplete: (data: Partial<UIProperty>) => void;
   isEdit?: boolean;
+  agentData?: any; // Add agent data for upload metadata
 }
 
 export const PropertyFormScreen: React.FC<PropertyFormScreenProps> = ({
   initialData,
   onComplete,
   isEdit = false,
+  agentData,
 }) => {
 
   // --------------------  Redux State --------------------
@@ -51,19 +58,20 @@ export const PropertyFormScreen: React.FC<PropertyFormScreenProps> = ({
   const agentData = useSelector((state: RootState) => state.agent.docData);
 
   // -------------------- State Management --------------------
-  const [formData, setFormData] = useState<Partial<UIProperty>>(
-    initialData || {
-      cpId: agentData.cpId,
-      agentName: agentData.agentName,
-      agentPhoneNumber: agentData.agentPhoneNumber,
-      kamName: agentData.kamName,
-      kamId: agentData.kam,
-      kamStatus: "pending",
-      dataStatus: "pending",
-      stage: "kam",
-      status: "pending",
-    }
-  );
+  const [formData, setFormData] = useState<Partial<UIProperty>>(() => {
+    // Initialize with proper media structure
+    const defaultMedia = {
+      photos: [],
+      videos: [],
+      documents: [],
+    };
+    
+    return {
+      ...initialData,
+      media: initialData?.media || defaultMedia,
+    };
+  });
+  
   const [selectedPlace, setSelectedPlace] = useState<Places>();
   const [docsToUpload, setDocsToUpload] = useState<DocsToUpload>({
     photo: [],
@@ -80,6 +88,16 @@ export const PropertyFormScreen: React.FC<PropertyFormScreenProps> = ({
   const [showPreview, setShowPreview] = useState<boolean>(false);
   const [showDraftModal, setShowDraftModal] = useState<boolean>(false)
 
+  console.log("Form Data:", formData);
+
+  // -------------------- Media Upload Handler --------------------
+  const handleMediaUpdate = (media: { photos: string[], videos: string[], documents: string[] }) => {
+    setFormData(prevData => ({
+      ...prevData,
+      media,
+    }));
+    setIsFormEmpty(false);
+  };
 
   // -------------------- Utility Functions --------------------
 
@@ -230,6 +248,7 @@ export const PropertyFormScreen: React.FC<PropertyFormScreenProps> = ({
       }));
     }
   }, [selectedPlace]);
+  
   /**
    * Validate all fields in the current step.
    */
@@ -297,7 +316,13 @@ export const PropertyFormScreen: React.FC<PropertyFormScreenProps> = ({
           {
             text: "Clear",
             onPress: () => {
-              setFormData({});
+              setFormData({
+                media: {
+                  photos: [],
+                  videos: [],
+                  documents: [],
+                },
+              });
               setIsFormEmpty(true);
               setCurrentStepIndex(0);
               setErrors({});
@@ -319,6 +344,9 @@ export const PropertyFormScreen: React.FC<PropertyFormScreenProps> = ({
       setCurrentStepIndex(index);
     }
   };
+
+  // Generate unique prop ID for uploads
+  const propId = formData.propertyId || `temp-${Date.now()}`;
 
   const handleFormCancel = () => {
 
@@ -375,7 +403,13 @@ export const PropertyFormScreen: React.FC<PropertyFormScreenProps> = ({
 
         {/* Preview */}
         <View className="flex-1">
-          <FormPreview config={inventoryFormConfig} data={formData} previewType={isEdit ? "edit" : "add"} />
+          <FormPreview 
+            config={inventoryFormConfig} 
+            data={formData} previewType={isEdit ? "edit" : "add"}
+            onMediaUpdate={handleMediaUpdate}
+            agentData={agentData}
+            propId={propId}
+          />
         </View>
 
         {/* Back & Submit buttons */}
@@ -554,6 +588,10 @@ export const PropertyFormScreen: React.FC<PropertyFormScreenProps> = ({
             getVisibleFields={getVisibleFields}
             selectedPlace={selectedPlace}
             setSelectedPlace={setSelectedPlace}
+            // Pass media upload handler
+            onMediaUpdate={handleMediaUpdate}
+            agentData={agentData}
+            propId={propId}
             docsToUpload={docsToUpload}
             setDocsToUpload={setDocsToUpload}
           />

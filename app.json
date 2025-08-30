@@ -7,15 +7,22 @@
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
     "userInterfaceStyle": "light",
-    "assetBundlePatterns": ["**/*"],
+    "assetBundlePatterns": [
+      "**/*"
+    ],
     "ios": {
       "supportsTablet": true,
       "googleServicesFile": "./GoogleService-Info.plist",
       "bundleIdentifier": "com.acnonline.in",
       "infoPlist": {
         "ITSAppUsesNonExemptEncryption": false,
-        "UIBackgroundModes": ["fetch", "remote-notification"],
-        "LSApplicationQueriesSchemes": ["itms-apps"]
+        "UIBackgroundModes": [
+          "fetch",
+          "remote-notification"
+        ],
+        "LSApplicationQueriesSchemes": [
+          "itms-apps"
+        ]
       },
       "entitlements": {
         "aps-environment": "production"
@@ -60,7 +67,8 @@
           "resizeMode": "contain",
           "backgroundColor": "#153E3B"
         }
-      ]
+      ],
+      "expo-web-browser"
     ],
     "experiments": {
       "typedRoutes": true
