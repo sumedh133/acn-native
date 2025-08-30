@@ -39,7 +39,7 @@ const AnimatedHeader: React.FC<AnimatedHeaderProps> = ({
   showNotificationBanner = false,
   customMessage,
 }) => {
-  const { headerTranslateY } = useContext(ScrollContext);
+  // const { headerTranslateY } = useContext(ScrollContext);
   const monthlyCredits = useSelector(
     (state: RootState) => state.agent?.docData?.monthlyCredits || 0
   );

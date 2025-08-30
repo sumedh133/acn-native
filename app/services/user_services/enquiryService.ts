@@ -178,7 +178,6 @@ export const getEnquiriesByStatus = async (
 export const getEnquiriesByPropertyID = async (
   propertyId: Enquiry["propertyId"]
 ): Promise<number> => {
-  console.log(propertyId, "to chec");
   const q = query(enquiriesCollection, where("propertyId", "==", propertyId));
   const snap = await getDocs(q);
   return snap.docs.length;
