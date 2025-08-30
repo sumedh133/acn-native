@@ -43,14 +43,13 @@ interface PropertyFormScreenProps {
   initialData?: Partial<UIProperty>;
   onComplete: (data: Partial<UIProperty>) => void;
   isEdit?: boolean;
-  agentData?: any; // Add agent data for upload metadata
 }
 
 export const PropertyFormScreen: React.FC<PropertyFormScreenProps> = ({
   initialData,
   onComplete,
   isEdit = false,
-  agentData,
+
 }) => {
 
   // --------------------  Redux State --------------------
@@ -414,7 +413,6 @@ export const PropertyFormScreen: React.FC<PropertyFormScreenProps> = ({
 
         {/* Back & Submit buttons */}
 
-        <View className="flex-row items-center justify-between gap-[13px] px-4 py-[14px] bg-white border-t border-t-[#EEEEEE]">
         <View className="flex-row items-center justify-between gap-[13px] px-4 py-[14px] bg-white border-t border-t-[#EEEEEE]">
           <TouchableOpacity
             className="flex-1 py-2 px-5 rounded-[4px] bg-white border border-[#153E3B]"
