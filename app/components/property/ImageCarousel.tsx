@@ -18,6 +18,8 @@ interface ImageCarouselProps {
   images: string[];
   onImagePress?: () => void;
   propertyId?: string;
+  onDeleteFile?: (fileUrl: string, index: number) => void;
+  canDeleteFile?: (index: number) => boolean;
 }
 
 const { width } = Dimensions.get("window");
@@ -26,6 +28,8 @@ const ImageCarousel: React.FC<ImageCarouselProps> = ({
   images,
   onImagePress,
   propertyId,
+  onDeleteFile,
+  canDeleteFile,
 }) => {
   const [activeIndex, setActiveIndex] = useState(0);
   const [isImageViewVisible, setIsImageViewVisible] = useState(false);
@@ -64,7 +68,15 @@ const ImageCarousel: React.FC<ImageCarouselProps> = ({
     setIsImageViewVisible(true);
   };
 
-  const renderItem = ({ item }: { item: string }) => {
+  const handleDeleteFile = (item: string, index: number) => {
+    if (onDeleteFile) {
+      onDeleteFile(item, index);
+    }
+  };
+
+  const renderItem = ({ item, index }: { item: string; index: number }) => {
+    const showDeleteButton = canDeleteFile ? canDeleteFile(index) : false;
+
     return (
       <View style={styles.imageItem}>
         <TouchableOpacity
@@ -72,8 +84,7 @@ const ImageCarousel: React.FC<ImageCarouselProps> = ({
           activeOpacity={0.9}
           onPress={handleImagePress}
         >
-          
-          {item.includes(".mp4") ? (
+          {item.includes(".mp4") || item.includes(".mov") || item.includes(".avi") ? (
             <Video
               source={{ uri: item }}
               style={{ width: "100%", aspectRatio: 16 / 9 }}
@@ -89,6 +100,19 @@ const ImageCarousel: React.FC<ImageCarouselProps> = ({
             />
           )}
         </TouchableOpacity>
+
+        {/* Delete button for individual item */}
+        {showDeleteButton && (
+          <TouchableOpacity
+            style={styles.deleteButton}
+            onPress={() => handleDeleteFile(item, index)}
+            activeOpacity={0.8}
+          >
+            <View style={styles.deleteButtonInner}>
+              <Ionicons name="close" size={16} color="white" />
+            </View>
+          </TouchableOpacity>
+        )}
       </View>
     );
   };
@@ -295,6 +319,7 @@ const styles = StyleSheet.create({
     width,
     height: 240,
     overflow: "hidden",
+    position: "relative",
   },
   imageTouchable: {
     width: "100%",
@@ -310,6 +335,28 @@ const styles = StyleSheet.create({
     backgroundColor: "#F3F4F6",
     justifyContent: "center",
     alignItems: "center",
+  },
+  deleteButton: {
+    position: "absolute",
+    top: 8,
+    right: 8,
+    zIndex: 20,
+  },
+  deleteButtonInner: {
+    backgroundColor: "rgba(239, 68, 68, 0.9)", // red-500 with opacity
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    justifyContent: "center",
+    alignItems: "center",
+    shadowColor: "#000",
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+    elevation: 5,
   },
   pagination: {
     position: "absolute",

@@ -13,7 +13,7 @@ import { LinearGradient } from "expo-linear-gradient";
 import * as DocumentPicker from 'expo-document-picker';
 import { Ionicons } from "@expo/vector-icons";
 import { UploadFileIcon } from "../../../../assets/icons/svg/PropertyListing/UploadFileIcon";
-import ImageCarousel from "../../../components/property/ImageCarousel"; // Import your existing ImageCarousel component
+import ImageCarousel from "../../../components/property/ImageCarousel";
 import { 
   MultipleFilesUploadService,
   SelectedFile, 
@@ -21,11 +21,10 @@ import {
   MediaUploadData,
   FilePickerResult,
   MultipleUploadConfig 
-} from "../../../services/media_services/imageService";
-import { Video } from 'expo-av';
+} from "../../../services/media_services/mediaService";
 
 const { width } = Dimensions.get("window");
-const TUS_ENDPOINT = "https://tus-x-gcp-protocol-test-1.onrender.com/files"
+const TUS_ENDPOINT = "https://tusd.tusdemo.net/files/"
 
 interface PropertyImagesProps {
   images?: string[];
@@ -44,9 +43,9 @@ export const PropertyImages: React.FC<PropertyImagesProps> = ({
 }) => {
   const [uploading, setUploading] = useState(false);
 
-  // Combine legacy images with current media photos and videos for carousel display
-  const mediaFiles = [...images, ...currentMedia.photos, ...currentMedia.videos];
-  const hasAnyFiles = mediaFiles.length > 0 || currentMedia.documents.length > 0;
+  // Combine all media types for carousel display (images, videos, AND documents)
+  const allMediaFiles = [...images, ...currentMedia.photos, ...currentMedia.videos, ...currentMedia.documents];
+  const hasAnyFiles = allMediaFiles.length > 0;
 
   const openFilePicker = async () => {
     try {
@@ -210,108 +209,53 @@ export const PropertyImages: React.FC<PropertyImagesProps> = ({
     );
   };
 
-  const getDocumentIcon = (fileName: string) => {
-    const extension = fileName.toLowerCase().split('.').pop();
-    switch (extension) {
-      case 'pdf':
-        return 'document-text';
-      case 'doc':
-      case 'docx':
-        return 'document-text';
-      case 'xls':
-      case 'xlsx':
-        return 'grid';
-      case 'ppt':
-      case 'pptx':
-        return 'easel';
-      default:
-        return 'document';
+  // Helper function to determine file type and if it can be deleted
+  const getFileInfo = (fileUrl: string, index: number) => {
+    let fileType: keyof MediaUploadData = 'photos';
+    let canDelete = true;
+    
+    const legacyImagesCount = images.length;
+    const photosCount = currentMedia.photos.length;
+    const videosCount = currentMedia.videos.length;
+    
+    if (index < legacyImagesCount) {
+      // This is a legacy image, might not be deletable
+      fileType = 'photos';
+      canDelete = false;
+    } else if (index < legacyImagesCount + photosCount) {
+      // This is a current photo
+      fileType = 'photos';
+    } else if (index < legacyImagesCount + photosCount + videosCount) {
+      // This is a current video
+      fileType = 'videos';
+    } else {
+      // This is a document
+      fileType = 'documents';
     }
+
+    return { fileType, canDelete };
   };
 
-  const getFileName = (url: string) => {
-    return url.split('/').pop() || 'Document';
+  const handleDeleteFromCarousel = (fileUrl: string, index: number) => {
+    const { fileType, canDelete } = getFileInfo(fileUrl, index);
+    if (canDelete) {
+      deleteFile(fileUrl, fileType);
+    }
   };
 
   return (
     <View className="rounded-[16px] bg-white overflow-hidden">
       {hasAnyFiles ? (
         <View>
-          {/* Media Carousel for Images and Videos */}
-          {mediaFiles.length > 0 && (
+          {/* Enhanced Media Carousel for Images, Videos, AND Documents */}
+          {allMediaFiles.length > 0 && (
             <View className="relative">
               <ImageCarousel 
-                images={mediaFiles} 
+                images={allMediaFiles} 
                 propertyId={propId}
+                onDeleteFile={handleDeleteFromCarousel}
+                canDeleteFile={(index) => getFileInfo(allMediaFiles[index], index).canDelete}
               />
-              
-              {/* Delete button overlay for media files */}
-              <View className="absolute top-4 left-4 flex-row flex-wrap gap-2">
-                {mediaFiles.map((fileUrl, index) => {
-                  // Determine if this is from legacy images, photos, or videos
-                  let fileType: keyof MediaUploadData = 'photos';
-                  let canDelete = true;
-                  
-                  if (index < images.length) {
-                    // This is a legacy image, might not be deletable
-                    canDelete = false;
-                  } else if (index < images.length + currentMedia.photos.length) {
-                    fileType = 'photos';
-                  } else {
-                    fileType = 'videos';
-                  }
-
-                  return canDelete ? (
-                    <TouchableOpacity
-                      key={`delete-${index}`}
-                      onPress={() => deleteFile(fileUrl, fileType)}
-                      className="bg-red-500 bg-opacity-80 p-2 rounded-full"
-                      activeOpacity={0.8}
-                    >
-                      <Ionicons name="close" size={16} color="white" />
-                    </TouchableOpacity>
-                  ) : null;
-                })}
-              </View>
-            </View>
-          )}
-
-          {/* Documents Section */}
-          {currentMedia.documents.length > 0 && (
-            <View className="p-4 border-t border-gray-100">
-              <Text className="text-lg font-semibold text-gray-800 mb-3">Documents</Text>
-              <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-                <View className="flex-row space-x-3">
-                  {currentMedia.documents.map((docUrl, index) => (
-                    <View key={`doc-${index}`} className="relative">
-                      <View className="bg-gray-50 p-4 rounded-lg border border-gray-200 w-32">
-                        <View className="items-center space-y-2">
-                          <Ionicons 
-                            name={getDocumentIcon(getFileName(docUrl)) as any} 
-                            size={32} 
-                            color="#6B7280" 
-                          />
-                          <Text 
-                            className="text-xs text-gray-600 text-center" 
-                            numberOfLines={2}
-                          >
-                            {getFileName(docUrl)}
-                          </Text>
-                        </View>
-                      </View>
-                      
-                      {/* Delete button for documents */}
-                      <TouchableOpacity
-                        onPress={() => deleteFile(docUrl, 'documents')}
-                        className="absolute -top-2 -right-2 bg-red-500 p-1 rounded-full"
-                        activeOpacity={0.8}
-                      >
-                        <Ionicons name="close" size={12} color="white" />
-                      </TouchableOpacity>
-                    </View>
-                  ))}
-                </View>
-              </ScrollView>
             </View>
           )}
 
@@ -348,10 +292,10 @@ export const PropertyImages: React.FC<PropertyImagesProps> = ({
             />
             <View className="flex flex-col items-center justify-center space-y-1 pb-3">
               <Text className="text-sm font-bold text-black">
-                No Files Found
+                No Media Found
               </Text>
               <Text className="text-sm font-medium text-[#757575]">
-                The listing doesn't have any media yet.
+                The listing doesn't have any images, videos, or documents yet.
               </Text>
               <TouchableOpacity
                 onPress={openFilePicker}
@@ -365,7 +309,7 @@ export const PropertyImages: React.FC<PropertyImagesProps> = ({
                   <UploadFileIcon size={18} color="white" />
                 )}
                 <Text className="text-white font-semibold text-sm">
-                  {uploading ? 'Uploading...' : 'Add Files'}
+                  {uploading ? 'Uploading...' : 'Add Media Files'}
                 </Text>
               </TouchableOpacity>
             </View>
