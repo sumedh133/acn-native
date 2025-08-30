@@ -389,8 +389,6 @@ export const MobileHits = ({
     );
   }
 
-  console.log(selectedProperties,'bbuibhbuihuihuibuiubuib')
-
   // Render the property list
   return (
     <Animated.FlatList

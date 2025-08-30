@@ -56,7 +56,7 @@ const ImageCarousel: React.FC<ImageCarouselProps> = ({
     const videoExtensions = ['.mp4', '.mov', '.avi', '.mkv', '.webm', '.m4v'];
     const documentExtensions = ['.pdf', '.doc', '.docx', '.xls', '.xlsx', '.ppt', '.pptx', '.txt'];
     
-    const lowerUri = uri.toLowerCase();
+    const lowerUri = uri;
     console.log('loweruri',lowerUri)
     
     if (videoExtensions.some(ext => lowerUri.includes(ext))) {

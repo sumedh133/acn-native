@@ -11,7 +11,10 @@ import {
   Alert,
 } from "react-native";
 import { router } from "expo-router";
-import { createProperty, updateProperty } from "@/app/services/property_services/propertyService";
+import {
+  createProperty,
+  updateProperty,
+} from "@/app/services/property_services/propertyService";
 import { convertMonthYearToUnix } from "@/app/helpers/format/format";
 import { showSuccessToast, showErrorToast } from "@/utils/toastUtils";
 import { FormRenderer } from "./FormRenderer";
@@ -49,9 +52,7 @@ export const PropertyFormScreen: React.FC<PropertyFormScreenProps> = ({
   initialData,
   onComplete,
   isEdit = false,
-
 }) => {
-
   // --------------------  Redux State --------------------
 
   const agentData = useSelector((state: RootState) => state.agent.docData);
@@ -64,13 +65,13 @@ export const PropertyFormScreen: React.FC<PropertyFormScreenProps> = ({
       videos: [],
       documents: [],
     };
-    
+
     return {
       ...initialData,
       media: initialData?.media || defaultMedia,
     };
   });
-  
+
   const [selectedPlace, setSelectedPlace] = useState<Places>();
   const [docsToUpload, setDocsToUpload] = useState<DocsToUpload>({
     photo: [],
@@ -85,13 +86,17 @@ export const PropertyFormScreen: React.FC<PropertyFormScreenProps> = ({
   const [isSavingDraft, setIsSavingDraft] = useState<boolean>(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [showPreview, setShowPreview] = useState<boolean>(false);
-  const [showDraftModal, setShowDraftModal] = useState<boolean>(false)
+  const [showDraftModal, setShowDraftModal] = useState<boolean>(false);
 
   console.log("Form Data:", formData);
 
   // -------------------- Media Upload Handler --------------------
-  const handleMediaUpdate = (media: { photos: string[], videos: string[], documents: string[] }) => {
-    setFormData(prevData => ({
+  const handleMediaUpdate = (media: {
+    photos: string[];
+    videos: string[];
+    documents: string[];
+  }) => {
+    setFormData((prevData) => ({
       ...prevData,
       media,
     }));
@@ -247,7 +252,7 @@ export const PropertyFormScreen: React.FC<PropertyFormScreenProps> = ({
       }));
     }
   }, [selectedPlace]);
-  
+
   /**
    * Validate all fields in the current step.
    */
@@ -262,12 +267,16 @@ export const PropertyFormScreen: React.FC<PropertyFormScreenProps> = ({
       const value = getFieldValue(formData, field.id);
       const error = validateField(field, value);
       if (error) {
-
         stepErrors[field.id] = error;
+
         isValid = false;
+        console.log(error, "error check");
       }
     });
-    if (!isValid) { showErrorToast("Please fill all required fields.") }
+    console.log(isValid, "validate");
+    if (!isValid) {
+      showErrorToast("Please fill all required fields.");
+    }
 
     handleErrorsUpdate(stepErrors);
     return isValid;
@@ -348,16 +357,14 @@ export const PropertyFormScreen: React.FC<PropertyFormScreenProps> = ({
   const propId = formData.propertyId || `temp-${Date.now()}`;
 
   const handleFormCancel = () => {
-
-    if (formData.propertyType || formData.assetType && formData.propertyName)
+    if (formData.propertyType || (formData.assetType && formData.propertyName))
       setShowDraftModal(true);
     else router.back();
-
   };
 
   const handleSaveDraft = async () => {
     try {
-      setIsSavingDraft(true)
+      setIsSavingDraft(true);
       console.log("Raw draft data:", formData);
 
       const normalizedData = normalizePropertyBeforeSubmit(formData);
@@ -379,18 +386,18 @@ export const PropertyFormScreen: React.FC<PropertyFormScreenProps> = ({
           ...(cleanData as Omit<Property, "propertyId">),
           status: "draft",
         });
-        showSuccessToast(`Draft saved successfully!\nID: ${newProperty.propertyId}`);
+        showSuccessToast(
+          `Draft saved successfully!\nID: ${newProperty.propertyId}`
+        );
       }
     } catch (error: any) {
       console.error("Error saving draft:", error);
       showSuccessToast(`Something went wrong while saving the draft.`);
+    } finally {
+      setIsSavingDraft(true);
     }
-    finally { setIsSavingDraft(true) }
   };
   // -------------------- Effects --------------------
-
-
-
 
   // -------------------- Derived Values --------------------
   const visibleSteps = getVisibleSteps();
@@ -402,9 +409,10 @@ export const PropertyFormScreen: React.FC<PropertyFormScreenProps> = ({
 
         {/* Preview */}
         <View className="flex-1">
-          <FormPreview 
-            config={inventoryFormConfig} 
-            data={formData} previewType={isEdit ? "edit" : "add"}
+          <FormPreview
+            config={inventoryFormConfig}
+            data={formData}
+            previewType={isEdit ? "edit" : "add"}
             onMediaUpdate={handleMediaUpdate}
             agentData={agentData}
             propId={propId}
@@ -462,8 +470,9 @@ export const PropertyFormScreen: React.FC<PropertyFormScreenProps> = ({
             onPress={handleClear}
           >
             <Text
-              className={`font-montserrat text-base font-bold underline ${isFormEmpty ? "text-[#9E9E9E]" : "text-[#D92D20]"
-                }`}
+              className={`font-montserrat text-base font-bold underline ${
+                isFormEmpty ? "text-[#9E9E9E]" : "text-[#D92D20]"
+              }`}
             >
               Clear
             </Text>
@@ -561,14 +570,12 @@ export const PropertyFormScreen: React.FC<PropertyFormScreenProps> = ({
                       }}
                     >
                       {getStepIcon(index + 1, "gray")}
-
                     </View>
                   )}
                 </TouchableOpacity>
               );
             })}
           </ScrollView>
-
         </View>
 
         {/* Form Renderer */}

@@ -114,9 +114,9 @@ export default function Dashboard({
   loading,
 }: DashboardProps) {
   const route = useRoute<DashboardRouteProp>();
-  const tab = route.params?.tab || "inventories";
+  const tab = route.params?.tab || "requirements";
 
-  const [activeTab, setActiveTab] = useState(tab || "inventories");
+  const [activeTab, setActiveTab] = useState(tab || "requirements");
   const [properties, setProperties] = useState<Property[] | []>([]);
   const [requirements, setRequirements] = useState<Requirement[] | []>([]);
   const [enquiries, setEnquiries] = useState<EnquiryWithProperty[] | []>([]);
@@ -490,13 +490,13 @@ export default function Dashboard({
   ]);
 
   const tabData = [
-    {
-      key: "inventories",
-      label: "My Inventories",
-      icon: MyInverntoriesIcon,
-      count: myProperties.length + myListing.length,
-      loading: loading.propertiesLoading,
-    },
+    // {
+    //   key: "inventories",
+    //   label: "My Inventories",
+    //   icon: MyInverntoriesIcon,
+    //   count: myProperties.length + myListing.length,
+    //   loading: loading.propertiesLoading,
+    // },
     {
       key: "requirements",
       label: "My Requirements",

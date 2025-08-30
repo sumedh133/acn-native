@@ -388,8 +388,6 @@ const PropertyCard: React.FC<PropertyCardProps> = ({
     }
   };
 
-  console.log(selectedProperties, "check check");
-
   const handleLongPress = () => {
     if (
       setSelectedProperties &&

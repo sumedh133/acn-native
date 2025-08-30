@@ -72,8 +72,9 @@ export interface FilePickerResult {
 
 interface StoredUpload {
   fileId: string;
-  fileName: string;
+  filename: string;
   fileUri: string;
+  fileType?: string;
   uploadUrl: string;
   bytesUploaded: number;
   bytesTotal: number;
@@ -283,8 +284,9 @@ export class MultipleFilesUploadService {
       const fingerprint = this.generateFingerprint(file, config);
       const uploadInfo: StoredUpload = {
         fileId,
-        fileName: file.name || "unknown",
+        filename: file.name || "unknown",
         fileUri: file.uri,
+        fileType: file.type,
         uploadUrl: upload.url || "",
         bytesUploaded: 0,
         bytesTotal: file.size || 0,
