@@ -77,6 +77,7 @@ const MyBusinessPage = () => {
         sortBy={sortBy}
         onSortChange={updateSort}
         showTabs={false}
+        isMyBusinessPage={true}
       />
       <PropertiesUnderReviewCard />
       <Listings data={searchState} loadMore={loadMore} refresh={refresh} />
