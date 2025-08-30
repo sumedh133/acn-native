@@ -8,8 +8,7 @@ import {
   DimensionValue,
 } from "react-native";
 import { FormConfig, FormStep } from "@/types/FormConfig";
-import { Places, Property } from "@/app/types";
-import CustomSelectDropdown from "../CustomSelectDropdown";
+import { DocsToUpload, Places, Property } from "@/app/types";
 import MonthYearPicker from "../Listing/MonthYearPicker";
 import Checkbox from "../Listing/CheckBox";
 import { FormField } from "@/types/FormConfig";
@@ -18,6 +17,9 @@ import TextInputField from "../Listing/TextInput";
 import MultiCheckbox from "../MultiCheckbox";
 import DropdownSelect from "../Listing/Dropdown";
 import PlacesSearch from "../Listing/PlacesSearch";
+import Document from "../Listing/document/Document";
+import PlusIcon from "../../../assets/icons/svg/AddInventory/FormIcons/plus_icon.svg";
+import CorrectIcon from "../../../assets/icons/svg/AddInventory/FormIcons/correct_icon.svg";
 
 type UIProperty = Omit<Property, "handOverDate"> & {
   handOverDate?: string;
@@ -42,6 +44,11 @@ interface FormRendererProps {
 
   selectedPlace?: Places;
   setSelectedPlace: (place?: Places) => void;
+  onMediaUpdate: (media?: any) => void;
+  agentData?: any;
+  propId?: any;
+  docsToUpload: DocsToUpload;
+  setDocsToUpload: (docsToUpload: DocsToUpload) => void;
 }
 
 // Total number of columns in our grid system
@@ -58,9 +65,9 @@ export const FormRenderer: React.FC<FormRendererProps> = ({
   getVisibleFields,
   selectedPlace,
   setSelectedPlace,
+  docsToUpload,
+  setDocsToUpload,
 }) => {
-
-
   /**
    * Set nested field value in formData.
    */
@@ -131,7 +138,6 @@ export const FormRenderer: React.FC<FormRendererProps> = ({
     }
     current[keys[keys.length - 1]] = undefined;
   };
-
 
   /**
    * Validate a single field.
@@ -227,23 +233,10 @@ export const FormRenderer: React.FC<FormRendererProps> = ({
     const fieldWidth = getFieldWidth(field);
 
     const commonLabel = (
-      <Text className="text-lg font-semibold mb-3">
+      <Text className="text-base font-semibold mb-3">
         {field.label}
         {field.required && <Text>*</Text>}
       </Text>
-    );
-
-    const commonTextInput = (props: any) => (
-      <TextInput
-        className={`border rounded-[5px] py-2 px-3 text-sm text-[#9E9E9E] font-normal bg-white ${error ? "border-[#d32f2f]" : "border-[#ddd]"
-          }`}
-        value={value?.toString() || ""}
-        onChangeText={(text) =>
-          setFieldValue(field.id, field.type === "number" ? Number(text) : text)
-        }
-        placeholder={field.placeholder}
-        {...props}
-      />
     );
 
     const errorMessage = error && (
@@ -260,16 +253,27 @@ export const FormRenderer: React.FC<FormRendererProps> = ({
                 setSelectedPlace={setSelectedPlace}
                 communityType={formData.communityType}
               />
+              {errorMessage}
             </View>
           );
+
         case "text":
-        case "number":
+        case "number": // backward compatibility
           return (
             <>
               {commonLabel}
-              {commonTextInput({
-                keyboardType: field.type === "number" ? "numeric" : "default",
-              })}
+              <TextInputField
+                value={value}
+                setValue={(val) => setFieldValue(field.id, val)}
+                placeholder={field.placeholder}
+                required={field.required}
+                keyboardType={field.keyBoardType || "default"}
+                {...(field.prefix ? { prefix: field.prefix } : {})}
+                {...(field.suffix ? { suffix: field.suffix } : {})}
+                {...(field.numberToStringFooter ? { numberToStringFooter: field.numberToStringFooter } : {})}
+                {...(field.footer ? { footer: field.footer } : {})}
+              />
+
               {errorMessage}
             </>
           );
@@ -318,7 +322,7 @@ export const FormRenderer: React.FC<FormRendererProps> = ({
                 {field.options?.map((option) => (
                   <TouchableOpacity
                     key={option.value}
-                    className={`px-[12px] py-[10px] border ${currentStep ? "rounded-[8px]" : "rounded-[30px]"
+                    className={`px-3 py-2 border ${currentStep ? "rounded-[8px]" : "rounded-[30px]"
                       } ${value === option.value
                         ? `bg-[#F0FFFE] border-[#153E3B]`
                         : `${currentStep ? "bg-[#FAFAFA]" : "bg-white"
@@ -331,7 +335,7 @@ export const FormRenderer: React.FC<FormRendererProps> = ({
                         } text-sm font-medium ${value === option.value
                           ? "text-[#153E3B] font-bold"
                           : "text-[#2B2928]"
-                        }`}
+                        } leading-normal`}
                     >
                       {option.label}
                     </Text>
@@ -352,7 +356,7 @@ export const FormRenderer: React.FC<FormRendererProps> = ({
                   const isSelected = multiValue.includes(option.value);
 
                   // Same logic as single-select
-                  const baseStyle = "px-[12px] py-[10px] border";
+                  const baseStyle = "px-[12px] py-[8px] border";
                   const borderRadius = currentStep
                     ? "rounded-[8px]"
                     : "rounded-[30px]";
@@ -372,16 +376,19 @@ export const FormRenderer: React.FC<FormRendererProps> = ({
                           : [...multiValue, option.value];
                         setFieldValue(field.id, newValue);
                       }}
-                    >
-                      <Text
-                        className={`${currentStep ? "" : "px-[10px]"
-                          } text-sm font-medium ${isSelected
-                            ? "text-[#153E3B] font-bold"
-                            : "text-[#2B2928]"
-                          }`}
-                      >
-                        {option.label}
-                      </Text>
+                    ><View className="flex-row items-center gap-[5px]">
+                        {isSelected ? (<CorrectIcon />) : (<PlusIcon />)}
+                        <Text
+                          className={`${currentStep ? "" : "px-[10px]"
+                            } text-sm font-medium ${isSelected
+                              ? "text-[#153E3B] font-bold"
+                              : "text-[#2B2928]"
+                            }`}
+                        >
+                          {option.label}
+                        </Text>
+                      </View>
+
                     </TouchableOpacity>
                   );
                 })}
@@ -426,7 +433,6 @@ export const FormRenderer: React.FC<FormRendererProps> = ({
               <DropdownSelect
                 value={value as string | null}
                 setValue={(val: string | null) => setFieldValue(field.id, val)}
-                title={field.label || ""}
                 options={field.options || []}
                 placeholder={field.placeholder || "Select an option"}
                 required={field.required}
@@ -443,7 +449,7 @@ export const FormRenderer: React.FC<FormRendererProps> = ({
                 options={field.options || []}
                 placeholder={field.placeholder || "Select a field"}
                 onChange={(selectedField: string, inputValue: string) => {
-                  setFieldValue(field.id, { selectedField, inputValue });
+                  setFieldValue(field.id, inputValue);
                 }}
               />
               {errorMessage}
@@ -452,10 +458,10 @@ export const FormRenderer: React.FC<FormRendererProps> = ({
         case "date":
           return (
             <>
+              {commonLabel}
               <MonthYearPicker
                 value={value as string | undefined}
                 setValue={(val: string) => setFieldValue(field.id, val)}
-                title={field.label}
                 placeholder={field.placeholder || "MM/YYYY"}
                 required={field.required}
                 minYear={1900}
@@ -533,13 +539,23 @@ export const FormRenderer: React.FC<FormRendererProps> = ({
               {errorMessage}
             </>
           );
+
+        case "documents":
+          return (
+            <>
+              <Document
+                docsToUpload={docsToUpload}
+                setDocsToUpload={setDocsToUpload}
+              />
+            </>
+          );
         default:
           return null;
       }
     };
 
     return (
-      <View key={field.id} style={{ width: fieldWidth }} className="mb-6 px-2">
+      <View key={field.id} style={{ width: fieldWidth }} className="mb-3 px-2">
         {fieldContent()}
       </View>
     );
@@ -554,26 +570,25 @@ export const FormRenderer: React.FC<FormRendererProps> = ({
 
   // Organize fields into rows
   const fieldRows = organizeFieldsIntoRows(visibleFields);
-
   return (
     <View className="flex-1 bg-white">
-      <View className="flex-row items-center mx-5 mb-4">
+      <View className="flex-row items-center px-3 mb-3">
         {/* Progress Bar */}
         <View className="flex-1 h-1 bg-[#E3E3E3] rounded-sm overflow-hidden">
           <View
-            className="h-full bg-[#153E3B] rounded-sm"
+            className="h-full bg-[#153E3B] rounded-sm font-lato"
             style={{ width: `${progress}%` }}
           />
         </View>
 
         {/* Percentage Text */}
-        <Text className="ml-2 text-xs font-bold text-[#153E3B]">
+        <Text className="ml-2 text-xs font-bold text-[#153E3B] leading[21px]">
           {Math.round(progress)}%
         </Text>
       </View>
 
       {/* Fields */}
-      <ScrollView className="flex-1 px-3" showsVerticalScrollIndicator={false}>
+      <ScrollView className="flex px-3 " showsVerticalScrollIndicator={false}>
         {fieldRows.map((row, rowIndex) => (
           <View
             key={`row-${rowIndex}`}

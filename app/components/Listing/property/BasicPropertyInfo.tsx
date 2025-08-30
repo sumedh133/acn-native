@@ -13,10 +13,10 @@ type UIProperty = Omit<Property, "handOverDate"> & {
   handOverDate?: string;
 };
 
-export const BasicPropertyInfo: React.FC<{ data: Partial<UIProperty> }> = ({
-  data,
+export const BasicPropertyInfo: React.FC<{ data: Partial<UIProperty>, previewType: string }> = ({
+  data, previewType
 }) => {
-  console.log("data", data);
+
   const getFieldValue = (obj: any, path: string) =>
     path.split(".").reduce((acc, key) => acc?.[key], obj);
 
@@ -90,16 +90,16 @@ export const BasicPropertyInfo: React.FC<{ data: Partial<UIProperty> }> = ({
     },
     {
       key: "handover",
-      label: data?.readyToMove
+      label: data?.readyToMove ||data?.possession==="Ready to Move"
         ? "Ready to Move"
         : data?.handOverDate
-        ? (() => {
+          ? (() => {
             // convert "MM/YYYY" -> timestamp (seconds)
             const [mm, yyyy] = data.handOverDate.split("/");
             const parsedDate = new Date(Number(yyyy), Number(mm) - 1, 1);
             return formatUnixDate(Math.floor(parsedDate.getTime() / 1000));
           })()
-        : "-",
+          : "-",
     },
     {
       key: "configuration",
@@ -108,9 +108,9 @@ export const BasicPropertyInfo: React.FC<{ data: Partial<UIProperty> }> = ({
   ];
 
   return (
-    <View className="px-5 py-4 bg-white border-b border-gray-100">
+    <View className="px-5 py-4 bg-white border-b border-[#CFCECE]">
       {/* Property Title */}
-      <Text className="text-[18px] font-bold text-[#0A0B0A] font-[Montserrat] leading-6 mb-4">
+      <Text className="text-base font-bold text-black font-montserrat leading-[150%] mb-4">
         {title}
       </Text>
 
@@ -126,17 +126,20 @@ export const BasicPropertyInfo: React.FC<{ data: Partial<UIProperty> }> = ({
             </Text>
           )}
         </View>
-        {daysSinceAdded > 10 ? (
-          <Text className="text-[12px] font-[Lato] font-medium leading-[18px] text-brand-tertiary text-opacity-70 overflow-hidden">
-            {updatedText}
-          </Text>
-        ) : (
-          <View className="px-2 py-1 bg-[#E5F8F6] rounded-md">
-            <Text className="text-[12px] font-[Lato] font-bold text-[#153E3B]">
-              Newly Added
+        {previewType === 'listing' && (
+          daysSinceAdded > 10 ? (
+            <Text className="text-[12px] font-[Lato] font-medium leading-[18px] text-brand-tertiary text-opacity-70 overflow-hidden">
+              {updatedText}
             </Text>
-          </View>
+          ) : (
+            <View className="px-2 py-1 bg-[#E5F8F6] rounded-md">
+              <Text className="text-[12px] font-[Lato] font-bold text-[#153E3B]">
+                Newly Added
+              </Text>
+            </View>
+          )
         )}
+
       </View>
 
       {/* Basic Info Grid */}
@@ -144,12 +147,11 @@ export const BasicPropertyInfo: React.FC<{ data: Partial<UIProperty> }> = ({
         {basicInfo.map((item, index) => (
           <View
             key={index}
-            className={`w-1/2 flex-row items-center mb-3 ${
-              index % 2 === 0 ? "pr-6" : "pl-6"
-            }`}
+            className={`w-1/2 flex-row items-center mb-3 ${index % 2 === 0 ? "pr-6" : "pl-6"
+              }`}
           >
             <View className="mr-2">{getIcon(item.key)}</View>
-            <Text className="text-[12px] font-[Lato] font-medium leading-[18px] text-[#433F3E]">
+            <Text className="text-[12px] font-lato font-medium leading-[150%] text-[#433F3E]">
               {item.label}
             </Text>
           </View>

@@ -9,12 +9,34 @@ const UPLOAD_STORAGE_KEY = "tus_uploads";
 const BACKGROUND_UPLOAD_TASK = "background-upload-task";
 
 // Types
-interface SelectedFile {
+export interface SelectedFile {
   uri: string;
   name?: string;
   type?: string;
   size?: number;
   id?: string; // Unique identifier for tracking
+}
+
+export interface UploadResult {
+  fileId: string;
+  fileName: string;
+  success: boolean;
+  uploadUrl?: string;
+  error?: Error;
+}
+
+export interface UploadedFileUrls {
+  [key: string]: string[];
+  photo: string[];
+  video: string[];
+  document: string[];
+}
+
+export interface FileObject {
+  name?: string;
+  size?: number | null;
+  uri: string;
+  firebaseUri?: string | null;
 }
 
 interface UploadProgress {
@@ -34,6 +56,18 @@ interface BatchUploadProgress {
   failedFiles: number;
   overallProgress: number;
   files: Map<string, UploadProgress>;
+}
+
+export interface MediaUploadData {
+  photos: string[];
+  videos: string[];
+  documents: string[];
+}
+export interface FilePickerResult {
+  uri: string;
+  name: string;
+  type: string;
+  size: number;
 }
 
 interface StoredUpload {
@@ -62,7 +96,7 @@ export interface UploadResult {
   error?: Error;
 }
 
-interface MultipleUploadConfig {
+export interface MultipleUploadConfig {
   endpoint: string;
   chunkSize?: number;
   maxConcurrent?: number; // Max parallel uploads
@@ -110,6 +144,60 @@ export class MultipleFilesUploadService {
       this.handleAppStateChange
     );
     // Store subscription for cleanup (React Native 0.65+)
+  }
+
+  public static validateFile(file: SelectedFile): {
+    valid: boolean;
+    error?: string;
+  } {
+    // Max 500MB
+    const MAX_SIZE = 500 * 1024 * 1024;
+
+    if (file.size && file.size > MAX_SIZE) {
+      return { valid: false, error: `File ${file.name} exceeds 500MB limit.` };
+    }
+
+    if (file.type) {
+      if (
+        !file.type.startsWith("image/") &&
+        !file.type.startsWith("video/") &&
+        !file.type.startsWith("application/") && // most documents (pdf, msword, etc.)
+        !file.type.startsWith("text/") // txt, csv, etc.
+      ) {
+        return {
+          valid: false,
+          error: `File ${file.name} must be an image, video, or document.`,
+        };
+      }
+    }
+
+    return { valid: true };
+  }
+
+  public static categorizeFilesByType(files: FilePickerResult[]): {
+    photos: FilePickerResult[];
+    videos: FilePickerResult[];
+    documents: FilePickerResult[];
+  } {
+    const categorized = {
+      photos: [] as FilePickerResult[],
+      videos: [] as FilePickerResult[],
+      documents: [] as FilePickerResult[],
+    };
+
+    files.forEach((file) => {
+      const mimeType = file.type.toLowerCase();
+
+      if (mimeType.startsWith("image/")) {
+        categorized.photos.push(file);
+      } else if (mimeType.startsWith("video/")) {
+        categorized.videos.push(file);
+      } else {
+        categorized.documents.push(file);
+      }
+    });
+
+    return categorized;
   }
 
   private handleAppStateChange = (nextAppState: AppStateStatus) => {

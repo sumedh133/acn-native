@@ -64,8 +64,8 @@ export const createProperty = async (
   const newProperty: Property = {
     ...property,
     propertyId,
-    added: Date.now(),
-    lastModified: Date.now(),
+    added: Date.now()/1000,
+    lastModified: Date.now()/1000,
     status: property.status || "active",
   };
 
@@ -122,7 +122,19 @@ export const updateProperty = async (
 
   await updateDoc(ref, {
     ...updates,
-    lastModified: Date.now(),
+    lastModified:Date.now()/1000,
+  });
+};
+
+/**
+ * Update a whole property object by property ID.
+ */
+export const updateWholeProperty = async (propertyId: string, updates: Partial<Property>) => {
+  const ref = doc(db, INVENTORY_COLLECTION, propertyId);
+
+  await setDoc(ref, {
+    ...updates,
+    lastModified: Date.now()/1000,
   });
 };
 

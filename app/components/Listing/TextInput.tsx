@@ -183,15 +183,16 @@ const styles = StyleSheet.create({
   },
   inputContainer: {
     width: "100%",
-    height: 48,
-    borderRadius: 8,
-    borderWidth: 1,
+    height: 32,
+    borderRadius: 5,
+    borderWidth: 1.5,
     borderColor: "#E1E3E6",
     backgroundColor: "#FFFFFF",
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
     paddingHorizontal: 12,
+    paddingVertical:8
   },
   focusedInputContainer: {
     borderColor: "#2B3034",
@@ -199,16 +200,18 @@ const styles = StyleSheet.create({
   inputField: {
     flex: 1,
     width: "100%",
-    height: 32,
+    height: 18,
     fontSize: 14,
     fontFamily: "sans-serif",
     color: "#000000",
   },
   suffixText: {
     fontSize: 14,
+    height: 18,
     fontFamily: "sans-serif",
     color: "#757575",
     marginLeft: 4,
+    lineHeight:18
   },
   priceInWords: {
     fontSize: 12,

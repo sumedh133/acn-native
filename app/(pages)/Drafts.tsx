@@ -10,7 +10,7 @@ import {
   SafeAreaView,
   ActivityIndicator,
 } from "react-native";
-import { ListingProperty } from "../types";
+import {Property} from "../types";
 import DraftCard from "../components/Listing/DraftCard";
 import {
   collection,
@@ -28,7 +28,7 @@ import { logEvent } from "@react-native-firebase/analytics";
 import { analytics } from "../config/firebase";
 
 const DraftsScreen: React.FC = () => {
-  const [drafts, setDrafts] = useState<ListingProperty[]>();
+  const [drafts, setDrafts] = useState<Property[]>();
   const [rendering, setRendering] = useState<boolean>(true);
   const [loadStartTime] = useState<number>(Date.now());
 
@@ -66,7 +66,7 @@ const DraftsScreen: React.FC = () => {
   );
 
   const pressDraftCard = useCallback(
-    (item: ListingProperty) => {
+    (item: Property) => {
       try {
         logEvent(analytics, "draft_card_click", {
           event_category: "drafts",
@@ -99,7 +99,7 @@ const DraftsScreen: React.FC = () => {
   };
 
   const renderPropertyItem = useCallback(
-    ({ item }: { item: ListingProperty }) => {
+    ({ item }: { item: Property }) => {
       return (
         <DraftCard
           item={item}
@@ -128,9 +128,9 @@ const DraftsScreen: React.FC = () => {
         where("status", "==", "draft")
       )
     );
-    const stateDrafts: ListingProperty[] = [];
+    const stateDrafts: Property[] = [];
     drafts.docs.forEach((draft) => {
-      stateDrafts.push(draft.data() as ListingProperty);
+      stateDrafts.push(draft.data() as Property);
     });
     setDrafts(stateDrafts);
     setRendering(false);

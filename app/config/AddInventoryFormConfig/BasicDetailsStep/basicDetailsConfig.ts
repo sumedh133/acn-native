@@ -41,9 +41,10 @@ export const basicDetailsStep: FormStep = {
         { label: "Row House", value: "row house" },
         { label: "Villament", value: "villament" },
         { label: "Independent Building", value: "independent house" },
-      ],dependsOn: {
+      ],
+      dependsOn: {
         conditions: [
-        {
+          {
             field: "propertyType",
             values: ["residential"],
           },
@@ -55,7 +56,7 @@ export const basicDetailsStep: FormStep = {
         logicOperator: "AND",
       },
       colspan: 12,
-      conditional: true,
+      
     },
     {
       id: "assetType",
@@ -71,7 +72,7 @@ export const basicDetailsStep: FormStep = {
       ],
       dependsOn: {
         conditions: [
-        {
+          {
             field: "propertyType",
             values: ["residential"],
           },
@@ -83,7 +84,7 @@ export const basicDetailsStep: FormStep = {
         logicOperator: "AND",
       },
       colspan: 12,
-      conditional: true,
+      
     },
     {
       id: "commercialPropertyType",
@@ -91,16 +92,16 @@ export const basicDetailsStep: FormStep = {
       type: "select",
       required: true,
       options: [
-        { label: "Office Space", value: "Office Space" },
-        { label: "Retail Space", value: "Retail Space" },
-        { label: "Commercial Space", value: "Commercial Space" },
+        { label: "Office Space", value: "office space" },
+        { label: "Retail Space", value: "retail space" },
+        { label: "Commercial Space", value: "commercial space" },
       ],
       dependsOn: {
         field: "propertyType",
         values: ["commercial"],
       },
       colspan: 12,
-      conditional: true,
+      
     },
     {
       id: "commercialSubType",
@@ -108,16 +109,13 @@ export const basicDetailsStep: FormStep = {
       type: "select",
       required: true,
       options: [
-        {
-          label: "Independent Office Space",
-          value: "Independent Office Space",
-        },
-        { label: "IT Park", value: "IT Park" },
-        { label: "Co-Working Space", value: "Co-Working Space" },
+        { label: "Independent Office Space", value: "independent office space" },
+        { label: "IT Park", value: "it park" },
+        { label: "Co-Working Space", value: "co-working space" },
       ],
       dependsOn: {
         field: "commercialPropertyType",
-        values: ["Office Space"],
+        values: ["office space"],
       },
       colspan: 12,
       conditional: true,
@@ -128,12 +126,12 @@ export const basicDetailsStep: FormStep = {
       type: "select",
       required: true,
       options: [
-        { label: "Commercial Shop", value: "Commercial Shop" },
-        { label: "Showroom", value: "Showroom" },
+        { label: "Commercial Shop", value: "commercial shop" },
+        { label: "Showroom", value: "showroom" },
       ],
       dependsOn: {
         field: "commercialPropertyType",
-        values: ["Retail Space"],
+        values: ["retail space"],
       },
       colspan: 12,
       conditional: true,
@@ -144,19 +142,19 @@ export const basicDetailsStep: FormStep = {
       type: "select",
       required: true,
       options: [
-        { label: "PG/Guest-House", value: "PG/Guest-House" },
-        { label: "Warehouse", value: "Warehouse" },
-        { label: "Commercial Plot", value: "Commercial Plot" },
-        { label: "Industrial Shed", value: "Industrial Shed" },
-        { label: "Factory", value: "Factory" },
-        { label: "Other", value: "Other" },
+        { label: "PG/Guest-House", value: "pg/guest-house" },
+        { label: "Warehouse", value: "warehouse" },
+        { label: "Commercial Plot", value: "commercial plot" },
+        { label: "Industrial Shed", value: "industrial shed" },
+        { label: "Factory", value: "factory" },
+        { label: "Other", value: "other" },
       ],
       dependsOn: {
         field: "commercialPropertyType",
-        values: ["Commercial Space"],
+        values: ["commercial space"],
       },
       colspan: 12,
-      conditional: true,
+      
     },
     {
       id: "communityType",
@@ -164,15 +162,15 @@ export const basicDetailsStep: FormStep = {
       type: "select",
       required: true,
       options: [
-        { label: "Gated", value: "Gated" },
-        { label: "Independent", value: "Independent" },
+        { label: "Gated", value: "gated" },
+        { label: "Independent", value: "independent" },
       ],
       dependsOn: {
         field: "propertyType",
         values: ["residential"],
       },
       colspan: 12,
-      conditional: true,
+      
     },
   ],
 };
