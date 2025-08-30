@@ -499,6 +499,10 @@ export class MultipleFilesUploadService {
             config.onFileProgress?.(fileId, progress);
           },
           onSuccess: () => {
+            let finalUrl = upload.url || "";
+            if (finalUrl.startsWith("http://")) {
+              finalUrl = finalUrl.replace("http://", "https://");
+            }
             const progress: UploadProgress = {
               fileId,
               fileName: file.name || "unknown",
@@ -521,7 +525,7 @@ export class MultipleFilesUploadService {
               fileId,
               fileName: file.name || "unknown",
               success: true,
-              uploadUrl: upload.url || undefined,
+              uploadUrl: finalUrl || undefined,
             });
           },
           onError: (error: any) => {
