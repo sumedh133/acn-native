@@ -138,7 +138,7 @@ export const ScrollProvider: React.FC<{ children: React.ReactNode }> = ({
   // Interpolations
   const footerTranslateY = clampedFooterY.interpolate({
     inputRange: [0, safeFooterHeight],
-    outputRange: [0, safeFooterHeight + 7],
+    outputRange: [0, safeFooterHeight + 20],
     extrapolate: "clamp",
   });
 

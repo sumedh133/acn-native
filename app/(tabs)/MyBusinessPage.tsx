@@ -46,7 +46,7 @@ const MyBusinessPage = () => {
     updateSort,
     refresh,
     loadMore,
-  } = useAlgoliaSearch({});
+  } = useAlgoliaSearch({ cpId: ["CPA469"] });
 
   const handleToggleMoreFilters = () => {
     // try {
@@ -64,7 +64,7 @@ const MyBusinessPage = () => {
   };
 
   return (
-    <View className="bg-white w-full h-full">
+    <View className="flex-1 flex-col bg-white">
       <Header activeCard={activeTab} setActiveCard={setActiveTab} />
       <PropertyFilters
         handleToggleMoreFilters={handleToggleMoreFilters}
