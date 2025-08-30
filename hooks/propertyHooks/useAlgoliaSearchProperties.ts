@@ -6,14 +6,12 @@ import {
   type SearchFilters,
 } from "../../app/services/property_services/propertyAlgoliaService";
 
-export const useAlgoliaSearch = () => {
+export const useAlgoliaSearch = (basicFilter: SearchFilters) => {
   const [searchState, setSearchState] = useState<InfiniteScrollState>(
     algoliaInfiniteSearch.getInitialState()
   );
   const [query, setQuery] = useState("");
-  const [filters, setFilters] = useState<SearchFilters>({
-    listingType: ["resale"],
-  });
+  const [filters, setFilters] = useState<SearchFilters>(basicFilter);
   const [selectedLandmark, setSelectedLandmark] = useState<Landmark | null>(
     null
   );

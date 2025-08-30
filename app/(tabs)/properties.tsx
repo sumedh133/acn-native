@@ -14,16 +14,16 @@ import MoreFilters from "../components/property/propertyMoreFilters/MoreFilters"
 
 // At the top of RequirementsPage, create simple context
 
-
 export default function PropertiesScreen() {
   const [isMoreFiltersModalOpen, setIsMoreFiltersModalOpen] = useState(false);
   const agentData = useSelector((state: RootState) => state?.agent?.docData);
   const userType = agentData?.userType || "free";
   const [isScrolling, setIsScrolling] = useState(false);
   const ScrollContext = React.createContext({
-  isScrolling: false,
-  setIsScrolling: (scrolling: boolean) => {},
-});
+    isScrolling: false,
+    setIsScrolling: (scrolling: boolean) => {},
+  });
+  const [activeTab, setActiveTab] = useState<"resale" | "rental">("resale");
 
   const isConnectedToInternet = useSelector(
     (state: RootState) => state.app.isConnectedToInternet
@@ -43,7 +43,30 @@ export default function PropertiesScreen() {
     updateSort,
     refresh,
     loadMore,
-  } = useAlgoliaSearch();
+  } = useAlgoliaSearch({ listingType: [`${activeTab}`] });
+
+  useEffect(() => {
+    if (!filters) return;
+
+    // Copy current filters and force listingType to match activeTab
+    const newFilters = { ...filters, listingType: [activeTab] };
+
+    if (activeTab === "rental") {
+      // Remove resale-only filters
+      delete newFilters.possession;
+      delete newFilters.carpetArea;
+      delete newFilters.totalAskPrice; // remove resale budget
+    } else if (activeTab === "resale") {
+      // Remove rental-only filters
+      delete newFilters.rent; // remove rental budget
+      delete newFilters.preferredTenants;
+      delete newFilters.nonVegAllowed;
+      delete newFilters.petsAllowed;
+      delete newFilters.availableFrom;
+    }
+
+    updateFilters(newFilters);
+  }, [activeTab]);
 
   // Track page view
   useEffect(() => {
@@ -153,6 +176,9 @@ export default function PropertiesScreen() {
             onFiltersChange={updateFilters}
             sortBy={sortBy}
             onSortChange={updateSort}
+            activeTab={activeTab}
+            setActiveTab={setActiveTab}
+            showTabs={true}
           />
         </View>
         <View className="w-full flex-1">

@@ -14,7 +14,7 @@ export interface SearchFilters {
   assetType?: string[];
   commercialSubType?: string[];
   apartmentType?: string[];
-  posession?: string[];
+  possession?: string[];
   facing?: string[];
   floor?: string[];
   furnishing?: string[];
@@ -26,6 +26,11 @@ export interface SearchFilters {
   sbua?: string[]; //number range
   carpetArea?: string[]; //number range
   availableFrom?: string[]; // string like winthin 1 month, within 2 months
+  totalAskPrice?: string[];
+  rent?: string[];
+  cpId?: string[];
+  stage?: string[];
+  builderCategory?: string[];
 
   // Add more filters as needed
   micromarket?: string[];
@@ -175,9 +180,12 @@ class AlgoliaInfiniteSearchService {
         values: filters.nonVegAllowed,
         fieldName: "tenantPreferences.nonVegAllowed",
       },
-      { values: filters.posession, fieldName: "posession" },
+      { values: filters.possession, fieldName: "possession" },
       { values: filters.availability, fieldName: "availability" },
       { values: filters.zone, fieldName: "zone" },
+      { values: filters.cpId, fieldName: "cpId" },
+      { values: filters.stage, fieldName: "stage" },
+      { values: filters.builderCategory, fieldName: "builderCategory" },
     ];
 
     const filterParts = filterConfigs
@@ -188,6 +196,8 @@ class AlgoliaInfiniteSearchService {
     const rangeFilters = [
       this.buildRangeFilter(filters.sbua, "sbua"),
       this.buildRangeFilter(filters.carpetArea, "carpetArea"),
+      this.buildRangeFilter(filters.totalAskPrice, "pricing.totalAskPrice"),
+      this.buildRangeFilter(filters.rent, "rentalInfo.rent "),
     ].filter((f) => f !== null) as string[];
 
     const availableFromFilter = this.buildAvailableFromFilter(
@@ -233,6 +243,7 @@ class AlgoliaInfiniteSearchService {
 
     const { searchClient, indexName } = this.getClientAndIndex(sortBy);
     const filterString = this.buildFilterString(filters);
+    console.log(filterString)
 
     const response = await searchClient.search([
       {

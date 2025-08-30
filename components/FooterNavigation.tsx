@@ -1,19 +1,5 @@
-import ActiveDashboardIcon from "@/assets/icons/svg/Footer/ActiveDashboardIcon";
-import ActiveNotificationIcon from "@/assets/icons/svg/Footer/ActiveNotificationsIcon";
-import ActivePropertiesIcon from "@/assets/icons/svg/Footer/ActivePropertiesIcon";
-import ActiveRequirementsIcon from "@/assets/icons/svg/Footer/ActiveRequirementsIcon";
-import DashboardIcon from "@/assets/icons/svg/Footer/DashboardIcon";
-import PropertiesIcon from "@/assets/icons/svg/Footer/PropertiesIcon";
-import RequirementsIcon from "@/assets/icons/svg/Footer/RequirementsIcon";
-import PlusIcon from "@/assets/icons/svg/Common/PlusIcon";
 import { useNavigation, usePathname, useRouter } from "expo-router";
-import React, {
-  ReactNode,
-  useState,
-  useRef,
-  useEffect,
-  useContext,
-} from "react";
+import React, { useState, useRef, useEffect, useContext } from "react";
 import {
   Text,
   TouchableOpacity,
@@ -27,54 +13,10 @@ import { analytics } from "@/app/config/firebase";
 import { logEvent } from "@react-native-firebase/analytics";
 import { useSelector } from "react-redux";
 import { RootState } from "@/store/store";
-import useNotification from "@/app/components/Notification/useNotification";
 import { ScrollContext } from "@/app/ScrollContext";
-
-// icons import
-import MyBusiness from "@/assets/icons/svg/Footer/MyBuisness.svg";
 import ModularPopup from "./ModularPopup";
-import AddInventoryIcon from "@/assets/icons/svg/Footer/AddInventoryIcon";
-import AddRequirementsIcon from "@/assets/icons/svg/Footer/AddRequirementsIcon";
-
-interface MenuItem {
-  title: string;
-  path: string;
-  icon: ReactNode;
-  activeIcon: ReactNode;
-}
-
-const menuItems: MenuItem[] = [
-  {
-    title: "Properties",
-    path: "/properties",
-    icon: <PropertiesIcon width={24} height={24} />,
-    activeIcon: <ActivePropertiesIcon width={24} height={24} />,
-  },
-  {
-    title: "Requirements",
-    path: "/requirements",
-    icon: <RequirementsIcon width={24} height={24} />,
-    activeIcon: <ActiveRequirementsIcon width={24} height={24} />,
-  },
-  {
-    title: "",
-    path: "/add",
-    icon: <PlusIcon width={24} height={24} />,
-    activeIcon: null,
-  },
-  {
-    title: "My Business",
-    path: "/(tabs)/NotificationPage",
-    icon: <MyBusiness width={24} height={24} />,
-    activeIcon: <ActiveNotificationIcon width={24} height={24} />,
-  },
-  {
-    title: "Dashboard",
-    path: "/dashboardTab",
-    icon: <DashboardIcon width={24} height={24} />,
-    activeIcon: <ActiveDashboardIcon width={24} height={24} />,
-  },
-];
+import { ModalType, getModalItems } from "@/app/constants/footerModalOptions";
+import { getPopupItems, menuItems } from "@/app/constants/footerConstants";
 
 const FooterNavigation = () => {
   const pathname = usePathname();
@@ -84,8 +26,6 @@ const FooterNavigation = () => {
   const userType =
     useSelector((state: RootState) => state?.agent?.docData?.userType) ||
     "free";
-  const { unreadCount } = useNotification();
-
   const [popupAnimationFlag, setPopupAnimationFlag] = useState<boolean>(false);
   const [showPopup, setShowPopup] = useState<boolean>(false);
   const navigateAtEndOfAnimation = useRef<string | null>(null);
@@ -93,13 +33,36 @@ const FooterNavigation = () => {
   const rotateAnimation = useRef(new Animated.Value(0)).current;
   const slideAnimation = useRef(new Animated.Value(height)).current;
   const opacityAnimation = useRef(new Animated.Value(0)).current;
+
+  // Unified modal state
+  const [activeModal, setActiveModal] = useState<ModalType>(null);
+  const modalSlideAnimation = useRef(new Animated.Value(height)).current;
+  const modalOpacityAnimation = useRef(new Animated.Value(0)).current;
+
   const {
     footerTranslateY,
     resetFooterPosition,
+    
+    // Sort
     showSortPopup,
     selectedSort,
     closeSortPopup,
     setSelectedSort,
+    
+    // Status
+    showStatusPopup,
+    selectedStatus,
+    closeStatusPopup,
+    setSelectedStatus,
+    
+    // Category
+    showCategoryPopup,
+    selectedCategory,
+    closeCategoryPopup,
+    setSelectedCategory,
+    
+    setFooterHeight,
+    footerHeight,
   } = useContext(ScrollContext);
 
   const rotate = rotateAnimation.interpolate({
@@ -107,86 +70,52 @@ const FooterNavigation = () => {
     outputRange: ["0deg", "45deg"],
   });
 
-  const popupItems = [
-    {
-      id: "add_inventory",
-      text: "Add Inventory",
-      subText: "Add your inventory to increase visibility",
-      icon: <AddInventoryIcon width={24} height={24} />,
-      colors: ["#FFFCEC", "#FFFFFF"],
-      iconColor: "#FFE86A",
-      free: true,
-      onPress: () => {
-        // Navigation logic
-        handlePopupCardClick("(pages)/Drafts");
-      },
-    },
-    {
-      id: "add_requirement",
-      text: "Add Requirement",
-      subText: "Add your requirements to find inventory.",
-      icon: <AddRequirementsIcon width={24} height={24} />,
-      colors: ["#F1FFFE", "#FFFFFF"],
-      iconColor: "#BFE9E6",
-      onPress: () => {
-        // Navigation logic
-        handlePopupCardClick("(tabs)/UserRequirementForm");
-      },
-    },
-  ];
-
-  // inside FooterNavigation component
-
-  const sortItems = [
-    {
-      id: "relevance",
-      text: "Most Relevant",
-      onPress: () => handleSortSelection("relevance"),
-      selected: true, // Default selected
-    },
-    {
-      id: "price_asc",
-      text: "Price: Low to High",
-      onPress: () => handleSortSelection("price_asc"),
-    },
-    {
-      id: "price_desc",
-      text: "Price: High to Low",
-      onPress: () => handleSortSelection("price_desc"),
-    },
-    {
-      id: "date_desc",
-      text: "Newest First",
-      onPress: () => handleSortSelection("date_desc"),
-    },
-    {
-      id: "date_asc",
-      text: "Oldest First",
-      onPress: () => handleSortSelection("date_asc"),
-    },
-  ].map((item) => ({
-    ...item,
-    selected: item.id === selectedSort, // ✅ mark as selected if matches context value
-  }));
-
-  // 4. Add sort handler function (add this after handleCardPress function)
-  const handleSortSelection = (value: string) => {
+  // Unified selection handler
+  const handleSelection = (type: string, value: string) => {
     try {
-      logEvent(analytics, "property_sort_change", {
-        event_category: "sort",
+      logEvent(analytics, `property_${type}_change`, {
+        event_category: type,
         event_label: "property",
-        sort_value: value,
+        [`${type}_value`]: value,
         user_type: userType,
       });
     } catch (error) {
-      console.error("Error logging sort change:", error);
+      console.error(`Error logging ${type} change:`, error);
     }
-    setSelectedSort(value);
-    closeSortPopup();
+
+    switch (type) {
+      case 'sort':
+        setSelectedSort(value);
+        closeSortPopup();
+        break;
+      case 'status':
+        setSelectedStatus(value);
+        closeStatusPopup();
+        break;
+      case 'category':
+        setSelectedCategory(value);
+        closeCategoryPopup();
+        break;
+    }
+    
+    setActiveModal(null);
   };
-  const [showSortModal, setShowSortModal] = useState<boolean>(false);
-  const sortSlideAnimation = useRef(new Animated.Value(height)).current;
-  const sortOpacityAnimation = useRef(new Animated.Value(0)).current;
+
+  // Unified close handler
+  const closeActiveModal = () => {
+    switch (activeModal) {
+      case 'sort':
+        closeSortPopup();
+        break;
+      case 'status':
+        closeStatusPopup();
+        break;
+      case 'category':
+        closeCategoryPopup();
+        break;
+    }
+    setActiveModal(null);
+  };
 
   const handleCardPress = (item: any) => {
     try {
@@ -204,8 +133,8 @@ const FooterNavigation = () => {
       logEvent(analytics, "add_popup_selection", {
         event_category: "interaction",
         event_label: "selection",
-        selected_option: item.id, // Changed from item.slug
-        destination: getDestinationFromId(item.id), // Helper function
+        selected_option: item.id,
+        destination: getDestinationFromId(item.id),
         user_type: userType,
       });
     } catch (error) {
@@ -258,7 +187,6 @@ const FooterNavigation = () => {
   };
 
   useEffect(() => {
-    // Reset footer position when pathname changes (navigation occurs)
     if (resetFooterPosition) {
       resetFooterPosition();
     }
@@ -268,8 +196,8 @@ const FooterNavigation = () => {
     const newState = !popupAnimationFlag;
 
     if (newState) {
-      // 🔴 Close sort modal if it's open
-      closeSortPopup();
+      // Close any active modals
+      closeActiveModal();
     }
 
     setPopupAnimationFlag(newState);
@@ -298,20 +226,22 @@ const FooterNavigation = () => {
           setPopupAnimationFlag(false);
           return true;
         }
+        if (activeModal) {
+          closeActiveModal();
+          return true;
+        }
         return false;
       };
 
-      // Add back press event listener
       const subscription = BackHandler.addEventListener(
         "hardwareBackPress",
         handleBackPress
       );
 
-      // Cleanup
       return () => {
         subscription.remove();
       };
-    }, [popupAnimationFlag])
+    }, [popupAnimationFlag, activeModal])
   );
 
   useEffect(() => {
@@ -353,38 +283,52 @@ const FooterNavigation = () => {
     });
   }, [popupAnimationFlag, rotateAnimation, slideAnimation, height]);
 
+  // Unified modal effect
   useEffect(() => {
-    if (showSortPopup) {
-      // 🔴 Close popup modal if it's open
+    const isAnyModalOpen = showSortPopup || showStatusPopup || showCategoryPopup;
+    
+    if (isAnyModalOpen) {
+      // Close popup modal if it's open
       setPopupAnimationFlag(false);
-      setShowSortModal(true);
-
-      // ✅ Reset footer up when sort opens
+      
+      // Reset footer position when any modal opens
       resetFooterPosition?.();
+      
+      // Set active modal type
+      if (showSortPopup) setActiveModal('sort');
+      else if (showStatusPopup) setActiveModal('status');
+      else if (showCategoryPopup) setActiveModal('category');
+    } else {
+      setActiveModal(null);
     }
 
-    const sortSlideAnimationTemp = Animated.timing(sortSlideAnimation, {
-      toValue: showSortPopup ? 0 : height,
+    const modalSlideAnimationTemp = Animated.timing(modalSlideAnimation, {
+      toValue: isAnyModalOpen ? 0 : height,
       duration: 300,
       easing: Easing.linear,
       useNativeDriver: true,
     });
 
-    const sortOpacityAnimationTemp = Animated.timing(sortOpacityAnimation, {
-      toValue: showSortPopup ? 1 : 0,
+    const modalOpacityAnimationTemp = Animated.timing(modalOpacityAnimation, {
+      toValue: isAnyModalOpen ? 1 : 0,
       duration: 300,
       easing: Easing.linear,
       useNativeDriver: true,
     });
 
-    Animated.parallel([sortSlideAnimationTemp, sortOpacityAnimationTemp]).start(
-      (finished) => {
-        if (!showSortPopup && finished.finished) setShowSortModal(false);
-      }
-    );
-  }, [showSortPopup, sortSlideAnimation, sortOpacityAnimation, height]);
+    Animated.parallel([modalSlideAnimationTemp, modalOpacityAnimationTemp]).start();
+  }, [showSortPopup, showStatusPopup, showCategoryPopup, modalSlideAnimation, modalOpacityAnimation, height]);
 
   if (params?.showFooter === false) return null;
+
+  const popupItems = getPopupItems(handlePopupCardClick);
+  const modalItems = getModalItems(
+    activeModal,
+    selectedSort,
+    selectedStatus,
+    selectedCategory,
+    handleSelection
+  );
 
   return (
     <>
@@ -404,30 +348,32 @@ const FooterNavigation = () => {
           >
             <ModularPopup
               items={popupItems}
-              slideAnimation={slideAnimation} // Your existing animation value
+              slideAnimation={slideAnimation}
               onDragDown={() => handlePopupClick()}
-              onItemPress={handleCardPress} // Analytics logging
-              dragThreshold={10} // Same as original DRAG_THRESHOLD
+              onItemPress={handleCardPress}
+              dragThreshold={10}
             />
           </TouchableOpacity>
         </Animated.View>
       )}
-      {showSortModal && (
+      
+      {/* Unified Modal for Sort/Status/Category */}
+      {activeModal && (
         <Animated.View
           style={[
             styles.popupContainerOverFooter,
-            { opacity: sortOpacityAnimation },
+            { opacity: modalOpacityAnimation },
           ]}
         >
           <TouchableOpacity
             activeOpacity={1}
             style={styles.popupTouchOverFooter}
-            onPress={closeSortPopup}
+            onPress={closeActiveModal}
           >
             <ModularPopup
-              items={sortItems}
-              slideAnimation={sortSlideAnimation}
-              onDragDown={closeSortPopup}
+              items={modalItems}
+              slideAnimation={modalSlideAnimation}
+              onDragDown={closeActiveModal}
               dragThreshold={10}
             />
           </TouchableOpacity>
@@ -435,6 +381,12 @@ const FooterNavigation = () => {
       )}
 
       <Animated.View
+        onLayout={(e) => {
+          const { height } = e.nativeEvent.layout;
+          if (footerHeight === null) {
+            setFooterHeight(height + 25);
+          }
+        }}
         style={[
           styles.footer,
           {
@@ -509,7 +461,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "flex-end",
     gap: 12,
-    paddingBottom: 59, // 👈 keeps Add popup above footer
+    paddingBottom: 55,
   },
   popupTouchOverFooter: {
     width: "100%",
@@ -522,15 +474,14 @@ const styles = StyleSheet.create({
     zIndex: 105,
   },
   footer: {
-    position: "absolute", // Add this
-    bottom: 0, // Add this
-    left: 0, // Add this
-    right: 0, // Add this
+    position: "absolute",
+    bottom: 0,
+    left: 0,
+    right: 0,
     display: "flex",
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
-    height: 59,
     paddingHorizontal: 9.5,
     backgroundColor: "#FFFFFF",
     borderTopWidth: 1,
