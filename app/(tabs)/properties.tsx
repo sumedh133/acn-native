@@ -45,6 +45,29 @@ export default function PropertiesScreen() {
     loadMore,
   } = useAlgoliaSearch({ listingType: [`${activeTab}`] });
 
+  useEffect(() => {
+    if (!filters) return;
+
+    // Copy current filters and force listingType to match activeTab
+    const newFilters = { ...filters, listingType: [activeTab] };
+
+    if (activeTab === "rental") {
+      // Remove resale-only filters
+      delete newFilters.possession;
+      delete newFilters.carpetArea;
+      delete newFilters.totalAskPrice; // remove resale budget
+    } else if (activeTab === "resale") {
+      // Remove rental-only filters
+      delete newFilters.rent; // remove rental budget
+      delete newFilters.preferredTenants;
+      delete newFilters.nonVegAllowed;
+      delete newFilters.petsAllowed;
+      delete newFilters.availableFrom;
+    }
+
+    updateFilters(newFilters);
+  }, [activeTab]);
+
   // Track page view
   useEffect(() => {
     try {
