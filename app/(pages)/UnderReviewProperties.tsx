@@ -1,6 +1,5 @@
 import React, { useState, useEffect, useCallback, useRef } from "react";
-import { View, Keyboard, Text, RefreshControl } from "react-native"; // Import RefreshControl from react-native
-import { useDoubleBackPressExit } from "@/hooks/useDoubleBackPressExit";
+import { View, Keyboard, Text, RefreshControl, ActivityIndicator } from "react-native"; // Import RefreshControl from react-native
 import Offline from "../components/Offline";
 import { useSelector } from "react-redux";
 import { RootState } from "@/store/store";
@@ -31,9 +30,6 @@ const UnderReviewProperties = () => {
   const viewabilityConfig = useRef({
     itemVisiblePercentThreshold: 50,
   });
-
-  // Call useDoubleBackPressExit IMMEDIATELY after other hooks
-  useDoubleBackPressExit();
 
   const cpId = useSelector((state: RootState) => state?.agent?.docData.cpId);
 
@@ -131,6 +127,7 @@ const UnderReviewProperties = () => {
 
       return (
         <View
+          className=""
           onStartShouldSetResponder={() => {
             handlePropertyView();
             return false;
@@ -163,15 +160,15 @@ const UnderReviewProperties = () => {
 
   if (loading) {
     return (
-      <View className="flex-1 justify-center items-center">
-        <Text>Loading...</Text>
+      <View className="flex-1 justify-center items-center bg-white">
+        <ActivityIndicator />
       </View>
     );
   }
 
   if (properties.length === 0) {
     return (
-      <View className="flex-1 justify-center items-center">
+      <View className="flex-1 justify-center items-center bg-white">
         <Text>No properties found</Text>
       </View>
     );
@@ -203,6 +200,8 @@ const UnderReviewProperties = () => {
         paddingHorizontal: 16,
         width: "100%",
         flexGrow: 1,
+        backgroundColor: "#F5F6F7",
+        padding: 12,
       }}
       style={{ flexGrow: 1, flexShrink: 1 }}
       initialNumToRender={10}

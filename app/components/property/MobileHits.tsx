@@ -20,6 +20,8 @@ import { RootState } from "@/store/store";
 import { analytics } from "../../config/firebase";
 import { logEvent } from "@react-native-firebase/analytics";
 import { ScrollContext } from "@/app/ScrollContext";
+import { Property } from "@/app/types";
+import { usePathname } from "expo-router";
 
 interface MobileHitsProps {
   results: any[]; // All accumulated results from infinite scroll
@@ -31,6 +33,8 @@ interface MobileHitsProps {
   query?: string; // Current search query for analytics
   onLoadMore: () => void; // Function to load next page
   onRefresh?: () => void; // Optional refresh function
+  selectedProperties?: string[];
+  setSelectedProperties?: (selectedProperties: string[]) => void;
 }
 
 export const MobileHits = ({
@@ -43,6 +47,8 @@ export const MobileHits = ({
   query = "",
   onLoadMore,
   onRefresh,
+  selectedProperties,
+  setSelectedProperties,
 }: MobileHitsProps) => {
   const agentData = useSelector((state: RootState) => state?.agent?.docData);
   const userType = agentData?.userType || "free";
@@ -58,6 +64,8 @@ export const MobileHits = ({
     itemVisiblePercentThreshold: 50, // Item is considered viewed when 50% visible
     minimumViewTime: 500, // Must be visible for at least 500ms
   });
+
+  const pathname = usePathname();
 
   // Track search results when they change
   useEffect(() => {
@@ -204,13 +212,13 @@ export const MobileHits = ({
 
   // Render individual property card
   const renderItem = useCallback(
-    ({ item, index }: { item: any; index: number }) => {
+    ({ item, index }: { item: Property; index: number }) => {
       const handlePropertyView = () => {
         try {
           logEvent(analytics, "property_card_view", {
             event_category: "interaction",
             event_label: "property_view",
-            property_id: item.propertyId || item.objectID,
+            property_id: item.propertyId,
             list_position: index + 1,
             total_results: results.length,
             user_type: userType,
@@ -228,13 +236,15 @@ export const MobileHits = ({
           }}
         >
           <PropertyCard
-            key={item.propertyId || item.objectID || index}
+            key={item.propertyId}
             property={item}
+            selectedProperties={selectedProperties}
+            setSelectedProperties={setSelectedProperties}
           />
         </View>
       );
     },
-    [results.length, userType]
+    [results.length, userType, selectedProperties]
   );
 
   // Render footer with loading indicator
@@ -384,6 +394,7 @@ export const MobileHits = ({
     <Animated.FlatList
       data={results}
       renderItem={renderItem}
+      extraData={selectedProperties}
       keyExtractor={keyExtractor}
       ItemSeparatorComponent={() => <View style={{ height: 12 }} />}
       onScroll={Animated.event(

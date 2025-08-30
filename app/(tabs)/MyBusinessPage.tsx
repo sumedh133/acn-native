@@ -1,6 +1,6 @@
 // React Components Import
 import { View, Text } from "react-native";
-import { useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 
 // Page Components Import
 import Header from "../components/MyBusinessPage/Header";
@@ -12,6 +12,8 @@ import PropertiesUnderReviewCard from "../components/MyBusinessPage/UnderReviewP
 import PropertyFilters from "../components/property/PropertyFilters";
 import { logEvent } from "@react-native-firebase/analytics";
 import MoreFilters from "../components/property/propertyMoreFilters/MoreFilters";
+import { Property } from "../types";
+import { searchProperties } from "../services/property_services/propertyService";
 
 // Icons Import
 
@@ -25,6 +27,11 @@ const MyBusinessPage = () => {
     "property"
   );
   const [isMoreFiltersModalOpen, setIsMoreFiltersModalOpen] = useState(false);
+  const [selectedProperties, setSelectedProperties] = useState<string[]>([]);
+  const [loading, setLoading] = useState<boolean>(false);
+  const [properties, setProperties] = useState<Property[]>();
+
+  // Use Selector to fetch from Local States
   const cpId = useSelector((state: any) => state?.agent?.docData?.cpId);
 
   // Services Call
@@ -46,7 +53,7 @@ const MyBusinessPage = () => {
     updateSort,
     refresh,
     loadMore,
-  } = useAlgoliaSearch({ cpId: ["CPA469"] });
+  } = useAlgoliaSearch({ cpId: [cpId] });
 
   const handleToggleMoreFilters = () => {
     // try {
@@ -62,6 +69,25 @@ const MyBusinessPage = () => {
     setIsMoreFiltersModalOpen((prev) => !prev);
     // Keyboard.dismiss();
   };
+
+  const fetchProperties = useCallback(async () => {
+    try {
+      setLoading(true);
+      const propertyResults: Property[] = await searchProperties("cpId", cpId);
+      console.log(propertyResults, "fetched properties");
+      setProperties(propertyResults || []);
+    } catch (error) {
+      console.error("Error fetching properties:", error);
+      setProperties([]);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+
+  useEffect(() => {
+    fetchProperties();
+  }, [fetchProperties]);
 
   return (
     <View className="flex-1 flex-col bg-white">
@@ -79,8 +105,15 @@ const MyBusinessPage = () => {
         showTabs={false}
         isMyBusinessPage={true}
       />
-      <PropertiesUnderReviewCard />
-      <Listings data={searchState} loadMore={loadMore} refresh={refresh} />
+      {properties && properties.length > 0 && <PropertiesUnderReviewCard />}
+      <Listings
+        data={searchState}
+        loadMore={loadMore}
+        refresh={refresh}
+        selectedProperties={selectedProperties}
+        setSelectedProperties={setSelectedProperties}
+        loading={loading}
+      />
       <MoreFilters
         isOpen={isMoreFiltersModalOpen}
         setIsOpen={setIsMoreFiltersModalOpen}

@@ -8,23 +8,24 @@ import {
   TouchableOpacity,
   Alert,
   ActivityIndicator,
-} from "react-native";  
+} from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
-import * as DocumentPicker from 'expo-document-picker';
+import * as DocumentPicker from "expo-document-picker";
 import { Ionicons } from "@expo/vector-icons";
 import { UploadFileIcon } from "../../../../assets/icons/svg/PropertyListing/UploadFileIcon";
 import ImageCarousel from "../../../components/property/ImageCarousel";
-import { 
+import {
   MultipleFilesUploadService,
-  SelectedFile, 
-  UploadResult, 
+  SelectedFile,
+  UploadResult,
   MediaUploadData,
   FilePickerResult,
-  MultipleUploadConfig 
+  MultipleUploadConfig,
 } from "../../../services/media_services/mediaService";
 
 const { width } = Dimensions.get("window");
-const TUS_ENDPOINT = "https://tusd.tusdemo.net/files/"
+const TUS_ENDPOINT =
+  "https://tus-protocol-dot-iqol-crm.uc.r.appspot.com/files/";
 
 interface PropertyImagesProps {
   images?: string[];
@@ -38,36 +39,41 @@ export const PropertyImages: React.FC<PropertyImagesProps> = ({
   images = [],
   onMediaUpdate,
   currentMedia = { photos: [], videos: [], documents: [] },
-  propId = 'temp-prop-id',
+  propId = "temp-prop-id",
   agentData,
 }) => {
   const [uploading, setUploading] = useState(false);
 
   // Combine all media types for carousel display (images, videos, AND documents)
-  const allMediaFiles = [...images, ...currentMedia.photos, ...currentMedia.videos, ...currentMedia.documents];
+  const allMediaFiles = [
+    ...images,
+    ...currentMedia.photos,
+    ...currentMedia.videos,
+    ...currentMedia.documents,
+  ];
   const hasAnyFiles = allMediaFiles.length > 0;
 
   const openFilePicker = async () => {
     try {
       const result = await DocumentPicker.getDocumentAsync({
-        type: '*/*',
+        type: "*/*",
         multiple: true,
         copyToCacheDirectory: true,
       });
 
       if (!result.canceled && result.assets && result.assets.length > 0) {
-        const files: FilePickerResult[] = result.assets.map(asset => ({
+        const files: FilePickerResult[] = result.assets.map((asset) => ({
           uri: asset.uri,
           name: asset.name || `file_${Date.now()}`,
-          type: asset.mimeType || 'application/octet-stream',
+          type: asset.mimeType || "application/octet-stream",
           size: asset.size || 0,
         }));
-        
+
         uploadFiles(files);
       }
     } catch (error) {
-      console.error('File picker error:', error);
-      Alert.alert('Error', 'Failed to pick files');
+      console.error("File picker error:", error);
+      Alert.alert("Error", "Failed to pick files");
     }
   };
 
@@ -78,7 +84,7 @@ export const PropertyImages: React.FC<PropertyImagesProps> = ({
     const validationErrors: string[] = [];
     const validFiles: FilePickerResult[] = [];
 
-    files.forEach(file => {
+    files.forEach((file) => {
       const validation = MultipleFilesUploadService.validateFile(file);
       if (validation.valid) {
         validFiles.push(file);
@@ -88,7 +94,7 @@ export const PropertyImages: React.FC<PropertyImagesProps> = ({
     });
 
     if (validationErrors.length > 0) {
-      Alert.alert('Invalid Files', validationErrors.join('\n'));
+      Alert.alert("Invalid Files", validationErrors.join("\n"));
       if (validFiles.length === 0) return;
     }
 
@@ -96,7 +102,8 @@ export const PropertyImages: React.FC<PropertyImagesProps> = ({
 
     try {
       const uploadService = new MultipleFilesUploadService();
-      const categorizedFiles = MultipleFilesUploadService.categorizeFilesByType(validFiles);
+      const categorizedFiles =
+        MultipleFilesUploadService.categorizeFilesByType(validFiles);
 
       // Prepare all files for upload with proper IDs
       const allFilesToUpload: Array<{
@@ -105,22 +112,24 @@ export const PropertyImages: React.FC<PropertyImagesProps> = ({
       }> = [];
 
       Object.entries(categorizedFiles).forEach(([type, fileList]) => {
-        fileList.forEach(file => {
+        fileList.forEach((file) => {
           allFilesToUpload.push({
             file,
-            type: type as keyof MediaUploadData
+            type: type as keyof MediaUploadData,
           });
         });
       });
 
       // Prepare files for TUS upload
-      const selectedFiles: SelectedFile[] = allFilesToUpload.map(({ file, type }, index) => ({
-        uri: file.uri,
-        name: file.name,
-        type: file.type,
-        size: file.size,
-        id: `${propId}-${type}-${file.name || Date.now()}-${index}`,
-      }));
+      const selectedFiles: SelectedFile[] = allFilesToUpload.map(
+        ({ file, type }, index) => ({
+          uri: file.uri,
+          name: file.name,
+          type: file.type,
+          size: file.size,
+          id: `${propId}-${type}-${file.name || Date.now()}-${index}`,
+        })
+      );
 
       // Configure upload
       const uploadConfig: MultipleUploadConfig = {
@@ -137,7 +146,10 @@ export const PropertyImages: React.FC<PropertyImagesProps> = ({
       };
 
       // Start the upload
-      const results = await uploadService.startBatchUpload(selectedFiles, uploadConfig);
+      const results = await uploadService.startBatchUpload(
+        selectedFiles,
+        uploadConfig
+      );
 
       // Process results and categorize successful uploads
       const successfulUploads: MediaUploadData = {
@@ -151,7 +163,10 @@ export const PropertyImages: React.FC<PropertyImagesProps> = ({
           const { type } = allFilesToUpload[index];
           successfulUploads[type].push(result.uploadUrl);
         } else {
-          console.error(`Failed to upload ${selectedFiles[index].name}:`, result.error?.message || 'Unknown error');
+          console.error(
+            `Failed to upload ${selectedFiles[index].name}:`,
+            result.error?.message || "Unknown error"
+          );
         }
       });
 
@@ -160,77 +175,84 @@ export const PropertyImages: React.FC<PropertyImagesProps> = ({
         const updatedMedia: MediaUploadData = {
           photos: [...currentMedia.photos, ...successfulUploads.photos],
           videos: [...currentMedia.videos, ...successfulUploads.videos],
-          documents: [...currentMedia.documents, ...successfulUploads.documents],
+          documents: [
+            ...currentMedia.documents,
+            ...successfulUploads.documents,
+          ],
         };
         onMediaUpdate(updatedMedia);
       }
 
       // Show success message
-      const totalSuccess = Object.values(successfulUploads).reduce((sum, arr) => sum + arr.length, 0);
+      const totalSuccess = Object.values(successfulUploads).reduce(
+        (sum, arr) => sum + arr.length,
+        0
+      );
       const totalFailed = validFiles.length - totalSuccess;
-      
+
       if (totalSuccess > 0) {
-        const message = totalSuccess === validFiles.length 
-          ? `All ${totalSuccess} files uploaded successfully!`
-          : `${totalSuccess} files uploaded successfully`;
-        Alert.alert('Upload Successful', message);
+        const message =
+          totalSuccess === validFiles.length
+            ? `All ${totalSuccess} files uploaded successfully!`
+            : `${totalSuccess} files uploaded successfully`;
+        Alert.alert("Upload Successful", message);
       }
 
       if (totalFailed > 0) {
-        Alert.alert('Upload Issues', `${totalFailed} files failed to upload. Please try again.`);
+        Alert.alert(
+          "Upload Issues",
+          `${totalFailed} files failed to upload. Please try again.`
+        );
       }
-
     } catch (error: any) {
-      console.error('Upload failed:', error);
-      Alert.alert('Upload Failed', error.message || 'Failed to upload files');
+      console.error("Upload failed:", error);
+      Alert.alert("Upload Failed", error.message || "Failed to upload files");
     } finally {
       setUploading(false);
     }
   };
 
   const deleteFile = (fileUrl: string, fileType: keyof MediaUploadData) => {
-    Alert.alert(
-      'Delete File',
-      'Are you sure you want to delete this file?',
-      [
-        { text: 'Cancel', style: 'cancel' },
-        {
-          text: 'Delete',
-          style: 'destructive',
-          onPress: () => {
-            if (onMediaUpdate) {
-              const updatedMedia = { ...currentMedia };
-              updatedMedia[fileType] = updatedMedia[fileType].filter(url => url !== fileUrl);
-              onMediaUpdate(updatedMedia);
-            }
-          },
+    Alert.alert("Delete File", "Are you sure you want to delete this file?", [
+      { text: "Cancel", style: "cancel" },
+      {
+        text: "Delete",
+        style: "destructive",
+        onPress: () => {
+          if (onMediaUpdate) {
+            const updatedMedia = { ...currentMedia };
+            updatedMedia[fileType] = updatedMedia[fileType].filter(
+              (url) => url !== fileUrl
+            );
+            onMediaUpdate(updatedMedia);
+          }
         },
-      ]
-    );
+      },
+    ]);
   };
 
   // Helper function to determine file type and if it can be deleted
   const getFileInfo = (fileUrl: string, index: number) => {
-    let fileType: keyof MediaUploadData = 'photos';
+    let fileType: keyof MediaUploadData = "photos";
     let canDelete = true;
-    
+
     const legacyImagesCount = images.length;
     const photosCount = currentMedia.photos.length;
     const videosCount = currentMedia.videos.length;
-    
+
     if (index < legacyImagesCount) {
       // This is a legacy image, might not be deletable
-      fileType = 'photos';
+      fileType = "photos";
       canDelete = false;
     } else if (index < legacyImagesCount + photosCount) {
       // This is a current photo
-      fileType = 'photos';
+      fileType = "photos";
     } else if (index < legacyImagesCount + photosCount + videosCount) {
       // This is a current video
-      fileType = 'videos';
+      fileType = "videos";
     } else {
       // This is a document
-      fileType = 'documents';
+      fileType = "documents";
     }
 
     return { fileType, canDelete };
@@ -250,11 +272,13 @@ export const PropertyImages: React.FC<PropertyImagesProps> = ({
           {/* Enhanced Media Carousel for Images, Videos, AND Documents */}
           {allMediaFiles.length > 0 && (
             <View className="relative">
-              <ImageCarousel 
-                images={allMediaFiles} 
+              <ImageCarousel
+                images={allMediaFiles}
                 propertyId={propId}
                 onDeleteFile={handleDeleteFromCarousel}
-                canDeleteFile={(index) => getFileInfo(allMediaFiles[index], index).canDelete}
+                canDeleteFile={(index) =>
+                  getFileInfo(allMediaFiles[index], index).canDelete
+                }
               />
             </View>
           )}
@@ -273,7 +297,7 @@ export const PropertyImages: React.FC<PropertyImagesProps> = ({
                 <UploadFileIcon size={18} color="white" />
               )}
               <Text className="text-white font-semibold text-sm">
-                {uploading ? 'Uploading...' : 'Add More Files'}
+                {uploading ? "Uploading..." : "Add More Files"}
               </Text>
             </TouchableOpacity>
           </View>
@@ -309,7 +333,7 @@ export const PropertyImages: React.FC<PropertyImagesProps> = ({
                   <UploadFileIcon size={18} color="white" />
                 )}
                 <Text className="text-white font-semibold text-sm">
-                  {uploading ? 'Uploading...' : 'Add Media Files'}
+                  {uploading ? "Uploading..." : "Add Media Files"}
                 </Text>
               </TouchableOpacity>
             </View>
