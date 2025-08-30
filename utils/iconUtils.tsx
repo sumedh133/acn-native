@@ -33,6 +33,7 @@ import UdsIcon from "../assets/icons/svg/PropertyListing/PropertyDetails/udsIcon
 import rentalInfoIcon from "../assets/icons/svg/PropertyListing/PropertyDetails/rentalInfoIcon.svg";
 
 import ApartmentTypeIcon from "../assets/icons/svg/PropertyListing/PropertyDetails/apartmentTypeIcon.svg";
+import { DefaultPropertyIcon } from "@/assets/icons/svg/PropertyListing/PropertyDetails/defaultPropertyIcon";
 import { apartmentTypes } from "@/app/components/property/propertyMoreFilters/moreFilterOptions";
 
 //Steps of form
@@ -112,8 +113,7 @@ export const getIcon = (
     return <IconComponent {...props} />;
   }
 
-  // fallback
-  return <></>;
+  return  <DefaultPropertyIcon />;;
 };
 
 type StepType = "default" | "gradient" | "gray";
