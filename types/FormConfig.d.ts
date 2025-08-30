@@ -23,7 +23,8 @@ export interface FormField {
   dateFields?: { label: string; value: any }[];
   dependsOn?:
     | {
-        field: string;
+    field: string;
+      
         values: any[];
       }
     | {
