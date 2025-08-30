@@ -256,13 +256,13 @@ const PlacesSearch = ({
             blurredAndNotSelected ? styles.notSelectedState : {},
           ]}
         >
-          <Ionicons name="search-outline" size={20} color="#726C6C" />
+          <Ionicons name="search-outline" height={20} width={20} color="#726C6C" />
           <TextInput
             style={styles.textInput}
             placeholder={
-              communityType === "Independent"
-                ? "Nearby LandMark"
-                : "Project Name"
+              communityType === "independent"
+                ? "Search Nearby LandMark"
+                : "Search Project Name"
             }
             placeholderTextColor="#7A7B7C"
             value={searchQuery}
@@ -334,16 +334,15 @@ const styles = StyleSheet.create({
   headingContainer: {
     display: "flex",
     flexDirection: "row",
-    gap: 6,
+    gap: 0,
   },
   sectionHeading: {
-    fontFamily: "Montserrat_600SemiBold",
-    fontSize: 14,
+    fontFamily: "Lato-Bold",
+    fontSize: 16,
+    fontWeight:"700"
   },
   compulsoryStar: {
-    fontFamily: "sans-serif",
-    color: "#DC3545",
-    fontSize: 14,
+    fontSize: 16,
     fontWeight: "400",
   },
   inputContainer: {
@@ -355,6 +354,7 @@ const styles = StyleSheet.create({
     backgroundColor: "#FAFAFA",
     paddingHorizontal: 12,
     paddingVertical: 8,
+    height:32,
     gap: 8,
   },
   textInput: {
@@ -363,6 +363,7 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontWeight: "400",
     color: "#333333",
+    height:20
   },
   notSelectedState: { borderColor: "#D92D20" },
   rightIcon: {

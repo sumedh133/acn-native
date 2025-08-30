@@ -3,6 +3,7 @@ import { basicDetailsStep } from "./BasicDetailsStep/basicDetailsConfig";
 import { propertyDetailsStep } from "./PropertyDetailsStep/propertyDetailsConfig";
 import { pricingDetailsStep } from "./PricingDetailsStep/PricingDetailsConfig";
 import { moreDetailsStep } from "./MoreDetailsStep/moreDetailsConfig";
+import { mediaDetailsStep } from "./MediaDetailsStep/media";
 
 export const inventoryFormConfig: FormConfig = {
   steps: [
@@ -10,12 +11,6 @@ export const inventoryFormConfig: FormConfig = {
     propertyDetailsStep,
     pricingDetailsStep,
     moreDetailsStep,
-    
-    {
-      id: "media",
-      title: "Media",
-      description: "Please upload required media files",
-      fields: [],
-    },
+    mediaDetailsStep,
   ],
 };

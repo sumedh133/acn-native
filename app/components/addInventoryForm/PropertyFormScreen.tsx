@@ -1,4 +1,6 @@
 import React, { useEffect, useState } from "react";
+import { useSelector } from "react-redux";
+import { RootState } from "@/store/store";
 import {
   SafeAreaView,
   StatusBar,
@@ -8,14 +10,20 @@ import {
   ScrollView,
   Alert,
 } from "react-native";
+import { router } from "expo-router";
+import { createProperty, updateProperty } from "@/app/services/property_services/propertyService";
+import { convertMonthYearToUnix } from "@/app/helpers/format/format";
+import { showSuccessToast, showErrorToast } from "@/utils/toastUtils";
 import { FormRenderer } from "./FormRenderer";
 import { inventoryFormConfig } from "@/app/config/AddInventoryFormConfig/inventoryFormConfig";
-import { Places, Property } from "@/app/types";
+import { DocsToUpload, Places, Property } from "@/app/types";
 import ArrowLeftIcon from "@/assets/icons/svg/Common/ArrowLeftIcon";
+import { getStepIcon } from "@/utils/iconUtils";
 import { LinearGradient } from "expo-linear-gradient";
 import { FormPreview } from "../Listing/listingPropertyDetails";
 import { getMicromarketFromCoordinates } from "@/app/helpers/getMicromarketFromCoordinates";
 import { FormField } from "@/types/FormConfig";
+import SaveAsDraft from "@/app/modals/SaveAsDraft";
 
 // Extend FormField to include our internal properties
 interface FormFieldWithMeta extends FormField {
@@ -24,41 +32,93 @@ interface FormFieldWithMeta extends FormField {
 
 type UIProperty = Omit<Property, "handOverDate"> & {
   handOverDate?: string;
+  media?: {
+    photos: string[];
+    videos: string[];
+    documents: string[];
+  };
 };
 
 interface PropertyFormScreenProps {
   initialData?: Partial<UIProperty>;
   onComplete: (data: Partial<UIProperty>) => void;
-  onCancel: () => void;
   isEdit?: boolean;
 }
 
 export const PropertyFormScreen: React.FC<PropertyFormScreenProps> = ({
   initialData,
   onComplete,
-  onCancel,
   isEdit = false,
+
 }) => {
+
+  // --------------------  Redux State --------------------
+
+  const agentData = useSelector((state: RootState) => state.agent.docData);
+
   // -------------------- State Management --------------------
-  const [formData, setFormData] = useState<Partial<UIProperty>>(
-    initialData || {}
-  );
+  const [formData, setFormData] = useState<Partial<UIProperty>>(() => {
+    // Initialize with proper media structure
+    const defaultMedia = {
+      photos: [],
+      videos: [],
+      documents: [],
+    };
+    
+    return {
+      ...initialData,
+      media: initialData?.media || defaultMedia,
+    };
+  });
+  
   const [selectedPlace, setSelectedPlace] = useState<Places>();
+  const [docsToUpload, setDocsToUpload] = useState<DocsToUpload>({
+    photo: [],
+    video: [],
+    document: [],
+  });
   const [currentStepIndex, setCurrentStepIndex] = useState<number>(0);
   const [maxStepIndex, setMaxStepIndex] = useState<number>(-1);
   const [isFormEmpty, setIsFormEmpty] = useState<boolean>(
     Object.keys(initialData || {}).length === 0
   );
+  const [isSavingDraft, setIsSavingDraft] = useState<boolean>(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [showPreview, setShowPreview] = useState<boolean>(false);
+  const [showDraftModal, setShowDraftModal] = useState<boolean>(false)
 
   console.log("Form Data:", formData);
+
+  // -------------------- Media Upload Handler --------------------
+  const handleMediaUpdate = (media: { photos: string[], videos: string[], documents: string[] }) => {
+    setFormData(prevData => ({
+      ...prevData,
+      media,
+    }));
+    setIsFormEmpty(false);
+  };
 
   // -------------------- Utility Functions --------------------
 
   /**
    * Check if a field should be visible based on its dependencies.
    */
+
+  const normalizePropertyBeforeSubmit = (
+    data: Partial<UIProperty>
+  ): Partial<Property> => {
+    const temp: Partial<UIProperty> = { ...data };
+
+    const normalized: Partial<Property> = {
+      ...temp,
+      handOverDate:
+        typeof temp.handOverDate === "string"
+          ? convertMonthYearToUnix(temp.handOverDate) ?? undefined
+          : temp.handOverDate,
+    };
+
+    return normalized;
+  };
   const isFieldVisible = (field: FormField): boolean => {
     if (!field.dependsOn) return true;
 
@@ -93,8 +153,8 @@ export const PropertyFormScreen: React.FC<PropertyFormScreenProps> = ({
   };
 
   /**
-    * Validate a single field.
-    */
+   * Validate a single field.
+   */
   const validateField = (field: FormField, value: any): string | null => {
     if (field.required) {
       const isEmpty =
@@ -122,8 +182,8 @@ export const PropertyFormScreen: React.FC<PropertyFormScreenProps> = ({
   };
 
   /**
-     * Filters visible fields based on conditional logic.
-     */
+   * Filters visible fields based on conditional logic.
+   */
   const getVisibleFields = (fields: FormField[]): FormFieldWithMeta[] =>
     fields.filter((field) => isFieldVisible(field)) as FormFieldWithMeta[];
 
@@ -187,9 +247,10 @@ export const PropertyFormScreen: React.FC<PropertyFormScreenProps> = ({
       }));
     }
   }, [selectedPlace]);
+  
   /**
- * Validate all fields in the current step.
- */
+   * Validate all fields in the current step.
+   */
   const validateCurrentStep = (): boolean => {
     const step = visibleSteps[currentStepIndex];
     if (!step) return false;
@@ -201,15 +262,16 @@ export const PropertyFormScreen: React.FC<PropertyFormScreenProps> = ({
       const value = getFieldValue(formData, field.id);
       const error = validateField(field, value);
       if (error) {
+
         stepErrors[field.id] = error;
         isValid = false;
       }
     });
+    if (!isValid) { showErrorToast("Please fill all required fields.") }
 
     handleErrorsUpdate(stepErrors);
     return isValid;
   };
-
 
   // -------------------- Event Handlers --------------------
 
@@ -220,22 +282,18 @@ export const PropertyFormScreen: React.FC<PropertyFormScreenProps> = ({
 
     const visibleSteps = getVisibleSteps();
     if (currentStepIndex < visibleSteps.length - 1) {
-      if (currentStepIndex > maxStepIndex) { setMaxStepIndex(currentStepIndex) }
+      if (currentStepIndex > maxStepIndex) {
+        setMaxStepIndex(currentStepIndex);
+      }
       setCurrentStepIndex((prev) => prev + 1);
     } else {
       setShowPreview(true);
     }
-
   };
-
 
   const handleBack = () => {
     setErrors({});
-    if (currentStepIndex > 0) {
-      setCurrentStepIndex((prev) => prev - 1);
-    } else {
-      onCancel();
-    }
+    setCurrentStepIndex((prev) => prev - 1);
   };
 
   const handleFormUpdate = (updatedData: Partial<UIProperty>) => {
@@ -257,7 +315,13 @@ export const PropertyFormScreen: React.FC<PropertyFormScreenProps> = ({
           {
             text: "Clear",
             onPress: () => {
-              setFormData({});
+              setFormData({
+                media: {
+                  photos: [],
+                  videos: [],
+                  documents: [],
+                },
+              });
               setIsFormEmpty(true);
               setCurrentStepIndex(0);
               setErrors({});
@@ -271,12 +335,62 @@ export const PropertyFormScreen: React.FC<PropertyFormScreenProps> = ({
 
   const handleStepChange = (index: number) => {
     setErrors({});
-    if (currentStepIndex <= maxStepIndex) { if (!validateCurrentStep()) return }
+    if (currentStepIndex <= maxStepIndex) {
+      if (!validateCurrentStep()) return;
+    }
     const visibleSteps = getVisibleSteps();
     if (index <= maxStepIndex || index < visibleSteps.length) {
       setCurrentStepIndex(index);
     }
   };
+
+  // Generate unique prop ID for uploads
+  const propId = formData.propertyId || `temp-${Date.now()}`;
+
+  const handleFormCancel = () => {
+
+    if (formData.propertyType || formData.assetType && formData.propertyName)
+      setShowDraftModal(true);
+    else router.back();
+
+  };
+
+  const handleSaveDraft = async () => {
+    try {
+      setIsSavingDraft(true)
+      console.log("Raw draft data:", formData);
+
+      const normalizedData = normalizePropertyBeforeSubmit(formData);
+
+      const cleanData = JSON.parse(
+        JSON.stringify(normalizedData, (key, value) =>
+          value === undefined ? null : value
+        )
+      );
+
+      if (cleanData.propertyId) {
+        await updateProperty(cleanData.propertyId, {
+          ...cleanData,
+          status: "draft",
+        });
+        showSuccessToast(`Draft updated successfully!`);
+      } else {
+        const newProperty = await createProperty({
+          ...(cleanData as Omit<Property, "propertyId">),
+          status: "draft",
+        });
+        showSuccessToast(`Draft saved successfully!\nID: ${newProperty.propertyId}`);
+      }
+    } catch (error: any) {
+      console.error("Error saving draft:", error);
+      showSuccessToast(`Something went wrong while saving the draft.`);
+    }
+    finally { setIsSavingDraft(true) }
+  };
+  // -------------------- Effects --------------------
+
+
+
 
   // -------------------- Derived Values --------------------
   const visibleSteps = getVisibleSteps();
@@ -288,7 +402,13 @@ export const PropertyFormScreen: React.FC<PropertyFormScreenProps> = ({
 
         {/* Preview */}
         <View className="flex-1">
-          <FormPreview config={inventoryFormConfig} data={formData} />
+          <FormPreview 
+            config={inventoryFormConfig} 
+            data={formData} previewType={isEdit ? "edit" : "add"}
+            onMediaUpdate={handleMediaUpdate}
+            agentData={agentData}
+            propId={propId}
+          />
         </View>
 
         {/* Back & Submit buttons */}
@@ -321,17 +441,17 @@ export const PropertyFormScreen: React.FC<PropertyFormScreenProps> = ({
   // -------------------- Render --------------------
   return (
     <SafeAreaView className="flex-1 bg-[#F5F6F7]">
-      <StatusBar barStyle="dark-content" backgroundColor="#fff" />
+      <StatusBar barStyle="dark-content" backgroundColor="#FAFAFA" />
 
       {/* Header */}
-      <View className="w-full py-4 px-3 bg-white border-b border-b-[#EEEEEE]">
+      <View className="w-full py-2 px-4 bg-[#FAFAFA] border-b border-[#E3E3E3]">
         <View className="flex-row items-center justify-between">
           {/* Back Button & Title */}
           <View className="flex-row items-center gap-4">
-            <TouchableOpacity onPress={onCancel}>
-              <ArrowLeftIcon />
+            <TouchableOpacity onPress={handleFormCancel}>
+              <ArrowLeftIcon height={16} width={16} />
             </TouchableOpacity>
-            <Text className="font-montserrat text-base font-bold text-[#BABABA]">
+            <Text className="font-montserrat text-base font-bold text-[#2B3034B2]">
               {isEdit ? "Edit Property" : "Add Property"}
             </Text>
           </View>
@@ -351,75 +471,104 @@ export const PropertyFormScreen: React.FC<PropertyFormScreenProps> = ({
         </View>
       </View>
 
-      <View className="flex-1 flex-col">
+      <View className="flex-1 flex-col gap-0 pt-3">
         {/* Step Navigation */}
-        <View className="pt-3 pb-4 bg-white">
+        <View className="pb-[17px] bg-white">
           <ScrollView
             horizontal
             showsHorizontalScrollIndicator={false}
-            className="bg-white px-3 gap-4"
+            className="bg-white px-3 gap-[10px] pb-1"
           >
-            {visibleSteps.map((step, index) => (
-              <TouchableOpacity
-                key={step.id}
-                onPress={() => handleStepChange(index)}
-                style={{ borderRadius: 10 }}
-              >
-                {currentStepIndex === index ? (
-                  <LinearGradient
-                    colors={["#10302D", "#32968D"]}
-                    start={{ x: 0, y: 0 }}
-                    end={{ x: 1, y: 0 }}
-                    style={{
-                      borderRadius: 10,
-                      padding: 2,
-                    }}
-                  >
-                    <View
+            {visibleSteps.map((step, index) => {
+              const isActive = currentStepIndex === index;
+              const isCompleted = index < currentStepIndex;
+
+              return (
+                <TouchableOpacity
+                  key={step.id}
+                  onPress={() => handleStepChange(index)}
+                  style={{
+                    borderRadius: 10,
+                    height: 37,
+                    justifyContent: "center",
+                  }}
+                >
+                  {isActive ? (
+                    <LinearGradient
+                      colors={["#10302D", "#32968D"]}
+                      start={{ x: 0, y: 0 }}
+                      end={{ x: 1, y: 0 }}
                       style={{
-                        borderRadius: 8,
-                        backgroundColor: "#FFFFFF",
-                        paddingVertical: 12,
-                        paddingHorizontal: 16,
+                        borderRadius: 10,
+                        padding: 1.5,
+                        height: "100%", // ✅ Full height
                       }}
                     >
-                      <Text className="font-['Montserrat_500Medium'] text-sm text-[#153E3B] font-semibold">
-                        {step.title}
-                      </Text>
+                      <View
+                        style={{
+                          borderRadius: 8,
+
+                          backgroundColor: "#FFFFFF",
+                          flexDirection: "row",
+                          alignItems: "center",
+                          justifyContent: "center",
+                          paddingHorizontal: 12,
+                          paddingVertical: 6.5,
+                          height: "100%", // ✅ Match parent height
+                          gap: 8,
+                        }}
+                      >
+                        {getStepIcon(currentStepIndex + 1, "gradient")}
+                        <Text
+                          style={{
+                            fontFamily: "Montserrat_500Medium",
+                            fontSize: 14,
+                            color: "#153E3B",
+                            fontWeight: "700",
+                          }}
+                        >
+                          {step.title}
+                        </Text>
+                      </View>
+                    </LinearGradient>
+                  ) : isCompleted ? (
+                    <LinearGradient
+                      colors={["#10302D", "#32968D"]}
+                      start={{ x: 0, y: 0 }}
+                      end={{ x: 1, y: 0 }}
+                      style={{
+                        borderRadius: 10,
+                        height: "100%", // ✅ Match height
+                        paddingHorizontal: 12,
+                        justifyContent: "center",
+                        alignItems: "center",
+                      }}
+                    >
+                      {getStepIcon(index + 1, "default")}
+                    </LinearGradient>
+                  ) : (
+                    <View
+                      style={{
+                        borderRadius: 10,
+                        borderColor: "#B5B3B3",
+                        borderWidth: 1,
+                        height: "100%",
+                        paddingHorizontal: 16,
+                        flexDirection: "row",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        gap: 8,
+                      }}
+                    >
+                      {getStepIcon(index + 1, "gray")}
+
                     </View>
-                  </LinearGradient>
-                ) : index < currentStepIndex ? (
-                  <LinearGradient
-                    colors={["#10302D", "#32968D"]}
-                    start={{ x: 0, y: 0 }}
-                    end={{ x: 1, y: 0 }}
-                    style={{
-                      borderRadius: 10,
-                      paddingVertical: 12,
-                      paddingHorizontal: 16,
-                    }}
-                  >
-                    <Text className="font-['Montserrat_500Medium'] text-sm text-white font-semibold">
-                      {step.title}
-                    </Text>
-                  </LinearGradient>
-                ) : (
-                  <View
-                    style={{
-                      borderRadius: 10,
-                      backgroundColor: "#F5F6F7",
-                      paddingVertical: 12,
-                      paddingHorizontal: 16,
-                    }}
-                  >
-                    <Text className="font-['Montserrat_500Medium'] text-sm text-[#153E3B] font-semibold">
-                      {step.title}
-                    </Text>
-                  </View>
-                )}
-              </TouchableOpacity>
-            ))}
+                  )}
+                </TouchableOpacity>
+              );
+            })}
           </ScrollView>
+
         </View>
 
         {/* Form Renderer */}
@@ -437,14 +586,20 @@ export const PropertyFormScreen: React.FC<PropertyFormScreenProps> = ({
             getVisibleFields={getVisibleFields}
             selectedPlace={selectedPlace}
             setSelectedPlace={setSelectedPlace}
+            // Pass media upload handler
+            onMediaUpdate={handleMediaUpdate}
+            agentData={agentData}
+            propId={propId}
+            docsToUpload={docsToUpload}
+            setDocsToUpload={setDocsToUpload}
           />
         </View>
 
         {/* Navigation Buttons */}
-        <View className="flex-row items-center justify-between gap-[13px] px-4 py-[14px] bg-white border-t border-t-[#EEEEEE]">
+        <View className="flex-row items-center justify-between gap-[13px] px-4 py-[14.5px] bg-red border-t border-t-[#EEEEEE]">
           {currentStepIndex && (
             <TouchableOpacity
-              className="flex-1 py-2 px-5 rounded-[4px] bg-white border border-[#153E3B]"
+              className="flex-1 w-1/2 py-2 px-5 rounded-[4px] bg-white border border-[#153E3B]"
               onPress={handleBack}
             >
               <Text className="text-center text-base font-semibold text-black">
@@ -453,10 +608,10 @@ export const PropertyFormScreen: React.FC<PropertyFormScreenProps> = ({
             </TouchableOpacity>
           )}
           <TouchableOpacity
-            className="flex-1 py-2 px-5 rounded-[4px] bg-[#153E3B] border border-[#153E3B]"
+            className="flex-1 w-1/2 py-2 px-5 rounded-[4px] bg-[#153E3B] border border-[#153E3B]"
             onPress={handleNext}
           >
-            <Text className="text-center text-base font-semibold text-white">
+            <Text className="text-center text-base font-semibold text-white leading-normal">
               {currentStepIndex === visibleSteps.length - 1
                 ? isEdit
                   ? "Update"
@@ -466,6 +621,12 @@ export const PropertyFormScreen: React.FC<PropertyFormScreenProps> = ({
           </TouchableOpacity>
         </View>
       </View>
+      <SaveAsDraft
+        visible={showDraftModal}
+        onClose={() => setShowDraftModal(false)}
+        handleSaveDraft={handleSaveDraft}
+        isSaving={isSavingDraft}
+      />
     </SafeAreaView>
   );
 };

@@ -154,21 +154,16 @@ export const resaleCommercialProperties: FormField[] = [
     label: "Amenities",
     type: "multiselect",
     options: [
-      { label: "Gym", value: "Gym" },
-      { label: "Lifts", value: "Lifts" },
-      { label: "Water Storage", value: "Water Storage" },
-      { label: "Visitor Parking", value: "Visitor Parking" },
-      { label: "Service Lifts", value: "Service Lifts" },
-      { label: "Pool", value: "Pool" },
-      { label: "CCTV Surveillance", value: "CCTV Surveillance" },
-      { label: "Security", value: "Security" },
-
-      { label: "Power Backup", value: "Power Backup" },
-
-      {
-        label: "Club-House",
-        value: "Club-House",
-      },
+      { label: "Maintenance Staff", value: "maintenance staff" },
+      { label: "Water Storage", value: "water storage" },
+      { label: "Visitor Parking", value: "visitor parking" },
+      { label: "ATM", value: "atm" },
+      { label: "CCTV Surveillance", value: "cctv surveillance" },
+      { label: "Cafeteria / Food Court", value: "cafeteria / food court" },
+      { label: "Lifts", value: "lifts" },
+      { label: "Security", value: "security" },
+      { label: "Power Backup", value: "power backup" },
+      { label: "Wheel-Chair Accessibility", value: "wheel-chair accessibility" },
     ],
     dependsOn: {
       conditions: [

@@ -148,9 +148,9 @@ const styles = StyleSheet.create({
   },
   inputContainer: {
     width: "100%",
-    height: 48,
-    borderRadius: 8,
-    borderWidth: 1,
+    height: 32,
+    borderRadius: 5,
+    borderWidth: 1.5,
     borderColor: "#E1E3E6",
     backgroundColor: "#FFFFFF",
     flexDirection: "row",

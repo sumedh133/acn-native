@@ -7,7 +7,7 @@ import TrashIcon from "@/assets/icons/svg/Common/TrashIcon";
 
 interface FilePreviewProps {
   docsToUpload: DocsToUpload;
-  setDocsToUpload: React.Dispatch<React.SetStateAction<DocsToUpload>>;
+  setDocsToUpload: (docsToUpload: DocsToUpload) => void;
 }
 
 const FilePreview: React.FC<FilePreviewProps> = ({
@@ -57,6 +57,8 @@ const FilePreview: React.FC<FilePreviewProps> = ({
   };
 
   const renderDocs = useCallback(() => {
+    if (!docsToUpload) return;
+
     return ["photo", "video", "document"].map(
       (type) =>
         docsToUpload[type]?.length > 0 && (
