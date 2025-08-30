@@ -33,6 +33,14 @@ import {
 } from "./moreFilterOptions";
 import DropdownTailwind from "../../DropdownTailwind";
 import NumberRangeFilter from "./NumberRangeFilter";
+import BudgetRangeFilter from "./BudgetFilter";
+
+const defaultRanges: Record<string, [string, string]> = {
+  rent: ["5000", "100000"],
+  totalAskPrice: ["100000", "1000000000"],
+  sbua: ["", ""], // if empty strings represent default
+  carpetArea: ["", ""],
+};
 
 export interface RangeState {
   start: (number | undefined)[];
@@ -110,10 +118,6 @@ const MoreFilters = ({
       [attribute]: values,
     }));
   };
-  useEffect(() => {
-    console.log("View mode changed to:", viewMode);
-  }, [viewMode]);
-
   // Helper function to toggle a filter value
   const toggleFilterValue = (
     attribute: string,
@@ -154,7 +158,7 @@ const MoreFilters = ({
   };
 
   const handleReset = () => {
-    setLocalFilters({});
+    setLocalFilters({ listingType: filters.listingType || [] });
     // setViewMode("residential");
     setLocalSelectedLandmark(null);
   };
@@ -221,8 +225,21 @@ const MoreFilters = ({
       console.error("Error logging filter application:", error);
     }
 
-    // Apply the local filters to the parent component
-    onFiltersChange(localFilters);
+    const appliedFilters: SearchFilters = { ...localFilters };
+
+    // Remove range filters that are at default
+    Object.entries(defaultRanges).forEach(([attr, defaultRange]) => {
+      const val = appliedFilters[attr as keyof SearchFilters];
+      if (!val || val.length !== 2) return;
+
+      const [currentMin, currentMax] = val;
+
+      if (currentMin === defaultRange[0] && currentMax === defaultRange[1]) {
+        delete appliedFilters[attr as keyof SearchFilters];
+      }
+    });
+
+    onFiltersChange(appliedFilters);
     setSelectedLandmark(localSelectedLandmark);
     handleToggle();
   };
@@ -469,6 +486,23 @@ const MoreFilters = ({
                 />
               )}
 
+            {/* Budget Filter */}
+            <BudgetRangeFilter
+              title="Budget"
+              attribute={
+                filters.listingType?.includes("rental")
+                  ? "rent"
+                  : "totalAskPrice"
+              }
+              localFilters={localFilters}
+              onChangeRange={(attr, range) => {
+                toggleFilterValue(attr, range);
+              }}
+              type={
+                filters.listingType?.includes("rental") ? "rental" : "resale"
+              }
+            />
+
             <NumberRangeFilter
               attribute="sbua"
               title="SBUA (sqft)"
@@ -579,7 +613,7 @@ const MoreFilters = ({
 
             {filters.listingType?.includes("resale") && (
               <FilterChipList
-                title={`Posession`}
+                title={`possession`}
                 items={possessionOptions}
                 attribute="possession"
                 localFilters={localFilters}

@@ -7,6 +7,7 @@ import {
   Keyboard,
   Animated,
 } from "react-native";
+import { Ionicons } from '@expo/vector-icons'; // or 'react-native-vector-icons/Ionicons'
 import { analytics } from "@/app/config/firebase";
 import { logEvent } from "@react-native-firebase/analytics";
 import { useSelector } from "react-redux";
@@ -18,11 +19,11 @@ import CustomCurrentRefinements from "./propertyMoreFilters/newCustomCurrentRefi
 import ToggleTabs from "../ToggleTabs";
 import { ScrollContext } from "@/app/ScrollContext";
 
-interface PropertyFiltersProps {
+// Common props for both cases
+interface BasePropertyFiltersProps {
   handleToggleMoreFilters: () => void;
   selectedLandmark?: any;
   setSelectedLandmark: (landmark: any) => void;
-  // New props from the hook
   query: string;
   onQueryChange: (query: string) => void;
   filters: SearchFilters;
@@ -30,7 +31,25 @@ interface PropertyFiltersProps {
   sortBy?: string;
   onSortChange: (sortBy: string) => void;
   loading?: boolean;
+  showTabs?: boolean; // 👈 discriminator
+  isMyBusinessPage?: boolean; // 👈 new prop
 }
+
+// Case when tabs are shown
+interface WithTabsProps extends BasePropertyFiltersProps {
+  showTabs: true;
+  activeTab: "resale" | "rental";
+  setActiveTab: (tab: "resale" | "rental") => void;
+}
+
+// Case when tabs are hidden
+interface WithoutTabsProps extends BasePropertyFiltersProps {
+  showTabs?: false; // default false if not given
+  activeTab?: never;
+  setActiveTab?: never;
+}
+
+export type PropertyFiltersProps = WithTabsProps | WithoutTabsProps;
 
 export default function PropertyFilters({
   handleToggleMoreFilters,
@@ -42,18 +61,57 @@ export default function PropertyFilters({
   onFiltersChange,
   sortBy,
   onSortChange,
+  activeTab,
+  setActiveTab,
+  showTabs = true,
+  isMyBusinessPage = false,
 }: PropertyFiltersProps) {
   const [searchText, setSearchText] = useState(query);
-  const [activeTab, setActiveTab] = useState<"resale" | "rental">("resale");
   const slideAnim = useRef(
     new Animated.Value(activeTab === "rental" ? 1 : 0)
   ).current;
+
+  // Animation values for rotating arrows
+  const statusRotateAnim = useRef(new Animated.Value(0)).current;
+  const categoryRotateAnim = useRef(new Animated.Value(0)).current;
+  const sortRotateAnim = useRef(new Animated.Value(0)).current;
+
   const {
     selectedSort,
     openSortPopup,
     setSelectedSort,
+    // Status filter methods
+    selectedStatus,
+    openStatusPopup,
+    setSelectedStatus,
+    // Category filter methods
+    selectedCategory,
+    openCategoryPopup,
+    setSelectedCategory,
   } = useContext(ScrollContext);
-    const prevSortByRef = useRef(sortBy);
+
+  // Create rotation interpolations
+  const statusRotateInterpolate = statusRotateAnim.interpolate({
+    inputRange: [0, 1],
+    outputRange: ['0deg', '180deg'],
+  });
+
+  const categoryRotateInterpolate = categoryRotateAnim.interpolate({
+    inputRange: [0, 1],
+    outputRange: ['0deg', '180deg'],
+  });
+
+  const sortRotateInterpolate = sortRotateAnim.interpolate({
+    inputRange: [0, 1],
+    outputRange: ['0deg', '180deg'],
+  });
+
+  // Track popup states (you'll need to get these from your context or manage them locally)
+  const [isStatusPopupOpen, setIsStatusPopupOpen] = useState(false);
+  const [isCategoryPopupOpen, setIsCategoryPopupOpen] = useState(false);
+  const [isSortPopupOpen, setIsSortPopupOpen] = useState(false);
+
+  const prevSortByRef = useRef(sortBy);
   const prevSelectedSortRef = useRef(selectedSort);
 
   const userType =
@@ -68,6 +126,51 @@ export default function PropertyFilters({
     { label: "Newest First", value: "date_desc" },
     { label: "Oldest First", value: "date_asc" },
   ];
+
+  // Animation effects for popup states
+  useEffect(() => {
+    Animated.timing(statusRotateAnim, {
+      toValue: isStatusPopupOpen ? 1 : 0,
+      duration: 200,
+      useNativeDriver: true,
+    }).start();
+  }, [isStatusPopupOpen]);
+
+  useEffect(() => {
+    Animated.timing(categoryRotateAnim, {
+      toValue: isCategoryPopupOpen ? 1 : 0,
+      duration: 200,
+      useNativeDriver: true,
+    }).start();
+  }, [isCategoryPopupOpen]);
+
+  useEffect(() => {
+    Animated.timing(sortRotateAnim, {
+      toValue: isSortPopupOpen ? 1 : 0,
+      duration: 200,
+      useNativeDriver: true,
+    }).start();
+  }, [isSortPopupOpen]);
+
+  // Modified popup handlers to track state
+  const handleOpenStatusPopup = () => {
+    setIsStatusPopupOpen(true);
+    openStatusPopup();
+    // You might need to set a timeout to close this or listen to popup close events
+    setTimeout(() => setIsStatusPopupOpen(false), 3000); // Adjust based on your popup behavior
+  };
+
+  const handleOpenCategoryPopup = () => {
+    setIsCategoryPopupOpen(true);
+    openCategoryPopup();
+    setTimeout(() => setIsCategoryPopupOpen(false), 3000);
+  };
+
+  const handleOpenSortPopup = () => {
+    setIsSortPopupOpen(true);
+    openSortPopup();
+    setTimeout(() => setIsSortPopupOpen(false), 3000);
+  };
 
   // Sync local search text with external query
   useEffect(() => {
@@ -98,44 +201,48 @@ export default function PropertyFilters({
     };
   }, [searchText, query, onQueryChange, userType]);
 
-  // Handle property type tab change
-  const handleTabChange = (tab: "resale" | "rental") => {
-    setActiveTab(tab);
-    onFiltersChange({ ...filters, listingType: [tab] });
-
-    try {
-      logEvent(analytics, "property_type_change", {
-        event_category: "navigation",
-        event_label: "property_type",
-        property_type: tab,
-        user_type: userType,
-      });
-    } catch (error) {
-      console.error("Error logging property type change:", error);
+  // Add after the existing sort useEffect
+  useEffect(() => {
+    // Handle status changes from context
+    if (
+      selectedStatus &&
+      selectedStatus !== "all" &&
+      selectedStatus !== filters.stage?.join(",")
+    ) {
+      const newFilters = { ...filters, stage: [selectedStatus] };
+      onFiltersChange(newFilters);
     }
-
-    // You might want to trigger a new search or update filters based on property type
-    // For now, this just changes the UI. You can extend this to affect the actual search.
-  };
-
-  const handleClear = () => {
-    try {
-      logEvent(analytics, "clear_property_search", {
-        event_category: "search",
-        event_label: "clear",
-        cleared_query: query,
-        user_type: userType,
-      });
-    } catch (error) {
-      console.error("Error logging search clear:", error);
+    // Remove filter if "all" is selected
+    else if (
+      selectedStatus === "all" &&
+      filters.stage &&
+      filters.stage.length > 0
+    ) {
+      const newFilters = { ...filters, stage: [] };
+      onFiltersChange(newFilters);
     }
+  }, [selectedStatus, filters.stage, onFiltersChange]);
 
-    Keyboard.dismiss();
-    setSearchText("");
-    if (query !== "") {
-      onQueryChange("");
+  useEffect(() => {
+    // Handle category changes from context
+    if (
+      selectedCategory &&
+      selectedCategory !== "all" &&
+      selectedCategory !== filters.builderCategory?.join(",")
+    ) {
+      const newFilters = { ...filters, builderCategory: [selectedCategory] };
+      onFiltersChange(newFilters);
     }
-  };
+    // Remove filter if "all" is selected
+    else if (
+      selectedCategory === "all" &&
+      filters.builderCategory &&
+      filters.builderCategory.length > 0
+    ) {
+      const newFilters = { ...filters, builderCategory: [] };
+      onFiltersChange(newFilters);
+    }
+  }, [selectedCategory, filters.builderCategory, onFiltersChange]);
 
   useEffect(() => {
     // Sync selectedSort with sortBy prop (when sortBy changes from parent)
@@ -194,46 +301,88 @@ export default function PropertyFilters({
     handleToggleMoreFilters();
   };
 
-  return (
-    <>
+  // Render the business page version
+  if (isMyBusinessPage) {
+    return (
       <View className="px-4 pt-3">
-        <View className="mb-3">
-          <ToggleTabs
-            tabs={[
-              { label: "Resale", value: "resale" },
-              { label: "Rental", value: "rental" },
-            ]}
-            activeTab={activeTab}
-            onChange={(val) =>
-              handleTabChange(
-                val == "resale" ? ("resale" as const) : ("rental" as const)
-              )
-            }
+        {/* Search Input - Full width */}
+        <View className="flex-row items-center bg-white border border-[#B5B3B3] rounded-lg px-3 h-12 mb-3">
+          <NewSearchIcon style={{ marginRight: 8 }} />
+          <TextInput
+            className="flex-1 text-sm text-gray-700"
+            placeholder="Search by project, micro market"
+            value={searchText}
+            onChangeText={setSearchText}
+            placeholderTextColor="#9CA3AF"
           />
         </View>
 
-        {/* Search + Sort + Filters */}
-        <View className="flex-row items-center space-x-2">
-          {/* Search Input */}
-          <View className="flex-1 flex-row items-center bg-white border border-[#B5B3B3] rounded-lg px-3 h-10 ">
-            <NewSearchIcon style={{ marginRight: 8 }} />
-            <TextInput
-              className="flex-1 text-xs text-gray-700 "
-              placeholder="Search by project, micro market"
-              value={searchText}
-              onChangeText={setSearchText}
-              placeholderTextColor="#9CA3AF"
-            />
-          </View>
-
+        {/* Filter Buttons Row */}
+        <View className="flex-row items-center space-x-2 mb-2">
+          {/* Status Button */}
           <TouchableOpacity
-            onPress={openSortPopup}
-            className="h-10 w-fit items-center justify-center rounded-lg border border-[#B5B3B3] bg-white"
+            onPress={handleOpenStatusPopup}
+            className="flex-row items-center justify-center rounded-lg border border-[#B5B3B3] bg-white h-10 relative pr-8 pl-4 "
           >
-            <Text className="px-4">Sort</Text>
+            <Text className="text-sm text-black" style={{fontFamily: "Lato_400Regular"}}>Status</Text>
+            <Animated.View
+              style={{
+                position: "absolute",
+                right: 8,
+                top: "50%",
+                transform: [
+                  { translateY: -10 },
+                  { rotate: statusRotateInterpolate },
+                ],
+              }}
+            >
+              <Ionicons name="chevron-down" size={20} color="#555" />
+            </Animated.View>
           </TouchableOpacity>
 
-          {/* Filter Button */}
+          {/* Category Button */}
+          <TouchableOpacity
+            onPress={handleOpenCategoryPopup}
+            className="flex-1 flex-row items-center justify-center rounded-lg border border-[#B5B3B3] bg-white h-10 relative pr-8 pl-4"
+          >
+            <Text className="text-sm text-black" style={{fontFamily: "Lato_400Regular"}}>Category</Text>
+            <Animated.View
+              style={{
+                position: "absolute",
+                right: 8,
+                top: "50%",
+                transform: [
+                  { translateY: -10 },
+                  { rotate: categoryRotateInterpolate },
+                ],
+              }}
+            >
+              <Ionicons name="chevron-down" size={20} color="#555" />
+            </Animated.View>
+          </TouchableOpacity>
+
+          {/* Sort Button */}
+          <TouchableOpacity
+            onPress={handleOpenSortPopup}
+            className="flex-row items-center justify-center rounded-lg border border-[#B5B3B3] bg-white h-10 relative pr-8 pl-4"
+          >
+            <Text className="text-sm text-black" style={{fontFamily: "Lato_400Regular"}}>Sort</Text>
+            <Animated.View
+              style={{
+                position: "absolute",
+                right: 8,
+                top: "50%",
+                transform: [
+                  { translateY: -10 },
+                  { rotate: sortRotateInterpolate },
+                ],
+              }}
+            >
+              <Ionicons name="chevron-down" size={20} color="#555" />
+            </Animated.View>
+          </TouchableOpacity>
+
+          {/* Filter Icon Button */}
           <TouchableOpacity
             onPress={handleMoreFilters}
             className="h-10 w-10 items-center justify-center rounded-lg border border-[#B5B3B3] bg-white"
@@ -242,7 +391,8 @@ export default function PropertyFilters({
           </TouchableOpacity>
         </View>
 
-        <View className="mt-2 flex-row -ml-3">
+        {/* Current Refinements */}
+        <View className="flex-row -ml-3">
           <CustomCurrentRefinements
             selectedLandmark={selectedLandmark}
             setSelectedLandmark={setSelectedLandmark}
@@ -251,6 +401,81 @@ export default function PropertyFilters({
           />
         </View>
       </View>
-    </>
+    );
+  }
+
+  // Render the original version (default)
+  return (
+    <View className="px-4 pt-3">
+      {/* 👇 Conditionally render ToggleTabs based on prop */}
+      {showTabs && (
+        <View className="mb-3">
+          <ToggleTabs
+            tabs={[
+              { label: "Resale", value: "resale" },
+              { label: "Rental", value: "rental" },
+            ]}
+            activeTab={activeTab!}
+            onChange={(val) =>
+              setActiveTab?.(
+                val === "resale" ? ("resale" as const) : ("rental" as const)
+              )
+            }
+          />
+        </View>
+      )}
+
+      {/* Search + Sort + Filters */}
+      <View className="flex-row items-center space-x-2">
+        {/* Search Input */}
+        <View className="flex-1 flex-row items-center bg-white border border-[#B5B3B3] rounded-lg px-3 h-10 ">
+          <NewSearchIcon style={{ marginRight: 8 }} />
+          <TextInput
+            className="flex-1 text-xs text-gray-700 "
+            placeholder="Search by project, micro market"
+            value={searchText}
+            onChangeText={setSearchText}
+            placeholderTextColor="#9CA3AF"
+          />
+        </View>
+
+        <TouchableOpacity
+          onPress={handleOpenSortPopup}
+          className="h-10 w-fit items-center justify-center rounded-lg border border-[#B5B3B3] bg-white relative pl-4 pr-8"
+        >
+          <Text className="text-sm text-black" style={{fontFamily: "Lato_400Regular"}}>Sort</Text>
+          <Animated.View
+            style={{
+              position: "absolute",
+              right: 8,
+              top: "50%",
+              transform: [
+                { translateY: -10 },
+                { rotate: sortRotateInterpolate },
+              ],
+            }}
+          >
+            <Ionicons name="chevron-down" size={20} color="#555" />
+          </Animated.View>
+        </TouchableOpacity>
+
+        {/* Filter Button */}
+        <TouchableOpacity
+          onPress={handleToggleMoreFilters}
+          className="h-10 w-10 items-center justify-center rounded-lg border border-[#B5B3B3] bg-white"
+        >
+          <FilterIcon />
+        </TouchableOpacity>
+      </View>
+
+      <View className="mt-2 flex-row -ml-3">
+        <CustomCurrentRefinements
+          selectedLandmark={selectedLandmark}
+          setSelectedLandmark={setSelectedLandmark}
+          filters={filters}
+          onFiltersChange={onFiltersChange}
+        />
+      </View>
+    </View>
   );
 }

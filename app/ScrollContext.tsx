@@ -1,162 +1,337 @@
-import React, { createContext, useCallback, useRef } from "react";
+import React, { createContext, useCallback, useRef, useState } from "react";
 import { Animated } from "react-native";
 
 interface ScrollContextType {
   scrollY: Animated.Value;
+
+  // Footer
   footerTranslateY: Animated.AnimatedInterpolation<number>;
   resetFooterPosition: () => void;
   onScrollEndDrag: () => void;
   onMomentumScrollEnd: () => void;
- 
+  setFooterHeight: (h: number) => void;
+  footerHeight: number | null;
+
+  // Header
+  setHeaderHeight: (h: number) => void;
+  headerHeightValue: number | null;
+  headerHeight: Animated.AnimatedInterpolation<number>;
+
+  // Notification
+  setNotificationHeight: (h: number) => void;
+  notificationHeightValue: number | null;
   notificationHeight: Animated.AnimatedInterpolation<number>;
 
-  // New sort popup state
+  // Sort popup
   showSortPopup: boolean;
   selectedSort: string | null;
   openSortPopup: () => void;
   closeSortPopup: () => void;
   setSelectedSort: (value: string) => void;
-}
 
-const FOOTER_HEIGHT = 77;
-const NOTIFICATION_HEIGHT = 80; 
+  // Status filter popup
+  showStatusPopup: boolean;
+  selectedStatus: string | null;
+  openStatusPopup: () => void;
+  closeStatusPopup: () => void;
+  setSelectedStatus: (value: string) => void;
+
+  // Category filter popup
+  showCategoryPopup: boolean;
+  selectedCategory: string | null;
+  openCategoryPopup: () => void;
+  closeCategoryPopup: () => void;
+  setSelectedCategory: (value: string) => void;
+}
 
 export const ScrollContext = createContext<ScrollContextType>({
   scrollY: new Animated.Value(0),
+
   footerTranslateY: new Animated.Value(0),
   resetFooterPosition: () => {},
   onScrollEndDrag: () => {},
   onMomentumScrollEnd: () => {},
+  setFooterHeight: () => {},
+  footerHeight: null,
 
+  setHeaderHeight: () => {},
+  headerHeightValue: null,
+  headerHeight: new Animated.Value(0),
+
+  setNotificationHeight: () => {},
+  notificationHeightValue: null,
   notificationHeight: new Animated.Value(0),
 
-  // New sort popup state
   showSortPopup: false,
   selectedSort: null,
   openSortPopup: () => {},
   closeSortPopup: () => {},
-  setSelectedSort: (value: string) => {},
+  setSelectedSort: () => {},
+
+  showStatusPopup: false,
+  selectedStatus: null,
+  openStatusPopup: () => {},
+  closeStatusPopup: () => {},
+  setSelectedStatus: () => {},
+
+  showCategoryPopup: false,
+  selectedCategory: null,
+  openCategoryPopup: () => {},
+  closeCategoryPopup: () => {},
+  setSelectedCategory: () => {},
 });
 
 export const ScrollProvider: React.FC<{ children: React.ReactNode }> = ({
   children,
 }) => {
   const scrollY = useRef(new Animated.Value(0)).current;
-  const clampedScrollY = useRef(new Animated.Value(0)).current;
+
+  // Footer state
+  const clampedFooterY = useRef(new Animated.Value(0)).current;
+  const currentClampedFooter = useRef(0);
+
+  // Header state
+  const clampedHeaderY = useRef(new Animated.Value(0)).current;
+  const currentClampedHeader = useRef(0);
+
+  // Notification state
+  const clampedNotificationY = useRef(new Animated.Value(0)).current;
+  const currentClampedNotification = useRef(0);
+
   const lastScrollValue = useRef(0);
-  const currentClampedValue = useRef(0);
   const scrollDirection = useRef<"up" | "down">("down");
 
-  const [showSortPopup, setShowSortPopup] = React.useState(false);
-  const [selectedSort, setSelectedSort] = React.useState<string | null>("relevance");
+  const [footerHeight, setFooterHeight] = useState<number | null>(null);
+  const [headerHeightValue, setHeaderHeight] = useState<number | null>(null);
+  const [notificationHeightValue, setNotificationHeight] =
+    useState<number | null>(null);
 
+  // Sort popup state
+  const [showSortPopup, setShowSortPopup] = useState(false);
+  const [selectedSort, setSelectedSort] = useState<string | null>("relevance");
+
+  // Status filter popup state
+  const [showStatusPopup, setShowStatusPopup] = useState(false);
+  const [selectedStatus, setSelectedStatus] = useState<string | null>(null);
+
+  // Category filter popup state
+  const [showCategoryPopup, setShowCategoryPopup] = useState(false);
+  const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
+
+  // Sort popup methods
   const openSortPopup = () => setShowSortPopup(true);
   const closeSortPopup = () => setShowSortPopup(false);
 
-  const footerTranslateY = clampedScrollY.interpolate({
-    inputRange: [0, FOOTER_HEIGHT],
-    outputRange: [0, FOOTER_HEIGHT],
+  // Status filter popup methods
+  const openStatusPopup = () => setShowStatusPopup(true);
+  const closeStatusPopup = () => setShowStatusPopup(false);
+
+  // Category filter popup methods
+  const openCategoryPopup = () => setShowCategoryPopup(true);
+  const closeCategoryPopup = () => setShowCategoryPopup(false);
+
+  // Safe fallbacks
+  const safeFooterHeight = footerHeight ?? 60;
+  const safeHeaderHeight = headerHeightValue ?? 56;
+  const safeNotificationHeight = notificationHeightValue ?? 80;
+
+  // Interpolations
+  const footerTranslateY = clampedFooterY.interpolate({
+    inputRange: [0, safeFooterHeight],
+    outputRange: [0, safeFooterHeight + 20],
     extrapolate: "clamp",
   });
 
-  const notificationHeight = clampedScrollY.interpolate({
-  inputRange: [0, FOOTER_HEIGHT], // start and end scroll
-  outputRange: [NOTIFICATION_HEIGHT, 0], // full height → collapsed
-  extrapolate: "clamp",
-});
+  const headerHeight = clampedHeaderY.interpolate({
+    inputRange: [0, safeHeaderHeight],
+    outputRange: [safeHeaderHeight, 0], // collapse/expand
+    extrapolate: "clamp",
+  });
 
+  const notificationHeight = clampedNotificationY.interpolate({
+    inputRange: [0, safeNotificationHeight],
+    outputRange: [safeNotificationHeight, 0], // collapse/expand
+    extrapolate: "clamp",
+  });
+
+  // Update clamps on scroll
   const updateClampedValue = useCallback(
     (currentScroll: number) => {
       const diff = currentScroll - lastScrollValue.current;
-
       if (Math.abs(diff) > 0.5) {
         scrollDirection.current = diff > 0 ? "down" : "up";
-
-        // Damping factor - reduce sensitivity
-        const dampingFactor = 0.3; // Adjust this: 0.5 = half speed, 0.3 = very slow, 0.8 = faster
+        const dampingFactor = 0.3;
         const dampedDiff = Math.abs(diff) * dampingFactor;
 
-        let newClampedValue;
+        // Footer behavior
         if (scrollDirection.current === "down") {
-          newClampedValue = Math.min(
-            FOOTER_HEIGHT,
-            currentClampedValue.current + dampedDiff
+          currentClampedFooter.current = Math.min(
+            safeFooterHeight,
+            currentClampedFooter.current + dampedDiff
           );
         } else {
-          newClampedValue = Math.max(
+          currentClampedFooter.current = Math.max(
             0,
-            currentClampedValue.current - dampedDiff
+            currentClampedFooter.current - dampedDiff
           );
         }
+        clampedFooterY.setValue(currentClampedFooter.current);
 
-        currentClampedValue.current = newClampedValue;
-        clampedScrollY.setValue(newClampedValue);
+        // Header behavior
+        if (scrollDirection.current === "down") {
+          currentClampedHeader.current = Math.min(
+            safeHeaderHeight,
+            currentClampedHeader.current + dampedDiff
+          );
+        } else {
+          currentClampedHeader.current = Math.max(
+            0,
+            currentClampedHeader.current - dampedDiff
+          );
+        }
+        clampedHeaderY.setValue(currentClampedHeader.current);
+
+        // Notification behavior
+        if (scrollDirection.current === "down") {
+          currentClampedNotification.current = Math.min(
+            safeNotificationHeight,
+            currentClampedNotification.current + dampedDiff
+          );
+        } else {
+          currentClampedNotification.current = Math.max(
+            0,
+            currentClampedNotification.current - dampedDiff
+          );
+        }
+        clampedNotificationY.setValue(currentClampedNotification.current);
       }
 
       lastScrollValue.current = currentScroll;
     },
-    [clampedScrollY]
+    [
+      clampedFooterY,
+      clampedHeaderY,
+      clampedNotificationY,
+      safeFooterHeight,
+      safeHeaderHeight,
+      safeNotificationHeight,
+    ]
   );
 
   React.useEffect(() => {
     const listener = scrollY.addListener(({ value }) => {
       updateClampedValue(value);
     });
-
     return () => scrollY.removeListener(listener);
   }, [scrollY, updateClampedValue]);
 
   const snapToNearest = useCallback(() => {
-    const currentValue = currentClampedValue.current;
-    const thresholdShow = 0.15 * FOOTER_HEIGHT; // 11.55 - very easy to show (just a tiny scroll up)
-    const thresholdHide = 0.8 * FOOTER_HEIGHT; // 61.6 - much harder to hide (need significant scroll down)
+    const snapFooter = () => {
+      const currentValue = currentClampedFooter.current;
+      const thresholdShow = 0.15 * safeFooterHeight;
+      const thresholdHide = 0.8 * safeFooterHeight;
+      let targetValue: number;
 
-    let targetValue: number;
-
-    // Biased toward showing:
-    // 0 to 11.55: Always show
-    // 11.55 to 61.6: Show unless user was scrolling down aggressively
-    // 61.6 to 77: Hide only when mostly sure
-
-    if (currentValue <= thresholdShow) {
-      // Footer barely moved - always show
-      targetValue = 0;
-    } else if (currentValue >= thresholdHide) {
-      // Footer almost completely hidden - hide it
-      targetValue = FOOTER_HEIGHT;
-    } else {
-      // Large middle zone - bias toward showing
-      if (scrollDirection.current === "up") {
-        // Any upward scroll in middle zone = show
+      if (currentValue <= thresholdShow) {
         targetValue = 0;
+      } else if (currentValue >= thresholdHide) {
+        targetValue = safeFooterHeight;
       } else {
-        // Downward scroll in middle zone - only hide if past 50%
-        targetValue = currentValue > 0.5 * FOOTER_HEIGHT ? FOOTER_HEIGHT : 0;
+        targetValue =
+          scrollDirection.current === "up"
+            ? 0
+            : currentValue > 0.5 * safeFooterHeight
+            ? safeFooterHeight
+            : 0;
       }
-    }
 
-    currentClampedValue.current = targetValue;
-    Animated.timing(clampedScrollY, {
-      toValue: targetValue,
-      duration: 200,
-      useNativeDriver: false,
-    }).start();
-  }, [clampedScrollY]);
+      currentClampedFooter.current = targetValue;
+      Animated.timing(clampedFooterY, {
+        toValue: targetValue,
+        duration: 200,
+        useNativeDriver: false,
+      }).start();
+    };
 
-  const onScrollEndDrag = useCallback(() => {
-    snapToNearest();
-  }, [snapToNearest]);
+    const snapHeader = () => {
+      const currentValue = currentClampedHeader.current;
+      const thresholdShow = 0.15 * safeHeaderHeight;
+      const thresholdHide = 0.8 * safeHeaderHeight;
+      let targetValue: number;
 
-  const onMomentumScrollEnd = useCallback(() => {
-    snapToNearest();
-  }, [snapToNearest]);
+      if (currentValue <= thresholdShow) {
+        targetValue = 0;
+      } else if (currentValue >= thresholdHide) {
+        targetValue = safeHeaderHeight;
+      } else {
+        targetValue =
+          scrollDirection.current === "up"
+            ? 0
+            : currentValue > 0.5 * safeHeaderHeight
+            ? safeHeaderHeight
+            : 0;
+      }
+
+      currentClampedHeader.current = targetValue;
+      Animated.timing(clampedHeaderY, {
+        toValue: targetValue,
+        duration: 200,
+        useNativeDriver: false,
+      }).start();
+    };
+
+    const snapNotification = () => {
+      const currentValue = currentClampedNotification.current;
+      const thresholdShow = 0.15 * safeNotificationHeight;
+      const thresholdHide = 0.8 * safeNotificationHeight;
+      let targetValue: number;
+
+      if (currentValue <= thresholdShow) {
+        targetValue = 0;
+      } else if (currentValue >= thresholdHide) {
+        targetValue = safeNotificationHeight;
+      } else {
+        targetValue =
+          scrollDirection.current === "up"
+            ? 0
+            : currentValue > 0.5 * safeNotificationHeight
+            ? safeNotificationHeight
+            : 0;
+      }
+
+      currentClampedNotification.current = targetValue;
+      Animated.timing(clampedNotificationY, {
+        toValue: targetValue,
+        duration: 200,
+        useNativeDriver: false,
+      }).start();
+    };
+
+    snapFooter();
+    snapHeader();
+    snapNotification();
+  }, [
+    clampedFooterY,
+    clampedHeaderY,
+    clampedNotificationY,
+    safeFooterHeight,
+    safeHeaderHeight,
+    safeNotificationHeight,
+  ]);
+
+  const onScrollEndDrag = useCallback(snapToNearest, [snapToNearest]);
+  const onMomentumScrollEnd = useCallback(snapToNearest, [snapToNearest]);
 
   const resetFooterPosition = useCallback(() => {
     scrollY.setValue(0);
-    clampedScrollY.setValue(0);
-    currentClampedValue.current = 0;
+    clampedFooterY.setValue(0);
+    clampedHeaderY.setValue(0);
+    clampedNotificationY.setValue(0);
+    currentClampedFooter.current = 0;
+    currentClampedHeader.current = 0;
+    currentClampedNotification.current = 0;
     lastScrollValue.current = 0;
-  }, [scrollY, clampedScrollY]);
+  }, [scrollY, clampedFooterY, clampedHeaderY, clampedNotificationY]);
 
   return (
     <ScrollContext.Provider
@@ -166,15 +341,35 @@ export const ScrollProvider: React.FC<{ children: React.ReactNode }> = ({
         resetFooterPosition,
         onScrollEndDrag,
         onMomentumScrollEnd,
-
+        setFooterHeight,
+        footerHeight,
+        setHeaderHeight,
+        headerHeightValue,
+        headerHeight,
+        setNotificationHeight,
+        notificationHeightValue,
         notificationHeight,
-
-        // sort popup state
+        
+        // Sort popup
         showSortPopup,
         selectedSort,
         openSortPopup,
         closeSortPopup,
         setSelectedSort,
+
+        // Status filter popup
+        showStatusPopup,
+        selectedStatus,
+        openStatusPopup,
+        closeStatusPopup,
+        setSelectedStatus,
+
+        // Category filter popup
+        showCategoryPopup,
+        selectedCategory,
+        openCategoryPopup,
+        closeCategoryPopup,
+        setSelectedCategory,
       }}
     >
       {children}

@@ -137,7 +137,9 @@ export const addEnquiryReview = async (
 /**
  * Get all enquiries for a buyerCpId
  */
-export const getEnquiriesByBuyer = async (buyerCpId: string): Promise<Enquiry[]> => {
+export const getEnquiriesByBuyer = async (
+  buyerCpId: string
+): Promise<Enquiry[]> => {
   const q = query(enquiriesCollection, where("buyerCpId", "==", buyerCpId));
   const snap = await getDocs(q);
   return snap.docs.map((doc) => doc.data() as Enquiry);
@@ -146,7 +148,9 @@ export const getEnquiriesByBuyer = async (buyerCpId: string): Promise<Enquiry[]>
 /**
  * Get all enquiries for a sellerCpId
  */
-export const getEnquiriesBySeller = async (sellerCpId: string): Promise<Enquiry[]> => {
+export const getEnquiriesBySeller = async (
+  sellerCpId: string
+): Promise<Enquiry[]> => {
   const q = query(enquiriesCollection, where("sellerCpId", "==", sellerCpId));
   const snap = await getDocs(q);
   return snap.docs.map((doc) => doc.data() as Enquiry);
@@ -158,7 +162,24 @@ export const getEnquiriesBySeller = async (sellerCpId: string): Promise<Enquiry[
 export const getEnquiriesByStatus = async (
   status: Enquiry["status"]
 ): Promise<Enquiry[]> => {
-  const q = query(enquiriesCollection, where("status", "==", status), orderBy("added", "desc"));
+  const q = query(
+    enquiriesCollection,
+    where("status", "==", status),
+    orderBy("added", "desc")
+  );
   const snap = await getDocs(q);
   return snap.docs.map((doc) => doc.data() as Enquiry);
+};
+
+/**
+ * Get enquiries for a property
+ */
+
+export const getEnquiriesByPropertyID = async (
+  propertyId: Enquiry["propertyId"]
+): Promise<number> => {
+  console.log(propertyId, "to chec");
+  const q = query(enquiriesCollection, where("propertyId", "==", propertyId));
+  const snap = await getDocs(q);
+  return snap.docs.length;
 };

@@ -1,4 +1,4 @@
-import React, { useRef, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import {
   View,
   Text,
@@ -6,6 +6,7 @@ import {
   StyleSheet,
   SafeAreaView,
   Platform,
+  Pressable,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import EnquiryCPModal from "@/app/modals/EnquiryCPModal";
@@ -21,7 +22,7 @@ import deductMonthlyCredit from "@/app/helpers/deductCredit";
 import { showErrorToast, showSuccessToast } from "@/utils/toastUtils";
 import { useDispatch } from "react-redux";
 import { AnyAction, ThunkDispatch } from "@reduxjs/toolkit";
-import { router } from "expo-router";
+import { router, usePathname } from "expo-router";
 import { setPropertyDataThunk } from "@/store/slices/propertySlice";
 import {
   getDaysDifference,
@@ -30,7 +31,12 @@ import {
 import CreditLimitModal from "@/app/modals/CreditLimitModal";
 import { analytics } from "@/app/config/firebase";
 import { logEvent } from "@react-native-firebase/analytics";
-import { formatCost, formatCost2, getDaysFrom } from "@/app/helpers/common";
+import {
+  formatCost,
+  formatCost2,
+  getDaysFrom,
+  toCapitalizedWords,
+} from "@/app/helpers/common";
 
 // import icons from "@/app/assets/icons";
 import apartment from "@/assets/icons/apartment.svg";
@@ -46,6 +52,11 @@ import commercialBuilding from "@/assets/icons/commercialBuilding.svg";
 // import icons
 import Location from "@/assets/icons/svg/PropertyFolder/location.svg";
 import Share from "@/assets/icons/svg/PropertyFolder/shareButton.svg";
+import Cross from "@/assets/icons/PropertyCard/cross.svg";
+import Tick from "@/assets/icons/PropertyCard/ticke.svg";
+
+// service
+import { getEnquiriesByPropertyID } from "@/app/services/user_services/enquiryService";
 
 interface PropertyCardProps {
   property: any;
@@ -68,6 +79,7 @@ const PropertyCard: React.FC<PropertyCardProps> = ({ property }) => {
   const [isShareModalOpen, setIsShareModalOpen] = useState(false);
   const [creditLimitModalVisible, setCreditLimitModalVisible] = useState(false);
   const [isGeneratingEnquiry, setIsGeneratingEnquiry] = useState(false);
+  const [enquiries, setEnquiries] = useState(0);
   const agentData = useSelector((state: RootState) => state.agent.docData);
   const phoneNumber = useSelector(
     (state: RootState) => state?.agent?.docData?.phoneNumber
@@ -80,6 +92,8 @@ const PropertyCard: React.FC<PropertyCardProps> = ({ property }) => {
     "free";
 
   const enquiryConfirmed = useRef<Boolean>(false);
+
+  const pathname = usePathname();
 
   const getIcon = () => {
     switch (property.assetType) {
@@ -324,6 +338,17 @@ const PropertyCard: React.FC<PropertyCardProps> = ({ property }) => {
     setIsShareModalOpen(true);
   };
 
+  // fetch number of enquiries on the given property
+  useEffect(() => {
+    const handleFetch = async () => {
+      const count = await getEnquiriesByPropertyID(property.propertyId);
+      setEnquiries(count);
+    };
+    if (pathname === "/MyBusinessPage") {
+      handleFetch();
+    }
+  }, []);
+
   // Function to open property details screen with routing
   const openPropertyDetails = async () => {
     try {
@@ -341,169 +366,271 @@ const PropertyCard: React.FC<PropertyCardProps> = ({ property }) => {
 
     if (property) {
       dispatch(setPropertyDataThunk(property));
-      router.push({
-        pathname: "/components/property/PropertyDetailsScreen",
-        params: {
-          parent: "properties",
-        },
-      });
+      if (pathname === "/MyBusinessPage") {
+        router.push({
+          pathname: "/(pages)/MyBusiness/PropertiesDetailsScreen",
+        });
+      } else {
+        router.push({
+          pathname: "/components/property/PropertyDetailsScreen",
+          params: {
+            parent: "properties",
+          },
+        });
+      }
     }
   };
 
   return (
-    <SafeAreaView>
+    <View>
       {/* Property Card */}
-      <View style={styles.propertyCard}>
-        <TouchableOpacity
-          style={styles.propertyCardTouchable}
+      <View>
+        {pathname === "/MyBusinessPage" && (
+          <View
+            className={`${
+              property.listingType === "rental"
+                ? "bg-[#FCE9BA]"
+                : "bg-[#EADDFF]"
+            } max-w-[56px] max-h-[19px] items-center ml-4 px-[11px] pt-1 rounded-t-sm`}
+          >
+            <Text className="text-[#10302D] text-xs font-medium leading-[150%]">
+              {toCapitalizedWords(property.listingType)}
+            </Text>
+          </View>
+        )}
+        <Pressable
+          className="flex flex-col border border-[#CCCBCB] rounded-lg"
           onPress={openPropertyDetails}
+          onLongPress={() => {
+            if (pathname === "/MyBusinessPage") {
+              console.log("long presssssssssssssssssssssss");
+            }
+          }}
         >
-          <View style={styles.propertyHeaderContainer}>
-            {/* Header section with Property ID and MicroMarket */}
-            <View style={styles.propertyIdSection}>
-              {/* Property ID on the left - using width fit-content approach */}
-              <View style={styles.propertyIdContainer}>
-                <View style={styles.propertyIdInner}>
-                  <Text style={styles.propertyTitle}>
-                    {property.propertyId}
+          {pathname === "/MyBusinessPage" &&
+            (property.status === "de-listed" ||
+              (property.status === "available" &&
+                getDaysDifference(
+                  property.dateOfStatusLastChecked + 60 * 60 * 24 * 15,
+                  Math.floor(Date.now() / 1000)
+                ))) && (
+              <View className="flex flex-row items-center justify-between bg-[#E3E3E3] rounded-t-lg px-4 py-2">
+                <View className="flex flex-col">
+                  {getDaysDifference(
+                    property.dateOfStatusLastChecked + 60 * 60 * 24 * 15,
+                    Math.floor(Date.now() / 1000)
+                  ) <= 4 &&
+                    property.status === "available" && (
+                      <Text className="font-[Lato] text-sm font-bold leading-[150%] tracking-[0.25px]">
+                        Will get de-listed in{" "}
+                        {getDaysDifference(
+                          property.dateOfStatusLastChecked + 60 * 60 * 24 * 15,
+                          Math.floor(Date.now() / 1000)
+                        )}{" "}
+                        days,
+                      </Text>
+                    )}
+                  <Text className="font-[Lato] text-sm font-bold leading-[150%] tracking-[0.25px]">
+                    Is the property available?
                   </Text>
                 </View>
-                {getDaysDifference(
-                  property.added,
-                  Math.floor(Date.now() / 1000)
-                ) > 10 ? (
+                <View className="flex flex-row gap-[10px]">
+                  <Cross />
+                  <Tick />
+                </View>
+              </View>
+            )}
+          <View className="p-4">
+            <View className="flex-col">
+              {/* Header section with Property ID and MicroMarket */}
+              <View className="flex-row items-center">
+                {/* Property ID on the left - using width fit-content approach */}
+                <View className="flex-1 shrink flex-row justify-between">
+                  <View className="self-start flex-row gap-2.5">
+                    <Text className="text-[#5A5555] text-sm border-b border-b-[#E3E3E3] font-[Lato] font-semibold leading-[21px] tracking-wide pb-0.5">
+                      {property.propertyId}
+                    </Text>
+                  </View>
+                  {getDaysDifference(
+                    property.added,
+                    Math.floor(Date.now() / 1000)
+                  ) > 10 ? (
+                    <View>
+                      <Text className="text-[#726C6C] text-sm font-[Lato] font-semibold leading-[21px] border-b border-b-[#E3E3E3]">{`Status updated ${getDaysFrom(
+                        property.dateOfLastChecked
+                      )} ago`}</Text>
+                    </View>
+                  ) : (
+                    <View className="bg-[#E93B3E] px-2 py-1 rounded">
+                      <Text className="text-white font-[Lato] text-xs font-medium leading-[18px]">
+                        Newly Added
+                      </Text>
+                    </View>
+                  )}
+                </View>
+              </View>
+
+              <View className="flex-row items-center mb-2 gap-1.5">
+                <View className="mt-1.5">
+                  {getIcon() &&
+                    React.createElement(getIcon(), { width: 40, height: 40 })}
+                </View>
+                <View className="flex-col gap-1">
+                  {/* Property Name */}
+                  <View className="mt-2 gap-2 flex-col">
+                    <Text className="text-black text-base font-[Montserrat_700Bold]">
+                      {getPropertyName()}
+                    </Text>
+                    <View className="flex-row items-center gap-0.5">
+                      <Location width={16} height={16} />
+                      <Text className="text-sm">
+                        {property.micromarket || "-"}
+                      </Text>
+                    </View>
+                  </View>
+                </View>
+              </View>
+
+              {/* Tags section for Asset Type, Unit Type, and Facing */}
+              <View className="flex-row flex-wrap gap-2 mb-3">
+                {[property.assetType, property.unitType, property.facing]
+                  .filter(Boolean) // Filter out any falsy values
+                  .map((tag, index) => (
+                    <View
+                      key={index}
+                      className="border border-[#205E59] px-3 py-1 rounded-3xl bg-[#F3FFFE]"
+                    >
+                      <Text className="text-xs text-[#525252]">{tag}</Text>
+                    </View>
+                  ))}
+              </View>
+            </View>
+
+            {/* Price and SBUA (Super Built-Up Area) section */}
+            <View className="flex-row justify-between items-start border-t border-t-[#E3E3E3] pt-2 mb-3">
+              {/* Total Ask Price */}
+              <View className="flex-col items-start border-r border-r-[#E3E3E3] pr-5">
+                {property.type === "resale" ? (
                   <View>
-                    <Text
-                      style={styles.statusUpdateText}
-                    >{`Status updated ${getDaysFrom(
-                      property.dateOfLastChecked
-                    )} ago`}</Text>
+                    <Text className="text-[#433F3E] text-xs font-[Montserrat_500normal]">
+                      Ask Price
+                    </Text>
+                    <Text className="text-sm font-semibold text-[#111827]">
+                      {formatCost2(property.totalAskPrice)}
+                    </Text>
                   </View>
                 ) : (
-                  <View style={styles.newContainer}>
-                    <Text style={styles.new}>Newly Added</Text>
+                  <View>
+                    <Text className="text-[#433F3E] text-xs font-[Montserrat_500normal]">
+                      Rent
+                    </Text>
+                    <Text className="text-sm font-semibold text-[#111827]">
+                      {formatCost2(property?.rent?.rent)}
+                    </Text>
                   </View>
                 )}
               </View>
 
-              {/* newly added flag */}
-              {/* {getDaysDifference(
-                property.added,
-                Math.floor(Date.now() / 1000) <= 10
-              ) && (
-                <View style={styles.newContainer}>
-                  <Text style={styles.new}>Newly Added</Text>
-                </View>
-              )} */}
-            </View>
-            <View style={styles.iconContainer}>
-              <View style={styles.iconWrapper}>
-                {getIcon() &&
-                  React.createElement(getIcon(), { width: 40, height: 40 })}
-              </View>
-              <View style={styles.propertyNameContainer}>
-                {/* Property Name */}
-                <View style={styles.propertyHeader}>
-                  <Text style={styles.propertyName}>{getPropertyName()}</Text>
-                  <View style={styles.locationContainer}>
-                    <Location width={16} height={16} />
-                    <Text style={styles.locationText}>
-                      {property.micromarket || "-"}
+              {/* Per Sqft or deposit*/}
+              <View className="flex-col items-start border-r border-r-[#E3E3E3] pr-5">
+                {property.type === "resale" ? (
+                  <View>
+                    <Text className="text-[#433F3E] text-xs font-[Montserrat_500normal]">
+                      Per Sqft Price
+                    </Text>
+                    <Text className="text-sm font-semibold text-[#111827]">
+                      {formatCost(property.pricePerSqft)}
                     </Text>
                   </View>
-                </View>
-              </View>
-            </View>
-
-            {/* Tags section for Asset Type, Unit Type, and Facing */}
-            <View style={styles.tagsContainer}>
-              {[property.assetType, property.unitType, property.facing]
-                .filter(Boolean) // Filter out any falsy values
-                .map((tag, index) => (
-                  <View key={index} style={styles.tagItem}>
-                    <Text style={styles.tagText}>{tag}</Text>
+                ) : (
+                  <View>
+                    <Text className="text-[#433F3E] text-xs font-[Montserrat_500normal]">
+                      Deposit
+                    </Text>
+                    <Text className="text-sm font-semibold text-[#111827]">
+                      {formatCost2(property?.rent?.deposit)}
+                    </Text>
                   </View>
-                ))}
-            </View>
-          </View>
-          {/* Price and SBUA (Super Built-Up Area) section */}
-          <View style={styles.priceSection}>
-            {/* Total Ask Price */}
-            <View style={styles.priceContainer}>
-              {property.type === "resale" ? (
-                <View>
-                  <Text style={styles.priceLabel}>Ask Price</Text>
-                  <Text style={styles.priceValue}>
-                    {formatCost2(property.totalAskPrice)}
-                  </Text>
-                </View>
-              ) : (
-                <View>
-                  <Text style={styles.priceLabel}>Rent</Text>
-                  <Text style={styles.priceValue}>
-                    {formatCost2(property?.rent?.rent)}
-                  </Text>
-                </View>
-              )}
-            </View>
-
-            {/* Per Sqft or deposit*/}
-            <View style={styles.priceContainer}>
-              {property.type === "resale" ? (
-                <View>
-                  <Text style={styles.priceLabel}>Per Sqft Price</Text>
-                  <Text style={styles.priceValue}>
-                    {formatCost(property.pricePerSqft)}
-                  </Text>
-                </View>
-              ) : (
-                <View>
-                  <Text style={styles.priceLabel}>Deposit</Text>
-                  <Text style={styles.priceValue}>
-                    {formatCost2(property?.rent?.deposit)}
-                  </Text>
-                </View>
-              )}
-            </View>
-
-            {/* SBUA */}
-            {property.assetType === "Plot" ? (
-              <View style={styles.sbuaContainer}>
-                <Text style={styles.sbuaLabel}>Plot Size</Text>
-                <Text style={styles.sbuaValue}>
-                  {property.plotSize ? `${property.plotSize} Sq Ft` : "-"}
-                </Text>
+                )}
               </View>
-            ) : (
-              <View style={styles.sbuaContainer}>
-                <Text style={styles.sbuaLabel}>SBUA</Text>
-                <Text style={styles.sbuaValue}>
-                  {property.sbua ? `${property.sbua} Sq Ft` : "-"}
-                </Text>
+
+              {/* SBUA */}
+              {property.assetType === "Plot" ? (
+                <View className="flex-col items-start">
+                  <Text className="text-[#6B7280] text-xs font-[Montserrat_600SemiBold]">
+                    Plot Size
+                  </Text>
+                  <Text className="text-sm font-semibold text-[#111827]">
+                    {property.plotSize ? `${property.plotSize} Sq Ft` : "-"}
+                  </Text>
+                </View>
+              ) : (
+                <View className="flex-col items-start">
+                  <Text className="text-[#6B7280] text-xs font-[Montserrat_600SemiBold]">
+                    SBUA
+                  </Text>
+                  <Text className="text-sm font-semibold text-[#111827]">
+                    {property.sbua ? `${property.sbua} Sq Ft` : "-"}
+                  </Text>
+                </View>
+              )}
+            </View>
+            {pathname === "/properties" && (
+              <View className="flex-row gap-3">
+                {/* Enquire Now Button */}
+                <TouchableOpacity
+                  className="flex-1 bg-[#153E3B] rounded-md py-2 flex-row justify-center items-center"
+                  onPress={handleEnquireNowBtn}
+                >
+                  <Ionicons name="call-outline" size={16} color="white" />
+                  <Text className="text-xs text-white font-medium ml-1">
+                    Enquire Now
+                  </Text>
+                </TouchableOpacity>
+
+                {/* share button*/}
+                <TouchableOpacity
+                  className="w-[34px] h-[34px] rounded p-1.5 bg-[#E3E3E3] justify-center items-center border border-[#153E3B]"
+                  onPress={handleShareButton}
+                >
+                  <Share />
+                </TouchableOpacity>
               </View>
             )}
           </View>
-
-          {/* Buttons for Drive Details and Enquire Now */}
-          <View style={styles.buttonsContainer}>
-            {/* Enquire Now Button */}
-            <TouchableOpacity
-              style={styles.enquireButton}
-              onPress={handleEnquireNowBtn}
+          {pathname === "/MyBusinessPage" && (
+            <View
+              className={`flex flex-row justify-between rounded-b-lg px-4 py-2 ${
+                property.status.toLowerCase() === "available"
+                  ? "bg-[#EAFFEF]"
+                  : property.status.toLowerCase() === "sold"
+                  ? "bg-[#F2F2F2]"
+                  : property.status.toLowerCase() === "hold"
+                  ? "bg-[#FFFCF0]"
+                  : property.status.toLowerCase() === "de-listed"
+                  ? "bg-[#FFF0F0]"
+                  : ""
+              }`}
             >
-              <Ionicons name="call-outline" size={16} color="white" />
-              <Text style={styles.enquireButtonText}>Enquire Now</Text>
-            </TouchableOpacity>
-
-            {/* share button*/}
-            <TouchableOpacity
-              style={styles.shareButton}
-              onPress={handleShareButton}
-            >
-              <Share />
-            </TouchableOpacity>
-          </View>
-        </TouchableOpacity>
+              <View className="flex flex-col gap-[2px]">
+                <Text className="text-[#5A5555] text-xs font-medium leading-[150%] tracking-[0.25px]">
+                  Enquiries Recieved
+                </Text>
+                <Text className="text-[#2B2928] text-sm font-bold leading-[150%]">
+                  {`${enquiries} ${enquiries === 1 ? "Enquiry" : "Enquiries"}`}
+                </Text>
+              </View>
+              <View className="flex flex-col gap-[2px]">
+                <Text className="text-[#5A5555] text-xs font-medium leading-[150%] tracking-[0.25px]">
+                  Status
+                </Text>
+                <Text className="text-[#2B2928] text-sm font-bold leading-[150%]">
+                  {toCapitalizedWords(property.status)}
+                </Text>
+              </View>
+            </View>
+          )}
+        </Pressable>
       </View>
 
       {/* Modals */}
@@ -544,259 +671,8 @@ const PropertyCard: React.FC<PropertyCardProps> = ({ property }) => {
         onGoPremium={handleGoPremium}
         onBuyCredits={handleBuyCredits}
       />
-    </SafeAreaView>
+    </View>
   );
 };
 
 export default React.memo(PropertyCard);
-
-const styles = StyleSheet.create({
-  // Property Card Container
-  propertyCard: {
-    zIndex: -999,
-  },
-
-  propertyCardTouchable: {
-    borderWidth: 1,
-    borderColor: "#CCCBCB",
-    borderRadius: 8,
-    padding: 16,
-    backgroundColor: "white",
-    marginBottom: 16,
-    flexDirection: "column",
-    gap: 12,
-  },
-
-  // Header Section
-  propertyHeaderContainer: {
-    flexDirection: "column",
-    // marginBottom: 12,
-  },
-
-  iconContainer: {
-    flexDirection: "row",
-    alignItems: "center",
-    marginBottom: 8,
-    gap: 6,
-  },
-
-  iconWrapper: {
-    marginTop: 6,
-  },
-
-  propertyIdSection: {
-    flexDirection: "row",
-    alignItems: "center",
-  },
-
-  propertyIdContainer: {
-    flex: 1,
-    flexShrink: 1,
-    flexDirection: "row",
-    justifyContent: "space-between",
-  },
-
-  propertyIdInner: {
-    alignSelf: "flex-start",
-    flexDirection: "row",
-    gap: 10,
-  },
-
-  newFlag: {
-    backgroundColor: "#E93B3E",
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 2,
-  },
-
-  newFlagText: {
-    color: "#FFF",
-    fontFamily: "Lato",
-    fontStyle: "normal",
-    lineHeight: 18,
-    fontSize: 12,
-    fontWeight: "500",
-  },
-
-  statusUpdateText: {
-    color: "#726C6C",
-    fontSize: 14,
-    fontStyle: "normal",
-    fontFamily: "Lato",
-    fontWeight: "600",
-    lineHeight: 21,
-    borderBottomWidth: 1,
-    borderBottomColor: "#E3E3E3",
-  },
-
-  propertyTitle: {
-    color: "#5A5555",
-    fontSize: 14,
-    borderBottomWidth: 1,
-    borderBottomColor: "#E3E3E3",
-    fontFamily: "Lato",
-    fontWeight: "600",
-    lineHeight: 21,
-    letterSpacing: 0.25,
-    paddingBottom: 2,
-  },
-
-  propertyHeader: {
-    marginTop: 8,
-    gap: 8,
-    flexDirection: "column",
-  },
-
-  propertyNameContainer: {
-    flexDirection: "column",
-    gap: 4,
-  },
-
-  propertySubtitle: {
-    color: "#9CA3AF",
-    fontSize: 12,
-    // marginTop: 40,
-  },
-
-  // Newly Added Flag
-  newContainer: {
-    backgroundColor: "#E93B3E",
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 4,
-  },
-
-  new: {
-    color: "#FFF",
-    fontFamily: "Lato, sans-serif",
-    fontSize: 12,
-    fontStyle: "normal",
-    fontWeight: "500",
-    lineHeight: 18,
-  },
-
-  // Property Name
-  propertyName: {
-    color: "black",
-    fontSize: 16,
-    fontWeight: "bold",
-    fontFamily: "Montserrat_700Bold",
-  },
-
-  // Location Section
-  locationContainer: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 2,
-  },
-
-  locationText: {
-    fontSize: 14,
-  },
-
-  // Tags Section
-  tagsContainer: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    gap: 8,
-    marginBottom: 12,
-  },
-
-  tagItem: {
-    borderWidth: 1,
-    borderColor: "#205E59",
-    paddingHorizontal: 12,
-    paddingVertical: 4,
-    borderRadius: 24,
-    backgroundColor: "#F3FFFE",
-  },
-
-  tagText: {
-    fontSize: 12,
-    color: "#525252",
-  },
-
-  // Price and SBUA Section
-  priceSection: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "flex-start",
-    borderTopWidth: 1,
-    borderTopColor: "#E3E3E3",
-    paddingTop: 8,
-    marginBottom: 12,
-  },
-
-  priceContainer: {
-    flexDirection: "column",
-    alignItems: "flex-start",
-    borderRightColor: "#E3E3E3",
-    borderRightWidth: 1,
-    paddingRight: 20,
-  },
-
-  priceLabel: {
-    color: "#433F3E",
-    fontSize: 12,
-    fontFamily: "Montserrat_500normal",
-  },
-
-  priceValue: {
-    fontSize: 14,
-    fontWeight: "600",
-    color: "#111827",
-  },
-
-  sbuaContainer: {
-    flexDirection: "column",
-    alignItems: "flex-start",
-  },
-
-  sbuaLabel: {
-    color: "#6B7280",
-    fontSize: 12,
-    fontFamily: "Montserrat_600SemiBold",
-  },
-
-  sbuaValue: {
-    fontSize: 14,
-    fontWeight: "600",
-    color: "#111827",
-  },
-
-  // Buttons Section
-  buttonsContainer: {
-    flexDirection: "row",
-    gap: 12,
-  },
-
-  enquireButton: {
-    flex: 1,
-    backgroundColor: "#153E3B",
-    borderRadius: 6,
-    paddingVertical: 8,
-    flexDirection: "row",
-    justifyContent: "center",
-    alignItems: "center",
-  },
-
-  enquireButtonText: {
-    fontSize: 12,
-    color: "white",
-    fontWeight: "500",
-    marginLeft: 4,
-  },
-
-  // Share Button (if needed)
-  shareButton: {
-    width: 34,
-    height: 34,
-    borderRadius: 4,
-    padding: 6,
-    backgroundColor: "#E3E3E3",
-    justifyContent: "center",
-    alignItems: "center",
-    borderColor: "#153E3B",
-    borderWidth: 1,
-  },
-});
