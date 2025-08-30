@@ -23,8 +23,14 @@ import {
   MultipleUploadConfig 
 } from "../../../services/media_services/mediaService";
 
+// Add MediaItem interface
+interface MediaItem {
+  url: string;
+  type: 'image' | 'video' | 'document';
+}
+
 const { width } = Dimensions.get("window");
-const TUS_ENDPOINT = "https://tusd.tusdemo.net/files/"
+const TUS_ENDPOINT  = "https://tus-protocol-dot-iqol-crm.uc.r.appspot.com/files"
 
 interface PropertyImagesProps {
   images?: string[];
@@ -43,9 +49,33 @@ export const PropertyImages: React.FC<PropertyImagesProps> = ({
 }) => {
   const [uploading, setUploading] = useState(false);
 
-  // Combine all media types for carousel display (images, videos, AND documents)
-  const allMediaFiles = [...images, ...currentMedia.photos, ...currentMedia.videos, ...currentMedia.documents];
-  const hasAnyFiles = allMediaFiles.length > 0;
+  // Create structured media array with type information
+  const createMediaItems = (): MediaItem[] => {
+    const mediaItems: MediaItem[] = [];
+    
+    // Add legacy images (treat as photos)
+    images.forEach(url => {
+      mediaItems.push({ url, type: 'image' });
+    });
+    
+    // Add current media with proper types
+    currentMedia.photos.forEach(url => {
+      mediaItems.push({ url, type: 'image' });
+    });
+    
+    currentMedia.videos.forEach(url => {
+      mediaItems.push({ url, type: 'video' });
+    });
+    
+    currentMedia.documents.forEach(url => {
+      mediaItems.push({ url, type: 'document' });
+    });
+    
+    return mediaItems;
+  };
+
+  const allMediaItems = createMediaItems();
+  const hasAnyFiles = allMediaItems.length > 0;
 
   const openFilePicker = async () => {
     try {
@@ -209,37 +239,41 @@ export const PropertyImages: React.FC<PropertyImagesProps> = ({
     );
   };
 
-  // Helper function to determine file type and if it can be deleted
-  const getFileInfo = (fileUrl: string, index: number) => {
-    let fileType: keyof MediaUploadData = 'photos';
+  // Updated helper function to work with MediaItem structure
+  const getFileInfo = (mediaItem: MediaItem, index: number) => {
+    let fileType: keyof MediaUploadData;
     let canDelete = true;
     
     const legacyImagesCount = images.length;
-    const photosCount = currentMedia.photos.length;
-    const videosCount = currentMedia.videos.length;
     
     if (index < legacyImagesCount) {
       // This is a legacy image, might not be deletable
       fileType = 'photos';
       canDelete = false;
-    } else if (index < legacyImagesCount + photosCount) {
-      // This is a current photo
-      fileType = 'photos';
-    } else if (index < legacyImagesCount + photosCount + videosCount) {
-      // This is a current video
-      fileType = 'videos';
     } else {
-      // This is a document
-      fileType = 'documents';
+      // This is a current media item, use its type
+      switch (mediaItem.type) {
+        case 'image':
+          fileType = 'photos';
+          break;
+        case 'video':
+          fileType = 'videos';
+          break;
+        case 'document':
+          fileType = 'documents';
+          break;
+        default:
+          fileType = 'photos';
+      }
     }
 
     return { fileType, canDelete };
   };
 
-  const handleDeleteFromCarousel = (fileUrl: string, index: number) => {
-    const { fileType, canDelete } = getFileInfo(fileUrl, index);
+  const handleDeleteFromCarousel = (mediaItem: MediaItem, index: number) => {
+    const { fileType, canDelete } = getFileInfo(mediaItem, index);
     if (canDelete) {
-      deleteFile(fileUrl, fileType);
+      deleteFile(mediaItem.url, fileType);
     }
   };
 
@@ -248,13 +282,13 @@ export const PropertyImages: React.FC<PropertyImagesProps> = ({
       {hasAnyFiles ? (
         <View>
           {/* Enhanced Media Carousel for Images, Videos, AND Documents */}
-          {allMediaFiles.length > 0 && (
+          {allMediaItems.length > 0 && (
             <View className="relative">
               <ImageCarousel 
-                images={allMediaFiles} 
+                mediaItems={allMediaItems}
                 propertyId={propId}
                 onDeleteFile={handleDeleteFromCarousel}
-                canDeleteFile={(index) => getFileInfo(allMediaFiles[index], index).canDelete}
+                canDeleteFile={(index) => getFileInfo(allMediaItems[index], index).canDelete}
               />
             </View>
           )}

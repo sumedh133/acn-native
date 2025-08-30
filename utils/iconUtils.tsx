@@ -30,6 +30,7 @@ import PlotLengthIcon from "../assets/icons/svg/PropertyListing/PropertyDetails/
 import PreferredTenantsIcon from "../assets/icons/svg/PropertyListing/PropertyDetails/preferredTenantsIcon.svg";
 import SbuaIcon from "../assets/icons/svg/PropertyListing/PropertyDetails/sbuaIcon.svg";
 import UdsIcon from "../assets/icons/svg/PropertyListing/PropertyDetails/udsIcon.svg";
+import rentalInfoIcon from "../assets/icons/svg/PropertyListing/PropertyDetails/rentalInfoIcon.svg";
 
 import ApartmentTypeIcon from "../assets/icons/svg/PropertyListing/PropertyDetails/apartmentTypeIcon.svg";
 import { apartmentTypes } from "@/app/components/property/propertyMoreFilters/moreFilterOptions";
@@ -53,6 +54,7 @@ export const iconMap: Record<string, React.FC<any>> = {
   rentalIncome: RentalIncomeIcon,
   totalAskPrice: TotalAskPriceIcon,
   rent: RentIcon,
+  rentalInfo: rentalInfoIcon,
 
   // property
   ageOfTheBuilding: AgeOfTheBuildingIcon,

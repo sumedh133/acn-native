@@ -15,17 +15,21 @@ import { Ionicons } from "@expo/vector-icons";
 import ImageViewing from "react-native-image-viewing";
 import { analytics } from "@/app/config/firebase";
 import { logEvent } from "@react-native-firebase/analytics";
-//import Video from "react-native-video";
 import Video, { VideoRef } from "react-native-video";
-
 import Swiper from 'react-native-swiper';
 import { WebView } from 'react-native-webview';
 
+// Add MediaItem interface
+interface MediaItem {
+  url: string;
+  type: 'image' | 'video' | 'document';
+}
+
 interface ImageCarouselProps {
-  images: string[];
+  mediaItems: MediaItem[]; // Changed from images: string[]
   onImagePress?: () => void;
   propertyId?: string;
-  onDeleteFile?: (fileUrl: string, index: number) => void;
+  onDeleteFile?: (mediaItem: MediaItem, index: number) => void; // Updated signature
   canDeleteFile?: (index: number) => boolean;
 }
 
@@ -34,7 +38,7 @@ type MediaType = 'image' | 'video' | 'document';
 const { width, height } = Dimensions.get("window");
 
 const ImageCarousel: React.FC<ImageCarouselProps> = ({
-  images,
+  mediaItems, // Changed from images
   onImagePress,
   propertyId,
   onDeleteFile,
@@ -45,32 +49,17 @@ const ImageCarousel: React.FC<ImageCarouselProps> = ({
   const [isVideoViewVisible, setIsVideoViewVisible] = useState(false);
   const [isDocumentViewVisible, setIsDocumentViewVisible] = useState(false);
   const [playingVideoIndex, setPlayingVideoIndex] = useState<number | null>(null);
-  const [fullscreenMedia, setFullscreenMedia] = useState<string>('');
+  const [fullscreenMedia, setFullscreenMedia] = useState<MediaItem | null>(null);
   const swiperRef = useRef<Swiper>(null);
   const fullscreenVideoRef = useRef<VideoRef>(null);
 
   // Format images for the image viewer (only images)
-
-  // Helper function to get media type
-  const getMediaType = (uri: string): MediaType => {
-    const videoExtensions = ['.mp4', '.mov', '.avi', '.mkv', '.webm', '.m4v'];
-    const documentExtensions = ['.pdf', '.doc', '.docx', '.xls', '.xlsx', '.ppt', '.pptx', '.txt'];
-    
-    const lowerUri = uri.toLowerCase();
-    console.log('loweruri',lowerUri)
-    
-    if (videoExtensions.some(ext => lowerUri.includes(ext))) {
-      return 'video';
-    }
-    if (documentExtensions.some(ext => lowerUri.includes(ext))) {
-      return 'document';
-    }
-    return 'image';
-  };
-
-  const imageViewerImages = images
-    .map((uri, index) => ({ uri, originalIndex: index }))
-    .filter(item => getMediaType(item.uri) === 'image');
+  const imageViewerImages = mediaItems
+    .map((item, index) => ({ uri: item.url, originalIndex: index }))
+    .filter(item => {
+      const mediaItem = mediaItems.find(m => m.url === item.uri);
+      return mediaItem?.type === 'image';
+    });
 
   // Helper function to get document icon
   const getDocumentIcon = (uri: string) => {
@@ -99,12 +88,12 @@ const ImageCarousel: React.FC<ImageCarouselProps> = ({
     return url.split('/').pop() || 'Document';
   };
 
-  // Ensure we re-render when images change
+  // Ensure we re-render when mediaItems change
   useEffect(() => {
-    if (activeIndex >= images.length) {
+    if (activeIndex >= mediaItems.length) {
       setActiveIndex(0);
     }
-  }, [images, activeIndex]);
+  }, [mediaItems, activeIndex]);
 
   // Pause video when sliding to different index
   useEffect(() => {
@@ -113,7 +102,7 @@ const ImageCarousel: React.FC<ImageCarouselProps> = ({
     }
   }, [activeIndex]);
 
-  if (!images || images.length === 0) {
+  if (!mediaItems || mediaItems.length === 0) {
     return (
       <View style={styles.placeholderContainer}>
         <Ionicons name="image-outline" size={48} color="#CCCCCC" />
@@ -122,17 +111,16 @@ const ImageCarousel: React.FC<ImageCarouselProps> = ({
   }
 
   const handleMediaPress = (index: number) => {
-    const currentMedia = images[index];
-    const mediaType = getMediaType(currentMedia);
+    const currentMedia = mediaItems[index];
     
     try {
-      logEvent(analytics, `property_${mediaType}_fullscreen`, {
+      logEvent(analytics, `property_${currentMedia.type}_fullscreen`, {
         event_category: "property",
         event_label: "interaction",
         property_id: propertyId,
         media_index: index,
-        total_media: images.length,
-        media_type: mediaType,
+        total_media: mediaItems.length,
+        media_type: currentMedia.type,
       });
     } catch (error) {
       console.error("Error logging media fullscreen:", error);
@@ -140,7 +128,7 @@ const ImageCarousel: React.FC<ImageCarouselProps> = ({
 
     setFullscreenMedia(currentMedia);
     
-    switch (mediaType) {
+    switch (currentMedia.type) {
       case 'image':
         setIsImageViewVisible(true);
         break;
@@ -153,9 +141,9 @@ const ImageCarousel: React.FC<ImageCarouselProps> = ({
     }
   };
 
-  const handleDeleteFile = (item: string, index: number) => {
+  const handleDeleteFile = (mediaItem: MediaItem, index: number) => {
     if (onDeleteFile) {
-      onDeleteFile(item, index);
+      onDeleteFile(mediaItem, index);
     }
   };
 
@@ -178,7 +166,7 @@ const ImageCarousel: React.FC<ImageCarouselProps> = ({
           property_id: propertyId,
           previous_index: activeIndex,
           new_index: index,
-          total_media: images.length,
+          total_media: mediaItems.length,
           navigation_method: "swipe",
         });
       } catch (error) {
@@ -189,25 +177,24 @@ const ImageCarousel: React.FC<ImageCarouselProps> = ({
   };
 
   // Render each slide content based on media type
-  const renderSlideContent = (item: string, index: number) => {
-    const mediaType = getMediaType(item);
+  const renderSlideContent = (mediaItem: MediaItem, index: number) => {
     const isVideoPlaying = playingVideoIndex === index;
-
-    switch (mediaType) {
+    
+    switch (mediaItem.type) {
       case 'video':
         return (
           <View style={styles.videoContainer}>
             <Video
-              source={{ uri: item }}
+              source={{ uri: mediaItem.url }}
               style={styles.video}
               resizeMode="cover"
               paused={!isVideoPlaying}
               controls={isVideoPlaying}
-              poster={item}
+              poster={mediaItem.url}
               posterResizeMode="cover"
               onLoad={() => {
                 // Video loaded successfully
-                console.log("vidoe is loading**********************************", { uri: item })
+                console.log("Video is loading", { uri: mediaItem.url });
               }}
               onError={(error) => {
                 console.error('Video load error:', error);
@@ -254,12 +241,12 @@ const ImageCarousel: React.FC<ImageCarouselProps> = ({
           >
             <View style={styles.documentPreview}>
               <Ionicons 
-                name={getDocumentIcon(item) as any} 
+                name={getDocumentIcon(mediaItem.url) as any} 
                 size={48} 
                 color="#6B7280" 
               />
               <Text style={styles.documentName} numberOfLines={2}>
-                {getFileName(item)}
+                {getFileName(mediaItem.url)}
               </Text>
               <View style={styles.documentIndicator}>
                 <Ionicons name="document-text" size={14} color="white" />
@@ -277,7 +264,7 @@ const ImageCarousel: React.FC<ImageCarouselProps> = ({
             onPress={() => handleMediaPress(index)}
           >
             <Image
-              source={{ uri: item }}
+              source={{ uri: mediaItem.url }}
               style={styles.image}
               resizeMode="cover"
             />
@@ -298,7 +285,7 @@ const ImageCarousel: React.FC<ImageCarouselProps> = ({
         paginationStyle={styles.pagination}
         dotStyle={styles.paginationDot}
         activeDotStyle={styles.activeDot}
-        showsButtons={images.length > 1}
+        showsButtons={mediaItems.length > 1}
         nextButton={
           <View style={styles.navButton}>
             <Ionicons name="chevron-forward" size={24} color="#FFFFFF" />
@@ -314,15 +301,15 @@ const ImageCarousel: React.FC<ImageCarouselProps> = ({
         loadMinimalSize={2}
         removeClippedSubviews={Platform.OS === 'android'}
       >
-        {images.map((item, index) => (
+        {mediaItems.map((mediaItem, index) => (
           <View key={index} style={styles.slide}>
-            {renderSlideContent(item, index)}
+            {renderSlideContent(mediaItem, index)}
             
             {/* Delete button for individual item */}
             {canDeleteFile && canDeleteFile(index) && (
               <TouchableOpacity
                 style={styles.deleteButton}
-                onPress={() => handleDeleteFile(item, index)}
+                onPress={() => handleDeleteFile(mediaItem, index)}
                 activeOpacity={0.8}
               >
                 <View style={styles.deleteButtonInner}>
@@ -337,7 +324,7 @@ const ImageCarousel: React.FC<ImageCarouselProps> = ({
       {/* Full-screen image viewer */}
       <ImageViewing
         images={imageViewerImages}
-        imageIndex={Math.max(0, imageViewerImages.findIndex(img => img.uri === fullscreenMedia))}
+        imageIndex={Math.max(0, imageViewerImages.findIndex(img => img.uri === fullscreenMedia?.url))}
         visible={isImageViewVisible}
         onRequestClose={() => setIsImageViewVisible(false)}
         swipeToCloseEnabled={true}
@@ -366,7 +353,7 @@ const ImageCarousel: React.FC<ImageCarouselProps> = ({
           <View style={styles.fullscreenVideoContainer}>
             <Video
               ref={fullscreenVideoRef}
-              source={{ uri: fullscreenMedia }}
+              source={{ uri: fullscreenMedia?.url || '' }}
               style={styles.fullscreenVideo}
               resizeMode="contain"
               controls={true}
@@ -396,13 +383,13 @@ const ImageCarousel: React.FC<ImageCarouselProps> = ({
               <Ionicons name="close" size={24} color="white" />
             </TouchableOpacity>
             <Text style={styles.fullscreenTitle} numberOfLines={1}>
-              {getFileName(fullscreenMedia)}
+              {getFileName(fullscreenMedia?.url || '')}
             </Text>
           </View>
           
           <View style={styles.fullscreenDocumentContainer}>
             <WebView
-              source={{ uri: `https://docs.google.com/gview?embedded=true&url=${encodeURIComponent(fullscreenMedia)}` }}
+              source={{ uri: `https://docs.google.com/gview?embedded=true&url=${encodeURIComponent(fullscreenMedia?.url || '')}` }}
               style={styles.fullscreenDocument}
               startInLoadingState={true}
               renderLoading={() => (
