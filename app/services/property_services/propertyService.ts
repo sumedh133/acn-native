@@ -127,7 +127,7 @@ export const updateProperty = async (
 };
 
 /**
- * Update a whole property object by property ID.
+ *dia Update a whole property object by property ID.
  */
 export const updateWholeProperty = async (propertyId: string, updates: Partial<Property>) => {
   const ref = doc(db, INVENTORY_COLLECTION, propertyId);
