@@ -30,6 +30,7 @@ export interface SearchFilters {
   rent?: string[];
   cpId?: string[];
   stage?: string[];
+  builderCategory?: string[];
 
   // Add more filters as needed
   micromarket?: string[];
@@ -184,6 +185,7 @@ class AlgoliaInfiniteSearchService {
       { values: filters.zone, fieldName: "zone" },
       { values: filters.cpId, fieldName: "cpId" },
       { values: filters.stage, fieldName: "stage" },
+      { values: filters.builderCategory, fieldName: "builderCategory" },
     ];
 
     const filterParts = filterConfigs

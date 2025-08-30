@@ -70,9 +70,9 @@ export default function PropertyFilters({
     new Animated.Value(activeTab === "rental" ? 1 : 0)
   ).current;
 
-  const { 
-    selectedSort, 
-    openSortPopup, 
+  const {
+    selectedSort,
+    openSortPopup,
     setSelectedSort,
     // Status filter methods
     selectedStatus,
@@ -83,7 +83,7 @@ export default function PropertyFilters({
     openCategoryPopup,
     setSelectedCategory,
   } = useContext(ScrollContext);
-  
+
   const prevSortByRef = useRef(sortBy);
   const prevSelectedSortRef = useRef(selectedSort);
 
@@ -128,6 +128,49 @@ export default function PropertyFilters({
       clearTimeout(handler);
     };
   }, [searchText, query, onQueryChange, userType]);
+
+  // Add after the existing sort useEffect
+  useEffect(() => {
+    // Handle status changes from context
+    if (
+      selectedStatus &&
+      selectedStatus !== "all" &&
+      selectedStatus !== filters.stage?.join(",")
+    ) {
+      const newFilters = { ...filters, stage: [selectedStatus] };
+      onFiltersChange(newFilters);
+    }
+    // Remove filter if "all" is selected
+    else if (
+      selectedStatus === "all" &&
+      filters.stage &&
+      filters.stage.length > 0
+    ) {
+      const newFilters = { ...filters, stage: [] };
+      onFiltersChange(newFilters);
+    }
+  }, [selectedStatus, filters.stage, onFiltersChange]);
+
+  useEffect(() => {
+    // Handle category changes from context
+    if (
+      selectedCategory &&
+      selectedCategory !== "all" &&
+      selectedCategory !== filters.builderCategory?.join(",")
+    ) {
+      const newFilters = { ...filters, builderCategory: [selectedCategory] };
+      onFiltersChange(newFilters);
+    }
+    // Remove filter if "all" is selected
+    else if (
+      selectedCategory === "all" &&
+      filters.builderCategory &&
+      filters.builderCategory.length > 0
+    ) {
+      const newFilters = { ...filters, builderCategory: [] };
+      onFiltersChange(newFilters);
+    }
+  }, [selectedCategory, filters.builderCategory, onFiltersChange]);
 
   useEffect(() => {
     // Sync selectedSort with sortBy prop (when sortBy changes from parent)
