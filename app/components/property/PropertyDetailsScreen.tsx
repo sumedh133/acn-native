@@ -648,7 +648,7 @@ export default function PropertyDetailsScreen() {
 
   return (
     <View style={styles.container}>
-      <FormPreview config={inventoryFormConfig} data={property} previewType="listing"/>
+      <FormPreview config={inventoryFormConfig} data={property} previewType="listing" />
       <ShareModal
         property={property}
         agentData={agentData}
