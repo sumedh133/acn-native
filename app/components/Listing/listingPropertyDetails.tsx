@@ -24,15 +24,15 @@ interface FormPreviewProps {
   previewType: string;
 }
 
-export const FormPreview: React.FC<FormPreviewProps> = ({ 
-  config, 
-  data, 
+export const FormPreview: React.FC<FormPreviewProps> = ({
+  config,
+  data,
   onMediaUpdate,
   agentData,
   propId,
   previewType
 }) => {
-  
+
   const getFieldValue = (obj: any, path: string) =>
     path.split(".").reduce((acc, key) => acc?.[key], obj);
 
@@ -77,20 +77,25 @@ export const FormPreview: React.FC<FormPreviewProps> = ({
     })
     .filter((s) => s.stepValues.length > 0);
 
-  // Get legacy images (if any) and current media
-  const legacyImages: string[] = []; // Add any legacy image handling here if needed
-  const currentMedia: MediaUploadData = data.media || { photos: [], videos: [], documents: [] };
+  const legacyImages: string[] = []; 
+  const currentMedia: MediaUploadData = {
+    photos: data.media?.photos ?? [],
+    videos: data.media?.videos ?? [],
+    documents: data.media?.documents ?? [],
+  };
+
+  console.log("Shree Krishna", currentMedia)
 
   return (
     <ScrollView className="flex-1 bg-gray-50">
-      <PropertyImages 
+      <PropertyImages
         images={legacyImages}
         currentMedia={currentMedia}
         onMediaUpdate={onMediaUpdate}
         propId={propId}
         agentData={agentData}
       />
-      <BasicPropertyInfo data={data} previewType={previewType}/>
+      <BasicPropertyInfo data={data} previewType={previewType} />
 
       {processedSteps.map((step) => {
         if (step.title === "Basic Details") return;
