@@ -31,6 +31,7 @@ interface BasePropertyFiltersProps {
   onSortChange: (sortBy: string) => void;
   loading?: boolean;
   showTabs?: boolean; // 👈 discriminator
+  isMyBusinessPage?: boolean; // 👈 new prop
 }
 
 // Case when tabs are shown
@@ -49,7 +50,6 @@ interface WithoutTabsProps extends BasePropertyFiltersProps {
 
 export type PropertyFiltersProps = WithTabsProps | WithoutTabsProps;
 
-
 export default function PropertyFilters({
   handleToggleMoreFilters,
   selectedLandmark,
@@ -62,15 +62,28 @@ export default function PropertyFilters({
   onSortChange,
   activeTab,
   setActiveTab,
-  showTabs = true, 
+  showTabs = true,
+  isMyBusinessPage = false,
 }: PropertyFiltersProps) {
   const [searchText, setSearchText] = useState(query);
   const slideAnim = useRef(
     new Animated.Value(activeTab === "rental" ? 1 : 0)
   ).current;
 
-  const { selectedSort, openSortPopup, setSelectedSort } =
-    useContext(ScrollContext);
+  const {
+    selectedSort,
+    openSortPopup,
+    setSelectedSort,
+    // Status filter methods
+    selectedStatus,
+    openStatusPopup,
+    setSelectedStatus,
+    // Category filter methods
+    selectedCategory,
+    openCategoryPopup,
+    setSelectedCategory,
+  } = useContext(ScrollContext);
+
   const prevSortByRef = useRef(sortBy);
   const prevSelectedSortRef = useRef(selectedSort);
 
@@ -116,6 +129,48 @@ export default function PropertyFilters({
     };
   }, [searchText, query, onQueryChange, userType]);
 
+  // Add after the existing sort useEffect
+  useEffect(() => {
+    // Handle status changes from context
+    if (
+      selectedStatus &&
+      selectedStatus !== "all" &&
+      selectedStatus !== filters.stage?.join(",")
+    ) {
+      const newFilters = { ...filters, stage: [selectedStatus] };
+      onFiltersChange(newFilters);
+    }
+    // Remove filter if "all" is selected
+    else if (
+      selectedStatus === "all" &&
+      filters.stage &&
+      filters.stage.length > 0
+    ) {
+      const newFilters = { ...filters, stage: [] };
+      onFiltersChange(newFilters);
+    }
+  }, [selectedStatus, filters.stage, onFiltersChange]);
+
+  useEffect(() => {
+    // Handle category changes from context
+    if (
+      selectedCategory &&
+      selectedCategory !== "all" &&
+      selectedCategory !== filters.builderCategory?.join(",")
+    ) {
+      const newFilters = { ...filters, builderCategory: [selectedCategory] };
+      onFiltersChange(newFilters);
+    }
+    // Remove filter if "all" is selected
+    else if (
+      selectedCategory === "all" &&
+      filters.builderCategory &&
+      filters.builderCategory.length > 0
+    ) {
+      const newFilters = { ...filters, builderCategory: [] };
+      onFiltersChange(newFilters);
+    }
+  }, [selectedCategory, filters.builderCategory, onFiltersChange]);
 
   useEffect(() => {
     // Sync selectedSort with sortBy prop (when sortBy changes from parent)
@@ -174,6 +229,80 @@ export default function PropertyFilters({
     handleToggleMoreFilters();
   };
 
+  // Render the business page version
+  if (isMyBusinessPage) {
+    return (
+      <View className="px-4 pt-3">
+        {/* Search Input - Full width */}
+        <View className="flex-row items-center bg-white border border-[#B5B3B3] rounded-lg px-3 h-12 mb-3">
+          <NewSearchIcon style={{ marginRight: 8 }} />
+          <TextInput
+            className="flex-1 text-sm text-gray-700"
+            placeholder="Search by project, micro market"
+            value={searchText}
+            onChangeText={setSearchText}
+            placeholderTextColor="#9CA3AF"
+          />
+        </View>
+
+        {/* Filter Buttons Row */}
+        <View className="flex-row items-center space-x-2 mb-2">
+          {/* Status Dropdown */}
+          <TouchableOpacity
+            onPress={openStatusPopup}
+            className="flex-row items-center justify-center rounded-lg border border-[#B5B3B3] bg-white px-4 h-10"
+          >
+            <Text className="text-sm text-gray-700 mr-2">Status</Text>
+            <View className="rotate-90">
+              <Text className="text-gray-500">⌄</Text>
+            </View>
+          </TouchableOpacity>
+
+          {/* Category Dropdown */}
+          <TouchableOpacity
+            onPress={openCategoryPopup}
+            className="flex-row items-center justify-center rounded-lg border border-[#B5B3B3] bg-white px-4 h-10"
+          >
+            <Text className="text-sm text-gray-700 mr-2">Category</Text>
+            <View className="rotate-90">
+              <Text className="text-gray-500">⌄</Text>
+            </View>
+          </TouchableOpacity>
+
+          {/* Sort Dropdown */}
+          <TouchableOpacity
+            onPress={openSortPopup}
+            className="flex-row items-center justify-center rounded-lg border border-[#B5B3B3] bg-white px-4 h-10"
+          >
+            <Text className="text-sm text-gray-700 mr-2">Sort</Text>
+            <View className="rotate-90">
+              <Text className="text-gray-500">⌄</Text>
+            </View>
+          </TouchableOpacity>
+
+          {/* Filter Icon */}
+          <TouchableOpacity
+            onPress={handleMoreFilters}
+            className="h-10 w-10 items-center justify-center rounded-lg border border-[#B5B3B3] bg-white"
+          >
+            <FilterIcon />
+          </TouchableOpacity>
+        </View>
+
+        {/* Current Refinements */}
+        <View className="flex-row -ml-3">
+          <CustomCurrentRefinements
+            selectedLandmark={selectedLandmark}
+            setSelectedLandmark={setSelectedLandmark}
+            filters={filters}
+            onFiltersChange={onFiltersChange}
+          />
+        </View>
+      </View>
+    );
+  }
+
+  // Render the original version (default)
   return (
     <View className="px-4 pt-3">
       {/* 👇 Conditionally render ToggleTabs based on prop */}

@@ -14,7 +14,7 @@ export interface SearchFilters {
   assetType?: string[];
   commercialSubType?: string[];
   apartmentType?: string[];
-  posession?: string[];
+  possession?: string[];
   facing?: string[];
   floor?: string[];
   furnishing?: string[];
@@ -30,6 +30,7 @@ export interface SearchFilters {
   rent?: string[];
   cpId?: string[];
   stage?: string[];
+  builderCategory?: string[];
 
   // Add more filters as needed
   micromarket?: string[];
@@ -179,11 +180,12 @@ class AlgoliaInfiniteSearchService {
         values: filters.nonVegAllowed,
         fieldName: "tenantPreferences.nonVegAllowed",
       },
-      { values: filters.posession, fieldName: "posession" },
+      { values: filters.possession, fieldName: "possession" },
       { values: filters.availability, fieldName: "availability" },
       { values: filters.zone, fieldName: "zone" },
       { values: filters.cpId, fieldName: "cpId" },
       { values: filters.stage, fieldName: "stage" },
+      { values: filters.builderCategory, fieldName: "builderCategory" },
     ];
 
     const filterParts = filterConfigs

@@ -613,7 +613,7 @@ const MoreFilters = ({
 
             {filters.listingType?.includes("resale") && (
               <FilterChipList
-                title={`Posession`}
+                title={`possession`}
                 items={possessionOptions}
                 attribute="possession"
                 localFilters={localFilters}

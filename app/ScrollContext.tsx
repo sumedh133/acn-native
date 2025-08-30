@@ -28,6 +28,20 @@ interface ScrollContextType {
   openSortPopup: () => void;
   closeSortPopup: () => void;
   setSelectedSort: (value: string) => void;
+
+  // Status filter popup
+  showStatusPopup: boolean;
+  selectedStatus: string | null;
+  openStatusPopup: () => void;
+  closeStatusPopup: () => void;
+  setSelectedStatus: (value: string) => void;
+
+  // Category filter popup
+  showCategoryPopup: boolean;
+  selectedCategory: string | null;
+  openCategoryPopup: () => void;
+  closeCategoryPopup: () => void;
+  setSelectedCategory: (value: string) => void;
 }
 
 export const ScrollContext = createContext<ScrollContextType>({
@@ -53,6 +67,18 @@ export const ScrollContext = createContext<ScrollContextType>({
   openSortPopup: () => {},
   closeSortPopup: () => {},
   setSelectedSort: () => {},
+
+  showStatusPopup: false,
+  selectedStatus: null,
+  openStatusPopup: () => {},
+  closeStatusPopup: () => {},
+  setSelectedStatus: () => {},
+
+  showCategoryPopup: false,
+  selectedCategory: null,
+  openCategoryPopup: () => {},
+  closeCategoryPopup: () => {},
+  setSelectedCategory: () => {},
 });
 
 export const ScrollProvider: React.FC<{ children: React.ReactNode }> = ({
@@ -80,11 +106,29 @@ export const ScrollProvider: React.FC<{ children: React.ReactNode }> = ({
   const [notificationHeightValue, setNotificationHeight] =
     useState<number | null>(null);
 
+  // Sort popup state
   const [showSortPopup, setShowSortPopup] = useState(false);
   const [selectedSort, setSelectedSort] = useState<string | null>("relevance");
 
+  // Status filter popup state
+  const [showStatusPopup, setShowStatusPopup] = useState(false);
+  const [selectedStatus, setSelectedStatus] = useState<string | null>(null);
+
+  // Category filter popup state
+  const [showCategoryPopup, setShowCategoryPopup] = useState(false);
+  const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
+
+  // Sort popup methods
   const openSortPopup = () => setShowSortPopup(true);
   const closeSortPopup = () => setShowSortPopup(false);
+
+  // Status filter popup methods
+  const openStatusPopup = () => setShowStatusPopup(true);
+  const closeStatusPopup = () => setShowStatusPopup(false);
+
+  // Category filter popup methods
+  const openCategoryPopup = () => setShowCategoryPopup(true);
+  const closeCategoryPopup = () => setShowCategoryPopup(false);
 
   // Safe fallbacks
   const safeFooterHeight = footerHeight ?? 60;
@@ -305,11 +349,27 @@ export const ScrollProvider: React.FC<{ children: React.ReactNode }> = ({
         setNotificationHeight,
         notificationHeightValue,
         notificationHeight,
+        
+        // Sort popup
         showSortPopup,
         selectedSort,
         openSortPopup,
         closeSortPopup,
         setSelectedSort,
+
+        // Status filter popup
+        showStatusPopup,
+        selectedStatus,
+        openStatusPopup,
+        closeStatusPopup,
+        setSelectedStatus,
+
+        // Category filter popup
+        showCategoryPopup,
+        selectedCategory,
+        openCategoryPopup,
+        closeCategoryPopup,
+        setSelectedCategory,
       }}
     >
       {children}
