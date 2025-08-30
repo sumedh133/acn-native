@@ -6,21 +6,16 @@ export const rentalCommercialProperties: FormField[] = [
     label: "Amenities",
     type: "multiselect",
     options: [
-      { label: "Maintenance Staff", value: "Maintenance Staff" },
-      { label: "Water Storage", value: "Water Storage" },
-      { label: "Visitor Parking", value: "Visitor Parking" },
-      { label: "ATM", value: "ATM" },
-      { label: "CCTV Surveillance", value: "CCTV Surveillance" },
-      { label: "Cafeteria / Food Court", value: "Cafeteria / Food Court" },
-      { label: "Lifts", value: "Lifts" },
-      { label: "Security", value: "Security" },
-
-      { label: "Power Backup", value: "Power Backup" },
-
-      {
-        label: "Wheel-Chair Accessibility",
-        value: "Wheel-Chair Accessibility",
-      },
+      { label: "Maintenance Staff", value: "maintenance staff" },
+      { label: "Water Storage", value: "water storage" },
+      { label: "Visitor Parking", value: "visitor parking" },
+      { label: "ATM", value: "atm" },
+      { label: "CCTV Surveillance", value: "cctv surveillance" },
+      { label: "Cafeteria / Food Court", value: "cafeteria / food court" },
+      { label: "Lifts", value: "lifts" },
+      { label: "Security", value: "security" },
+      { label: "Power Backup", value: "power backup" },
+      { label: "Wheel-Chair Accessibility", value: "wheel-chair accessibility" },
     ],
     dependsOn: {
       conditions: [

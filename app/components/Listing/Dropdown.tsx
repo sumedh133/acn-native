@@ -20,7 +20,7 @@ interface DropdownOption {
 interface DropdownSelectProps {
   value: string | null;
   setValue: (value: string | null) => void;
-  title: string;
+  title?: string;
   options: DropdownOption[];
   placeholder?: string;
   required?: boolean;
@@ -84,8 +84,8 @@ const DropdownSelect = ({
   // Filter options based on search term
   const filteredOptions = searchTerm
     ? options.filter((option) =>
-        option.label.toLowerCase().includes(searchTerm.toLowerCase())
-      )
+      option.label.toLowerCase().includes(searchTerm.toLowerCase())
+    )
     : options;
 
   // Find the selected option label to display
@@ -95,10 +95,11 @@ const DropdownSelect = ({
 
   return (
     <View style={styles.section}>
-      <View style={styles.headingContainer}>
-        <Text style={styles.sectionHeading}>{title}</Text>
-        {required && <Text style={styles.compulsoryStar}>*</Text>}
-      </View>
+      {title && (
+        <View style={styles.headingContainer}>
+          <Text style={styles.sectionHeading}>{title}</Text>
+          {required && <Text style={styles.compulsoryStar}>*</Text>}
+        </View>)}
 
       <TouchableOpacity
         style={styles.dropdownButton}
@@ -200,9 +201,9 @@ const styles = StyleSheet.create({
   },
   dropdownButton: {
     width: "100%",
-    height: 48,
-    borderRadius: 8,
-    borderWidth: 1,
+    height: 32,
+    borderRadius: 5,
+    borderWidth: 1.5,
     borderColor: "#E1E3E6",
     backgroundColor: "#FFFFFF",
     paddingHorizontal: 12,

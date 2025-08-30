@@ -5,15 +5,26 @@ export const resaleResidentialProperties: FormField[] = [
     id: "uds",
     label: "UDS",
     type: "number",
-    placeholder: "Please enter UDS value",
+    placeholder: "1500",
     dependsOn: {
       conditions: [
         { field: "listingType", values: ["resale"] },
         { field: "propertyType", values: ["residential"] },
-        { field: "assetType", values: ["apartment","villa","villament","independent house","row house"] },
+        {
+          field: "assetType",
+          values: [
+            "apartment",
+            "villa",
+            "villament",
+            "independent house",
+            "row house",
+          ],
+        },
       ],
       logicOperator: "AND",
     },
+    keyBoardType: "numeric",
+    suffix: "Sqft",
     colspan: 12,
   },
   {
@@ -29,7 +40,6 @@ export const resaleResidentialProperties: FormField[] = [
     },
     colspan: 12,
   },
-  
   {
     id: "features.exclusive",
     label: "Exclusive",
@@ -43,7 +53,6 @@ export const resaleResidentialProperties: FormField[] = [
     },
     colspan: 12,
   },
-  
   {
     id: "features.ocReceived",
     label: "OC Received",
@@ -52,27 +61,44 @@ export const resaleResidentialProperties: FormField[] = [
       conditions: [
         { field: "listingType", values: ["resale"] },
         { field: "propertyType", values: ["residential"] },
-        { field: "assetType", values: ["apartment","villa","villament","independent house","row house"] },
+        {
+          field: "assetType",
+          values: [
+            "apartment",
+            "villa",
+            "villament",
+            "independent house",
+            "row house",
+          ],
+        },
       ],
       logicOperator: "AND",
     },
     colspan: 12,
   },
-
   {
     id: "leagalInfo.buildingKhata",
     label: "Building Khata",
     type: "select",
     placeholder: "Please select building khata type",
     options: [
-      { label: "A-Khata", value: "A" },
-      { label: "B-Khata", value: "B" },
+      { label: "A-Khata", value: "a" },
+      { label: "B-Khata", value: "b" },
     ],
     dependsOn: {
       conditions: [
         { field: "listingType", values: ["resale"] },
         { field: "propertyType", values: ["residential"] },
-        { field: "assetType", values: ["apartment","villa","villament","independent house","row house"] },
+        {
+          field: "assetType",
+          values: [
+            "apartment",
+            "villa",
+            "villament",
+            "independent house",
+            "row house",
+          ],
+        },
       ],
       logicOperator: "AND",
     },
@@ -84,8 +110,8 @@ export const resaleResidentialProperties: FormField[] = [
     type: "select",
     placeholder: "Please select land khata type",
     options: [
-      { label: "A-Khata", value: "A" },
-      { label: "B-Khata", value: "B" },
+      { label: "A-Khata", value: "a" },
+      { label: "B-Khata", value: "b" },
     ],
     dependsOn: {
       conditions: [
@@ -104,13 +130,21 @@ export const resaleResidentialProperties: FormField[] = [
       conditions: [
         { field: "listingType", values: ["resale"] },
         { field: "propertyType", values: ["residential"] },
-        { field: "assetType", values: ["apartment","villa","villament","independent house","row house"] },
+        {
+          field: "assetType",
+          values: [
+            "apartment",
+            "villa",
+            "villament",
+            "independent house",
+            "row house",
+          ],
+        },
       ],
       logicOperator: "AND",
     },
     colspan: 12,
   },
-
   {
     id: "legalInfo.biappaApproved",
     label: "BIAPPA Approved Khata",
@@ -146,45 +180,56 @@ export const resaleResidentialProperties: FormField[] = [
       conditions: [
         { field: "listingType", values: ["resale"] },
         { field: "propertyType", values: ["residential"] },
-        { field: "assetType", values: ["apartment","villa","villament","independent house","row house"] },
+        {
+          field: "assetType",
+          values: [
+            "apartment",
+            "villa",
+            "villament",
+            "independent house",
+            "row house",
+          ],
+        },
       ],
       logicOperator: "AND",
     },
     colspan: 6,
   },
-
   {
     id: "amenities",
     label: "Amenities",
     type: "multiselect",
     options: [
-      { label: "Gym", value: "Gym" },
-      { label: "Lifts", value: "Lifts" },
-      { label: "Water Storage", value: "Water Storage" },
-      { label: "Visitor Parking", value: "Visitor Parking" },
-      { label: "Service Lifts", value: "Service Lifts" },
-      { label: "Pool", value: "Pool" },
-      { label: "CCTV Surveillance", value: "CCTV Surveillance" },
-      { label: "Security", value: "Security" },
-
-      { label: "Power Backup", value: "Power Backup" },
-
-      {
-        label: "Club-House",
-        value: "Club-House",
-      },
+      { label: "Gym", value: "gym" },
+      { label: "Lifts", value: "lifts" },
+      { label: "Water Storage", value: "water storage" },
+      { label: "Visitor Parking", value: "visitor parking" },
+      { label: "Service Lifts", value: "service lifts" },
+      { label: "Pool", value: "pool" },
+      { label: "CCTV Surveillance", value: "cctv surveillance" },
+      { label: "Security", value: "security" },
+      { label: "Power Backup", value: "power backup" },
+      { label: "Club-House", value: "club-house" },
     ],
     dependsOn: {
       conditions: [
         { field: "listingType", values: ["resale"] },
         { field: "propertyType", values: ["residential"] },
-        { field: "assetType", values: ["apartment","villa","villament","independent house","row house"] },
+        {
+          field: "assetType",
+          values: [
+            "apartment",
+            "villa",
+            "villament",
+            "independent house",
+            "row house",
+          ],
+        },
       ],
       logicOperator: "AND",
     },
     colspan: 12,
   },
-
   {
     id: "extraDetails",
     label: "Extra Details",

@@ -4,14 +4,30 @@ import { PropertyFormScreen } from "@/app/components/addInventoryForm/PropertyFo
 import { Property } from "../types";
 import { createProperty } from "../services/property_services/propertyService";
 import { convertMonthYearToUnix } from "../helpers/format/format";
+import { showErrorToast, showSuccessToast } from "@/utils/toastUtils";
+import { useLocalSearchParams } from "expo-router";
 
 type UIProperty = Omit<Property, "handOverDate"> & {
   handOverDate?: string;
 };
 
 const AddInventoryForm = () => {
-  const [showForm, setShowForm] = useState(true);
-  const [editData, setEditData] = useState<Partial<UIProperty> | undefined>();
+  const { item } = useLocalSearchParams();
+
+  const [editData, setEditData] = useState<Partial<UIProperty> | undefined>(() => {
+    if (item) {
+      try {
+        return JSON.parse(item as string) as Partial<UIProperty>;
+      } catch (error) {
+        console.error("Invalid JSON in item:", item);
+        return undefined;
+      }
+    }
+    return undefined;
+  });
+
+
+  console.log("Hare Krishna", editData)
 
   const normalizePropertyBeforeSubmit = (
     data: Partial<UIProperty>
@@ -23,7 +39,7 @@ const AddInventoryForm = () => {
       handOverDate:
         typeof temp.handOverDate === "string"
           ? convertMonthYearToUnix(temp.handOverDate) ?? undefined
-          : temp.handOverDate, // already number or undefined
+          : temp.handOverDate,
     };
 
     return normalized;
@@ -32,7 +48,7 @@ const AddInventoryForm = () => {
   const handleFormComplete = async (data: Partial<UIProperty>) => {
     try {
       console.log("Raw form data:", data);
-      Alert.alert("Debug Data", JSON.stringify(data, null, 2).slice(0, 300)); // show trimmed data
+      Alert.alert("Debug Data", JSON.stringify(data, null, 2).slice(0, 300));
 
       const normalizedData = normalizePropertyBeforeSubmit(data);
 
@@ -47,55 +63,27 @@ const AddInventoryForm = () => {
         // update flow
         console.log("Cleaned update data:", cleanData);
 
-        Alert.alert(
-          "Success",
-          `Property updated successfully!\nID: ${editData.propertyId}`,
-          [{ text: "OK", onPress: () => setShowForm(false) }]
-        );
+        showSuccessToast(`Property updated successfully!\n`)
       } else {
         // create flow
         const newProperty = await createProperty(
           cleanData as Omit<Property, "propertyId">
         );
-        console.log("Cleaned new property:", newProperty);
-
-        Alert.alert(
-          "Success",
-          `Property added successfully!\nID: ${newProperty.propertyId}`,
-          [{ text: "OK", onPress: () => setShowForm(false) }]
-        );
+        showSuccessToast(`Property added successfully!\nID: ${newProperty.propertyId}`
+        )
       }
     } catch (error: any) {
+      if (editData) { showSuccessToast(`Something went wrong while updating the property.`) }
+      else { showSuccessToast(`Something went wrong while saving the property.`) }
       console.error("Error saving property:", error);
-      Alert.alert("Error", "Something went wrong while saving the property.");
     }
   };
 
-  const handleFormCancel = () => {
-    Alert.alert(
-      "Cancel",
-      "Are you sure you want to cancel? All changes will be lost.",
-      [
-        { text: "Continue Editing", style: "cancel" },
-        {
-          text: "Yes, Cancel",
-          style: "destructive",
-          onPress: () => setShowForm(false),
-        },
-      ]
-    );
-  };
-
-  if (!showForm) {
-    // Return your main app UI here
-    return null;
-  }
 
   return (
     <PropertyFormScreen
       initialData={editData}
       onComplete={handleFormComplete}
-      onCancel={handleFormCancel}
       isEdit={!!editData}
     />
   );

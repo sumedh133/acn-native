@@ -21,6 +21,7 @@ interface FormPreviewProps {
   onMediaUpdate?: (media: MediaUploadData) => void;
   agentData?: any;
   propId?: string;
+  previewType: string;
 }
 
 export const FormPreview: React.FC<FormPreviewProps> = ({ 
@@ -28,7 +29,8 @@ export const FormPreview: React.FC<FormPreviewProps> = ({
   data, 
   onMediaUpdate,
   agentData,
-  propId 
+  propId,
+  previewType
 }) => {
   
   const getFieldValue = (obj: any, path: string) =>
@@ -88,7 +90,7 @@ export const FormPreview: React.FC<FormPreviewProps> = ({
         propId={propId}
         agentData={agentData}
       />
-      <BasicPropertyInfo data={data} />
+      <BasicPropertyInfo data={data} previewType={previewType}/>
 
       {processedSteps.map((step) => {
         if (step.title === "Basic Details") return;
@@ -113,7 +115,7 @@ export const FormPreview: React.FC<FormPreviewProps> = ({
                 data={data}
                 displayType={displayType}
               />
-              <View className="bg-white px-6 py-2 rounded-lg">
+              <View className="bg-white px-6 py-4 rounded-lg">
                 <LocationSection data={data} />
               </View>
             </>
