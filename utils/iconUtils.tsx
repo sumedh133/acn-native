@@ -56,6 +56,11 @@ import Step3Gray from '../assets/icons/svg/AddInventory/StepIcons/step3_gray.svg
 import Step4Gray from '../assets/icons/svg/AddInventory/StepIcons/step4_gray.svg';
 import Step5Gray from '../assets/icons/svg/AddInventory/StepIcons/step5_gray.svg';
 
+
+//listing page image
+import deleteIcon from "../assets/icons/svg/PropertyListing/deleteIcon.svg";
+import crossIcon from "../assets/icons/svg/PropertyListing/crossIcon.svg";
+
 // map string keys to icon components
 export const iconMap: Record<string, React.FC<any>> = {
   micromarket: MicromarketIcon,
@@ -96,6 +101,10 @@ export const iconMap: Record<string, React.FC<any>> = {
   uds: UdsIcon,
 
   apartmentType: ApartmentTypeIcon,
+
+  //images
+  deleteIcon: deleteIcon,
+  crossIcon: crossIcon
 };
 
 

@@ -257,6 +257,7 @@ export const PropertyFormScreen: React.FC<PropertyFormScreenProps> = ({
    * Validate all fields in the current step.
    */
   const validateCurrentStep = (): boolean => {
+    return true;
     const step = visibleSteps[currentStepIndex];
     if (!step) return false;
 
