@@ -6,6 +6,7 @@ import { createProperty } from "../services/property_services/propertyService";
 import { convertMonthYearToUnix } from "../helpers/format/format";
 import { showErrorToast, showSuccessToast } from "@/utils/toastUtils";
 import { useLocalSearchParams } from "expo-router";
+import { router } from "expo-router";
 
 type UIProperty = Omit<Property, "handOverDate"> & {
   handOverDate?: string;
@@ -66,8 +67,9 @@ const AddInventoryForm = () => {
         const newProperty = await createProperty(
           cleanData as Omit<Property, "propertyId">
         );
-        showSuccessToast(`Property added successfully!\nID: ${newProperty.propertyId}`
-        )
+        showSuccessToast("Property sent for verification!");
+        router.dismissAll();
+        router.replace("/(tabs)/dashboardTab");
       }
     } catch (error: any) {
       if (editData) { showErrorToast(`Something went wrong while updating the property.`) }
