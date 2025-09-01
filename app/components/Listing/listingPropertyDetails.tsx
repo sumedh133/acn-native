@@ -94,6 +94,7 @@ export const FormPreview: React.FC<FormPreviewProps> = ({
         onMediaUpdate={onMediaUpdate}
         propId={propId}
         agentData={agentData}
+        previewType={previewType}
       />
       <BasicPropertyInfo data={data} previewType={previewType} />
 

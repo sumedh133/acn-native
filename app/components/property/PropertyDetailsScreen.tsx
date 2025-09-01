@@ -64,6 +64,7 @@ import {
   toCapitalizedWords,
 } from "@/app/helpers/common";
 import { inventoryFormConfig } from "@/app/config/AddInventoryFormConfig/inventoryFormConfig";
+import Share from "@/assets/icons/svg/PropertyFolder/shareButton.svg";
 
 const { width } = Dimensions.get("window");
 
@@ -474,19 +475,23 @@ export default function PropertyDetailsScreen() {
       case "properties":
         return (
           <>
+
             <TouchableOpacity
-              style={styles.secondaryButton}
-              onPress={handleOpenDriveDetails}
-            >
-              <DriveIcon />
-              <Text style={styles.secondaryButtonText}>Open Details</Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={styles.primaryButton}
+              className="flex-1 bg-[#153E3B] rounded-[4px] py-2 px-5 flex-row justify-center items-center"
               onPress={handleEnquireNowBtn}
             >
-              <Ionicons name="call-outline" size={20} color="white" />
-              <Text style={styles.primaryButtonText}>Enquire Now</Text>
+              <Ionicons name="call-outline" size={16} color="white" />
+              <Text className="text-xs text-white font-medium ml-1">
+                Enquire Now
+              </Text>
+            </TouchableOpacity>
+            {/* share button*/}
+            <TouchableOpacity
+              className="w-[34px] h-[34px] rounded p-1.5 bg-[#FFFFFF] justify-center items-center border border-[#C3C3C3]"
+              onPress={handleShareButtonPress}
+            >
+              <Share />
+
             </TouchableOpacity>
           </>
         );
@@ -685,14 +690,17 @@ export default function PropertyDetailsScreen() {
         onGoPremium={handleGoPremium}
         onBuyCredits={handleBuyCredits}
       />
+      {parent !== "properties" && (<>
 
-      {/* Fixed share button */}
-      <TouchableOpacity
-        style={styles.shareButton}
-        onPress={handleShareButtonPress}
-      >
-        <ShareIconInsidePropertyDetails />
-      </TouchableOpacity>
+        {/* Fixed share button */}
+        < TouchableOpacity
+          style={styles.shareButton}
+          onPress={handleShareButtonPress}
+        >
+          <ShareIconInsidePropertyDetails />
+        </TouchableOpacity>
+      </>)
+      }
 
       {/* Footer Actions */}
       <View style={styles.footer}>{renderFooter()}</View>
