@@ -146,7 +146,7 @@ export const resaleCommercialProperties: FormField[] = [
       ],
       logicOperator: "AND",
     },
-    colspan: 6,
+    colspan: 12,
   },
 
   {

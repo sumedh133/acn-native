@@ -12,7 +12,7 @@ import { DocsToUpload, Places, Property } from "@/app/types";
 import MonthYearPicker from "../Listing/MonthYearPicker";
 import Checkbox from "../Listing/CheckBox";
 import { FormField } from "@/types/FormConfig";
-import DropdownWithInput from "../DropdownInput";
+import TotalAskPrice from "../Listing/TotalAskPrice";
 import TextInputField from "../Listing/TextInput";
 import MultiCheckbox from "../MultiCheckbox";
 import DropdownSelect from "../Listing/Dropdown";
@@ -137,33 +137,6 @@ export const FormRenderer: React.FC<FormRendererProps> = ({
       current = current[keys[i]];
     }
     current[keys[keys.length - 1]] = undefined;
-  };
-
-  /**
-   * Validate a single field.
-   */
-  const validateField = (field: FormField, value: any): string | null => {
-    if (
-      field.required &&
-      (value === "" || value === undefined || value === null)
-    ) {
-      return `${field.label} is required`;
-    }
-
-    if (field.validation) {
-      const { min, max, pattern, message } = field.validation;
-      if (min !== undefined && Number(value) < min) {
-        return message || `${field.label} must be at least ${min}`;
-      }
-      if (max !== undefined && Number(value) > max) {
-        return message || `${field.label} must be at most ${max}`;
-      }
-      if (pattern && !pattern.test(String(value))) {
-        return message || `${field.label} format is invalid`;
-      }
-    }
-
-    return null;
   };
 
   /**
@@ -328,7 +301,10 @@ export const FormRenderer: React.FC<FormRendererProps> = ({
                         : `${currentStep ? "bg-[#FAFAFA]" : "bg-white"
                         } border-[#BABABA]`
                       }`}
-                    onPress={() => setFieldValue(field.id, option.value)}
+                    onPress={() => {
+                      if (value == option.value) { setFieldValue(field.id, null) }
+                      else { setFieldValue(field.id, option.value) }
+                    }}
                   >
                     <Text
                       className={`${currentStep ? "" : "px-[10px]"
@@ -433,7 +409,10 @@ export const FormRenderer: React.FC<FormRendererProps> = ({
               <DropdownSelect
                 value={value as string | null}
                 setValue={(val: string | null) => setFieldValue(field.id, val)}
-                options={field.options || []}
+                options={[
+                  { label: field.placeholder || "Please select", value: null },
+                  ...(field.options ?? [])
+                ]}
                 placeholder={field.placeholder || "Select an option"}
                 required={field.required}
               />
@@ -445,12 +424,12 @@ export const FormRenderer: React.FC<FormRendererProps> = ({
           return (
             <>
               {commonLabel}
-              <DropdownWithInput
-                options={field.options || []}
-                placeholder={field.placeholder || "Select a field"}
-                onChange={(selectedField: string, inputValue: string) => {
-                  setFieldValue(field.id, inputValue);
-                }}
+              <TotalAskPrice
+                initialPrice={formData[field.id as keyof UIProperty] as number | undefined}
+                onPriceChange={(fieldKey, value) =>
+                  setFieldValue(fieldKey, value)
+                }
+                required={false}
               />
               {errorMessage}
             </>

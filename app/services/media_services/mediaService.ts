@@ -3,6 +3,7 @@ import TusFileReader from "./TusFileReader";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import * as FileSystem from "expo-file-system";
 import { AppState, AppStateStatus } from "react-native";
+import pLimit from "p-limit";
 
 // Constants
 const UPLOAD_STORAGE_KEY = "tus_uploads";
@@ -364,20 +365,15 @@ export class MultipleFilesUploadService {
     };
 
     try {
-      if (config.backgroundUpload) {
-        await this.initializeBackgroundUploads();
-      }
+      // if (config.backgroundUpload) {
+      //   await this.initializeBackgroundUploads();
+      // }
 
-      const uploadPromises = files.map((file) =>
-        this.uploadSingleFile(file, config)
-      );
-
-      let results: UploadResult[];
+      let results: UploadResult[] = [];
       if (config.strategy === "sequential") {
-        results = [];
-        for (const promise of uploadPromises) {
+        for (const file of files) {
           try {
-            const result = await promise;
+            const result = await this.uploadSingleFile(file, config);
             results.push(result);
           } catch (error) {
             results.push({
@@ -391,28 +387,28 @@ export class MultipleFilesUploadService {
       } else {
         // Parallel with concurrency limit
         const maxConcurrent = config.maxConcurrent || 3;
-        results = [];
+        const limit = pLimit(maxConcurrent);
+        const limitedUploads = files.map((file) =>
+          limit(() => this.uploadSingleFile(file, config))
+        );
 
-        for (let i = 0; i < uploadPromises.length; i += maxConcurrent) {
-          const batch = uploadPromises.slice(i, i + maxConcurrent);
-          const batchResults = await Promise.allSettled(batch);
+        const settledResults = await Promise.allSettled(limitedUploads);
 
-          for (const result of batchResults) {
-            if (result.status === "fulfilled") {
-              results.push(result.value);
-            } else {
-              results.push({
-                fileId: "unknown",
-                fileName: "unknown",
-                success: false,
-                error:
-                  result.reason instanceof Error
-                    ? result.reason
-                    : new Error(String(result.reason)),
-              });
-            }
+        results = settledResults.map((result) => {
+          if (result.status === "fulfilled") {
+            return result.value;
+          } else {
+            return {
+              fileId: "unknown",
+              fileName: "unknown",
+              success: false,
+              error:
+                result.reason instanceof Error
+                  ? result.reason
+                  : new Error(String(result.reason)),
+            };
           }
-        }
+        });
       }
 
       config.onBatchComplete?.(results);

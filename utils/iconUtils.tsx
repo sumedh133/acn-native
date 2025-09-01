@@ -33,6 +33,9 @@ import UdsIcon from "../assets/icons/svg/PropertyListing/PropertyDetails/udsIcon
 import rentalInfoIcon from "../assets/icons/svg/PropertyListing/PropertyDetails/rentalInfoIcon.svg";
 
 import ApartmentTypeIcon from "../assets/icons/svg/PropertyListing/PropertyDetails/apartmentTypeIcon.svg";
+import plotAreaIcon from "../assets/icons/svg/PropertyListing/PropertyDetails/plotAreaIcon.svg";
+import balconyFacingIcon from "../assets/icons/svg/PropertyListing/PropertyDetails/balconyFacingIcon.svg";
+import structureIcon from "../assets/icons/svg/PropertyListing/PropertyDetails/structureIcon.svg";
 import { DefaultPropertyIcon } from "@/assets/icons/svg/PropertyListing/PropertyDetails/defaultPropertyIcon";
 import { apartmentTypes } from "@/app/components/property/propertyMoreFilters/moreFilterOptions";
 
@@ -69,7 +72,9 @@ export const iconMap: Record<string, React.FC<any>> = {
   type: ApartmentIcon,
   handover: HandoverIcon,
   handOverDate: HandoverIcon,
+  handoverDate: HandoverIcon,
   possession: HandoverIcon,
+  readyToMove: HandoverIcon,
   configuration: ConfigurationIcon,
   bedrooms: ConfigurationIcon,
 
@@ -99,6 +104,9 @@ export const iconMap: Record<string, React.FC<any>> = {
   preferredTenants: PreferredTenantsIcon,
   sbua: SbuaIcon,
   uds: UdsIcon,
+  plotArea: plotAreaIcon,
+  structure: structureIcon,
+  balconyFacing: balconyFacingIcon,
 
   apartmentType: ApartmentTypeIcon,
 

@@ -10,7 +10,7 @@ import {
   SafeAreaView,
   ActivityIndicator,
 } from "react-native";
-import {Property} from "../types";
+import { Property } from "../types";
 import DraftCard from "../components/Listing/DraftCard";
 import {
   collection,
@@ -26,6 +26,7 @@ import { useSelector } from "react-redux";
 import { RootState } from "@/store/store";
 import { logEvent } from "@react-native-firebase/analytics";
 import { analytics } from "../config/firebase";
+import { deleteProperty } from "../services/property_services/propertyService";
 
 const DraftsScreen: React.FC = () => {
   const [drafts, setDrafts] = useState<Property[]>();
@@ -43,7 +44,7 @@ const DraftsScreen: React.FC = () => {
   const deleteDraft = useCallback(
     async (id: string) => {
       try {
-        await deleteDoc(doc(db, "acnQCInventories", id));
+        await deleteProperty(id);
         setDrafts((prev) => prev?.filter((draft) => draft.propertyId !== id));
         logEvent(analytics, "draft_delete", {
           event_category: "drafts",
@@ -114,7 +115,7 @@ const DraftsScreen: React.FC = () => {
   const initialRender = async () => {
     const count = await getCountFromServer(
       query(
-        collection(db, "acnQCInventories"),
+        collection(db, "acnPropertiesTest"),
         where("cpId", "==", cpId),
         where("status", "==", "draft")
       )
@@ -123,7 +124,7 @@ const DraftsScreen: React.FC = () => {
       router.replace("/(tabs)/AddInventoryForm");
     const drafts = await getDocs(
       query(
-        collection(db, "acnQCInventories"),
+        collection(db, "acnPropertiesTest"),
         where("cpId", "==", cpId),
         where("status", "==", "draft")
       )

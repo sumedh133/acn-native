@@ -1,6 +1,6 @@
 export interface GeoLocation {
-  lat?: number;
-  lng?: number;
+  lat?: number | null;
+  lng?: number |null;
 }
 
 // export interface Property {
@@ -132,10 +132,10 @@ export interface Landmark {
 
 export interface Places {
   name: string;
-  lat: number;
-  lng: number;
-  address: string;
-  mapLocation: string;
+  lat: number |null;
+  lng: number|null;
+  address: string |null;
+  mapLocation: string |null;
 }
 
 export interface UploadedFileUrls {
@@ -285,7 +285,7 @@ type noOfBedrooms = 1 | 2 | 3 | 4 | 5 | 6 | 7;
 type noOfBathrooms = 1 | 2 | 3 | 4 | 5 | "5+";
 type noOfBalconies = 0 | 1 | 2 | 3 | 4 | 5 | "5+";
 type balconyFacing = "Inside" | "Outside";
-type possession = "Ready to Move" | "Under Construction";
+type possession = "ready to move" | "under construction";
 type ageOfTheBuilding =
   | "New"
   | "1-5 years"
@@ -384,9 +384,9 @@ export interface Property {
   stage: string;
 
   // Location Information
-  propertyName: string;
+  propertyName: string |null;
   micromarket: string | null;
-  mapLocation: string;
+  mapLocation: string |null;
   zone: string | null;
   communityType: communityType;
   _geoloc: GeoLocation;

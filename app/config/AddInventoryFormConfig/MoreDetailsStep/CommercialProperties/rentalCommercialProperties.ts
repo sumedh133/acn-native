@@ -38,7 +38,7 @@ export const rentalCommercialProperties: FormField[] = [
       ],
       logicOperator: "AND",
     },
-    colspan: 6,
+    colspan: 12,
   },
   {
     id: "extraDetails",

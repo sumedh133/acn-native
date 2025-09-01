@@ -7,6 +7,8 @@ import {
   getDaysDifference,
   getDaysFrom,
   formatPrice,
+  toCapitalize,
+  convertMonthYearToUnix,
 } from "../../../helpers/format/format";
 import { ChevronIcon } from "../../../../assets/icons/svg/PropertyListing/ViewToggle";
 
@@ -16,7 +18,12 @@ type UIProperty = Omit<Property, "handOverDate"> & {
 
 interface DetailsSectionProps {
   title: string;
-  stepValues: Array<{ id: string; label: string }>;
+  stepValues: Array<{
+    id: string;
+    label: string;
+    suffix: string;
+    prefix: string;
+  }>;
   data: Partial<UIProperty>;
   defaultVisible?: number;
   displayType?: "list" | "tags" | "mixed";
@@ -31,15 +38,57 @@ export const DetailsSection: React.FC<DetailsSectionProps> = ({
 }) => {
   const [showAll, setShowAll] = useState(false);
 
+  const excludedFields = new Set([
+    "propertyName",
+    "noOfBedrooms",
+    "noOfBathrooms",
+    "noOfBalconies",
+    "readyToMove",
+    "rentalInfo.maintenanceAmount",
+    "possession",
+    "availableFrom",
+    "handoverDate",
+    "handOverDate",
+    "isPreLeased",
+  ]);
+
+  // Remove excluded fields right at the start
+  const filteredStepValues = stepValues.filter(
+    (field) => !excludedFields.has(field.id)
+  );
+
   const getFieldValue = (obj: any, path: string) =>
     path.split(".").reduce((acc, key) => acc?.[key], obj);
 
-  const formatValue = (value: any): string => {
+  const formatValue = (value: any, field?: any): string => {
     if (!value) return "N/A";
     if (Array.isArray(value)) {
       return value.length > 0 ? value.join(", ") : "N/A";
     }
-    return String(value);
+    let formatted = String(value).trim();
+    if (field.id === "structure") {
+      formatted = `G+ ${formatted}`;
+    }
+    if (field?.id === "availableFrom" || field?.id === "handOverDate") {
+      if (typeof value === "number" || /^\d+$/.test(String(value))) {
+        return formatUnixDate(Number(value));
+      } else {
+        return formatted;
+      }
+    }
+    if (field?.prefix) {
+      if (field.prefix === "₹ " || field.prefix === "₹") {
+        formatted = formatPrice(value);
+        formatted = `${formatted}`;
+      } else {
+        formatted = `${formatted}`;
+      }
+    }
+    if (field?.suffix) {
+      formatted = `${formatted} ${field.suffix}`;
+    }
+
+    return toCapitalize(formatted);
   };
 
   // Helper function to determine if a field should be displayed as a pill
@@ -64,7 +113,7 @@ export const DetailsSection: React.FC<DetailsSectionProps> = ({
 
   if (displayType === "tags") {
     const tags: string[] = [];
-    stepValues.forEach((field) => {
+    filteredStepValues.forEach((field) => {
       const value = getFieldValue(data, field.id);
       if (value) {
         if (Array.isArray(value)) {
@@ -77,7 +126,7 @@ export const DetailsSection: React.FC<DetailsSectionProps> = ({
 
     if (tags.length === 0) return null;
     const visibleTags = showAll ? tags : tags.slice(0, 8);
-    console.log("Hare Krishna is the key",)
+    console.log("Hare Krishna is the key");
 
     return (
       <View className="bg-white px-4 py-4">
@@ -91,7 +140,7 @@ export const DetailsSection: React.FC<DetailsSectionProps> = ({
               className="bg-emerald-50 border border-emerald-100 px-3 py-2 rounded-lg m-1"
             >
               <Text className="text-emerald-700 text-sm font-medium">
-                {tag}
+                {toCapitalize(tag)}
               </Text>
             </View>
           ))}
@@ -118,13 +167,13 @@ export const DetailsSection: React.FC<DetailsSectionProps> = ({
 
   // Mixed display for "More Details" - pills for booleans/amenities, grid for others
   if (displayType === "mixed") {
-    const fieldsWithValues = stepValues
+    const fieldsWithValues = filteredStepValues
       .map((field) => {
         const value = getFieldValue(data, field.id);
         return {
           ...field,
           value,
-          formattedValue: formatValue(value),
+          formattedValue: formatValue(value, field),
           hasValue:
             value &&
             (Array.isArray(value)
@@ -204,7 +253,7 @@ export const DetailsSection: React.FC<DetailsSectionProps> = ({
                       {field.label}
                     </Text>
                     <Text className="text-[15px] leading-[24px] font-bold text-black font-[Lato]">
-                      {field.formattedValue}
+                      {toCapitalize(field.formattedValue)}
                     </Text>
                   </View>
                 </View>
@@ -223,7 +272,7 @@ export const DetailsSection: React.FC<DetailsSectionProps> = ({
                   className="bg-white border border-[#2B2928] px-3 py-2 rounded-[28px] m-1"
                 >
                   <Text className="text-[#333333] text-sm font-medium leading-[150%]">
-                    {field.label}
+                    {toCapitalize(field.label)}
                   </Text>
                 </View>
               ))}
@@ -244,7 +293,7 @@ export const DetailsSection: React.FC<DetailsSectionProps> = ({
                   className="bg-[#E6F7F4] px-3 py-2 rounded-[28px] m-1"
                 >
                   <Text className="text-black text-sm font-medium leading-[150%]">
-                    {item}
+                    {toCapitalize(item)}
                   </Text>
                 </View>
               ))}
@@ -253,7 +302,7 @@ export const DetailsSection: React.FC<DetailsSectionProps> = ({
         ))}
 
         {/* Show More/Less Button */}
-        {(allFieldsCombined.length > 4) && (
+        {allFieldsCombined.length > 4 && (
           <TouchableOpacity
             onPress={() => setShowAll(!showAll)}
             className="mt-1"
@@ -274,12 +323,12 @@ export const DetailsSection: React.FC<DetailsSectionProps> = ({
   }
 
   // Original grid view for other sections
-  const fieldsWithValues = stepValues
+  const fieldsWithValues = filteredStepValues
     .map((field) => {
       const value = getFieldValue(data, field.id);
       return {
         ...field,
-        value: formatValue(value),
+        value: formatValue(value, field),
         hasValue:
           value &&
           (Array.isArray(value)
@@ -313,7 +362,40 @@ export const DetailsSection: React.FC<DetailsSectionProps> = ({
                   {field.label}
                 </Text>
                 <Text className="text-[16px] leading-[24px] font-bold text-black font-[Lato]">
-                  {field.value}
+                  {field.id === "rentalInfo" && data?.rentalInfo
+                    ? (() => {
+                        const { startDate = "", endDate = "" } =
+                          data.rentalInfo;
+
+                        // Helper to normalize any input (string or number) into unix timestamp
+                        const normalizeToUnix = (
+                          val: string | number
+                        ): number => {
+                          if (!val) return 0;
+                          if (typeof val === "number") return val; // already timestamp
+                          return convertMonthYearToUnix(val); // convert from "MM/YYYY"
+                        };
+
+                        const startUnix = normalizeToUnix(startDate);
+                        const endUnix = normalizeToUnix(endDate);
+
+                        if (!startUnix && !endUnix) return "-";
+
+                        return `${startUnix ? formatUnixDate(startUnix) : ""}${
+                          startUnix && endUnix ? " - " : ""
+                        }${endUnix ? formatUnixDate(endUnix) : ""}`;
+                      })()
+                    : field.label.toLowerCase() === "maintenance" &&
+                      field.value &&
+                      String(field.value).toLowerCase() !== "included"
+                    ? // Show maintenanceAmount if maintenance is not included
+                      formatValue(
+                        getFieldValue(data, "rentalInfo.maintenanceAmount"),
+                        stepValues.find(
+                          (f) => f.id === "rentalInfo.maintenanceAmount"
+                        )
+                      )
+                    : toCapitalize(field.value)}
                 </Text>
               </View>
             </View>

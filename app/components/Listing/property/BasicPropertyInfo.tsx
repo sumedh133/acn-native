@@ -7,16 +7,17 @@ import {
   getDaysDifference,
   getDaysFrom,
   formatPrice,
+  toCapitalize,
 } from "../../../helpers/format/format";
 
 type UIProperty = Omit<Property, "handOverDate"> & {
   handOverDate?: string;
 };
 
-export const BasicPropertyInfo: React.FC<{ data: Partial<UIProperty>, previewType: string }> = ({
-  data, previewType
-}) => {
-
+export const BasicPropertyInfo: React.FC<{
+  data: Partial<UIProperty>;
+  previewType: string;
+}> = ({ data, previewType }) => {
   const getFieldValue = (obj: any, path: string) =>
     path.split(".").reduce((acc, key) => acc?.[key], obj);
 
@@ -26,19 +27,19 @@ export const BasicPropertyInfo: React.FC<{ data: Partial<UIProperty>, previewTyp
     "";
 
   const propertyType =
+    (typeof data.assetType === "string" && data.assetType.trim()) ||
     (typeof data.commercialPropertyType === "string" &&
       data.commercialPropertyType.trim()) ||
-    (typeof data.assetType === "string" && data.assetType.trim()) ||
     "";
 
-  const market =
-    (typeof data.micromarket === "string" && data.micromarket.trim()) || "";
+  const propertyName =
+    (typeof data.propertyName === "string" && data.propertyName.trim()) || "";
 
-  let title = [communityOrCommercial, propertyType].filter(Boolean).join(" ");
-
-  if (market) {
-    title = `${title} in ${market}`;
-  }
+  let title = propertyName
+    ? propertyName
+    : [communityOrCommercial, propertyType, `for ${data.listingType}`]
+        .filter(Boolean)
+        .join(" ");
 
   let priceLabel = "";
   let showMonthSuffix = false;
@@ -78,6 +79,42 @@ export const BasicPropertyInfo: React.FC<{ data: Partial<UIProperty>, previewTyp
     configurationLabel = `${data.sbua} Sqft`;
   }
 
+  function getHandoverLabel(data: any): string {
+    if (
+      data?.readyToMove ||
+      data?.possession?.toLowerCase() === "ready to move"
+    ) {
+      return "Ready to Move";
+    }
+
+    if (data?.possession?.toLowerCase() === "under construction") {
+      if (data?.availableFrom) {
+        if (typeof data.availableFrom === "string") {
+          // format: "MM/YYYY"
+          const [mm, yyyy] = data.availableFrom.split("/");
+          const parsedDate = new Date(Number(yyyy), Number(mm) - 1, 1);
+          return formatUnixDate(Math.floor(parsedDate.getTime() / 1000));
+        } else if (typeof data.availableFrom === "number") {
+          // timestamp (ms or sec)
+          const ts =
+            data.availableFrom > 1e12
+              ? Math.floor(data.availableFrom / 1000) // ms → sec
+              : data.availableFrom;
+          return formatUnixDate(ts);
+        }
+      }
+
+      if (data?.handOverDate || data?.handoverDate) {
+        const dateStr = data.handOverDate || data.handoverDate;
+        const [mm, yyyy] = dateStr.split("/");
+        const parsedDate = new Date(Number(yyyy), Number(mm) - 1, 1);
+        return formatUnixDate(Math.floor(parsedDate.getTime() / 1000));
+      }
+    }
+
+    return "-";
+  }
+
   const basicInfo = [
     {
       key: "micromarket",
@@ -90,16 +127,7 @@ export const BasicPropertyInfo: React.FC<{ data: Partial<UIProperty>, previewTyp
     },
     {
       key: "handover",
-      label: data?.readyToMove ||data?.possession==="Ready to Move"
-        ? "Ready to Move"
-        : data?.handOverDate
-          ? (() => {
-            // convert "MM/YYYY" -> timestamp (seconds)
-            const [mm, yyyy] = data.handOverDate.split("/");
-            const parsedDate = new Date(Number(yyyy), Number(mm) - 1, 1);
-            return formatUnixDate(Math.floor(parsedDate.getTime() / 1000));
-          })()
-          : "-",
+      label: getHandoverLabel(data),
     },
     {
       key: "configuration",
@@ -126,8 +154,8 @@ export const BasicPropertyInfo: React.FC<{ data: Partial<UIProperty>, previewTyp
             </Text>
           )}
         </View>
-        {previewType === 'listing' && (
-          daysSinceAdded > 10 ? (
+        {previewType === "listing" &&
+          (daysSinceAdded > 10 ? (
             <Text className="text-[12px] font-[Lato] font-medium leading-[18px] text-brand-tertiary text-opacity-70 overflow-hidden">
               {updatedText}
             </Text>
@@ -137,9 +165,7 @@ export const BasicPropertyInfo: React.FC<{ data: Partial<UIProperty>, previewTyp
                 Newly Added
               </Text>
             </View>
-          )
-        )}
-
+          ))}
       </View>
 
       {/* Basic Info Grid */}
@@ -147,12 +173,13 @@ export const BasicPropertyInfo: React.FC<{ data: Partial<UIProperty>, previewTyp
         {basicInfo.map((item, index) => (
           <View
             key={index}
-            className={`w-1/2 flex-row items-center mb-3 ${index % 2 === 0 ? "pr-6" : "pl-6"
-              }`}
+            className={`w-1/2 flex-row items-center mb-3 ${
+              index % 2 === 0 ? "pr-6" : "pl-6"
+            }`}
           >
             <View className="mr-2">{getIcon(item.key)}</View>
             <Text className="text-[12px] font-lato font-medium leading-[150%] text-[#433F3E]">
-              {item.label}
+              {toCapitalize(item.label)}
             </Text>
           </View>
         ))}
