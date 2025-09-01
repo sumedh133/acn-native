@@ -20,6 +20,7 @@ export const pricingDetailsStep: FormStep = {
         field: "listingType",
         values: ["resale"],
       },
+      prefix: "₹ ",
       colspan: 12,
     },
 

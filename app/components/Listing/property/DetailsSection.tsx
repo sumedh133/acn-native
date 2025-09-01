@@ -44,6 +44,10 @@ export const DetailsSection: React.FC<DetailsSectionProps> = ({
     "noOfBalconies",
     "readyToMove",
     "rentalInfo.maintenanceAmount",
+    "possession",
+    "availableFrom",
+    "handoverDate",
+    "handOverDate",
   ]);
 
   // Remove excluded fields right at the start
@@ -71,7 +75,7 @@ export const DetailsSection: React.FC<DetailsSectionProps> = ({
       }
     }
     if (field?.prefix) {
-      if (field.prefix === "₹ ") {
+      if (field.prefix === "₹ "|| field.prefix === "₹") {
         formatted = formatPrice(value);
         formatted = `${formatted}`;
       } else {
