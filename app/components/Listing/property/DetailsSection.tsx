@@ -8,6 +8,7 @@ import {
   getDaysFrom,
   formatPrice,
   toCapitalize,
+  convertMonthYearToUnix,
 } from "../../../helpers/format/format";
 import { ChevronIcon } from "../../../../assets/icons/svg/PropertyListing/ViewToggle";
 
@@ -76,7 +77,7 @@ export const DetailsSection: React.FC<DetailsSectionProps> = ({
       }
     }
     if (field?.prefix) {
-      if (field.prefix === "₹ "|| field.prefix === "₹") {
+      if (field.prefix === "₹ " || field.prefix === "₹") {
         formatted = formatPrice(value);
         formatted = `${formatted}`;
       } else {
@@ -361,14 +362,38 @@ export const DetailsSection: React.FC<DetailsSectionProps> = ({
                   {field.label}
                 </Text>
                 <Text className="text-[16px] leading-[24px] font-bold text-black font-[Lato]">
-                  {field.label.toLowerCase() === "maintenance" &&
-                  field.value &&
-                  String(field.value).toLowerCase() !== "included" &&
-                  String(field.value).toLowerCase() !== "Included"
+                  {field.id === "rentalInfo" && data?.rentalInfo
+                    ? (() => {
+                        const { startDate = "", endDate = "" } =
+                          data.rentalInfo;
+
+                        // Helper to normalize any input (string or number) into unix timestamp
+                        const normalizeToUnix = (
+                          val: string | number
+                        ): number => {
+                          if (!val) return 0;
+                          if (typeof val === "number") return val; // already timestamp
+                          return convertMonthYearToUnix(val); // convert from "MM/YYYY"
+                        };
+
+                        const startUnix = normalizeToUnix(startDate);
+                        const endUnix = normalizeToUnix(endDate);
+
+                        if (!startUnix && !endUnix) return "-";
+
+                        return `${startUnix ? formatUnixDate(startUnix) : ""}${
+                          startUnix && endUnix ? " - " : ""
+                        }${endUnix ? formatUnixDate(endUnix) : ""}`;
+                      })()
+                    : field.label.toLowerCase() === "maintenance" &&
+                      field.value &&
+                      String(field.value).toLowerCase() !== "included"
                     ? // Show maintenanceAmount if maintenance is not included
                       formatValue(
                         getFieldValue(data, "rentalInfo.maintenanceAmount"),
-                        stepValues.find((f) => f.id === "rentalInfo.maintenanceAmount")
+                        stepValues.find(
+                          (f) => f.id === "rentalInfo.maintenanceAmount"
+                        )
                       )
                     : toCapitalize(field.value)}
                 </Text>
