@@ -30,7 +30,7 @@ interface MediaItem {
 }
 
 const { width } = Dimensions.get("window");
-const TUS_ENDPOINT  = "https://tus-protocol-dot-iqol-crm.uc.r.appspot.com/files"
+const TUS_ENDPOINT = "https://tus-protocol-dot-iqol-crm.uc.r.appspot.com/files"
 
 interface PropertyImagesProps {
   images?: string[];
@@ -38,6 +38,7 @@ interface PropertyImagesProps {
   currentMedia?: MediaUploadData;
   propId?: string;
   agentData?: any;
+  previewType?: string
 }
 
 export const PropertyImages: React.FC<PropertyImagesProps> = ({
@@ -46,31 +47,32 @@ export const PropertyImages: React.FC<PropertyImagesProps> = ({
   currentMedia = { photos: [], videos: [], documents: [] },
   propId = "temp-prop-id",
   agentData,
+  previewType
 }) => {
   const [uploading, setUploading] = useState(false);
 
   // Create structured media array with type information
   const createMediaItems = (): MediaItem[] => {
     const mediaItems: MediaItem[] = [];
-    
+
     // Add legacy images (treat as photos)
     images.forEach(url => {
       mediaItems.push({ url, type: 'image' });
     });
-    
+
     // Add current media with proper types
     currentMedia.photos.forEach(url => {
       mediaItems.push({ url, type: 'image' });
     });
-    
+
     currentMedia.videos.forEach(url => {
       mediaItems.push({ url, type: 'video' });
     });
-    
+
     currentMedia.documents.forEach(url => {
       mediaItems.push({ url, type: 'document' });
     });
-    
+
     return mediaItems;
   };
 
@@ -80,7 +82,7 @@ export const PropertyImages: React.FC<PropertyImagesProps> = ({
   const openFilePicker = async () => {
     try {
       const result = await DocumentPicker.getDocumentAsync({
-        type: "*/*",
+        type: "/",
         multiple: true,
         copyToCacheDirectory: true,
       });
@@ -255,19 +257,19 @@ export const PropertyImages: React.FC<PropertyImagesProps> = ({
     ]);
   };
 
-  // Updated helper function to work with MediaItem structure
+  // Helper function to work with MediaItem structure
   const getFileInfo = (mediaItem: MediaItem, index: number) => {
     let fileType: keyof MediaUploadData;
     let canDelete = true;
 
     const legacyImagesCount = images.length;
-    
+
     if (index < legacyImagesCount) {
       // This is a legacy image, might not be deletable
       fileType = "photos";
       canDelete = false;
     } else {
-      // This is a current media item, use its type
+      // Current media item
       switch (mediaItem.type) {
         case 'image':
           fileType = 'photos';
@@ -297,10 +299,9 @@ export const PropertyImages: React.FC<PropertyImagesProps> = ({
     <View className="rounded-[16px] bg-white overflow-hidden">
       {hasAnyFiles ? (
         <View>
-          {/* Enhanced Media Carousel for Images, Videos, AND Documents */}
           {allMediaItems.length > 0 && (
             <View className="relative">
-              <ImageCarousel 
+              <ImageCarousel
                 mediaItems={allMediaItems}
                 propertyId={propId}
                 onDeleteFile={handleDeleteFromCarousel}
@@ -308,28 +309,27 @@ export const PropertyImages: React.FC<PropertyImagesProps> = ({
               />
             </View>
           )}
-
-          {/* Add More Button when files exist */}
-          <View className="p-4 border-t border-gray-100">
-            <TouchableOpacity
-              onPress={openFilePicker}
-              className="bg-[#2D5A52] px-4 py-3 rounded-lg flex-row items-center justify-center space-x-2"
-              activeOpacity={0.8}
-              disabled={uploading}
-            >
-              {uploading ? (
-                <ActivityIndicator size="small" color="white" />
-              ) : (
-                <UploadFileIcon size={18} color="white" />
-              )}
-              <Text className="text-white font-semibold text-sm">
-                {uploading ? "Uploading..." : "Add More Files"}
-              </Text>
-            </TouchableOpacity>
-          </View>
+          {(previewType == 'add' || previewType == 'edit' || previewType === 'my-business') && (
+            <View className="p-4 border-t border-gray-100">
+              <TouchableOpacity
+                onPress={openFilePicker}
+                className="bg-[#2D5A52] px-4 py-3 rounded-lg flex-row items-center justify-center space-x-2"
+                activeOpacity={0.8}
+                disabled={uploading}
+              >
+                {uploading ? (
+                  <ActivityIndicator size="small" color="white" />
+                ) : (
+                  <UploadFileIcon size={18} color="white" />
+                )}
+                <Text className="text-white font-semibold text-sm">
+                  {uploading ? "Uploading..." : "Add More Files"}
+                </Text>
+              </TouchableOpacity>
+            </View>
+          )}
         </View>
       ) : (
-        // No files state
         <LinearGradient
           colors={["#E0F7F4", "#FFFFFF"]}
           locations={[0.0891, 0.7814]}
@@ -347,21 +347,23 @@ export const PropertyImages: React.FC<PropertyImagesProps> = ({
               <Text className="text-sm font-medium text-[#757575]">
                 The listing doesn't have any images, videos, or documents yet.
               </Text>
-              <TouchableOpacity
-                onPress={openFilePicker}
-                className="bg-[#2D5A52] px-4 py-[9px] rounded-lg flex-row items-center space-x-2 mt-3"
-                activeOpacity={0.8}
-                disabled={uploading}
-              >
-                {uploading ? (
-                  <ActivityIndicator size="small" color="white" />
-                ) : (
-                  <UploadFileIcon size={18} color="white" />
-                )}
-                <Text className="text-white font-semibold text-sm">
-                  {uploading ? "Uploading..." : "Add Media Files"}
-                </Text>
-              </TouchableOpacity>
+              {(previewType == 'add' || previewType == 'edit' || previewType === 'my-business') && (
+                <TouchableOpacity
+                  onPress={openFilePicker}
+                  className="bg-[#2D5A52] px-4 py-[9px] rounded-lg flex-row items-center space-x-2 mt-3"
+                  activeOpacity={0.8}
+                  disabled={uploading}
+                >
+                  {uploading ? (
+                    <ActivityIndicator size="small" color="white" />
+                  ) : (
+                    <UploadFileIcon size={18} color="white" />
+                  )}
+                  <Text className="text-white font-semibold text-sm">
+                    {uploading ? "Uploading..." : "Add Media Files"}
+                  </Text>
+                </TouchableOpacity>
+              )}
             </View>
           </View>
         </LinearGradient>

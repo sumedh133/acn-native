@@ -19,7 +19,7 @@ import { Property } from "../../types";
 
 // Firestore Collections
 const ADMIN_COLLECTION = "acn-admin";
-const INVENTORY_COLLECTION = "acnQCInventories";
+const INVENTORY_COLLECTION = "acnPropertiesTest";
 
 /**
  * Generate a new unique Property ID using `acn-admin/lastQcId`.
