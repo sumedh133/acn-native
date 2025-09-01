@@ -77,7 +77,7 @@ export const FormPreview: React.FC<FormPreviewProps> = ({
     })
     .filter((s) => s.stepValues.length > 0);
 
-  const legacyImages: string[] = []; 
+  const legacyImages: string[] = [];
   const currentMedia: MediaUploadData = {
     photos: data.media?.photos ?? [],
     videos: data.media?.videos ?? [],
@@ -88,6 +88,7 @@ export const FormPreview: React.FC<FormPreviewProps> = ({
 
   return (
     <ScrollView className="flex-1 bg-gray-50">
+     
       <PropertyImages
         images={legacyImages}
         currentMedia={currentMedia}
