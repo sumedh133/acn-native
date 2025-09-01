@@ -20,6 +20,7 @@ export const pricingDetailsStep: FormStep = {
         field: "listingType",
         values: ["resale"],
       },
+      prefix: "₹ ",
       colspan: 12,
     },
 
@@ -141,7 +142,6 @@ export const pricingDetailsStep: FormStep = {
       },
        keyBoardType: "numeric",
       prefix: "₹ ",
-      suffix: "Per Month",
       numberToStringFooter: true,
       colspan: 12,
     },

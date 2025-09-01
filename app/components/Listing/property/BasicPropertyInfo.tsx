@@ -79,6 +79,42 @@ export const BasicPropertyInfo: React.FC<{
     configurationLabel = `${data.sbua} Sqft`;
   }
 
+  function getHandoverLabel(data: any): string {
+    if (
+      data?.readyToMove ||
+      data?.possession?.toLowerCase() === "ready to move"
+    ) {
+      return "Ready to Move";
+    }
+
+    if (data?.possession?.toLowerCase() === "under construction") {
+      if (data?.availableFrom) {
+        if (typeof data.availableFrom === "string") {
+          // format: "MM/YYYY"
+          const [mm, yyyy] = data.availableFrom.split("/");
+          const parsedDate = new Date(Number(yyyy), Number(mm) - 1, 1);
+          return formatUnixDate(Math.floor(parsedDate.getTime() / 1000));
+        } else if (typeof data.availableFrom === "number") {
+          // timestamp (ms or sec)
+          const ts =
+            data.availableFrom > 1e12
+              ? Math.floor(data.availableFrom / 1000) // ms → sec
+              : data.availableFrom;
+          return formatUnixDate(ts);
+        }
+      }
+
+      if (data?.handOverDate || data?.handoverDate) {
+        const dateStr = data.handOverDate || data.handoverDate;
+        const [mm, yyyy] = dateStr.split("/");
+        const parsedDate = new Date(Number(yyyy), Number(mm) - 1, 1);
+        return formatUnixDate(Math.floor(parsedDate.getTime() / 1000));
+      }
+    }
+
+    return "-";
+  }
+
   const basicInfo = [
     {
       key: "micromarket",
@@ -90,35 +126,9 @@ export const BasicPropertyInfo: React.FC<{
         data?.assetType?.trim() || data?.commercialPropertyType?.trim() || "-",
     },
     {
-  key: "handover",
-  label:
-    data?.possession === "ready to move"
-      ? "Ready to Move"
-      : ((true || data?.possession?.toLowerCase() === "under construction") && data?.availableFrom)
-      ? (() => {
-          if (typeof data.availableFrom === "string") {
-            // assume format "MM/YYYY"
-            const [mm, yyyy] = (data.availableFrom as string).split("/");
-            const parsedDate = new Date(Number(yyyy), Number(mm) - 1, 1);
-            return formatUnixDate(Math.floor(parsedDate.getTime() / 1000));
-          } else if (typeof data.availableFrom === "number") {
-            // assume timestamp (ms or sec)
-            const ts =
-              data.availableFrom > 1e12
-                ? Math.floor(data.availableFrom / 1000) // ms → sec
-                : data.availableFrom; // already in sec
-            return formatUnixDate(ts);
-          }
-          return "-sdc";
-        })()
-      : data?.handOverDate
-      ? (() => {
-          const [mm, yyyy] = data.handOverDate.split("/");
-          const parsedDate = new Date(Number(yyyy), Number(mm) - 1, 1);
-          return formatUnixDate(Math.floor(parsedDate.getTime() / 1000));
-        })()
-      : "-abc",
-},
+      key: "handover",
+      label: getHandoverLabel(data),
+    },
     {
       key: "configuration",
       label: configurationLabel,
