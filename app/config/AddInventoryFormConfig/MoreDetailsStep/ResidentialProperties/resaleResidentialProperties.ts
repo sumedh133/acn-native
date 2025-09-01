@@ -193,7 +193,7 @@ export const resaleResidentialProperties: FormField[] = [
       ],
       logicOperator: "AND",
     },
-    colspan: 6,
+    colspan: 12,
   },
   {
     id: "amenities",

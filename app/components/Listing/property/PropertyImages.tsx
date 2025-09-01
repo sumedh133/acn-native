@@ -277,25 +277,7 @@ export const PropertyImages: React.FC<PropertyImagesProps> = ({
               />
             </View>
           )}
-          {(previewType == 'add' || previewType == 'edit' || previewType === 'my-business') && (
-            {/* <View className="p-4 border-t border-gray-100">
-              <TouchableOpacity
-                onPress={openFilePicker}
-                className="bg-[#2D5A52] px-4 py-3 rounded-lg flex-row items-center justify-center space-x-2"
-                activeOpacity={0.8}
-                disabled={uploading}
-              >
-                {uploading ? (
-                  <ActivityIndicator size="small" color="white" />
-                ) : (
-                  <UploadFileIcon size={18} color="white" />
-                )}
-                <Text className="text-white font-semibold text-sm">
-                  {uploading ? 'Uploading...' : 'Add More Files'}
-                </Text>
-              </TouchableOpacity>
-            </View> */}
-          )}
+          
         </View>
       ) : (
         <LinearGradient

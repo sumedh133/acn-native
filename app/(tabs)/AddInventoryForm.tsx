@@ -27,7 +27,6 @@ const AddInventoryForm = () => {
   });
 
 
-  console.log("Hare Krishna", editData)
 
   const normalizePropertyBeforeSubmit = (
     data: Partial<UIProperty>
@@ -47,8 +46,6 @@ const AddInventoryForm = () => {
 
   const handleFormComplete = async (data: Partial<UIProperty>) => {
     try {
-      console.log("Raw form data:", data);
-      Alert.alert("Debug Data", JSON.stringify(data, null, 2).slice(0, 300));
 
       const normalizedData = normalizePropertyBeforeSubmit(data);
 
@@ -73,8 +70,8 @@ const AddInventoryForm = () => {
         )
       }
     } catch (error: any) {
-      if (editData) { showSuccessToast(`Something went wrong while updating the property.`) }
-      else { showSuccessToast(`Something went wrong while saving the property.`) }
+      if (editData) { showErrorToast(`Something went wrong while updating the property.`) }
+      else { showErrorToast(`Something went wrong while saving the property.`) }
       console.error("Error saving property:", error);
     }
   };
