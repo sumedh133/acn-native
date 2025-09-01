@@ -1,6 +1,7 @@
 import React from "react";
 import { View, Text, TouchableOpacity, Linking } from "react-native";
 import { Property } from "@/app/types";
+import { Linking } from "react-native";
 
 type UIProperty = Omit<Property, "handOverDate"> & {
   handOverDate?: string;
@@ -43,13 +44,15 @@ export const LocationSection: React.FC<LocationSectionProps> = ({ data }) => {
       </View>
 
       {/* Button */}
-      <TouchableOpacity className="flex-row items-center justify-center py-2 px-8 border-2 border-black rounded-[4px]">
-        <Text
-          className="text-[#10302D] text-center text-[12px] leading-[150%] font-bold font-lato"
-          onPress={() => {
-            Linking.openURL(data.mapLocation || "");
-          }}
-        >
+      <TouchableOpacity
+        className="flex-row items-center justify-center py-2 px-8 border-2 border-black rounded-[4px]"
+        onPress={() => {
+          if (data?.mapLocation) {
+            Linking.openURL(data.mapLocation);
+          }
+        }}
+      >
+        <Text className="text-[#10302D] text-center text-[12px] leading-[150%] font-bold font-lato">
           Open in Google Maps
         </Text>
         <Text className="text-[#10302D] text-[12px] font-bold">→</Text>

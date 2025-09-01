@@ -20,6 +20,7 @@ export const pricingDetailsStep: FormStep = {
         field: "listingType",
         values: ["resale"],
       },
+      prefix: "₹ ",
       colspan: 12,
     },
 
@@ -106,7 +107,7 @@ export const pricingDetailsStep: FormStep = {
     // ----------- Rental Info for Resale Properties (optional) -----------
     {
       id: "isPreLeased",
-      label: "PreL-Leased / Pre-Rented",
+      label: "Pre-Leased / Pre-Rented",
       type: "select",
       required: false,
       options: [
@@ -141,7 +142,6 @@ export const pricingDetailsStep: FormStep = {
       },
        keyBoardType: "numeric",
       prefix: "₹ ",
-      suffix: "Per Month",
       numberToStringFooter: true,
       colspan: 12,
     },

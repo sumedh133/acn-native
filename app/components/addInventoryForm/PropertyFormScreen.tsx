@@ -14,6 +14,7 @@ import { router } from "expo-router";
 import {
   createProperty,
   updateProperty,
+  updateWholeProperty
 } from "@/app/services/property_services/propertyService";
 import { convertMonthYearToUnix } from "@/app/helpers/format/format";
 import { showSuccessToast, showErrorToast } from "@/utils/toastUtils";
@@ -34,6 +35,7 @@ interface FormFieldWithMeta extends FormField {
 }
 
 type UIProperty = Omit<Property, "handOverDate"> & {
+  address?: string | null
   handOverDate?: string;
   media?: {
     photos: string[];
@@ -67,12 +69,21 @@ export const PropertyFormScreen: React.FC<PropertyFormScreenProps> = ({
     };
 
     return {
-      ...initialData,
+      cpId: initialData?.cpId || agentData?.cpId,
+      agentName: initialData?.agentName || agentData?.name,
+      agentPhoneNumber: initialData?.agentPhoneNumber || agentData?.phone,
+      kamId: initialData?.kamId || agentData?.kamId,
+      kamStatus: "pending",
+      dataStatus: "pending",
+      stage: "kam",
       media: initialData?.media || defaultMedia,
+      ...initialData,
+      
     };
   });
 
   const [selectedPlace, setSelectedPlace] = useState<Places>();
+
   const [docsToUpload, setDocsToUpload] = useState<DocsToUpload>({
     photo: [],
     video: [],
@@ -88,7 +99,6 @@ export const PropertyFormScreen: React.FC<PropertyFormScreenProps> = ({
   const [showPreview, setShowPreview] = useState<boolean>(false);
   const [showDraftModal, setShowDraftModal] = useState<boolean>(false);
 
-  console.log("Form Data:", formData);
 
   // -------------------- Media Upload Handler --------------------
   const handleMediaUpdate = (media: {
@@ -237,6 +247,14 @@ export const PropertyFormScreen: React.FC<PropertyFormScreenProps> = ({
           lng: selectedPlace.lng,
         },
       }));
+    } else if (!selectedPlace && formData.propertyName && initialData) {
+      setSelectedPlace({
+        name: formData?.propertyName,
+        lat: formData?._geoloc?.lat || null,
+        lng: formData?._geoloc?.lng || null,
+        address: formData?.address || null,
+        mapLocation: formData?.mapLocation || null,
+      });
     } else {
       setFormData((prevProperty) => ({
         ...prevProperty,
@@ -370,13 +388,13 @@ export const PropertyFormScreen: React.FC<PropertyFormScreenProps> = ({
       const normalizedData = normalizePropertyBeforeSubmit(formData);
 
       const cleanData = JSON.parse(
-        JSON.stringify(normalizedData, (key, value) =>
+        JSON.stringify(normalizedData, (_, value) =>
           value === undefined ? null : value
         )
       );
 
       if (cleanData.propertyId) {
-        await updateProperty(cleanData.propertyId, {
+        await updateWholeProperty(cleanData.propertyId, {
           ...cleanData,
           status: "draft",
         });
@@ -470,9 +488,8 @@ export const PropertyFormScreen: React.FC<PropertyFormScreenProps> = ({
             onPress={handleClear}
           >
             <Text
-              className={`font-montserrat text-base font-bold underline ${
-                isFormEmpty ? "text-[#9E9E9E]" : "text-[#D92D20]"
-              }`}
+              className={`font-montserrat text-base font-bold underline ${isFormEmpty ? "text-[#9E9E9E]" : "text-[#D92D20]"
+                }`}
             >
               Clear
             </Text>
@@ -603,23 +620,25 @@ export const PropertyFormScreen: React.FC<PropertyFormScreenProps> = ({
         </View>
 
         {/* Navigation Buttons */}
-        <View className="flex-row items-center justify-between gap-[13px] px-4 py-[14.5px] bg-red border-t border-t-[#EEEEEE]">
+        <View className="flex flex-row items-center justify-center gap-[13px] px-4 py-[14.5px] bg-red border-t border-t-[#EEEEEE]">
           {currentStepIndex && (
             <TouchableOpacity
-              className="flex-1 w-1/2 py-2 px-5 rounded-[4px] bg-white border border-[#153E3B]"
+              className="w-[50%] py-2 px-5 rounded-[4px] bg-white border border-[#153E3B]"
               onPress={handleBack}
             >
               <Text className="text-center text-base font-semibold text-black">
-                {"Back"}
+                {currentStepIndex === visibleSteps.length
+                  ? "Edit"
+                  : "Back"}
               </Text>
             </TouchableOpacity>
           )}
           <TouchableOpacity
-            className="flex-1 w-1/2 py-2 px-5 rounded-[4px] bg-[#153E3B] border border-[#153E3B]"
+            className="w-[50%] py-2 px-5 rounded-[4px] bg-[#153E3B] border border-[#153E3B]"
             onPress={handleNext}
           >
             <Text className="text-center text-base font-semibold text-white leading-normal">
-              {currentStepIndex === visibleSteps.length - 1
+              {currentStepIndex === visibleSteps.length
                 ? isEdit
                   ? "Update"
                   : "Submit"

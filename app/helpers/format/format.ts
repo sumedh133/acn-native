@@ -73,3 +73,18 @@ if (!value) return "-";
     return `${num}`;
   }
 };
+
+export const toCapitalize = (text: string): string => {
+  if (!text) return "";
+
+  return text
+    .split(/([ -])/g) // keep spaces & dashes as separators
+    .map((word) => {
+      if (!word.match(/[a-zA-Z]/)) return word; // non-letter separators
+      const firstChar = word.charAt(0);
+      if (firstChar === firstChar.toUpperCase()) return word; // first letter already uppercase
+      return firstChar.toUpperCase() + word.slice(1);
+    })
+    .join("");
+};
+

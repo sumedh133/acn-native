@@ -10,178 +10,247 @@ import {
   Modal,
   StatusBar,
   SafeAreaView,
+  ScrollView,
+  Alert,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
-import ImageViewing from "react-native-image-viewing";
 import { analytics } from "@/app/config/firebase";
 import { logEvent } from "@react-native-firebase/analytics";
 import Video, { VideoRef } from "react-native-video";
-import Swiper from 'react-native-swiper';
-import { WebView } from 'react-native-webview';
+import deleteIcon from "../../../assets/icons/svg/PropertyListing/deleteIcon.svg";
+import crossIcon from "../../../assets/icons/svg/PropertyListing/crossIcon.svg";
+import { getIcon } from "@/utils/iconUtils";
 
-// Add MediaItem interface
+// MediaItem interface
 interface MediaItem {
   url: string;
-  type: 'image' | 'video' | 'document';
+  type: "image" | "video" | "document";
 }
 
 interface ImageCarouselProps {
-  mediaItems: MediaItem[]; // Changed from images: string[]
+  mediaItems: MediaItem[];
   onImagePress?: () => void;
   propertyId?: string;
-  onDeleteFile?: (mediaItem: MediaItem, index: number) => void; // Updated signature
+  onDeleteFile?: (mediaItem: MediaItem, index: number) => void;
   canDeleteFile?: (index: number) => boolean;
 }
-
-type MediaType = 'image' | 'video' | 'document';
 
 const { width, height } = Dimensions.get("window");
 
 const ImageCarousel: React.FC<ImageCarouselProps> = ({
-  mediaItems, // Changed from images
+  mediaItems,
   onImagePress,
   propertyId,
   onDeleteFile,
   canDeleteFile,
 }) => {
-  const [activeIndex, setActiveIndex] = useState(0);
-  const [isImageViewVisible, setIsImageViewVisible] = useState(false);
-  const [isVideoViewVisible, setIsVideoViewVisible] = useState(false);
-  const [isDocumentViewVisible, setIsDocumentViewVisible] = useState(false);
-  const [playingVideoIndex, setPlayingVideoIndex] = useState<number | null>(null);
-  const [fullscreenMedia, setFullscreenMedia] = useState<MediaItem | null>(null);
-  const swiperRef = useRef<Swiper>(null);
-  const fullscreenVideoRef = useRef<VideoRef>(null);
+  const [selectedIdx, setSelectedIdx] = useState(0);
+  const [showFullscreenModal, setShowFullscreenModal] = useState(false);
+  const [playingVideoIndex, setPlayingVideoIndex] = useState<number | null>(
+    null
+  );
+  const [lastTapTime, setLastTapTime] = useState<{ [key: number]: number }>({});
+  const scrollRef = useRef<ScrollView>(null);
+  const fullscreenScrollRef = useRef<ScrollView>(null);
+  const thumbnailScrollRef = useRef<ScrollView>(null);
 
-  // Format images for the image viewer (only images)
-  const imageViewerImages = mediaItems
-    .map((item, index) => ({ uri: item.url, originalIndex: index }))
-    .filter(item => {
-      const mediaItem = mediaItems.find(m => m.url === item.uri);
-      return mediaItem?.type === 'image';
-    });
+  // Filter out documents - only show images and videos
+  const filteredMediaItems = mediaItems.filter(
+    (item) => item.type !== "document"
+  );
 
-  // Helper function to get document icon
-  const getDocumentIcon = (uri: string) => {
-    const extension = uri.toLowerCase().split('.').pop();
-    switch (extension) {
-      case 'pdf':
-        return 'document-text';
-      case 'doc':
-      case 'docx':
-        return 'document-text';
-      case 'xls':
-      case 'xlsx':
-        return 'grid';
-      case 'ppt':
-      case 'pptx':
-        return 'easel';
-      case 'txt':
-        return 'document-outline';
-      default:
-        return 'document';
+  // Auto-scroll to selected image in main carousel
+  const scrollToImage = (index: number) => {
+    if (scrollRef.current && filteredMediaItems.length > 0) {
+      const clampedIndex = Math.max(
+        0,
+        Math.min(index, filteredMediaItems.length - 1)
+      );
+      scrollRef.current.scrollTo({
+        x: clampedIndex * width,
+        animated: true,
+      });
     }
   };
 
-  // Helper function to get file name from URL
-  const getFileName = (url: string) => {
-    return url.split('/').pop() || 'Document';
+  // Auto-scroll to selected image in fullscreen
+  const scrollToFullscreenImage = (index: number) => {
+    if (fullscreenScrollRef.current && filteredMediaItems.length > 0) {
+      const clampedIndex = Math.max(
+        0,
+        Math.min(index, filteredMediaItems.length - 1)
+      );
+      fullscreenScrollRef.current.scrollTo({
+        x: clampedIndex * width,
+        animated: true,
+      });
+    }
   };
 
-  // Ensure we re-render when mediaItems change
-  useEffect(() => {
-    if (activeIndex >= mediaItems.length) {
-      setActiveIndex(0);
+  // Auto-scroll thumbnail strip
+  const scrollThumbnailToIndex = (index: number) => {
+    if (thumbnailScrollRef.current && filteredMediaItems.length > 0) {
+      const thumbnailWidth = 80;
+      const spacing = 8;
+      const clampedIndex = Math.max(
+        0,
+        Math.min(index, filteredMediaItems.length - 1)
+      );
+      const scrollPosition =
+        clampedIndex * (thumbnailWidth + spacing) - width / 2 + 40;
+      thumbnailScrollRef.current.scrollTo({
+        x: Math.max(0, scrollPosition),
+        animated: true,
+      });
     }
-  }, [mediaItems, activeIndex]);
+  };
 
-  // Pause video when sliding to different index
-  useEffect(() => {
-    if (playingVideoIndex !== null && playingVideoIndex !== activeIndex) {
-      setPlayingVideoIndex(null);
+  // Handle scroll events to update selected index
+  const handleScroll = (event: any) => {
+    const contentOffsetX = event.nativeEvent.contentOffset.x;
+    const currentIndex = Math.round(contentOffsetX / width);
+    const clampedIndex = Math.max(
+      0,
+      Math.min(currentIndex, filteredMediaItems.length - 1)
+    );
+
+    if (clampedIndex !== selectedIdx) {
+      setSelectedIdx(clampedIndex);
+      setPlayingVideoIndex(null); // Pause video when changing slides
     }
-  }, [activeIndex]);
+  };
 
-  if (!mediaItems || mediaItems.length === 0) {
+  // Handle fullscreen scroll events
+  const handleFullscreenScroll = (event: any) => {
+    const contentOffsetX = event.nativeEvent.contentOffset.x;
+    const currentIndex = Math.round(contentOffsetX / width);
+    const clampedIndex = Math.max(
+      0,
+      Math.min(currentIndex, filteredMediaItems.length - 1)
+    );
+
+    if (clampedIndex !== selectedIdx) {
+      setSelectedIdx(clampedIndex);
+      setPlayingVideoIndex(null); // Pause video when changing slides
+      scrollThumbnailToIndex(clampedIndex);
+    }
+  };
+
+  if (!filteredMediaItems || filteredMediaItems.length === 0) {
     return (
       <View style={styles.placeholderContainer}>
         <Ionicons name="image-outline" size={48} color="#CCCCCC" />
+        <Text style={styles.placeholderText}>No media available</Text>
       </View>
     );
   }
 
-  const handleMediaPress = (index: number) => {
-    const currentMedia = mediaItems[index];
-    
+  const handleImagePress = () => {
     try {
-      logEvent(analytics, `property_${currentMedia.type}_fullscreen`, {
+      logEvent(analytics, `property_media_fullscreen`, {
         event_category: "property",
         event_label: "interaction",
         property_id: propertyId,
-        media_index: index,
-        total_media: mediaItems.length,
-        media_type: currentMedia.type,
+        media_index: selectedIdx,
+        total_media: filteredMediaItems.length,
       });
     } catch (error) {
       console.error("Error logging media fullscreen:", error);
     }
 
-    setFullscreenMedia(currentMedia);
-    
-    switch (currentMedia.type) {
-      case 'image':
-        setIsImageViewVisible(true);
-        break;
-      case 'video':
-        setIsVideoViewVisible(true);
-        break;
-      case 'document':
-        setIsDocumentViewVisible(true);
-        break;
-    }
+    setPlayingVideoIndex(null);
+    setShowFullscreenModal(true);
+
+    // Scroll to current image in fullscreen after modal opens
+    setTimeout(() => {
+      scrollToFullscreenImage(selectedIdx);
+      scrollThumbnailToIndex(selectedIdx);
+    }, 300);
   };
 
-  const handleDeleteFile = (mediaItem: MediaItem, index: number) => {
-    if (onDeleteFile) {
-      onDeleteFile(mediaItem, index);
+  const handleThumbnailPress = (index: number, mediaItem: MediaItem) => {
+    const clampedIndex = Math.max(
+      0,
+      Math.min(index, filteredMediaItems.length - 1)
+    );
+    const now = Date.now();
+    const lastTap = lastTapTime[clampedIndex] || 0;
+
+    if (now - lastTap < 300) {
+      // Double tap detected - delete functionality
+      if (canDeleteFile && canDeleteFile(clampedIndex) && onDeleteFile) {
+        Alert.alert(
+          "Delete Media",
+          "Are you sure you want to delete this media?",
+          [
+            { text: "Cancel", style: "cancel" },
+            {
+              text: "Delete",
+              style: "destructive",
+              onPress: () => {
+                //setShowFullscreenModal(false);
+                onDeleteFile(mediaItem, clampedIndex);
+              },
+            },
+          ]
+        );
+      }
+    } else {
+      // Single tap - change active image
+      setSelectedIdx(clampedIndex);
+      setPlayingVideoIndex(null);
+      scrollToFullscreenImage(clampedIndex);
     }
+
+    setLastTapTime((prev) => ({ ...prev, [clampedIndex]: now }));
   };
 
   const handleVideoPress = (index: number) => {
-    if (playingVideoIndex === index) {
-      // Pause video
+    const clampedIndex = Math.max(
+      0,
+      Math.min(index, filteredMediaItems.length - 1)
+    );
+    if (playingVideoIndex === clampedIndex) {
       setPlayingVideoIndex(null);
     } else {
-      // Play this video and pause others
-      setPlayingVideoIndex(index);
+      setPlayingVideoIndex(clampedIndex);
     }
   };
 
-  const handleIndexChanged = (index: number) => {
-    if (index !== activeIndex) {
-      try {
-        logEvent(analytics, "property_media_change", {
-          event_category: "property",
-          event_label: "interaction",
-          property_id: propertyId,
-          previous_index: activeIndex,
-          new_index: index,
-          total_media: mediaItems.length,
-          navigation_method: "swipe",
-        });
-      } catch (error) {
-        console.error("Error logging media change:", error);
+  const moveLeft = () => {
+    if (selectedIdx > 0) {
+      const newIndex = selectedIdx - 1;
+      setSelectedIdx(newIndex);
+      setPlayingVideoIndex(null);
+      if (showFullscreenModal) {
+        scrollToFullscreenImage(newIndex);
+        scrollThumbnailToIndex(newIndex);
+      } else {
+        scrollToImage(newIndex);
       }
-      setActiveIndex(index);
     }
   };
 
-  // Render each slide content based on media type
-  const renderSlideContent = (mediaItem: MediaItem, index: number) => {
-    const isVideoPlaying = playingVideoIndex === index;
-    
+  const moveRight = () => {
+    if (selectedIdx < filteredMediaItems.length - 1) {
+      const newIndex = selectedIdx + 1;
+      setSelectedIdx(newIndex);
+      setPlayingVideoIndex(null);
+      if (showFullscreenModal) {
+        scrollToFullscreenImage(newIndex);
+        scrollThumbnailToIndex(newIndex);
+      } else {
+        scrollToImage(newIndex);
+      }
+    }
+  };
+
+  // Render main carousel content
+  const renderMainContent = (mediaItem: MediaItem, index: number) => {
+    const isVideoPlaying = playingVideoIndex === index && !showFullscreenModal;
+
     switch (mediaItem.type) {
-      case 'video':
+      case "video":
         return (
           <View style={styles.videoContainer}>
             <Video
@@ -192,17 +261,12 @@ const ImageCarousel: React.FC<ImageCarouselProps> = ({
               controls={isVideoPlaying}
               poster={mediaItem.url}
               posterResizeMode="cover"
-              onLoad={() => {
-                // Video loaded successfully
-                console.log("Video is loading", { uri: mediaItem.url });
-              }}
               onError={(error) => {
-                console.error('Video load error:', error);
+                console.error("Video load error:", error);
                 setPlayingVideoIndex(null);
               }}
             />
-            
-            {/* Play button overlay - only show when not playing */}
+
             {!isVideoPlaying && (
               <TouchableOpacity
                 style={styles.playButtonOverlay}
@@ -215,194 +279,247 @@ const ImageCarousel: React.FC<ImageCarouselProps> = ({
               </TouchableOpacity>
             )}
 
-            {/* Video indicator and fullscreen button */}
-            <View style={styles.mediaIndicators}>
-              <View style={styles.videoIndicator}>
-                <Ionicons name="videocam" size={16} color="white" />
-                <Text style={styles.videoIndicatorText}>Video</Text>
-              </View>
-              <TouchableOpacity
-                style={styles.fullscreenButton}
-                onPress={() => handleMediaPress(index)}
-                activeOpacity={0.8}
-              >
-                <Ionicons name="expand-outline" size={16} color="white" />
-              </TouchableOpacity>
+            <View style={styles.videoIndicator}>
+              <Ionicons name="videocam" size={14} color="white" />
+              <Text style={styles.videoIndicatorText}>Video</Text>
             </View>
           </View>
-        );
-
-      case 'document':
-        return (
-          <TouchableOpacity
-            style={styles.documentContainer}
-            activeOpacity={0.8}
-            onPress={() => handleMediaPress(index)}
-          >
-            <View style={styles.documentPreview}>
-              <Ionicons 
-                name={getDocumentIcon(mediaItem.url) as any} 
-                size={48} 
-                color="#6B7280" 
-              />
-              <Text style={styles.documentName} numberOfLines={2}>
-                {getFileName(mediaItem.url)}
-              </Text>
-              <View style={styles.documentIndicator}>
-                <Ionicons name="document-text" size={14} color="white" />
-                <Text style={styles.documentIndicatorText}>Document</Text>
-              </View>
-            </View>
-          </TouchableOpacity>
         );
 
       default: // image
         return (
-          <TouchableOpacity
-            style={styles.imageTouchable}
-            activeOpacity={0.9}
-            onPress={() => handleMediaPress(index)}
-          >
-            <Image
-              source={{ uri: mediaItem.url }}
-              style={styles.image}
-              resizeMode="cover"
-            />
-          </TouchableOpacity>
+          <Image
+            source={{ uri: mediaItem.url }}
+            style={styles.image}
+            resizeMode="cover"
+          />
         );
     }
   };
 
-  return (
-    <View style={styles.container}>
-      <Swiper
-        ref={swiperRef}
-        style={styles.wrapper}
-        onIndexChanged={handleIndexChanged}
-        index={activeIndex}
-        loop={false}
-        showsPagination={true}
-        paginationStyle={styles.pagination}
-        dotStyle={styles.paginationDot}
-        activeDotStyle={styles.activeDot}
-        showsButtons={mediaItems.length > 1}
-        nextButton={
-          <View style={styles.navButton}>
-            <Ionicons name="chevron-forward" size={24} color="#FFFFFF" />
-          </View>
-        }
-        prevButton={
-          <View style={styles.navButton}>
-            <Ionicons name="chevron-back" size={24} color="#FFFFFF" />
-          </View>
-        }
-        buttonWrapperStyle={styles.buttonWrapper}
-        loadMinimal={true}
-        loadMinimalSize={2}
-        removeClippedSubviews={Platform.OS === 'android'}
-      >
-        {mediaItems.map((mediaItem, index) => (
-          <View key={index} style={styles.slide}>
-            {renderSlideContent(mediaItem, index)}
-            
-            {/* Delete button for individual item */}
-            {canDeleteFile && canDeleteFile(index) && (
+  // Render fullscreen content
+  const renderFullscreenContent = (mediaItem: MediaItem, index: number) => {
+    const isVideoPlaying = playingVideoIndex === index && showFullscreenModal;
+
+    switch (mediaItem.type) {
+      case "video":
+        return (
+          <View style={styles.fullscreenVideoContainer}>
+            <Video
+              source={{ uri: mediaItem.url }}
+              style={styles.fullscreenVideo}
+              resizeMode="contain"
+              paused={!isVideoPlaying}
+              controls={isVideoPlaying}
+              onError={(error) => {
+                console.error("Fullscreen video error:", error);
+                setPlayingVideoIndex(null);
+              }}
+            />
+
+            {!isVideoPlaying && (
               <TouchableOpacity
-                style={styles.deleteButton}
-                onPress={() => handleDeleteFile(mediaItem, index)}
+                style={styles.fullscreenPlayButtonOverlay}
                 activeOpacity={0.8}
+                onPress={() => setPlayingVideoIndex(index)}
               >
-                <View style={styles.deleteButtonInner}>
-                  <Ionicons name="close" size={16} color="white" />
+                <View style={styles.fullscreenPlayButton}>
+                  <Ionicons name="play" size={32} color="white" />
                 </View>
               </TouchableOpacity>
             )}
           </View>
-        ))}
-      </Swiper>
+        );
 
-      {/* Full-screen image viewer */}
-      <ImageViewing
-        images={imageViewerImages}
-        imageIndex={Math.max(0, imageViewerImages.findIndex(img => img.uri === fullscreenMedia?.url))}
-        visible={isImageViewVisible}
-        onRequestClose={() => setIsImageViewVisible(false)}
-        swipeToCloseEnabled={true}
-        doubleTapToZoomEnabled={true}
-      />
+      default: // image
+        return (
+          <View style={styles.fullscreenImageContainer}>
+            <Image
+              source={{ uri: mediaItem.url }}
+              style={styles.fullscreenImage}
+              resizeMode="cover"
+            />
+          </View>
+        );
+    }
+  };
 
-      {/* Full-screen video viewer */}
+  // Render thumbnail
+  const renderThumbnail = (
+    mediaItem: MediaItem,
+    index: number,
+    isActive: boolean
+  ) => {
+    return (
+      <TouchableOpacity
+        key={index}
+        style={[styles.thumbnail]}
+        onPress={() => handleThumbnailPress(index, mediaItem)}
+        activeOpacity={0.8}
+      >
+        <Image
+          source={{ uri: mediaItem.url }}
+          style={styles.thumbnailImage}
+          resizeMode="cover"
+        />
+        {mediaItem.type === "video" && (
+          <View style={styles.thumbnailVideoIndicator}>
+            <Ionicons name="videocam" size={10} color="white" />
+          </View>
+        )}
+        {isActive && (
+          <View style={styles.thumbnailDeleteIcon}>
+            {getIcon("deleteIcon")}
+          </View>
+        )}
+      </TouchableOpacity>
+    );
+  };
+
+  return (
+    <View style={styles.container}>
+      {/* Main Carousel */}
+      <View style={styles.mainCarouselContainer}>
+        <ScrollView
+          ref={scrollRef}
+          horizontal
+          pagingEnabled
+          showsHorizontalScrollIndicator={false}
+          onMomentumScrollEnd={handleScroll}
+          scrollEventThrottle={16}
+          style={styles.scrollView}
+        >
+          {filteredMediaItems.map((mediaItem, index) => (
+            <TouchableOpacity
+              key={index}
+              style={styles.slide}
+              activeOpacity={0.9}
+              onPress={handleImagePress}
+            >
+              {renderMainContent(mediaItem, index)}
+            </TouchableOpacity>
+          ))}
+        </ScrollView>
+
+        {/* Navigation arrows */}
+        {/* {selectedIdx > 0 && (
+          <TouchableOpacity
+            style={[styles.navButton, styles.leftNav]}
+            onPress={moveLeft}
+            activeOpacity={0.8}
+          >
+            <Ionicons name="chevron-back" size={24} color="white" />
+          </TouchableOpacity>
+        )}
+
+        {selectedIdx < filteredMediaItems.length - 1 && (
+          <TouchableOpacity
+            style={[styles.navButton, styles.rightNav]}
+            onPress={moveRight}
+            activeOpacity={0.8}
+          >
+            <Ionicons name="chevron-forward" size={24} color="white" />
+          </TouchableOpacity>
+        )} */}
+
+        {/* Pagination dots */}
+        <View style={styles.pagination}>
+          {filteredMediaItems.map((_, index) => (
+            <View
+              key={index}
+              style={[
+                styles.paginationDot,
+                index === selectedIdx && styles.activeDot,
+              ]}
+            />
+          ))}
+        </View>
+      </View>
+
+      {/* Fullscreen Modal */}
       <Modal
-        visible={isVideoViewVisible}
-        transparent={false}
+        visible={showFullscreenModal}
+        transparent={true}
         animationType="fade"
-        onRequestClose={() => setIsVideoViewVisible(false)}
+        onRequestClose={() => {
+          setShowFullscreenModal(false);
+          setPlayingVideoIndex(null);
+          scrollToImage(selectedIdx);
+        }}
       >
         <SafeAreaView style={styles.fullscreenContainer}>
-          <StatusBar hidden />
+          {/* Header */}
           <View style={styles.fullscreenHeader}>
             <TouchableOpacity
-              onPress={() => setIsVideoViewVisible(false)}
+              onPress={() => {
+                setShowFullscreenModal(false);
+                setPlayingVideoIndex(null);
+                scrollToImage(selectedIdx);
+              }}
               style={styles.closeButton}
             >
-              <Ionicons name="close" size={24} color="white" />
+              {getIcon("crossIcon")}
             </TouchableOpacity>
-            <Text style={styles.fullscreenTitle}>Video</Text>
+            {/* <Text style={styles.fullscreenTitle}>
+              {selectedIdx + 1} of {filteredMediaItems.length}
+            </Text> */}
+            <View style={styles.headerSpacer} />
           </View>
-          
-          <View style={styles.fullscreenVideoContainer}>
-            <Video
-              ref={fullscreenVideoRef}
-              source={{ uri: fullscreenMedia?.url || '' }}
-              style={styles.fullscreenVideo}
-              resizeMode="contain"
-              controls={true}
-              paused={false}
-              onError={(error) => {
-                console.error('Fullscreen video error:', error);
-                setIsVideoViewVisible(false);
-              }}
-            />
-          </View>
-        </SafeAreaView>
-      </Modal>
 
-      {/* Full-screen document viewer */}
-      <Modal
-        visible={isDocumentViewVisible}
-        transparent={false}
-        animationType="slide"
-        onRequestClose={() => setIsDocumentViewVisible(false)}
-      >
-        <SafeAreaView style={styles.fullscreenContainer}>
-          <View style={styles.fullscreenHeader}>
-            <TouchableOpacity
-              onPress={() => setIsDocumentViewVisible(false)}
-              style={styles.closeButton}
+          {/* Main Fullscreen Content */}
+          <View style={styles.fullscreenContent}>
+            <ScrollView
+              ref={fullscreenScrollRef}
+              horizontal
+              pagingEnabled
+              showsHorizontalScrollIndicator={false}
+              onMomentumScrollEnd={handleFullscreenScroll}
+              scrollEventThrottle={16}
             >
-              <Ionicons name="close" size={24} color="white" />
-            </TouchableOpacity>
-            <Text style={styles.fullscreenTitle} numberOfLines={1}>
-              {getFileName(fullscreenMedia?.url || '')}
-            </Text>
-          </View>
-          
-          <View style={styles.fullscreenDocumentContainer}>
-            <WebView
-              source={{ uri: `https://docs.google.com/gview?embedded=true&url=${encodeURIComponent(fullscreenMedia?.url || '')}` }}
-              style={styles.fullscreenDocument}
-              startInLoadingState={true}
-              renderLoading={() => (
-                <View style={styles.documentLoading}>
-                  <Ionicons name="document-text" size={48} color="#6B7280" />
-                  <Text style={styles.documentLoadingText}>Loading document...</Text>
+              {filteredMediaItems.map((mediaItem, index) => (
+                <View
+                  key={`fullscreen-${index}`}
+                  style={styles.fullscreenSlide}
+                >
+                  {renderFullscreenContent(mediaItem, index)}
                 </View>
+              ))}
+            </ScrollView>
+
+            {/* Fullscreen Navigation arrows */}
+            {/* {selectedIdx > 0 && (
+              <TouchableOpacity
+                style={[styles.fullscreenNavButton, styles.leftNav]}
+                onPress={moveLeft}
+                activeOpacity={0.8}
+              >
+                <Ionicons name="chevron-back" size={32} color="white" />
+              </TouchableOpacity>
+            )}
+
+            {selectedIdx < filteredMediaItems.length - 1 && (
+              <TouchableOpacity
+                style={[styles.fullscreenNavButton, styles.rightNav]}
+                onPress={moveRight}
+                activeOpacity={0.8}
+              >
+                <Ionicons name="chevron-forward" size={32} color="white" />
+              </TouchableOpacity>
+            )} */}
+          </View>
+
+          {/* Thumbnail Strip */}
+          <View style={styles.thumbnailContainer}>
+            <ScrollView
+              ref={thumbnailScrollRef}
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              contentContainerStyle={styles.thumbnailScrollContainer}
+            >
+              {filteredMediaItems.map((mediaItem, index) =>
+                renderThumbnail(mediaItem, index, index === selectedIdx)
               )}
-              onError={() => {
-                // Fallback to direct URL if Google Docs viewer fails
-                console.log('Google Docs viewer failed, trying direct URL');
-              }}
-            />
+            </ScrollView>
           </View>
         </SafeAreaView>
       </Modal>
@@ -416,17 +533,18 @@ const styles = StyleSheet.create({
     width: "100%",
     position: "relative",
   },
-  wrapper: {
+  mainCarouselContainer: {
     height: 240,
+    width: "100%",
+    position: "relative",
+  },
+  scrollView: {
+    flex: 1,
   },
   slide: {
     width,
     height: 240,
     position: "relative",
-  },
-  imageTouchable: {
-    width: "100%",
-    height: "100%",
   },
   image: {
     width: "100%",
@@ -439,27 +557,10 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
   },
-  deleteButton: {
-    position: "absolute",
-    top: 8,
-    right: 8,
-    zIndex: 20,
-  },
-  deleteButtonInner: {
-    backgroundColor: "rgba(239, 68, 68, 0.9)",
-    width: 28,
-    height: 28,
-    borderRadius: 14,
-    justifyContent: "center",
-    alignItems: "center",
-    shadowColor: "#000",
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.25,
-    shadowRadius: 3.84,
-    elevation: 5,
+  placeholderText: {
+    color: "#6B7280",
+    fontSize: 14,
+    marginTop: 8,
   },
   videoContainer: {
     width: "100%",
@@ -482,167 +583,223 @@ const styles = StyleSheet.create({
     backgroundColor: "rgba(0, 0, 0, 0.2)",
   },
   playButton: {
-    width: 60,
-    height: 60,
-    borderRadius: 30,
+    width: 50,
+    height: 50,
+    borderRadius: 25,
     backgroundColor: "rgba(0, 0, 0, 0.7)",
     justifyContent: "center",
     alignItems: "center",
-    paddingLeft: 4,
-    shadowColor: "#000",
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.3,
-    shadowRadius: 4,
-    elevation: 8,
+    paddingLeft: 3,
   },
-  mediaIndicators: {
+  videoIndicator: {
     position: "absolute",
     bottom: 8,
     left: 8,
-    right: 8,
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-  },
-  videoIndicator: {
     flexDirection: "row",
     alignItems: "center",
     backgroundColor: "rgba(0, 0, 0, 0.7)",
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 12,
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 10,
   },
   videoIndicatorText: {
     color: "white",
-    fontSize: 12,
+    fontSize: 10,
     fontWeight: "500",
-    marginLeft: 4,
-  },
-  fullscreenButton: {
-    backgroundColor: "rgba(0, 0, 0, 0.7)",
-    padding: 6,
-    borderRadius: 16,
-  },
-  documentContainer: {
-    width: "100%",
-    height: "100%",
-    backgroundColor: "#F3F4F6",
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  documentPreview: {
-    alignItems: "center",
-    justifyContent: "center",
-    paddingHorizontal: 20,
-  },
-  documentName: {
-    color: "#374151",
-    fontSize: 14,
-    fontWeight: "500",
-    textAlign: "center",
-    marginTop: 12,
-    marginBottom: 8,
-  },
-  documentIndicator: {
-    flexDirection: "row",
-    alignItems: "center",
-    backgroundColor: "rgba(107, 114, 128, 0.8)",
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 12,
-    marginTop: 4,
-  },
-  documentIndicatorText: {
-    color: "white",
-    fontSize: 12,
-    fontWeight: "500",
-    marginLeft: 4,
-  },
-  pagination: {
-    bottom: 12,
-  },
-  paginationDot: {
-    backgroundColor: "rgba(255, 255, 255, 0.5)",
-    width: 8,
-    height: 8,
-    borderRadius: 4,
     marginLeft: 3,
-    marginRight: 3,
-  },
-  activeDot: {
-    backgroundColor: "#FFFFFF",
-    width: 10,
-    height: 10,
-    borderRadius: 5,
-    marginLeft: 3,
-    marginRight: 3,
   },
   navButton: {
+    position: "absolute",
+    top: "50%",
+    marginTop: -20,
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: "rgba(21, 62, 59, 0.8)",
+    backgroundColor: "rgba(0, 0, 0, 0.6)",
+    justifyContent: "center",
+    alignItems: "center",
+    zIndex: 10,
+  },
+  leftNav: {
+    left: 16,
+  },
+  rightNav: {
+    right: 16,
+  },
+  pagination: {
+    position: "absolute",
+    bottom: 8,
+    left: 0,
+    right: 0,
+    flexDirection: "row",
     justifyContent: "center",
     alignItems: "center",
   },
-  buttonWrapper: {
-    backgroundColor: 'transparent',
-    paddingHorizontal: 20,
-    paddingVertical: 0,
-    position: 'absolute',
-    top: '50%',
-    marginTop: -20,
+  paginationDot: {
+    backgroundColor: "rgba(255, 255, 255, 0.5)",
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+    marginLeft: 2,
+    marginRight: 2,
   },
+  activeDot: {
+    backgroundColor: "#FFFFFF",
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+  },
+
+  // Fullscreen styles
   fullscreenContainer: {
     flex: 1,
-    backgroundColor: "#000",
+    backgroundColor: "rgba(0,0,0,0.9)",
   },
   fullscreenHeader: {
     flexDirection: "row",
     alignItems: "center",
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    backgroundColor: "rgba(0, 0, 0, 0.8)",
+    justifyContent: "space-between",
+    left:19,
+    top:32,
+    padding:6
   },
   closeButton: {
     padding: 8,
+    width: 40,
   },
   fullscreenTitle: {
     color: "white",
     fontSize: 16,
     fontWeight: "500",
-    marginLeft: 8,
     flex: 1,
+    textAlign: "center",
   },
-  fullscreenVideoContainer: {
+  headerSpacer: {
+    width: 40,
+  },
+  fullscreenContent: {
+    flex: 1,
+    position: "relative",
+    paddingTop: 10,
+    paddingBottom: 80,
+  },
+  fullscreenSlide: {
+    width,
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
+    paddingHorizontal: 20, // Add side padding
+    paddingVertical: 20,
+  },
+  fullscreenImageContainer: {
+    justifyContent: "center",
+    alignItems: "center",
+    width: 336,
+    height: 196,
+  },
+  fullscreenImage: {
+    width: "100%",
+    height: "100%",
+    resizeMode: "contain",
+  },
+  fullscreenVideoContainer: {
+    justifyContent: "center",
+    alignItems: "center",
+    position: "relative",
+    width: 336,
+    height: 196,
   },
   fullscreenVideo: {
     width: "100%",
     height: "100%",
   },
-  fullscreenDocumentContainer: {
-    flex: 1,
-    backgroundColor: "white",
-  },
-  fullscreenDocument: {
-    flex: 1,
-  },
-  documentLoading: {
-    flex: 1,
+  fullscreenPlayButtonOverlay: {
+    position: "absolute",
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
     justifyContent: "center",
     alignItems: "center",
-    backgroundColor: "#F3F4F6",
+    backgroundColor: "rgba(0, 0, 0, 0.3)",
   },
-  documentLoadingText: {
-    color: "#6B7280",
-    fontSize: 16,
-    marginTop: 12,
+  fullscreenPlayButton: {
+    width: 70,
+    height: 70,
+    borderRadius: 35,
+    backgroundColor: "rgba(0, 0, 0, 0.7)",
+    justifyContent: "center",
+    alignItems: "center",
+    paddingLeft: 4,
+  },
+  fullscreenNavButton: {
+    position: "absolute",
+    top: "50%",
+    marginTop: -25,
+    width: 50,
+    height: 50,
+    borderRadius: 25,
+    backgroundColor: "rgba(0, 0, 0, 0.7)",
+    justifyContent: "center",
+    alignItems: "center",
+    zIndex: 10,
+  },
+
+  // Thumbnail styles
+  thumbnailContainer: {
+    position: "absolute",
+    bottom: 50,
+    left: 0,
+    right: 0,
+    paddingVertical: 15,
+    paddingHorizontal: 10,
+    alignItems: "center",
+  },
+
+  thumbnailScrollContainer: {
+    paddingHorizontal: 12, // Reduced from 16
+    alignItems: "center",
+  },
+  thumbnail: {
+    width: 60, // Reduced from 72
+    height: 60, // Reduced from 54
+    marginRight: 8, // Reduced from 8
+    borderRadius: 4, // Reduced from 6
+    overflow: "hidden",
+    position: "relative",
+  },
+  activeThumbnail: {
+    borderWidth: 2,
+    borderColor: "#007AFF",
+  },
+  thumbnailImage: {
+    width: "100%",
+    height: "100%",
+  },
+  thumbnailVideoIndicator: {
+    position: "absolute",
+    top: 2,
+    right: 2,
+    backgroundColor: "rgba(0, 0, 0, 0.7)",
+    borderRadius: 8,
+    width: 16,
+    height: 12,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  activeThumbnailOverlay: {
+    position: "absolute",
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: "rgba(0, 122, 255, 0.2)",
+  },
+  thumbnailDeleteIcon: {
+    position: "absolute",
+    borderRadius: 10,
+    justifyContent: "center",
+    alignItems: "center",
   },
 });
 
