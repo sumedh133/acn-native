@@ -151,8 +151,8 @@ export const PropertyImages: React.FC<PropertyImagesProps> = ({
       // Configure upload
       const uploadConfig: MultipleUploadConfig = {
         endpoint: TUS_ENDPOINT,
-        chunkSize: 2 * 1024 * 1024, // 2MB chunks
-        maxConcurrent: 5,
+        chunkSize: 1024 * 1024, // 2MB chunks
+        maxConcurrent: 3,
         strategy: "parallel",
         resumable: true,
         retryAttempts: 2,
