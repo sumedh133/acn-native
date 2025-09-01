@@ -8,19 +8,19 @@ import {
   TouchableOpacity,
   Alert,
   ActivityIndicator,
-} from "react-native";
+} from "react-native";  
 import { LinearGradient } from "expo-linear-gradient";
-import * as DocumentPicker from "expo-document-picker";
+import * as DocumentPicker from 'expo-document-picker';
 import { Ionicons } from "@expo/vector-icons";
 import { UploadFileIcon } from "../../../../assets/icons/svg/PropertyListing/UploadFileIcon";
 import ImageCarousel from "../../../components/property/ImageCarousel";
-import {
+import { 
   MultipleFilesUploadService,
-  SelectedFile,
-  UploadResult,
+  SelectedFile, 
+  UploadResult, 
   MediaUploadData,
   FilePickerResult,
-  MultipleUploadConfig,
+  MultipleUploadConfig 
 } from "../../../services/media_services/mediaService";
 
 // Add MediaItem interface
@@ -30,7 +30,7 @@ interface MediaItem {
 }
 
 const { width } = Dimensions.get("window");
-const TUS_ENDPOINT = "https://tus-protocol-dot-iqol-crm.uc.r.appspot.com/files"
+const TUS_ENDPOINT  = "https://tusd.tusdemo.net/files/"
 
 interface PropertyImagesProps {
   images?: string[];
@@ -45,13 +45,13 @@ export const PropertyImages: React.FC<PropertyImagesProps> = ({
   images = [],
   onMediaUpdate,
   currentMedia = { photos: [], videos: [], documents: [] },
-  propId = "temp-prop-id",
+  propId = 'temp-prop-id',
   agentData,
   previewType
 }) => {
   const [uploading, setUploading] = useState(false);
 
-  // Create structured media array with type information
+  // Create structured media array with type information (excluding documents)
   const createMediaItems = (): MediaItem[] => {
     const mediaItems: MediaItem[] = [];
 
@@ -59,8 +59,8 @@ export const PropertyImages: React.FC<PropertyImagesProps> = ({
     images.forEach(url => {
       mediaItems.push({ url, type: 'image' });
     });
-
-    // Add current media with proper types
+    
+    // Add current media with proper types (only photos and videos)
     currentMedia.photos.forEach(url => {
       mediaItems.push({ url, type: 'image' });
     });
@@ -68,11 +68,7 @@ export const PropertyImages: React.FC<PropertyImagesProps> = ({
     currentMedia.videos.forEach(url => {
       mediaItems.push({ url, type: 'video' });
     });
-
-    currentMedia.documents.forEach(url => {
-      mediaItems.push({ url, type: 'document' });
-    });
-
+    
     return mediaItems;
   };
 
@@ -82,24 +78,24 @@ export const PropertyImages: React.FC<PropertyImagesProps> = ({
   const openFilePicker = async () => {
     try {
       const result = await DocumentPicker.getDocumentAsync({
-        type: "/",
+        type: '*/*',
         multiple: true,
         copyToCacheDirectory: true,
       });
 
       if (!result.canceled && result.assets && result.assets.length > 0) {
-        const files: FilePickerResult[] = result.assets.map((asset) => ({
+        const files: FilePickerResult[] = result.assets.map(asset => ({
           uri: asset.uri,
           name: asset.name || `file_${Date.now()}`,
-          type: asset.mimeType || "application/octet-stream",
+          type: asset.mimeType || 'application/octet-stream',
           size: asset.size || 0,
         }));
-
+        
         uploadFiles(files);
       }
     } catch (error) {
-      console.error("File picker error:", error);
-      Alert.alert("Error", "Failed to pick files");
+      console.error('File picker error:', error);
+      Alert.alert('Error', 'Failed to pick files');
     }
   };
 
@@ -110,7 +106,7 @@ export const PropertyImages: React.FC<PropertyImagesProps> = ({
     const validationErrors: string[] = [];
     const validFiles: FilePickerResult[] = [];
 
-    files.forEach((file) => {
+    files.forEach(file => {
       const validation = MultipleFilesUploadService.validateFile(file);
       if (validation.valid) {
         validFiles.push(file);
@@ -120,7 +116,7 @@ export const PropertyImages: React.FC<PropertyImagesProps> = ({
     });
 
     if (validationErrors.length > 0) {
-      Alert.alert("Invalid Files", validationErrors.join("\n"));
+      Alert.alert('Invalid Files', validationErrors.join('\n'));
       if (validFiles.length === 0) return;
     }
 
@@ -128,8 +124,7 @@ export const PropertyImages: React.FC<PropertyImagesProps> = ({
 
     try {
       const uploadService = new MultipleFilesUploadService();
-      const categorizedFiles =
-        MultipleFilesUploadService.categorizeFilesByType(validFiles);
+      const categorizedFiles = MultipleFilesUploadService.categorizeFilesByType(validFiles);
 
       // Prepare all files for upload with proper IDs
       const allFilesToUpload: Array<{
@@ -138,30 +133,28 @@ export const PropertyImages: React.FC<PropertyImagesProps> = ({
       }> = [];
 
       Object.entries(categorizedFiles).forEach(([type, fileList]) => {
-        fileList.forEach((file) => {
+        fileList.forEach(file => {
           allFilesToUpload.push({
             file,
-            type: type as keyof MediaUploadData,
+            type: type as keyof MediaUploadData
           });
         });
       });
 
       // Prepare files for TUS upload
-      const selectedFiles: SelectedFile[] = allFilesToUpload.map(
-        ({ file, type }, index) => ({
-          uri: file.uri,
-          name: file.name,
-          type: file.type,
-          size: file.size,
-          id: `${propId}-${type}-${file.name || Date.now()}-${index}`,
-        })
-      );
+      const selectedFiles: SelectedFile[] = allFilesToUpload.map(({ file, type }, index) => ({
+        uri: file.uri,
+        name: file.name,
+        type: file.type,
+        size: file.size,
+        id: `${propId}-${type}-${file.name || Date.now()}-${index}`,
+      }));
 
       // Configure upload
       const uploadConfig: MultipleUploadConfig = {
         endpoint: TUS_ENDPOINT,
-        chunkSize: 2 * 1024 * 1024, // 2MB chunks
-        maxConcurrent: 5,
+        chunkSize: 1024 * 1024, // 2MB chunks
+        maxConcurrent: 3,
         strategy: "parallel",
         resumable: true,
         retryAttempts: 2,
@@ -171,11 +164,10 @@ export const PropertyImages: React.FC<PropertyImagesProps> = ({
         },
       };
 
+      console.log('selected files', selectedFiles)
+
       // Start the upload
-      const results = await uploadService.startBatchUpload(
-        selectedFiles,
-        uploadConfig
-      );
+      const results = await uploadService.startBatchUpload(selectedFiles, uploadConfig);
 
       // Process results and categorize successful uploads
       const successfulUploads: MediaUploadData = {
@@ -189,10 +181,7 @@ export const PropertyImages: React.FC<PropertyImagesProps> = ({
           const { type } = allFilesToUpload[index];
           successfulUploads[type].push(result.uploadUrl);
         } else {
-          console.error(
-            `Failed to upload ${selectedFiles[index].name}:`,
-            result.error?.message || "Unknown error"
-          );
+          console.error(`Failed to upload ${selectedFiles[index].name}:`, result.error?.message || 'Unknown error');
         }
       });
 
@@ -201,72 +190,53 @@ export const PropertyImages: React.FC<PropertyImagesProps> = ({
         const updatedMedia: MediaUploadData = {
           photos: [...currentMedia.photos, ...successfulUploads.photos],
           videos: [...currentMedia.videos, ...successfulUploads.videos],
-          documents: [
-            ...currentMedia.documents,
-            ...successfulUploads.documents,
-          ],
+          documents: [...currentMedia.documents, ...successfulUploads.documents],
         };
         onMediaUpdate(updatedMedia);
       }
+      console.log('successfull', successfulUploads)
 
       // Show success message
-      const totalSuccess = Object.values(successfulUploads).reduce(
-        (sum, arr) => sum + arr.length,
-        0
-      );
+      const totalSuccess = Object.values(successfulUploads).reduce((sum, arr) => sum + arr.length, 0);
       const totalFailed = validFiles.length - totalSuccess;
-
+      
       if (totalSuccess > 0) {
-        const message =
-          totalSuccess === validFiles.length
-            ? `All ${totalSuccess} files uploaded successfully!`
-            : `${totalSuccess} files uploaded successfully`;
-        Alert.alert("Upload Successful", message);
+        const message = totalSuccess === validFiles.length 
+          ? `All ${totalSuccess} files uploaded successfully!`
+          : `${totalSuccess} files uploaded successfully`;
+        Alert.alert('Upload Successful', message);
       }
 
       if (totalFailed > 0) {
-        Alert.alert(
-          "Upload Issues",
-          `${totalFailed} files failed to upload. Please try again.`
-        );
+        Alert.alert('Upload Issues', `${totalFailed} files failed to upload. Please try again.`);
       }
+
     } catch (error: any) {
-      console.error("Upload failed:", error);
-      Alert.alert("Upload Failed", error.message || "Failed to upload files");
+      console.error('Upload failed:', error);
+      Alert.alert('Upload Failed', error.message || 'Failed to upload files');
     } finally {
       setUploading(false);
     }
   };
 
   const deleteFile = (fileUrl: string, fileType: keyof MediaUploadData) => {
-    Alert.alert("Delete File", "Are you sure you want to delete this file?", [
-      { text: "Cancel", style: "cancel" },
-      {
-        text: "Delete",
-        style: "destructive",
-        onPress: () => {
-          if (onMediaUpdate) {
-            const updatedMedia = { ...currentMedia };
-            updatedMedia[fileType] = updatedMedia[fileType].filter(
-              (url) => url !== fileUrl
-            );
-            onMediaUpdate(updatedMedia);
-          }
-        },
-      },
-    ]);
+    if (onMediaUpdate) {
+      const updatedMedia = { ...currentMedia };
+      updatedMedia[fileType] = updatedMedia[fileType].filter(url => url !== fileUrl);
+      onMediaUpdate(updatedMedia);
+    }
   };
 
-  // Helper function to work with MediaItem structure
+  // Updated helper function to work with MediaItem structure (excluding documents)
   const getFileInfo = (mediaItem: MediaItem, index: number) => {
     let fileType: keyof MediaUploadData;
     let canDelete = true;
-
+    
     const legacyImagesCount = images.length;
 
     if (index < legacyImagesCount) {
       // This is a legacy image, might not be deletable
-      fileType = "photos";
+      fileType = 'photos';
       canDelete = false;
     } else {
       // Current media item
@@ -276,9 +246,6 @@ export const PropertyImages: React.FC<PropertyImagesProps> = ({
           break;
         case 'video':
           fileType = 'videos';
-          break;
-        case 'document':
-          fileType = 'documents';
           break;
         default:
           fileType = 'photos';
@@ -299,6 +266,7 @@ export const PropertyImages: React.FC<PropertyImagesProps> = ({
     <View className="rounded-[16px] bg-white overflow-hidden">
       {hasAnyFiles ? (
         <View>
+          {/* Enhanced Media Carousel for Images and Videos only */}
           {allMediaItems.length > 0 && (
             <View className="relative">
               <ImageCarousel
@@ -310,7 +278,7 @@ export const PropertyImages: React.FC<PropertyImagesProps> = ({
             </View>
           )}
           {(previewType == 'add' || previewType == 'edit' || previewType === 'my-business') && (
-            <View className="p-4 border-t border-gray-100">
+            {/* <View className="p-4 border-t border-gray-100">
               <TouchableOpacity
                 onPress={openFilePicker}
                 className="bg-[#2D5A52] px-4 py-3 rounded-lg flex-row items-center justify-center space-x-2"
@@ -323,34 +291,34 @@ export const PropertyImages: React.FC<PropertyImagesProps> = ({
                   <UploadFileIcon size={18} color="white" />
                 )}
                 <Text className="text-white font-semibold text-sm">
-                  {uploading ? "Uploading..." : "Add More Files"}
+                  {uploading ? 'Uploading...' : 'Add More Files'}
                 </Text>
               </TouchableOpacity>
-            </View>
+            </View> */}
           )}
         </View>
       ) : (
         <LinearGradient
           colors={["#E0F7F4", "#FFFFFF"]}
           locations={[0.0891, 0.7814]}
-          className="w-full"
+          className="w-full rounded-b-[16px] border-b border-[#EBEBEB]"
         >
-          <View className="flex flex-col items-center justify-center space-y-4 px-3 py-8">
+          <View className="flex flex-col items-center justify-center space-y-4 px-3 py-4 mt-6">
             <Image
               source={require("../../../../assets/icons/no-image-icon.webp")}
               className="w-24 h-24"
             />
-            <View className="flex flex-col items-center justify-center space-y-1 pb-3">
+            <View className="flex flex-col items-center justify-center">
               <Text className="text-sm font-bold text-black">
-                No Media Found
+                No Images Found
               </Text>
-              <Text className="text-sm font-medium text-[#757575]">
-                The listing doesn't have any images, videos, or documents yet.
+              <Text className="text-sm font-medium text-[#757575] pb-3">
+                The listing doesn't have any images or videos yet.
               </Text>
               {(previewType == 'add' || previewType == 'edit' || previewType === 'my-business') && (
                 <TouchableOpacity
                   onPress={openFilePicker}
-                  className="bg-[#2D5A52] px-4 py-[9px] rounded-lg flex-row items-center space-x-2 mt-3"
+                  className="bg-[#2D5A52] px-6 py-[9px] rounded-lg flex-row items-center space-x-2"
                   activeOpacity={0.8}
                   disabled={uploading}
                 >
@@ -360,7 +328,7 @@ export const PropertyImages: React.FC<PropertyImagesProps> = ({
                     <UploadFileIcon size={18} color="white" />
                   )}
                   <Text className="text-white font-semibold text-sm">
-                    {uploading ? "Uploading..." : "Add Media Files"}
+                    {uploading ? 'Uploading...' : 'Add Now'}
                   </Text>
                 </TouchableOpacity>
               )}

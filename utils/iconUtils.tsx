@@ -33,6 +33,9 @@ import UdsIcon from "../assets/icons/svg/PropertyListing/PropertyDetails/udsIcon
 import rentalInfoIcon from "../assets/icons/svg/PropertyListing/PropertyDetails/rentalInfoIcon.svg";
 
 import ApartmentTypeIcon from "../assets/icons/svg/PropertyListing/PropertyDetails/apartmentTypeIcon.svg";
+import plotAreaIcon from "../assets/icons/svg/PropertyListing/PropertyDetails/plotAreaIcon.svg";
+import balconyFacingIcon from "../assets/icons/svg/PropertyListing/PropertyDetails/balconyFacingIcon.svg";
+import structureIcon from "../assets/icons/svg/PropertyListing/PropertyDetails/structureIcon.svg";
 import { DefaultPropertyIcon } from "@/assets/icons/svg/PropertyListing/PropertyDetails/defaultPropertyIcon";
 import { apartmentTypes } from "@/app/components/property/propertyMoreFilters/moreFilterOptions";
 
@@ -56,6 +59,11 @@ import Step3Gray from '../assets/icons/svg/AddInventory/StepIcons/step3_gray.svg
 import Step4Gray from '../assets/icons/svg/AddInventory/StepIcons/step4_gray.svg';
 import Step5Gray from '../assets/icons/svg/AddInventory/StepIcons/step5_gray.svg';
 
+
+//listing page image
+import deleteIcon from "../assets/icons/svg/PropertyListing/deleteIcon.svg";
+import crossIcon from "../assets/icons/svg/PropertyListing/crossIcon.svg";
+
 // map string keys to icon components
 export const iconMap: Record<string, React.FC<any>> = {
   micromarket: MicromarketIcon,
@@ -64,7 +72,9 @@ export const iconMap: Record<string, React.FC<any>> = {
   type: ApartmentIcon,
   handover: HandoverIcon,
   handOverDate: HandoverIcon,
+  handoverDate: HandoverIcon,
   possession: HandoverIcon,
+  readyToMove: HandoverIcon,
   configuration: ConfigurationIcon,
   bedrooms: ConfigurationIcon,
 
@@ -94,8 +104,15 @@ export const iconMap: Record<string, React.FC<any>> = {
   preferredTenants: PreferredTenantsIcon,
   sbua: SbuaIcon,
   uds: UdsIcon,
+  plotArea: plotAreaIcon,
+  structure: structureIcon,
+  balconyFacing: balconyFacingIcon,
 
   apartmentType: ApartmentTypeIcon,
+
+  //images
+  deleteIcon: deleteIcon,
+  crossIcon: crossIcon
 };
 
 

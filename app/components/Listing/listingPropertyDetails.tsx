@@ -68,10 +68,10 @@ export const FormPreview: React.FC<FormPreviewProps> = ({
         .map((fields) => {
           const activeField = fields.find((f) => isFieldVisible(f));
           return activeField
-            ? { id: activeField.id, label: activeField.label }
+            ? { id: activeField.id, label: activeField.label, suffix: activeField.suffix || '', prefix: activeField.prefix || '' }
             : null;
         })
-        .filter(Boolean) as Array<{ id: string; label: string }>;
+        .filter(Boolean) as Array<{ id: string; label: string, suffix: string, prefix: string }>;
 
       return { ...step, stepValues };
     })

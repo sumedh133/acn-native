@@ -285,7 +285,7 @@ type noOfBedrooms = 1 | 2 | 3 | 4 | 5 | 6 | 7;
 type noOfBathrooms = 1 | 2 | 3 | 4 | 5 | "5+";
 type noOfBalconies = 0 | 1 | 2 | 3 | 4 | 5 | "5+";
 type balconyFacing = "Inside" | "Outside";
-type possession = "Ready to Move" | "Under Construction";
+type possession = "ready to move" | "under construction";
 type ageOfTheBuilding =
   | "New"
   | "1-5 years"
