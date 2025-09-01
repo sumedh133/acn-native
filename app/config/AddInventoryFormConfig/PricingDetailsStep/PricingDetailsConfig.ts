@@ -142,7 +142,6 @@ export const pricingDetailsStep: FormStep = {
       },
        keyBoardType: "numeric",
       prefix: "₹ ",
-      suffix: "Per Month",
       numberToStringFooter: true,
       colspan: 12,
     },
