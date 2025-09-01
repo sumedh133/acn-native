@@ -11,6 +11,7 @@ import { logEvent } from "@react-native-firebase/analytics";
 import { MobileHits } from "../components/property/MobileHits";
 import { useAlgoliaSearch } from "@/hooks/propertyHooks/useAlgoliaSearchProperties";
 import MoreFilters from "../components/property/propertyMoreFilters/MoreFilters";
+import { usePathname } from "expo-router";
 
 // At the top of RequirementsPage, create simple context
 
@@ -18,6 +19,7 @@ export default function PropertiesScreen() {
   const [isMoreFiltersModalOpen, setIsMoreFiltersModalOpen] = useState(false);
   const agentData = useSelector((state: RootState) => state?.agent?.docData);
   const userType = agentData?.userType || "free";
+  const path = usePathname();
   const [isScrolling, setIsScrolling] = useState(false);
   const ScrollContext = React.createContext({
     isScrolling: false,
@@ -67,6 +69,7 @@ export default function PropertiesScreen() {
 
     updateFilters(newFilters);
   }, [activeTab]);
+  console.log("Hare krishna",path)
 
   // Track page view
   useEffect(() => {

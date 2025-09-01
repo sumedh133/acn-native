@@ -9,7 +9,7 @@ import {
 
 interface TextInputFieldProps {
   value: string | number | null;
-  setValue: (value: string | number) => void;
+  setValue: (value: string | number|null) => void;
   title?: string;
   placeholder?: string;
   required?: boolean;
@@ -53,7 +53,7 @@ const TextInputField = ({
       keyboardType === "number-pad" ||
       keyboardType === "decimal-pad"
     ) {
-      if (text === "") setValue(0);
+      if (text === "") setValue(null);
       else {
         const numericValue =
           keyboardType === "decimal-pad"

@@ -107,7 +107,7 @@ export const pricingDetailsStep: FormStep = {
     // ----------- Rental Info for Resale Properties (optional) -----------
     {
       id: "isPreLeased",
-      label: "PreL-Leased / Pre-Rented",
+      label: "Pre-Leased / Pre-Rented",
       type: "select",
       required: false,
       options: [
