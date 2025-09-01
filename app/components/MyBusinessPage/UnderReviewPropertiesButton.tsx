@@ -5,7 +5,13 @@ import HourglassIcon from "@/assets/icons/MyBusinessPage/hourglass.svg";
 import RightArrow from "@/assets/icons/arrowRightt.svg";
 import { router } from "expo-router";
 
-const PropertiesUnderReviewCard = () => {
+interface PropertiesUnderReviewCardProps {
+  count: number;
+}
+
+const PropertiesUnderReviewCard = ({
+  count,
+}: PropertiesUnderReviewCardProps) => {
   return (
     <TouchableOpacity
       activeOpacity={0.8}
@@ -30,7 +36,7 @@ const PropertiesUnderReviewCard = () => {
           className="flex-1 text-base font-medium text-black mx-3"
           style={{ fontFamily: "Lato_700Bold" }}
         >
-          3 properties under review{/* Count here needs to be fetched */}
+          {count} properties under review{/* Count here needs to be fetched */}
         </Text>
 
         {/* Arrow */}

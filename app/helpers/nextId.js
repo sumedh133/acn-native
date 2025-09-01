@@ -11,7 +11,9 @@ const generateNextId = (data) => {
 
   const padLength = label === "P" ? 4 : 3;
   // Generate last ID
-  const lastId = `${label}${prefix}${count.toString().padStart(padLength, "0")}`;
+  const lastId = `${label}${prefix}${count
+    .toString()
+    .padStart(padLength, "0")}`;
 
   // Update prefix and count for the next ID
   let newCount = count + 1;
@@ -28,7 +30,7 @@ const generateNextId = (data) => {
   }
 
   // Generate next ID
-  const nextId = `${label}${newPrefix}${newCount.toString().padStart(padLength, "0")}`;
+  const nextId = `${label}${newPrefix}${newCount.padStart(padLength, "0")}`;
 
   return { lastId, nextId, updatedPrefix: newPrefix, updatedCount: newCount };
 };
@@ -68,7 +70,7 @@ const handleIdGeneration = async (type, retries = 3) => {
     } else {
       console.error(
         "Transaction failed after multiple retries:",
-        error.message,
+        error.message
       );
       throw new Error("ID generation failed. Please try again.");
     }

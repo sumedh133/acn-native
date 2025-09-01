@@ -1,5 +1,5 @@
 import React from "react";
-import { View, Text, TouchableOpacity } from "react-native";
+import { View, Text, TouchableOpacity, Linking } from "react-native";
 import { Property } from "@/app/types";
 
 type UIProperty = Omit<Property, "handOverDate"> & {
@@ -15,14 +15,13 @@ export const LocationSection: React.FC<LocationSectionProps> = ({ data }) => {
     path.split(".").reduce((acc, key) => acc?.[key], obj);
 
   // Sample data or from props
-  const area =
-    getFieldValue(data, "area") || "East Bangalore";
+  const area = getFieldValue(data, "area") || "East Bangalore";
   const address =
     getFieldValue(data, "address") ||
     "CIL Layout A Block, Judicial Colony, Raj Mahal Vilas 2nd Stage, Sanjayanagara, Bengaluru, Karnataka 560094";
 
   return (
-     <View className="px-3 py-3 border border-[#E1E1E1] rounded-[8px]">
+    <View className="px-3 py-3 border border-[#E1E1E1] rounded-[8px]">
       {/* Area */}
       <View className="flex-row mb-3">
         <Text className="w-[104px] text-[14px] leading-[21px] font-medium tracking-[0.25px] text-[#5A5555] font-[Montserrat]">
@@ -45,7 +44,12 @@ export const LocationSection: React.FC<LocationSectionProps> = ({ data }) => {
 
       {/* Button */}
       <TouchableOpacity className="flex-row items-center justify-center py-2 px-8 border-2 border-black rounded-[4px]">
-        <Text className="text-[#10302D] text-center text-[12px] leading-[150%] font-bold font-lato">
+        <Text
+          className="text-[#10302D] text-center text-[12px] leading-[150%] font-bold font-lato"
+          onPress={() => {
+            Linking.openURL(data.mapLocation || "");
+          }}
+        >
           Open in Google Maps
         </Text>
         <Text className="text-[#10302D] text-[12px] font-bold">→</Text>

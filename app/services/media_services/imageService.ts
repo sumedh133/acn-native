@@ -45,25 +45,25 @@ export interface FilePickerResult {
 
 // Constants for file categorization
 export const IMAGE_MIME_TYPES = [
-  'image/jpeg',
-  'image/jpg', 
-  'image/png',
-  'image/gif',
-  'image/webp',
-  'image/svg+xml',
-  'image/bmp',
-  'image/tiff'
+  "image/jpeg",
+  "image/jpg",
+  "image/png",
+  "image/gif",
+  "image/webp",
+  "image/svg+xml",
+  "image/bmp",
+  "image/tiff",
 ] as const;
 
 export const VIDEO_MIME_TYPES = [
-  'video/mp4',
-  'video/avi',
-  'video/mov',
-  'video/wmv',
-  'video/flv',
-  'video/webm',
-  'video/mkv',
-  'video/3gp'
+  "video/mp4",
+  "video/avi",
+  "video/mov",
+  "video/wmv",
+  "video/flv",
+  "video/webm",
+  "video/mkv",
+  "video/3gp",
 ] as const;
 
 export class MultipleFilesUploadService {
@@ -83,7 +83,7 @@ export class MultipleFilesUploadService {
       );
 
       let results: UploadResult[];
-      
+
       if (config.strategy === "sequential") {
         results = [];
         for (const promise of uploadPromises) {
@@ -128,7 +128,8 @@ export class MultipleFilesUploadService {
 
       return results;
     } catch (error) {
-      const errorObj = error instanceof Error ? error : new Error(String(error));
+      const errorObj =
+        error instanceof Error ? error : new Error(String(error));
       const failedResults: UploadResult[] = files.map((file) => ({
         fileId: file.id,
         fileName: file.name,
@@ -200,17 +201,17 @@ export class MultipleFilesUploadService {
     // - react-native-fs to read file contents
     // - FormData with proper file handling
     // - Platform-specific file handling
-    
+
     try {
       // Create a blob with proper type
       const blob = new Blob([], { type: file.type });
-      return new File([blob], file.name, { 
+      return new File([blob], file.name, {
         type: file.type,
         lastModified: Date.now(),
       });
     } catch (error) {
       // Fallback for environments where File constructor isn't available
-      console.warn('File constructor not available, using fallback');
+      console.warn("File constructor not available, using fallback");
       const blob = new Blob([], { type: file.type });
       // Cast to File as a fallback - you may need platform-specific handling here
       return blob as unknown as File;
@@ -218,7 +219,7 @@ export class MultipleFilesUploadService {
   }
 
   private generateRetryDelays(attempts: number): number[] {
-    return Array.from({ length: attempts }, (_, i) => 
+    return Array.from({ length: attempts }, (_, i) =>
       Math.min(1000 * Math.pow(2, i), 10000)
     );
   }
@@ -231,7 +232,7 @@ export class MultipleFilesUploadService {
         this.uploads.delete(fileId);
         return true;
       } catch (error) {
-        console.error('Failed to cancel upload:', error);
+        console.error("Failed to cancel upload:", error);
         return false;
       }
     }
@@ -274,12 +275,12 @@ export class MultipleFilesUploadService {
       documents: [] as FilePickerResult[],
     };
 
-    files.forEach(file => {
+    files.forEach((file) => {
       const mimeType = file.type.toLowerCase();
-      
-      if (mimeType.startsWith('image/')) {
+
+      if (mimeType.startsWith("image/")) {
         categorized.photos.push(file);
-      } else if (mimeType.startsWith('video/')) {
+      } else if (mimeType.startsWith("video/")) {
         categorized.videos.push(file);
       } else {
         categorized.documents.push(file);
@@ -296,11 +297,11 @@ export class MultipleFilesUploadService {
   } {
     // Max file size: 100MB
     const MAX_FILE_SIZE = 100 * 1024 * 1024;
-    
+
     if (file.size > MAX_FILE_SIZE) {
       return {
         valid: false,
-        error: `File "${file.name}" is too large. Maximum size is 100MB.`
+        error: `File "${file.name}" is too large. Maximum size is 100MB.`,
       };
     }
 
@@ -308,7 +309,7 @@ export class MultipleFilesUploadService {
     if (file.size === 0) {
       return {
         valid: false,
-        error: `File "${file.name}" is empty.`
+        error: `File "${file.name}" is empty.`,
       };
     }
 

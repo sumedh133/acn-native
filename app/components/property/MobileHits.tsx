@@ -22,6 +22,7 @@ import { logEvent } from "@react-native-firebase/analytics";
 import { ScrollContext } from "@/app/ScrollContext";
 import { Property } from "@/app/types";
 import { usePathname } from "expo-router";
+import { FlashList } from "@shopify/flash-list";
 
 interface MobileHitsProps {
   results: any[]; // All accumulated results from infinite scroll
@@ -33,8 +34,7 @@ interface MobileHitsProps {
   query?: string; // Current search query for analytics
   onLoadMore: () => void; // Function to load next page
   onRefresh?: () => void; // Optional refresh function
-  selectedProperties?: string[];
-  setSelectedProperties?: (selectedProperties: string[]) => void;
+  selectedProperties?: Set<string>;
 }
 
 export const MobileHits = ({
@@ -48,7 +48,6 @@ export const MobileHits = ({
   onLoadMore,
   onRefresh,
   selectedProperties,
-  setSelectedProperties,
 }: MobileHitsProps) => {
   const agentData = useSelector((state: RootState) => state?.agent?.docData);
   const userType = agentData?.userType || "free";
@@ -59,6 +58,8 @@ export const MobileHits = ({
   const [isRendered, setIsRendered] = useState(false);
   const { scrollY, onScrollEndDrag, onMomentumScrollEnd } =
     useContext(ScrollContext);
+
+  console.log(selectedProperties, "this is thecheck");
 
   const viewabilityConfig = useRef<ViewabilityConfig>({
     itemVisiblePercentThreshold: 50, // Item is considered viewed when 50% visible
@@ -137,11 +138,7 @@ export const MobileHits = ({
   ]);
 
   // Key extractor for FlatList
-  const keyExtractor = useCallback(
-    (item: any, index: number) =>
-      item.propertyId || item.objectID || String(index),
-    []
-  );
+  const keyExtractor = useCallback((item: Property) => item.propertyId, []);
 
   // Track property card views
   const handleViewableItemsChanged = useCallback(
@@ -239,7 +236,6 @@ export const MobileHits = ({
             key={item.propertyId}
             property={item}
             selectedProperties={selectedProperties}
-            setSelectedProperties={setSelectedProperties}
           />
         </View>
       );
@@ -391,7 +387,7 @@ export const MobileHits = ({
 
   // Render the property list
   return (
-    <Animated.FlatList
+    <FlashList
       data={results}
       renderItem={renderItem}
       extraData={selectedProperties}
@@ -420,13 +416,13 @@ export const MobileHits = ({
       }
       contentContainerStyle={{
         paddingHorizontal: 16,
-        width: "100%",
-        flexGrow: 1,
+        // width: "100%",
+        // flexGrow: 1,
       }}
       style={{ flexGrow: 1, flexShrink: 1 }}
-      initialNumToRender={10}
-      maxToRenderPerBatch={5}
-      windowSize={10}
+      // estimatedItemSize={10}
+      // maxToRenderPerBatch={5}
+      // windowSize={10}
       removeClippedSubviews={true}
       onEndReached={handleEndReached}
       onEndReachedThreshold={0.3}

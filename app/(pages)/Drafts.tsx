@@ -10,7 +10,7 @@ import {
   SafeAreaView,
   ActivityIndicator,
 } from "react-native";
-import {Property} from "../types";
+import { Property } from "../types";
 import DraftCard from "../components/Listing/DraftCard";
 import {
   collection,

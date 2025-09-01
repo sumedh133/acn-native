@@ -1,5 +1,11 @@
 import React, { useState, useEffect, useCallback, useRef } from "react";
-import { View, Keyboard, Text, RefreshControl, ActivityIndicator } from "react-native"; // Import RefreshControl from react-native
+import {
+  View,
+  Keyboard,
+  Text,
+  RefreshControl,
+  ActivityIndicator,
+} from "react-native"; // Import RefreshControl from react-native
 import Offline from "../components/Offline";
 import { useSelector } from "react-redux";
 import { RootState } from "@/store/store";

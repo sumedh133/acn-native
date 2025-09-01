@@ -728,7 +728,7 @@ const styles = StyleSheet.create({
     paddingVertical: 8,
     gap: 10,
     borderWidth: 1,
-    borderColor: "#E3E3E3",
+    borderColor: "#9F9C9C",
     borderRadius: 20,
   },
   creditsText: {

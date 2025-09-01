@@ -26,11 +26,11 @@ import {
 // Add MediaItem interface
 interface MediaItem {
   url: string;
-  type: 'image' | 'video' | 'document';
+  type: "image" | "video" | "document";
 }
 
 const { width } = Dimensions.get("window");
-const TUS_ENDPOINT  = "https://tus-protocol-dot-iqol-crm.uc.r.appspot.com/files"
+const TUS_ENDPOINT = "https://tusd.tusdemo.net/files/";
 
 interface PropertyImagesProps {
   images?: string[];
@@ -52,25 +52,25 @@ export const PropertyImages: React.FC<PropertyImagesProps> = ({
   // Create structured media array with type information
   const createMediaItems = (): MediaItem[] => {
     const mediaItems: MediaItem[] = [];
-    
+
     // Add legacy images (treat as photos)
-    images.forEach(url => {
-      mediaItems.push({ url, type: 'image' });
+    images.forEach((url) => {
+      mediaItems.push({ url, type: "image" });
     });
-    
+
     // Add current media with proper types
-    currentMedia.photos.forEach(url => {
-      mediaItems.push({ url, type: 'image' });
+    currentMedia.photos.forEach((url) => {
+      mediaItems.push({ url, type: "image" });
     });
-    
-    currentMedia.videos.forEach(url => {
-      mediaItems.push({ url, type: 'video' });
+
+    currentMedia.videos.forEach((url) => {
+      mediaItems.push({ url, type: "video" });
     });
-    
-    currentMedia.documents.forEach(url => {
-      mediaItems.push({ url, type: 'document' });
+
+    currentMedia.documents.forEach((url) => {
+      mediaItems.push({ url, type: "document" });
     });
-    
+
     return mediaItems;
   };
 
@@ -261,7 +261,7 @@ export const PropertyImages: React.FC<PropertyImagesProps> = ({
     let canDelete = true;
 
     const legacyImagesCount = images.length;
-    
+
     if (index < legacyImagesCount) {
       // This is a legacy image, might not be deletable
       fileType = "photos";
@@ -269,17 +269,17 @@ export const PropertyImages: React.FC<PropertyImagesProps> = ({
     } else {
       // This is a current media item, use its type
       switch (mediaItem.type) {
-        case 'image':
-          fileType = 'photos';
+        case "image":
+          fileType = "photos";
           break;
-        case 'video':
-          fileType = 'videos';
+        case "video":
+          fileType = "videos";
           break;
-        case 'document':
-          fileType = 'documents';
+        case "document":
+          fileType = "documents";
           break;
         default:
-          fileType = 'photos';
+          fileType = "photos";
       }
     }
 
@@ -300,11 +300,13 @@ export const PropertyImages: React.FC<PropertyImagesProps> = ({
           {/* Enhanced Media Carousel for Images, Videos, AND Documents */}
           {allMediaItems.length > 0 && (
             <View className="relative">
-              <ImageCarousel 
+              <ImageCarousel
                 mediaItems={allMediaItems}
                 propertyId={propId}
                 onDeleteFile={handleDeleteFromCarousel}
-                canDeleteFile={(index) => getFileInfo(allMediaItems[index], index).canDelete}
+                canDeleteFile={(index) =>
+                  getFileInfo(allMediaItems[index], index).canDelete
+                }
               />
             </View>
           )}

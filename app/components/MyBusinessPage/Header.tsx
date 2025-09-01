@@ -1,6 +1,6 @@
 // react imports
 import { RootState } from "@/store/store";
-import { Text, View, Animated } from "react-native";
+import { Text, View, Animated, TouchableOpacity } from "react-native";
 import { useSelector } from "react-redux";
 import { useContext, useEffect, useRef } from "react";
 
@@ -28,15 +28,16 @@ const MyBusinessHeader = ({
   );
 
   // Use the scroll context
-  const { headerHeight, setHeaderHeight } = useContext(ScrollContext);
+  const { secondaryHeaderHeight, setSecondaryHeaderHeight } =
+    useContext(ScrollContext);
   const headerRef = useRef<View>(null);
 
   // Measure the header height on mount
   useEffect(() => {
     // Set the header height for the context to use
     // The height is 90px as per your original component
-    setHeaderHeight(75);
-  }, [setHeaderHeight]);
+    setSecondaryHeaderHeight(75);
+  }, [setSecondaryHeaderHeight]);
 
   const cards = [
     {
@@ -57,7 +58,7 @@ const MyBusinessHeader = ({
     <Animated.View
       ref={headerRef}
       style={{
-        height: headerHeight,
+        height: secondaryHeaderHeight,
         overflow: "hidden",
       }}
       className="bg-white"
@@ -65,7 +66,7 @@ const MyBusinessHeader = ({
       <View className="flex flex-row bg-white w-full h-[90px] gap-[14.54px] px-4 mb-[10px]">
         {cards?.map((item, idx) => {
           return (
-            <View
+            <TouchableOpacity
               key={item.key}
               className={`${
                 activeCard === item.key ? "bg-[#153E3B]" : "bg-white"
@@ -92,7 +93,7 @@ const MyBusinessHeader = ({
               <View className="absolute bottom-0 right-[-1] z-[-5] overflow-hidden rounded-br-xl">
                 {item.img}
               </View>
-            </View>
+            </TouchableOpacity>
           );
         })}
       </View>

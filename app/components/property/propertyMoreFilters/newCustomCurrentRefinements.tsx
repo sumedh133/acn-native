@@ -28,6 +28,7 @@ export default function CustomCurrentRefinements({
   const allRefinements = Object.entries(filters)
     .filter(([key]) => key !== "listingType" && key !== "stage" && key !== "builderCategory")
     .filter(([key]) => key !== "cpId")
+    .filter(([key]) => key !== "status")
     .flatMap(([key, values]) => {
       if (!values) return [];
 

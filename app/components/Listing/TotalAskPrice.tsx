@@ -35,7 +35,7 @@ const TotalAskPrice: React.FC<TotalAskPricetProps> = ({
   searchable = false, // Default to false
 }) => {
   // Convert number to string for display
-  const [price, setPrice] = useState(initialPrice ? initialPrice.toString() : "");
+  const [price, setPrice] = useState(initialPrice ? initialPrice.toString(): "");
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [modalVisible, setModalVisible] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
@@ -70,7 +70,9 @@ const TotalAskPrice: React.FC<TotalAskPricetProps> = ({
     if (onPriceChange) {
       // Convert string to number before passing to callback
       // Remove commas before converting to number
-      const numericPrice = validPrice ? parseFloat(validPrice.replace(/,/g, "")) : 0;
+      const numericPrice = validPrice
+        ? parseFloat(validPrice.replace(/,/g, ""))
+        : 0;
       onPriceChange(selectedOption.value, numericPrice);
     }
   };
@@ -98,7 +100,7 @@ const TotalAskPrice: React.FC<TotalAskPricetProps> = ({
 
     // CHANGE HERE: Reset the price state to empty string
     setPrice("");
-    
+
     setSelectedOption(option);
     setIsDropdownOpen(false);
     setModalVisible(false);
@@ -113,7 +115,7 @@ const TotalAskPrice: React.FC<TotalAskPricetProps> = ({
 
     // CHANGE HERE: Reset the price state to empty string
     setPrice("");
-    
+
     setSelectedOption(option);
     setIsDropdownOpen(false);
     setModalVisible(false);
@@ -124,8 +126,9 @@ const TotalAskPrice: React.FC<TotalAskPricetProps> = ({
 
   // Calculate the total in words (for display below the input)
   const getPriceInWords = (): string => {
-    if (!price) 
-      if (selectedOption.value === 'totalAskPrice' ) return "Eg. 2.20 Cr | 2 Crore 20 Lakh Rupees only";
+    if (!price)
+      if (selectedOption.value === "totalAskPrice")
+        return "Eg. 2.20 Cr | 2 Crore 20 Lakh Rupees only";
       else return "Eg. 7.50 K | 7500 Rupees only";
     const numericPrice = parseFloat(price.replace(/,/g, ""));
     if (isNaN(numericPrice)) return "";
@@ -183,7 +186,11 @@ const TotalAskPrice: React.FC<TotalAskPricetProps> = ({
             onChangeText={handlePriceChange}
             onFocus={handleFocus}
             onBlur={handleBlur}
-            placeholder={selectedOption.value === 'totalAskPrice' ? "eg. 2,20,00,000" : "eg. 7,500"}
+            placeholder={
+              selectedOption.value === "totalAskPrice"
+                ? "eg. 2,20,00,000"
+                : "eg. 7,500"
+            }
             placeholderTextColor="#A0A0A0"
             keyboardType="numeric"
           />
@@ -295,9 +302,9 @@ const styles = StyleSheet.create({
   },
   titleText: {
     fontSize: 14,
-    marginBottom:6,
+    marginBottom: 6,
     color: "#000000",
-    fontFamily:"Montserrat_600SemiBold",
+    fontFamily: "Montserrat_600SemiBold",
   },
   compulsoryStar: {
     fontFamily: "sans-serif",

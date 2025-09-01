@@ -43,7 +43,10 @@ export default function PropertiesScreen() {
     updateSort,
     refresh,
     loadMore,
-  } = useAlgoliaSearch({ listingType: [`${activeTab}`] });
+  } = useAlgoliaSearch({
+    listingType: [`${activeTab}`],
+    // status: ["available"],
+  });
 
   useEffect(() => {
     if (!filters) return;

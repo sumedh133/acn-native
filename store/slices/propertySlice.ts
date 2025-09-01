@@ -5,7 +5,7 @@ import {
   AnyAction,
 } from "@reduxjs/toolkit";
 import { RootState } from "../store";
-import { main, Property } from "@/app/types";
+import { Property } from "@/app/types";
 import { db } from "@/app/config/firebase";
 import { doc, onSnapshot } from "firebase/firestore";
 import { setPropertyListener, clearPropertyListener } from "./listenerSlice";
@@ -36,7 +36,7 @@ const propertySlice = createSlice({
     setPropertyId: (state, action: PayloadAction<string | null>) => {
       state.propertyId = action.payload;
     },
-    setPropertyData: (state, action: PayloadAction<main>) => {
+    setPropertyData: (state, action: PayloadAction<Property>) => {
       const { propertyId, ...propertyData } = action.payload;
       state.propertyId = propertyId ?? null;
       state.propertyDocData = action.payload;
@@ -72,7 +72,7 @@ export const {
 
 // Thunk action to set property data
 export const setPropertyDataThunk =
-  (property: main): ThunkAction<void, RootState, unknown, AnyAction> =>
+  (property: Property): ThunkAction<void, RootState, unknown, AnyAction> =>
   (dispatch, getState) => {
     const { propertyId: currentPropertyId } = getState().property;
 
@@ -84,10 +84,10 @@ export const listenToPropertyChanges =
   (propertyId: string): ThunkAction<void, RootState, unknown, AnyAction> =>
   (dispatch, getState) => {
     dispatch(clearPropertyListener());
-    const docRef = doc(db, "acnTest", propertyId);
+    const docRef = doc(db, "acnTestProperties", propertyId);
     const unsubscribe = onSnapshot(docRef, (docSnap) => {
       if (docSnap.exists()) {
-        dispatch(setPropertyData(docSnap.data() as main));
+        dispatch(setPropertyData(docSnap.data() as Property));
       }
     });
     dispatch(setPropertyListener(unsubscribe));
