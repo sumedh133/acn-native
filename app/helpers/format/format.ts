@@ -58,7 +58,7 @@ export const convertMonthYearToUnix = (input: string): number => {
 };
 
 export const formatPrice = (value?: number | string) => {
-  if (!value) return "-";
+if (!value) return "-";
 
   const num = Number(value);
   if (isNaN(num)) return value.toString();

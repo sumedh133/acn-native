@@ -20,6 +20,7 @@ import PlacesSearch from "../Listing/PlacesSearch";
 import Document from "../Listing/document/Document";
 import PlusIcon from "../../../assets/icons/svg/AddInventory/FormIcons/plus_icon.svg";
 import CorrectIcon from "../../../assets/icons/svg/AddInventory/FormIcons/correct_icon.svg";
+import PhotoVideoPicker from "../Listing/PhotoVideoPicker";
 
 type UIProperty = Omit<Property, "handOverDate"> & {
   handOverDate?: string;
@@ -270,7 +271,9 @@ export const FormRenderer: React.FC<FormRendererProps> = ({
                 keyboardType={field.keyBoardType || "default"}
                 {...(field.prefix ? { prefix: field.prefix } : {})}
                 {...(field.suffix ? { suffix: field.suffix } : {})}
-                {...(field.numberToStringFooter ? { numberToStringFooter: field.numberToStringFooter } : {})}
+                {...(field.numberToStringFooter
+                  ? { numberToStringFooter: field.numberToStringFooter }
+                  : {})}
                 {...(field.footer ? { footer: field.footer } : {})}
               />
 
@@ -283,8 +286,9 @@ export const FormRenderer: React.FC<FormRendererProps> = ({
             <>
               {commonLabel}
               <TextInput
-                className={`border rounded-lg p-3 text-base bg-white min-h-[100px] ${error ? "border-[#d32f2f]" : "border-[#ddd]"
-                  }`}
+                className={`border rounded-lg p-3 text-base bg-white min-h-[100px] ${
+                  error ? "border-[#d32f2f]" : "border-[#ddd]"
+                }`}
                 style={{ textAlignVertical: "top" }}
                 value={value?.toString() || ""}
                 onChangeText={(text) => setFieldValue(field.id, text)}
@@ -322,20 +326,25 @@ export const FormRenderer: React.FC<FormRendererProps> = ({
                 {field.options?.map((option) => (
                   <TouchableOpacity
                     key={option.value}
-                    className={`px-3 py-2 border ${currentStep ? "rounded-[8px]" : "rounded-[30px]"
-                      } ${value === option.value
+                    className={`px-3 py-2 border ${
+                      currentStep ? "rounded-[8px]" : "rounded-[30px]"
+                    } ${
+                      value === option.value
                         ? `bg-[#F0FFFE] border-[#153E3B]`
-                        : `${currentStep ? "bg-[#FAFAFA]" : "bg-white"
-                        } border-[#BABABA]`
-                      }`}
+                        : `${
+                            currentStep ? "bg-[#FAFAFA]" : "bg-white"
+                          } border-[#BABABA]`
+                    }`}
                     onPress={() => setFieldValue(field.id, option.value)}
                   >
                     <Text
-                      className={`${currentStep ? "" : "px-[10px]"
-                        } text-sm font-medium ${value === option.value
+                      className={`${
+                        currentStep ? "" : "px-[10px]"
+                      } text-sm font-medium ${
+                        value === option.value
                           ? "text-[#153E3B] font-bold"
                           : "text-[#2B2928]"
-                        } leading-normal`}
+                      } leading-normal`}
                     >
                       {option.label}
                     </Text>
@@ -363,8 +372,8 @@ export const FormRenderer: React.FC<FormRendererProps> = ({
                   const bgColor = isSelected
                     ? "bg-[#F0FFFE] border-[#153E3B]"
                     : currentStep
-                      ? "bg-[#FAFAFA] border-[#BABABA]"
-                      : "bg-white border-[#BABABA]";
+                    ? "bg-[#FAFAFA] border-[#BABABA]"
+                    : "bg-white border-[#BABABA]";
 
                   return (
                     <TouchableOpacity
@@ -376,19 +385,21 @@ export const FormRenderer: React.FC<FormRendererProps> = ({
                           : [...multiValue, option.value];
                         setFieldValue(field.id, newValue);
                       }}
-                    ><View className="flex-row items-center gap-[5px]">
-                        {isSelected ? (<CorrectIcon />) : (<PlusIcon />)}
+                    >
+                      <View className="flex-row items-center gap-[5px]">
+                        {isSelected ? <CorrectIcon /> : <PlusIcon />}
                         <Text
-                          className={`${currentStep ? "" : "px-[10px]"
-                            } text-sm font-medium ${isSelected
+                          className={`${
+                            currentStep ? "" : "px-[10px]"
+                          } text-sm font-medium ${
+                            isSelected
                               ? "text-[#153E3B] font-bold"
                               : "text-[#2B2928]"
-                            }`}
+                          }`}
                         >
                           {option.label}
                         </Text>
                       </View>
-
                     </TouchableOpacity>
                   );
                 })}
@@ -547,6 +558,12 @@ export const FormRenderer: React.FC<FormRendererProps> = ({
                 docsToUpload={docsToUpload}
                 setDocsToUpload={setDocsToUpload}
               />
+            </>
+          );
+        case "photos/videos":
+          return (
+            <>
+              <PhotoVideoPicker />
             </>
           );
         default:

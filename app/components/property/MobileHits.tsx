@@ -59,8 +59,6 @@ export const MobileHits = ({
   const { scrollY, onScrollEndDrag, onMomentumScrollEnd } =
     useContext(ScrollContext);
 
-  console.log(selectedProperties, "this is thecheck");
-
   const viewabilityConfig = useRef<ViewabilityConfig>({
     itemVisiblePercentThreshold: 50, // Item is considered viewed when 50% visible
     minimumViewTime: 500, // Must be visible for at least 500ms

@@ -58,6 +58,7 @@ import Selected from "@/assets/icons/PropertyCard/selected.svg";
 
 // service
 import { getEnquiriesByPropertyID } from "@/app/services/user_services/enquiryService";
+import StatusUpdateModal from "./statusUpdateModal";
 
 interface PropertyCardProps {
   property: any;
@@ -433,9 +434,6 @@ const PropertyCard: React.FC<PropertyCardProps> = ({
           )}
           <Pressable
             delayLongPress={1000}
-            onPressIn={() => {
-              setLongPressed(false);
-            }}
             onLongPress={() => {
               setLongPressed(true);
             }}
@@ -448,7 +446,17 @@ const PropertyCard: React.FC<PropertyCardProps> = ({
                 // openPropertyDetails();
               }
             }}
-            onPress={openPropertyDetails}
+            onPress={() => {
+              if (
+                pathname === "/MyBusinessPage" &&
+                selectedProperties &&
+                selectedProperties.size >= 0
+              ) {
+                handleLongPress();
+              } else {
+                openPropertyDetails();
+              }
+            }}
             className="flex flex-col border bg-white border-[#CCCBCB] rounded-lg"
           >
             {pathname === "/MyBusinessPage" &&
@@ -741,6 +749,16 @@ const PropertyCard: React.FC<PropertyCardProps> = ({
         onGoPremium={handleGoPremium}
         onBuyCredits={handleBuyCredits}
       />
+
+      {statusUpdateModalOpen && (
+        <StatusUpdateModal
+          visible={statusUpdateModalOpen}
+          onClose={() => {
+            setStatusUpdateModalOpen(false);
+          }}
+          selectedProperty={new Set(property.propertyId)}
+        />
+      )}
     </View>
   );
 };
