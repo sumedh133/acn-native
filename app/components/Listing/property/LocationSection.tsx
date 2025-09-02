@@ -1,7 +1,6 @@
 import React from "react";
 import { View, Text, TouchableOpacity, Linking } from "react-native";
 import { Property } from "@/app/types";
-import { Linking } from "react-native";
 
 type UIProperty = Omit<Property, "handOverDate"> & {
   handOverDate?: string;

@@ -30,7 +30,7 @@ const MyBusinessPage = () => {
   const [isMoreFiltersModalOpen, setIsMoreFiltersModalOpen] = useState(false);
   const selectedProperties = new Set<string>();
   const [loading, setLoading] = useState<boolean>(false);
-  const [properties, setProperties] = useState<Property[]>();
+  const [properties, setProperties] = useState<Property[]>([]);
 
   // Use Selector to fetch from Local States
   const cpId = useSelector((state: any) => state?.agent?.docData?.cpId);
@@ -93,7 +93,11 @@ const MyBusinessPage = () => {
   }, []);
 
   useEffect(() => {
-    fetchProperties();
+    try {
+      fetchProperties();
+    } catch (error) {
+      console.error(error);
+    }
   }, [fetchProperties]);
 
   return (
