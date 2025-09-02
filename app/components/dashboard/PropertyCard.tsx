@@ -7,7 +7,7 @@ import { setPropertyDataThunk } from "@/store/slices/propertySlice";
 import { RootState } from "@/store/store";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { AnyAction, ThunkDispatch } from "@reduxjs/toolkit";
-import { router } from "expo-router";
+import { router, usePathname } from "expo-router";
 import {
   collection,
   getCountFromServer,
@@ -44,6 +44,7 @@ const PropertyCard = ({
   const [isShareModalOpen, setIsShareModalOpen] = useState(false);
   const [matchingEnquiriesCount, setMatchingEnquiriesCount] = useState("-");
   const dispatch = useDispatch<ThunkDispatch<RootState, unknown, AnyAction>>();
+  const pathname = usePathname();
   const userType =
     useSelector((state: RootState) => state?.agent?.docData?.userType) ||
     "free";
@@ -117,8 +118,10 @@ const PropertyCard = ({
     setMatchingEnquiriesCount(count.data().count.toString());
   };
 
+  console.log(pathname)
+
   useEffect(() => {
-    fetchMatchingEnquiryCount();
+    if (pathname === "/MyBusinessPage") fetchMatchingEnquiryCount();
   }, []);
 
   useEffect(() => {

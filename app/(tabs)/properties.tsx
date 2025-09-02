@@ -47,7 +47,7 @@ export default function PropertiesScreen() {
     loadMore,
   } = useAlgoliaSearch({
     listingType: [`${activeTab}`],
-    // status: ["available"],
+    status: ["available", "Available"],
   });
 
   useEffect(() => {
@@ -72,7 +72,7 @@ export default function PropertiesScreen() {
 
     updateFilters(newFilters);
   }, [activeTab]);
-  console.log("Hare krishna",path)
+  console.log("Hare krishna", path);
 
   // Track page view
   useEffect(() => {

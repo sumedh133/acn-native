@@ -23,6 +23,7 @@ import { ScrollContext } from "@/app/ScrollContext";
 import { Property } from "@/app/types";
 import { usePathname } from "expo-router";
 import { FlashList } from "@shopify/flash-list";
+import { FlatList } from "react-native";
 
 interface MobileHitsProps {
   results: any[]; // All accumulated results from infinite scroll
@@ -136,7 +137,10 @@ export const MobileHits = ({
   ]);
 
   // Key extractor for FlatList
-  const keyExtractor = useCallback((item: Property) => item.propertyId, []);
+  const keyExtractor = useCallback(
+    (item: Property, index: number) => item.propertyId,
+    []
+  );
 
   // Track property card views
   const handleViewableItemsChanged = useCallback(
@@ -385,7 +389,7 @@ export const MobileHits = ({
 
   // Render the property list
   return (
-    <FlashList
+    <FlatList
       data={results}
       renderItem={renderItem}
       extraData={selectedProperties}
