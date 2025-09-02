@@ -585,7 +585,9 @@ const PropertyCard: React.FC<PropertyCardProps> = ({
                         Rent
                       </Text>
                       <Text className="text-sm font-semibold text-[#111827]">
-                        {formatCost2(property?.rent?.rent)}
+                        {property.rentalInfo.rent
+                          ? formatCost2(property?.rentalInfo?.rent)
+                          : null}
                       </Text>
                     </View>
                   ) : (
@@ -596,7 +598,7 @@ const PropertyCard: React.FC<PropertyCardProps> = ({
                       <Text className="text-sm font-semibold text-[#111827]">
                         {property?.pricing?.totalAskPrice
                           ? formatCost2(property.pricing.totalAskPrice)
-                          : formatCost(property.totalAskPrice)}
+                          : null}
                       </Text>
                     </View>
                   )}
@@ -610,7 +612,9 @@ const PropertyCard: React.FC<PropertyCardProps> = ({
                         Deposit
                       </Text>
                       <Text className="text-sm font-semibold text-[#111827]">
-                        {formatCost2(property?.rent?.deposit)}
+                        {property?.rentalInfo?.deposit
+                          ? formatCost2(property?.rentalInfo?.deposit)
+                          : null}
                       </Text>
                     </View>
                   ) : (
@@ -621,8 +625,8 @@ const PropertyCard: React.FC<PropertyCardProps> = ({
                       <Text className="text-sm font-semibold text-[#111827]">
                         {property?.pricing?.pricePerSqft
                           ? formatCost(property.pricing.pricePerSqft)
-                          : property?.askPricePerSqft
-                          ? formatCost(property.askPricePerSqft)
+                          : property?.pricing.pricePerSqft
+                          ? formatCost(property.pricing.pricePerSqft)
                           : null}
                       </Text>
                     </View>
