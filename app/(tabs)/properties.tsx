@@ -72,7 +72,6 @@ export default function PropertiesScreen() {
 
     updateFilters(newFilters);
   }, [activeTab]);
-  console.log("Hare krishna", path);
 
   // Track page view
   useEffect(() => {

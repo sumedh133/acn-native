@@ -9,6 +9,7 @@ import {
   Pressable,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
+import * as Haptics from "expo-haptics";
 import EnquiryCPModal from "@/app/modals/EnquiryCPModal";
 import ConfirmModal from "@/app/modals/ConfirmModal";
 import ShareModal from "@/app/modals/ShareModal";
@@ -59,10 +60,14 @@ import Selected from "@/assets/icons/PropertyCard/selected.svg";
 // service
 import { getEnquiriesByPropertyID } from "@/app/services/user_services/enquiryService";
 import StatusUpdateModal from "./statusUpdateModal";
+import { updateProperty } from "@/app/services/property_services/propertyService";
 
 interface PropertyCardProps {
   property: any;
   selectedProperties?: Set<string>;
+  isSelectionMode?: boolean;
+  onToggleSelection?: (propertyId: string) => void;
+  onLongPress?: (propertyId: string) => void;
 }
 
 interface IdGenerationResult {
@@ -73,6 +78,9 @@ interface IdGenerationResult {
 const PropertyCard: React.FC<PropertyCardProps> = ({
   property,
   selectedProperties,
+  isSelectionMode = false,
+  onToggleSelection,
+  onLongPress: onLongPressProp,
 }) => {
   const dispatch = useDispatch<ThunkDispatch<RootState, unknown, AnyAction>>();
   const boosterCredits =
@@ -103,6 +111,16 @@ const PropertyCard: React.FC<PropertyCardProps> = ({
   const enquiryConfirmed = useRef<Boolean>(false);
 
   const pathname = usePathname();
+
+  // Early return if property data is invalid
+  if (!property) {
+    return null;
+  }
+
+  if (!property.propertyId) {
+    console.warn("PropertyCard: Missing propertyId");
+    return null;
+  }
 
   const getIcon = () => {
     switch (property.assetType) {
@@ -154,7 +172,10 @@ const PropertyCard: React.FC<PropertyCardProps> = ({
 
   // Get property name with first letter capitalized
   const getPropertyName = () => {
-    const name = property.propertyName || "";
+    if (!property.propertyName || typeof property.propertyName !== "string") {
+      return "Unnamed Property";
+    }
+    const name = property.propertyName.trim();
     if (!name) return "Unnamed Property";
     return name.charAt(0).toUpperCase() + name.slice(1);
   };
@@ -384,39 +405,54 @@ const PropertyCard: React.FC<PropertyCardProps> = ({
     }
   };
 
+  const handleSelectionToggle = () => {
+    if (onToggleSelection) {
+      // Add light haptic feedback for selection toggle
+      if (Platform.OS === "ios") {
+        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+      } else {
+        Haptics.selectionAsync();
+      }
+      onToggleSelection(property.propertyId);
+    }
+  };
+
   const handleLongPress = () => {
-    if (selectedProperties && selectedProperties.has(property.propertyId)) {
-      selectedProperties.delete(property.propertyId);
-      return;
+    if (onLongPressProp) {
+      // Add haptic feedback for selection
+      if (Platform.OS === "ios") {
+        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+      } else {
+        // For Android, use notification impact which is more noticeable
+        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+      }
+      onLongPressProp(property.propertyId);
     }
-    if (selectedProperties) {
-      selectedProperties.add(property.propertyId);
-    }
+  };
+
+  const handleUpdateStatus = () => {
+    updateProperty(property.propertyId, {
+      status: "available",
+      dateOfLastChecked: getUnixDateTime(),
+    });
   };
 
   return (
     <View>
       {/* Property Card */}
       <View className="flex flex-row items-center gap-3">
-        {pathname === "/MyBusinessPage" &&
-          selectedProperties &&
-          selectedProperties.has(property.propertyId) && (
-            <Pressable
-              onPress={() => {
-                console.log("remove");
-                handleLongPress();
-              }}
-            >
-              {selectedProperties &&
-              selectedProperties.has(property.propertyId) ? (
-                <View className="min-w-[25px] min-h-[25]">
-                  <Selected />
-                </View>
-              ) : (
-                <View className="min-w-[25px] min-h-[25] border border-[#E3E3E3] rounded-full"></View>
-              )}
-            </Pressable>
-          )}
+        {pathname === "/MyBusinessPage" && isSelectionMode && (
+          <Pressable onPress={handleSelectionToggle}>
+            {selectedProperties &&
+            selectedProperties.has(property.propertyId) ? (
+              <View className="min-w-[25px] min-h-[25] ">
+                <Selected />
+              </View>
+            ) : (
+              <View className="min-w-[25px] min-h-[25] border border-[#CCCBCB] rounded-full"></View>
+            )}
+          </Pressable>
+        )}
         <View className="flex-1">
           {(pathname === "/MyBusinessPage" ||
             pathname === "/UnderReviewProperties") && (
@@ -425,35 +461,29 @@ const PropertyCard: React.FC<PropertyCardProps> = ({
                 property.listingType === "rental"
                   ? "bg-[#FCE9BA]"
                   : "bg-[#EADDFF]"
-              } max-w-[56px] max-h-[19px] items-center ml-4 px-[11px] pt-1 rounded-t-sm`}
+              } max-w-[56px] max-h-[19px] items-center ml-4 px-[11px] pt-1 rounded-t-lg`}
             >
               <Text className="text-[#10302D] text-xs font-medium leading-[150%]">
-                {toCapitalizedWords(property.listingType)}
+                {property.listingType
+                  ? toCapitalizedWords(property.listingType)
+                  : "-"}
               </Text>
             </View>
           )}
           <Pressable
-            delayLongPress={1000}
+            delayLongPress={500}
             onLongPress={() => {
-              setLongPressed(true);
-            }}
-            onPressOut={() => {
-              if (longPressed) {
-                console.log(1);
+              if (pathname === "/MyBusinessPage") {
+                setLongPressed(true);
                 handleLongPress();
-              } else {
-                console.log(2);
-                // openPropertyDetails();
               }
             }}
             onPress={() => {
-              if (
-                pathname === "/MyBusinessPage" &&
-                selectedProperties &&
-                selectedProperties.size >= 0
-              ) {
-                handleLongPress();
+              if (pathname === "/MyBusinessPage" && isSelectionMode) {
+                // In selection mode, tap should toggle selection
+                handleSelectionToggle();
               } else {
+                // Normal mode, open property details
                 openPropertyDetails();
               }
             }}
@@ -464,16 +494,18 @@ const PropertyCard: React.FC<PropertyCardProps> = ({
                 property.status === "hold" ||
                 property.status === "sold" ||
                 (property.status === "available" &&
+                  property.dateOfStatusLastChecked &&
                   getDaysDifference(
                     property.dateOfStatusLastChecked + 60 * 60 * 24 * 15,
                     Math.floor(Date.now() / 1000)
                   ))) && (
                 <View className="flex flex-row items-center justify-between bg-[#E3E3E3] rounded-t-lg px-4 py-2">
                   <View className="flex flex-col">
-                    {getDaysDifference(
-                      property.dateOfStatusLastChecked + 60 * 60 * 24 * 15,
-                      Math.floor(Date.now() / 1000)
-                    ) <= 4 &&
+                    {property.dateOfStatusLastChecked &&
+                      getDaysDifference(
+                        property.dateOfStatusLastChecked + 60 * 60 * 24 * 15,
+                        Math.floor(Date.now() / 1000)
+                      ) <= 4 &&
                       property.status === "available" && (
                         <Text className="font-[Lato] text-sm font-bold leading-[150%] tracking-[0.25px]">
                           Will get de-listed in{" "}
@@ -481,7 +513,7 @@ const PropertyCard: React.FC<PropertyCardProps> = ({
                             property.dateOfStatusLastChecked +
                               60 * 60 * 24 * 15,
                             Math.floor(Date.now() / 1000)
-                          )}{" "}
+                          ).toString()}{" "}
                           days,
                         </Text>
                       )}
@@ -499,7 +531,7 @@ const PropertyCard: React.FC<PropertyCardProps> = ({
                     </Pressable>
                     <Pressable
                       onPress={() => {
-                        setStatusUpdateModalOpen(true);
+                        handleUpdateStatus();
                       }}
                     >
                       <Tick />
@@ -564,12 +596,15 @@ const PropertyCard: React.FC<PropertyCardProps> = ({
                 <View className="flex-row flex-wrap gap-2 mb-3">
                   {[property.assetType, property.unitType, property.facing]
                     .filter(Boolean) // Filter out any falsy values
+                    .filter((tag) => typeof tag === "string" && tag.trim()) // Ensure valid strings
                     .map((tag, index) => (
                       <View
                         key={index}
                         className="border border-[#205E59] px-3 py-1 rounded-3xl bg-[#F3FFFE]"
                       >
-                        <Text className="text-xs text-[#525252]">{tag}</Text>
+                        <Text className="text-xs text-[#525252]">
+                          {String(tag).trim()}
+                        </Text>
                       </View>
                     ))}
                 </View>
@@ -585,9 +620,9 @@ const PropertyCard: React.FC<PropertyCardProps> = ({
                         Rent
                       </Text>
                       <Text className="text-sm font-semibold text-[#111827]">
-                        {property.rentalInfo.rent
-                          ? formatCost2(property?.rentalInfo?.rent)
-                          : null}
+                        {property?.rentalInfo?.rent
+                          ? formatCost2(property.rentalInfo.rent)
+                          : "-"}
                       </Text>
                     </View>
                   ) : (
@@ -598,7 +633,7 @@ const PropertyCard: React.FC<PropertyCardProps> = ({
                       <Text className="text-sm font-semibold text-[#111827]">
                         {property?.pricing?.totalAskPrice
                           ? formatCost2(property.pricing.totalAskPrice)
-                          : null}
+                          : "-"}
                       </Text>
                     </View>
                   )}
@@ -614,7 +649,7 @@ const PropertyCard: React.FC<PropertyCardProps> = ({
                       <Text className="text-sm font-semibold text-[#111827]">
                         {property?.rentalInfo?.deposit
                           ? formatCost2(property?.rentalInfo?.deposit)
-                          : null}
+                          : "-"}
                       </Text>
                     </View>
                   ) : (
@@ -625,9 +660,7 @@ const PropertyCard: React.FC<PropertyCardProps> = ({
                       <Text className="text-sm font-semibold text-[#111827]">
                         {property?.pricing?.pricePerSqft
                           ? formatCost(property.pricing.pricePerSqft)
-                          : property?.pricing.pricePerSqft
-                          ? formatCost(property.pricing.pricePerSqft)
-                          : null}
+                          : "-"}
                       </Text>
                     </View>
                   )}
@@ -696,7 +729,7 @@ const PropertyCard: React.FC<PropertyCardProps> = ({
                     Enquiries Recieved
                   </Text>
                   <Text className="text-[#2B2928] text-sm font-bold leading-[150%]">
-                    {`${enquiries} ${
+                    {`${typeof enquiries === "number" ? enquiries : 0} ${
                       enquiries === 1 ? "Enquiry" : "Enquiries"
                     }`}
                   </Text>
@@ -706,7 +739,9 @@ const PropertyCard: React.FC<PropertyCardProps> = ({
                     Status
                   </Text>
                   <Text className="text-[#2B2928] text-sm font-bold leading-[150%]">
-                    {toCapitalizedWords(property.status)}
+                    {property?.status
+                      ? toCapitalizedWords(property.status)
+                      : "-"}
                   </Text>
                 </View>
               </View>
