@@ -297,7 +297,7 @@ export const PropertyImages: React.FC<PropertyImagesProps> = ({
               <Text className="text-sm font-medium text-[#757575] pb-3">
                 The listing doesn't have any images or videos yet.
               </Text>
-              {(previewType == 'add' || previewType == 'edit' || previewType === 'my-business') && (
+              {(previewType == 'add' || previewType == 'edit' || previewType === 'my-business' || true) && (
                 <TouchableOpacity
                   onPress={openFilePicker}
                   className="bg-[#2D5A52] px-6 py-[9px] rounded-lg flex-row items-center space-x-2"

@@ -1,5 +1,5 @@
 import React from "react";
-import { ScrollView, View } from "react-native";
+import { ScrollView, View,Text } from "react-native";
 import { FormConfig, FormField } from "@/types/FormConfig";
 import { Property } from "@/app/types";
 import { MediaUploadData } from "../../services/media_services/imageService";
@@ -88,7 +88,18 @@ export const FormPreview: React.FC<FormPreviewProps> = ({
 
   return (
     <ScrollView className="flex-1 bg-gray-50">
-     
+      <View className="absolute bg-transparent z-50 flex flex-row justify-between items-center px-6 py-4">
+  <View className="bg-[">
+    <Text>{data?.propertyId}</Text>
+  </View>
+  <View>
+    <Text>{data?.listingType}</Text>
+  </View>
+  <View>
+    <Text>{data?.rentalInfo?.isPreLeased ? "Pre-Leased" : "Not Pre-Leased"}</Text>
+  </View>
+</View>
+
       <PropertyImages
         images={legacyImages}
         currentMedia={currentMedia}
