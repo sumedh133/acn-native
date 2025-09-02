@@ -11,7 +11,6 @@ import {
 } from "react-native";  
 import { LinearGradient } from "expo-linear-gradient";
 import * as DocumentPicker from 'expo-document-picker';
-import { Ionicons } from "@expo/vector-icons";
 import { UploadFileIcon } from "../../../../assets/icons/svg/PropertyListing/UploadFileIcon";
 import ImageCarousel from "../../../components/property/ImageCarousel";
 import { 
@@ -263,7 +262,7 @@ export const PropertyImages: React.FC<PropertyImagesProps> = ({
   };
 
   return (
-    <View className="rounded-[16px] bg-white overflow-hidden">
+    <View className="rounded-b-[16px] bg-white overflow-hidden">
       {hasAnyFiles ? (
         <View>
           {/* Enhanced Media Carousel for Images and Videos only */}
@@ -297,7 +296,7 @@ export const PropertyImages: React.FC<PropertyImagesProps> = ({
                 No Images Found
               </Text>
               <Text className="text-sm font-medium text-[#757575] pb-3">
-                The listing doesn't have any images or videos yet.
+                Generally properties with images gets 5x enquires.
               </Text>
               {(previewType == 'add' || previewType == 'edit' || previewType === 'my-business' || true) && (
                 <TouchableOpacity

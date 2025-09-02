@@ -47,9 +47,10 @@ const EnquiryCard: React.FC<EnquiryCardProps> = ({ enquiry }) => {
                             <Text className="text-xs text-[#5A5555] font-semibold leading-normal">
                                 {enquiry.enquiryId}
                             </Text>
-                            <Text className="bg-[#E93B3E] text-white px-0.5 py-0.5 rounded-[2px] text-xs font-medium">
-                                New!
-                            </Text>
+                            {enquiry.isNew && (
+                                <Text className="bg-[#E93B3E] text-white px-0.5 py-0.5 rounded-[2px] text-xs font-medium">
+                                    New!
+                                </Text>)}
                         </View>
                         <Text className="text-xs text-[#5A5555] font-semibold leading-normal">
                             Enquired On: {formatUnixDate(enquiry.added)}

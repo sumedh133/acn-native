@@ -397,14 +397,27 @@ const PropertyCard: React.FC<PropertyCardProps> = ({
     }
 
     if (property) {
-      console.log("Hare Krishna");
       dispatch(setPropertyDataThunk(property));
-      router.push({
-        pathname: "/components/property/PropertyDetailsScreen",
-        params: {
-          parent: "properties",
-        },
-      });
+      if (pathname == "/MyBusinessPage") {
+        router.push({
+          pathname: "/(pages)/MyBusiness/PropertiesDetailsScreen",
+          params: {
+            parent: "myBusiness",
+          },
+        });
+
+      }
+      else {
+        router.push({
+          pathname: "/components/property/PropertyDetailsScreen",
+          params: {
+            parent: "properties",
+          },
+        });
+
+      }
+
+
     }
   };
 
@@ -447,7 +460,7 @@ const PropertyCard: React.FC<PropertyCardProps> = ({
         {pathname === "/MyBusinessPage" && isSelectionMode && (
           <Pressable onPress={handleSelectionToggle}>
             {selectedProperties &&
-            selectedProperties.has(property.propertyId) ? (
+              selectedProperties.has(property.propertyId) ? (
               <View className="min-w-[25px] min-h-[25] ">
                 <Selected />
               </View>
@@ -459,20 +472,19 @@ const PropertyCard: React.FC<PropertyCardProps> = ({
         <View className="flex-1">
           {(pathname === "/MyBusinessPage" ||
             pathname === "/UnderReviewProperties") && (
-            <View
-              className={`${
-                property.listingType === "rental"
-                  ? "bg-[#FCE9BA]"
-                  : "bg-[#EADDFF]"
-              } max-w-[56px] max-h-[19px] items-center ml-4 px-[11px] pt-1 rounded-t-lg`}
-            >
-              <Text className="text-[#10302D] text-xs font-medium leading-[150%]">
-                {property.listingType
-                  ? toCapitalizedWords(property.listingType)
-                  : "-"}
-              </Text>
-            </View>
-          )}
+              <View
+                className={`${property.listingType === "rental"
+                    ? "bg-[#FCE9BA]"
+                    : "bg-[#EADDFF]"
+                  } max-w-[56px] max-h-[19px] items-center ml-4 px-[11px] pt-1 rounded-t-lg`}
+              >
+                <Text className="text-[#10302D] text-xs font-medium leading-[150%]">
+                  {property.listingType
+                    ? toCapitalizedWords(property.listingType)
+                    : "-"}
+                </Text>
+              </View>
+            )}
           <Pressable
             delayLongPress={500}
             onLongPress={() => {
@@ -514,7 +526,7 @@ const PropertyCard: React.FC<PropertyCardProps> = ({
                           Will get de-listed in{" "}
                           {getDaysDifference(
                             property.dateOfStatusLastChecked +
-                              60 * 60 * 24 * 15,
+                            60 * 60 * 24 * 15,
                             Math.floor(Date.now() / 1000)
                           ).toString()}{" "}
                           days,
@@ -715,26 +727,24 @@ const PropertyCard: React.FC<PropertyCardProps> = ({
             </View>
             {pathname === "/MyBusinessPage" && (
               <View
-                className={`flex flex-row justify-between rounded-b-lg px-4 py-2 ${
-                  property.status.toLowerCase() === "available"
+                className={`flex flex-row justify-between rounded-b-lg px-4 py-2 ${property.status.toLowerCase() === "available"
                     ? "bg-[#EAFFEF]"
                     : property.status.toLowerCase() === "sold"
-                    ? "bg-[#F2F2F2]"
-                    : property.status.toLowerCase() === "hold"
-                    ? "bg-[#FFFCF0]"
-                    : property.status.toLowerCase() === "de-listed"
-                    ? "bg-[#FFF0F0]"
-                    : ""
-                }`}
+                      ? "bg-[#F2F2F2]"
+                      : property.status.toLowerCase() === "hold"
+                        ? "bg-[#FFFCF0]"
+                        : property.status.toLowerCase() === "de-listed"
+                          ? "bg-[#FFF0F0]"
+                          : ""
+                  }`}
               >
                 <View className="flex flex-col gap-[2px]">
                   <Text className="text-[#5A5555] text-xs font-medium leading-[150%] tracking-[0.25px]">
                     Enquiries Recieved
                   </Text>
                   <Text className="text-[#2B2928] text-sm font-bold leading-[150%]">
-                    {`${typeof enquiries === "number" ? enquiries : 0} ${
-                      enquiries === 1 ? "Enquiry" : "Enquiries"
-                    }`}
+                    {`${typeof enquiries === "number" ? enquiries : 0} ${enquiries === 1 ? "Enquiry" : "Enquiries"
+                      }`}
                   </Text>
                 </View>
                 <View className="flex flex-col gap-[2px]">
@@ -764,9 +774,8 @@ const PropertyCard: React.FC<PropertyCardProps> = ({
 
       <ConfirmModal
         title="Confirm Enquiry"
-        message={`Are you sure you want to enquire? You have ${
-          monthlyCredits + boosterCredits
-        } credits remaining for this month.`}
+        message={`Are you sure you want to enquire? You have ${monthlyCredits + boosterCredits
+          } credits remaining for this month.`}
         onConfirm={onConfirmEnquiry}
         onCancel={handleCancel}
         onModalHide={() => {

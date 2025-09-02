@@ -351,6 +351,8 @@ export default function PropertyDetailsScreen() {
       added: getUnixDateTime(),
       lastModified: getUnixDateTime(),
       reviews: [],
+      isNew: true,
+      isContactShared: false
     } as Enquiry;
 
     try {
@@ -653,7 +655,7 @@ export default function PropertyDetailsScreen() {
 
   return (
     <View style={styles.container}>
-    
+
       <FormPreview config={inventoryFormConfig} data={property} previewType="listing" />
       <ShareModal
         property={property}
