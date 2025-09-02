@@ -30,7 +30,7 @@ const generateNextId = (data) => {
   }
 
   // Generate next ID
-  const nextId = `${label}${newPrefix}${newCount.padStart(padLength, "0")}`;
+  const nextId = `${label}${newPrefix}${newCount.toString().padStart(padLength, "0")}`;
 
   return { lastId, nextId, updatedPrefix: newPrefix, updatedCount: newCount };
 };

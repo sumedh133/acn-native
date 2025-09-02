@@ -56,11 +56,13 @@ import Share from "@/assets/icons/svg/PropertyFolder/shareButton.svg";
 import Cross from "@/assets/icons/PropertyCard/cross.svg";
 import Tick from "@/assets/icons/PropertyCard/ticke.svg";
 import Selected from "@/assets/icons/PropertyCard/selected.svg";
+import Info from "@/assets/icons/PropertyCard/info.svg";
 
 // service
 import { getEnquiriesByPropertyID } from "@/app/services/user_services/enquiryService";
 import StatusUpdateModal from "./statusUpdateModal";
 import { updateProperty } from "@/app/services/property_services/propertyService";
+import { ScrollContext } from "@/app/ScrollContext";
 
 interface PropertyCardProps {
   property: any;
@@ -96,6 +98,7 @@ const PropertyCard: React.FC<PropertyCardProps> = ({
   const [enquiries, setEnquiries] = useState(0);
   const [statusUpdateModalOpen, setStatusUpdateModalOpen] =
     useState<boolean>(false);
+  const { openStatusInfo } = React.useContext(ScrollContext);
   const [longPressed, setLongPressed] = useState<boolean>(false);
   const agentData = useSelector((state: RootState) => state.agent.docData);
   const phoneNumber = useSelector(
@@ -751,11 +754,31 @@ const PropertyCard: React.FC<PropertyCardProps> = ({
                   <Text className="text-[#5A5555] text-xs font-medium leading-[150%] tracking-[0.25px]">
                     Status
                   </Text>
-                  <Text className="text-[#2B2928] text-sm font-bold leading-[150%]">
-                    {property?.status
-                      ? toCapitalizedWords(property.status)
-                      : "-"}
-                  </Text>
+                  <View className="flex flex-row items-center gap-1">
+                    <Text
+                      className={`text-sm font-bold leading-[150%] ${
+                        property?.status.toLowerCase() === "available"
+                          ? "text-[#34C759]"
+                          : property?.status.toLowerCase() === "sold"
+                          ? "text-[#5A5555]"
+                          : property?.status.toLowerCase() === "hold"
+                          ? "text-[#FFCC00]"
+                          : property?.status.toLowerCase() === "de-listed"
+                          ? "text-[#DE1135]"
+                          : "text-[#2B2928]"
+                      }`}
+                    >
+                      {property?.status
+                        ? toCapitalizedWords(property.status)
+                        : "-"}
+                    </Text>
+                    <Pressable
+                      hitSlop={10}
+                      onPress={() => openStatusInfo(property?.status || null)}
+                    >
+                      <Info />
+                    </Pressable>
+                  </View>
                 </View>
               </View>
             )}
@@ -810,6 +833,8 @@ const PropertyCard: React.FC<PropertyCardProps> = ({
           selectedProperty={new Set(property.propertyId)}
         />
       )}
+
+      {/* Bottom sheet rendered in FooterNavigation via context */}
     </View>
   );
 };

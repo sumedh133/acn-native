@@ -67,7 +67,6 @@ const ModularPopup = ({
   ).current;
 
   const handleItemPress = (item: PopupItem) => {
-    console.log('hullalalalallallalalalalala')
     // Call global handler if provided
     onItemPress && onItemPress(item);
     // Call item's specific handler
