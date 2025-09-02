@@ -227,6 +227,8 @@ const PropertyCard: React.FC<PropertyCardProps> = ({
       added: getUnixDateTime(),
       lastModified: getUnixDateTime(),
       reviews: [],
+      isNew: true,
+      isContactShared:false
     } as Enquiry;
 
     try {
@@ -374,13 +376,25 @@ const PropertyCard: React.FC<PropertyCardProps> = ({
     }
 
     if (property) {
+      console.log("Hare Krishna")
       dispatch(setPropertyDataThunk(property));
-      router.push({
-        pathname: "/components/property/PropertyDetailsScreen",
-        params: {
-          parent: "properties",
-        },
-      });
+      console.log("Hare Krishna",pathname)
+      if (pathname == '/MyBusinessPage') {
+         router.push({
+          pathname: "/(pages)/MyBusiness/PropertiesDetailsScreen",
+          params: {
+            parent: "properties",
+          },
+        });
+      }
+      else {
+        router.push({
+          pathname: "/components/property/PropertyDetailsScreen",
+          params: {
+            parent: "properties",
+          },
+        });
+      }
     }
   };
 
@@ -413,7 +427,7 @@ const PropertyCard: React.FC<PropertyCardProps> = ({
                   <Selected />
                 </View>
               ) : (
-                <View className="min-w-[25px] min-h-[25] border border-[#E3E3E3] rounded-full"></View>
+                <View className="min-w-[25px] min-h-[25] border border-[#E3E3E3] rounded-full"><Text></Text></View>
               )}
             </Pressable>
           )}
@@ -447,16 +461,11 @@ const PropertyCard: React.FC<PropertyCardProps> = ({
               }
             }}
             onPress={() => {
-              if (
-                pathname === "/MyBusinessPage" &&
-                selectedProperties &&
-                selectedProperties.size >= 0
-              ) {
-                handleLongPress();
-              } else {
+            
                 openPropertyDetails();
-              }
+              
             }}
+
             className="flex flex-col border bg-white border-[#CCCBCB] rounded-lg"
           >
             {pathname === "/MyBusinessPage" &&
