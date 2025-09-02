@@ -238,6 +238,13 @@ export default function LayoutApp() {
     return () => unsubscribe();
   }, []);
 
+  // if not authentication re route to landing page
+  useEffect(() => {
+    if (!isAuthenticated) {
+      router.replace("/components/Auth/LandingPage");
+    }
+  }, [isAuthenticated]);
+
   const calculateDaysLeft = (trialStartedAt: number): number => {
     try {
       const trialStartDate = new Date(trialStartedAt * 1000);

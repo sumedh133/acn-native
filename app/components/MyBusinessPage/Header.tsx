@@ -61,9 +61,9 @@ const MyBusinessHeader = ({
         height: secondaryHeaderHeight,
         overflow: "hidden",
       }}
-      className="bg-white"
+      className="mt-[10px]"
     >
-      <View className="flex flex-row bg-white w-full h-[90px] gap-[14.54px] px-4 mb-[10px]">
+      <View className="flex flex-row  w-full h-[90px] gap-[14.54px] px-4 mb-[10px]">
         {cards?.map((item, idx) => {
           return (
             <TouchableOpacity

@@ -138,6 +138,20 @@ const MyBusinessPage = () => {
     setIsSelectionMode(false);
   };
 
+  const handleMarkAsAvailable = () => {
+    // Add haptic feedback
+    if (Platform.OS === "ios") {
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+    } else {
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+    }
+
+    // TODO: Implement mark as available functionality
+    console.log("Mark as available:", Array.from(selectedProperties));
+    // For now, just clear selection
+    handleExitSelectionMode();
+  };
+
   // Scroll context
   const { resetFooterPosition } = useContext(ScrollContext);
 
@@ -186,50 +200,21 @@ const MyBusinessPage = () => {
       {properties && properties.length > 0 && (
         <PropertiesUnderReviewCard count={properties.length} />
       )}
-
-      {/* Selection Mode Header */}
-      {isSelectionMode && (
-        <View className="flex-row items-center justify-between bg-[#153E3B] px-4 py-3 mx-4 mb-3 rounded-lg">
-          <View className="flex-row items-center">
-            <Text className="text-white font-medium mr-2">
-              {selectedProperties.size} selected
-            </Text>
-            {selectedProperties.size > 0 && (
-              <TouchableOpacity
-                onPress={handleDeselectAll}
-                className="bg-white/20 px-3 py-1 rounded-full mr-2"
-              >
-                <Text className="text-white text-sm">Clear All</Text>
-              </TouchableOpacity>
-            )}
-            <TouchableOpacity
-              onPress={handleSelectAll}
-              className="bg-white/20 px-3 py-1 rounded-full"
-            >
-              <Text className="text-white text-sm">Select All</Text>
-            </TouchableOpacity>
-          </View>
-          <TouchableOpacity
-            onPress={handleExitSelectionMode}
-            className="bg-white/20 p-2 rounded-full"
-          >
-            <Ionicons name="close" size={20} color="white" />
-          </TouchableOpacity>
-        </View>
-      )}
-      <Listings
-        data={searchState}
-        loadMore={loadMore}
-        refresh={refresh}
-        selectedProperties={selectedProperties}
-        isSelectionMode={isSelectionMode}
-        onToggleSelection={handleToggleSelection}
-        onLongPress={handleLongPress}
-        onSelectAll={handleSelectAll}
-        onDeselectAll={handleDeselectAll}
-        onExitSelectionMode={handleExitSelectionMode}
-        loading={loading}
-      />
+      <View className={`flex-1 ${selectedProperties.size > 0 ? "pb-20" : ""}`}>
+        <Listings
+          data={searchState}
+          loadMore={loadMore}
+          refresh={refresh}
+          selectedProperties={selectedProperties}
+          isSelectionMode={isSelectionMode}
+          onToggleSelection={handleToggleSelection}
+          onLongPress={handleLongPress}
+          onSelectAll={handleSelectAll}
+          onDeselectAll={handleDeselectAll}
+          onExitSelectionMode={handleExitSelectionMode}
+          loading={loading}
+        />
+      </View>
       <MoreFilters
         isOpen={isMoreFiltersModalOpen}
         setIsOpen={setIsMoreFiltersModalOpen}
@@ -241,6 +226,39 @@ const MyBusinessPage = () => {
         onFiltersChange={updateFilters}
         facets={facets}
       />
+
+      {/* Bottom Selection Bar */}
+      {selectedProperties.size > 0 && (
+        <View className="absolute bottom-0 left-0 right-0 bg-white border-t border-gray-200  shadow-lg">
+          <View className="flex-row items-center justify-between p-3">
+            <TouchableOpacity
+              onPress={handleSelectAll}
+              className="mr-4 border border-[#10302D] rounded py-2 px-4"
+            >
+              <Text className="text-[#10302D] text-sm font-lato-semibold leading-[150%]">
+                Select All
+              </Text>
+            </TouchableOpacity>
+            <View className="flex-row items-center gap-2">
+              <Text className="text-black text-sm font-montserrat-bold leading-[150%]">
+                {selectedProperties.size} Selected
+              </Text>
+              <TouchableOpacity onPress={handleExitSelectionMode}>
+                <Ionicons name="close" size={24} color="#000" />
+              </TouchableOpacity>
+            </View>
+
+            <TouchableOpacity
+              onPress={handleMarkAsAvailable}
+              className="bg-[#153E3B] rounded py-2 px-4"
+            >
+              <Text className="text-white font-lato-bold leading-[150%] text-sm">
+                Mark as Available
+              </Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      )}
     </View>
   );
 };
