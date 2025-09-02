@@ -201,7 +201,11 @@ const MyBusinessPage = () => {
 
   return (
     <View className="flex-1 flex-col">
-      <Header activeCard={activeTab} setActiveCard={setActiveTab} />
+      <Header
+        activeCard={activeTab}
+        setActiveCard={setActiveTab}
+        count={{ property: searchState.allResults.length, requirement: 0 }}
+      />
       <PropertyFilters
         handleToggleMoreFilters={handleToggleMoreFilters}
         selectedLandmark={selectedLandmark}

@@ -47,6 +47,12 @@ interface ScrollContextType {
   openCategoryPopup: () => void;
   closeCategoryPopup: () => void;
   setSelectedCategory: (value: string) => void;
+
+  // Status info bottom sheet
+  isStatusInfoOpen: boolean;
+  currentStatusInfo: string | null;
+  openStatusInfo: (status: string | null) => void;
+  closeStatusInfo: () => void;
 }
 
 export const ScrollContext = createContext<ScrollContextType>({
@@ -88,6 +94,12 @@ export const ScrollContext = createContext<ScrollContextType>({
   openCategoryPopup: () => {},
   closeCategoryPopup: () => {},
   setSelectedCategory: () => {},
+
+  // Status info bottom sheet
+  isStatusInfoOpen: false,
+  currentStatusInfo: null,
+  openStatusInfo: () => {},
+  closeStatusInfo: () => {},
 });
 
 export const ScrollProvider: React.FC<{ children: React.ReactNode }> = ({
@@ -135,15 +147,17 @@ export const ScrollProvider: React.FC<{ children: React.ReactNode }> = ({
   const [showCategoryPopup, setShowCategoryPopup] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
 
-  // Sort popup methods
+  // Status info bottom sheet state
+  const [isStatusInfoOpen, setIsStatusInfoOpen] = useState<boolean>(false);
+  const [currentStatusInfo, setCurrentStatusInfo] = useState<string | null>(
+    null
+  );
+
+  // Popup methods
   const openSortPopup = () => setShowSortPopup(true);
   const closeSortPopup = () => setShowSortPopup(false);
-
-  // Status filter popup methods
   const openStatusPopup = () => setShowStatusPopup(true);
   const closeStatusPopup = () => setShowStatusPopup(false);
-
-  // Category filter popup methods
   const openCategoryPopup = () => setShowCategoryPopup(true);
   const closeCategoryPopup = () => setShowCategoryPopup(false);
 
@@ -451,6 +465,18 @@ export const ScrollProvider: React.FC<{ children: React.ReactNode }> = ({
         openCategoryPopup,
         closeCategoryPopup,
         setSelectedCategory,
+
+        // Status info bottom sheet
+        isStatusInfoOpen,
+        currentStatusInfo,
+        openStatusInfo: (status: string | null) => {
+          setCurrentStatusInfo(status ?? null);
+          setIsStatusInfoOpen(true);
+        },
+        closeStatusInfo: () => {
+          setIsStatusInfoOpen(false);
+          setCurrentStatusInfo(null);
+        },
       }}
     >
       {children}
