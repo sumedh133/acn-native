@@ -58,11 +58,11 @@ import Selected from "@/assets/icons/PropertyCard/selected.svg";
 
 // service
 import { getEnquiriesByPropertyID } from "@/app/services/user_services/enquiryService";
+import StatusUpdateModal from "./statusUpdateModal";
 
 interface PropertyCardProps {
   property: any;
-  selectedProperties?: string[];
-  setSelectedProperties?: (selectedProperties: string[]) => void;
+  selectedProperties?: Set<string>;
 }
 
 interface IdGenerationResult {
@@ -73,7 +73,6 @@ interface IdGenerationResult {
 const PropertyCard: React.FC<PropertyCardProps> = ({
   property,
   selectedProperties,
-  setSelectedProperties,
 }) => {
   const dispatch = useDispatch<ThunkDispatch<RootState, unknown, AnyAction>>();
   const boosterCredits =
@@ -87,6 +86,9 @@ const PropertyCard: React.FC<PropertyCardProps> = ({
   const [creditLimitModalVisible, setCreditLimitModalVisible] = useState(false);
   const [isGeneratingEnquiry, setIsGeneratingEnquiry] = useState(false);
   const [enquiries, setEnquiries] = useState(0);
+  const [statusUpdateModalOpen, setStatusUpdateModalOpen] =
+    useState<boolean>(false);
+  const [longPressed, setLongPressed] = useState<boolean>(false);
   const agentData = useSelector((state: RootState) => state.agent.docData);
   const phoneNumber = useSelector(
     (state: RootState) => state?.agent?.docData?.phoneNumber
@@ -391,21 +393,12 @@ const PropertyCard: React.FC<PropertyCardProps> = ({
   };
 
   const handleLongPress = () => {
-    if (
-      setSelectedProperties &&
-      selectedProperties &&
-      selectedProperties.includes(property.propertyId)
-    ) {
-      const properties = selectedProperties;
-      properties.filter((prop) => {
-        prop === property.propertyId;
-      });
-      setSelectedProperties(properties);
+    if (selectedProperties && selectedProperties.has(property.propertyId)) {
+      selectedProperties.delete(property.propertyId);
+      return;
     }
-    if (setSelectedProperties && selectedProperties) {
-      const properties = selectedProperties;
-      properties.push(property.propertyId);
-      setSelectedProperties(properties);
+    if (selectedProperties) {
+      selectedProperties.add(property.propertyId);
     }
   };
 
@@ -415,8 +408,13 @@ const PropertyCard: React.FC<PropertyCardProps> = ({
       <View className="flex flex-row items-center gap-3">
         {pathname === "/MyBusinessPage" &&
           selectedProperties &&
-          selectedProperties.length > 0 && (
-            <View>
+          selectedProperties.has(property.propertyId) && (
+            <Pressable
+              onPress={() => {
+                console.log("remove");
+                handleLongPress();
+              }}
+            >
               {selectedProperties &&
                 selectedProperties.includes(property.propertyId.toString()) ? (
                 <TouchableOpacity
@@ -424,14 +422,11 @@ const PropertyCard: React.FC<PropertyCardProps> = ({
                   onPress={handleLongPress}
                 >
                   <Selected />
-                </TouchableOpacity>
+                </View>
               ) : (
-                <TouchableOpacity
-                  className="min-w-[25px] min-h-[25] border border-[#E3E3E3] rounded-full"
-                  onPress={handleLongPress}
-                ></TouchableOpacity>
+                <View className="min-w-[25px] min-h-[25] border border-[#E3E3E3] rounded-full"></View>
               )}
-            </View>
+            </Pressable>
           )}
         <View className="flex-1">
           {(pathname === "/MyBusinessPage" ||
@@ -450,10 +445,11 @@ const PropertyCard: React.FC<PropertyCardProps> = ({
           <TouchableOpacity
             onLongPress={handleLongPress}
             className="flex flex-col border bg-white border-[#CCCBCB] rounded-lg"
-            onPress={openPropertyDetails}
           >
             {pathname === "/MyBusinessPage" &&
               (property.status === "de-listed" ||
+                property.status === "hold" ||
+                property.status === "sold" ||
                 (property.status === "available" &&
                   getDaysDifference(
                     property.dateOfStatusLastChecked + 60 * 60 * 24 * 15,
@@ -481,8 +477,20 @@ const PropertyCard: React.FC<PropertyCardProps> = ({
                     </Text>
                   </View>
                   <View className="flex flex-row gap-[10px]">
-                    <Cross />
-                    <Tick />
+                    <Pressable
+                      onPress={() => {
+                        setStatusUpdateModalOpen(true);
+                      }}
+                    >
+                      <Cross />
+                    </Pressable>
+                    <Pressable
+                      onPress={() => {
+                        setStatusUpdateModalOpen(true);
+                      }}
+                    >
+                      <Tick />
+                    </Pressable>
                   </View>
                 </View>
               )}
@@ -497,22 +505,24 @@ const PropertyCard: React.FC<PropertyCardProps> = ({
                         {property.propertyId}
                       </Text>
                     </View>
-                    {getDaysDifference(
-                      property.added,
-                      Math.floor(Date.now() / 1000)
-                    ) > 10 ? (
-                      <View>
-                        <Text className="text-[#726C6C] text-sm font-[Lato] font-semibold leading-[21px] border-b border-b-[#E3E3E3]">{`Status updated ${getDaysFrom(
-                          property.dateOfLastChecked
-                        )} ago`}</Text>
-                      </View>
-                    ) : (
-                      <View className="bg-[#E93B3E] px-2 py-1 rounded">
-                        <Text className="text-white font-[Lato] text-xs font-medium leading-[18px]">
-                          Newly Added
-                        </Text>
-                      </View>
-                    )}
+                    {property.status === "available" &&
+                      pathname === "/properties" &&
+                      (getDaysDifference(
+                        property.added,
+                        Math.floor(Date.now() / 1000)
+                      ) > 10 ? (
+                        <View>
+                          <Text className="text-[#726C6C] text-sm font-[Lato] font-semibold leading-[21px] border-b border-b-[#E3E3E3]">{`Status updated ${getDaysFrom(
+                            property.dateOfLastChecked
+                          )} ago`}</Text>
+                        </View>
+                      ) : (
+                        <View className="bg-[#E93B3E] px-2 py-1 rounded">
+                          <Text className="text-white font-[Lato] text-xs font-medium leading-[18px]">
+                            Newly Added
+                          </Text>
+                        </View>
+                      ))}
                   </View>
                 </View>
 
@@ -682,7 +692,7 @@ const PropertyCard: React.FC<PropertyCardProps> = ({
                 </View>
               </View>
             )}
-          </TouchableOpacity>
+          </Pressable>
         </View>
       </View>
 
@@ -723,6 +733,16 @@ const PropertyCard: React.FC<PropertyCardProps> = ({
         onGoPremium={handleGoPremium}
         onBuyCredits={handleBuyCredits}
       />
+
+      {statusUpdateModalOpen && (
+        <StatusUpdateModal
+          visible={statusUpdateModalOpen}
+          onClose={() => {
+            setStatusUpdateModalOpen(false);
+          }}
+          selectedProperty={new Set(property.propertyId)}
+        />
+      )}
     </View>
   );
 };

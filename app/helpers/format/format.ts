@@ -1,20 +1,20 @@
 export const formatUnixDate = (timestamp: number): string => {
-    if (!timestamp) return '-'
+  if (!timestamp) return "-";
 
-    // Convert Unix timestamp to milliseconds
-    const date = new Date(Number(timestamp) * 1000)
+  // Convert Unix timestamp to milliseconds
+  const date = new Date(Number(timestamp) * 1000);
 
-    // Check if date is valid
-    if (isNaN(date.getTime())) {
-        console.warn('Invalid date:', timestamp)
-        return '-'
-    }
+  // Check if date is valid
+  if (isNaN(date.getTime())) {
+    console.warn("Invalid date:", timestamp);
+    return "-";
+  }
 
-    return date.toLocaleDateString('en-IN', {
-        month: 'short',
-        year: 'numeric',
-    })
-}
+  return date.toLocaleDateString("en-IN", {
+    month: "short",
+    year: "numeric",
+  });
+};
 
 export const getDaysDifference = (from: number, to: number): number => {
   if (!from || !to) return 0;
@@ -40,7 +40,6 @@ export const getDaysFrom = (timestamp: number): string => {
   return `${diffDays} days`;
 };
 
-
 export const convertMonthYearToUnix = (input: string): number => {
   if (!input) return 0;
 
@@ -54,12 +53,12 @@ export const convertMonthYearToUnix = (input: string): number => {
   }
 
   const date = new Date(year, month, 1); // first day of month
-  console.log('dtae', Math.floor(date.getTime() / 1000))
+  console.log("dtae", Math.floor(date.getTime() / 1000));
   return Math.floor(date.getTime() / 1000); // convert ms -> seconds
 };
 
 export const formatPrice = (value?: number | string) => {
-  if (!value) return "-";
+if (!value) return "-";
 
   const num = Number(value);
   if (isNaN(num)) return value.toString();

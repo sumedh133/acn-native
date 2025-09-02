@@ -6,8 +6,7 @@ interface MyBusinessListingsProps {
   data: any;
   loadMore: any;
   refresh: any;
-  selectedProperties: string[];
-  setSelectedProperties: (selectedProperties: string[]) => void;
+  selectedProperties: Set<string>;
   loading: boolean;
 }
 
@@ -16,7 +15,6 @@ const MyBusinessListings = ({
   loadMore,
   refresh,
   selectedProperties,
-  setSelectedProperties,
   loading,
 }: MyBusinessListingsProps) => {
   return (
@@ -31,7 +29,6 @@ const MyBusinessListings = ({
         onLoadMore={loadMore}
         onRefresh={refresh}
         selectedProperties={selectedProperties}
-        setSelectedProperties={setSelectedProperties}
       />
     </View>
   );

@@ -57,7 +57,8 @@ const DropdownMoreFilters = ({
   const [buttonPosition, setButtonPosition] = useState({ x: 0, y: 0 });
   const [modalVisible, setModalVisible] = useState(false);
   const buttonRef = useRef<View | null>(null);
-  const userType = useSelector((state: RootState) => state.agent?.docData?.userType) || "free";
+  const userType =
+    useSelector((state: RootState) => state.agent?.docData?.userType) || "free";
 
   // Handle back button press on Android to close dropdown
   useEffect(() => {
@@ -71,7 +72,7 @@ const DropdownMoreFilters = ({
 
     const backHandler = BackHandler.addEventListener(
       "hardwareBackPress",
-      backAction,
+      backAction
     );
 
     return () => backHandler.remove();
@@ -80,15 +81,15 @@ const DropdownMoreFilters = ({
   const handleToggle = useCallback(() => {
     if (!isOpen) {
       try {
-        logEvent(analytics, 'open_more_filters', {
-          event_category: 'filters',
-          event_label: 'open',
+        logEvent(analytics, "open_more_filters", {
+          event_category: "filters",
+          event_label: "open",
           filter_type: title.toLowerCase(),
           available_options: items.length,
-          user_type: userType
+          user_type: userType,
         });
       } catch (error) {
-        console.error('Error logging filter open:', error);
+        console.error("Error logging filter open:", error);
       }
       calculateButtonPosition();
       setTimeout(() => {
@@ -115,22 +116,22 @@ const DropdownMoreFilters = ({
 
   const handleRefine = useCallback(
     (value: string) => {
-      const selectedItem = items.find(item => item.value === value);
+      const selectedItem = items.find((item) => item.value === value);
       try {
-        logEvent(analytics, 'apply_more_filter', {
-          event_category: 'filters',
-          event_label: 'apply',
+        logEvent(analytics, "apply_more_filter", {
+          event_category: "filters",
+          event_label: "apply",
           filter_type: title.toLowerCase(),
           filter_value: value,
           filter_label: selectedItem?.label,
-          user_type: userType
+          user_type: userType,
         });
       } catch (error) {
-        console.error('Error logging filter application:', error);
+        console.error("Error logging filter application:", error);
       }
       refine(value);
     },
-    [refine, title, items, userType],
+    [refine, title, items, userType]
   );
 
   const calculateButtonPosition = () => {
@@ -153,7 +154,7 @@ const DropdownMoreFilters = ({
         setMaxItemWidth(totalWidth);
       }
     },
-    [maxItemWidth],
+    [maxItemWidth]
   );
 
   // Calculate all item widths when items change
@@ -169,7 +170,7 @@ const DropdownMoreFilters = ({
   const renderItems = useMemo(() => {
     return items.map((item, index) => {
       const isSelected = items.some(
-        (items) => items.isRefined && items.label === item.label,
+        (items) => items.isRefined && items.label === item.label
       );
 
       return (
@@ -180,7 +181,9 @@ const DropdownMoreFilters = ({
         >
           <View className="flex-row items-center flex-1">
             <View
-              className={`w-4 h-4 ${isSelected ? "bg-[#153E3B]" : "border border-gray-300"} rounded mr-2 items-center justify-center`}
+              className={`w-4 h-4 ${
+                isSelected ? "bg-[#153E3B]" : "border border-gray-300"
+              } rounded mr-2 items-center justify-center`}
             >
               {isSelected && (
                 <Ionicons name="checkmark" size={12} color="#FFFFFF" />

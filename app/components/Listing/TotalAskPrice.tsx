@@ -35,7 +35,7 @@ const TotalAskPrice: React.FC<TotalAskPricetProps> = ({
   searchable = false, // Default to false
 }) => {
   // Convert number to string for display
-  const [price, setPrice] = useState(initialPrice ? initialPrice.toString() : "");
+  const [price, setPrice] = useState(initialPrice ? initialPrice.toString(): "");
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [modalVisible, setModalVisible] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
@@ -70,7 +70,9 @@ const TotalAskPrice: React.FC<TotalAskPricetProps> = ({
     if (onPriceChange) {
       // Convert string to number before passing to callback
       // Remove commas before converting to number
-      const numericPrice = validPrice ? parseFloat(validPrice.replace(/,/g, "")) : 0;
+      const numericPrice = validPrice
+        ? parseFloat(validPrice.replace(/,/g, ""))
+        : 0;
       onPriceChange(selectedOption.value, numericPrice);
     }
   };
@@ -98,7 +100,7 @@ const TotalAskPrice: React.FC<TotalAskPricetProps> = ({
 
     // CHANGE HERE: Reset the price state to empty string
     setPrice("");
-    
+
     setSelectedOption(option);
     setIsDropdownOpen(false);
     setModalVisible(false);
@@ -113,7 +115,7 @@ const TotalAskPrice: React.FC<TotalAskPricetProps> = ({
 
     // CHANGE HERE: Reset the price state to empty string
     setPrice("");
-    
+
     setSelectedOption(option);
     setIsDropdownOpen(false);
     setModalVisible(false);
@@ -296,9 +298,9 @@ const styles = StyleSheet.create({
   },
   titleText: {
     fontSize: 14,
-    marginBottom:6,
+    marginBottom: 6,
     color: "#000000",
-    fontFamily:"Montserrat_600SemiBold",
+    fontFamily: "Montserrat_600SemiBold",
   },
   compulsoryStar: {
     fontFamily: "sans-serif",

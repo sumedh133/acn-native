@@ -64,7 +64,7 @@ export const generatePropertyMonths = (properties) => {
     });
 };
 
-export const generateListingAndPropertyMonths = (listings,properties)=>{
+export const generateListingAndPropertyMonths = (listings, properties) => {
   const monthSet = new Set();
   listings.forEach((listing) => {
     if (listing.dateOfInventoryAdded) {
@@ -95,7 +95,7 @@ export const generateListingAndPropertyMonths = (listings,properties)=>{
       if (yearA !== yearB) return yearB - yearA;
       return monthB - monthA;
     });
-}
+};
 
 export const filterPropertiesByMonth = (properties, selectedMonth) => {
   if (!selectedMonth) return properties;
@@ -115,7 +115,7 @@ export const filterListingsByMonth = (listings, selectedMonth) => {
     const monthYear = formatDateToMonthYear(listing.dateOfInventoryAdded);
     return monthYear === selectedMonth;
   });
-}
+};
 
 export const generateRequirementMonths = (requirements) => {
   const monthSet = new Set();

@@ -17,6 +17,11 @@ interface ScrollContextType {
   headerHeightValue: number | null;
   headerHeight: Animated.AnimatedInterpolation<number>;
 
+  // Secondary Header
+  setSecondaryHeaderHeight: (h: number) => void;
+  secondaryHeaderHeightValue: number | null;
+  secondaryHeaderHeight: Animated.AnimatedInterpolation<number>;
+
   // Notification
   setNotificationHeight: (h: number) => void;
   notificationHeightValue: number | null;
@@ -58,6 +63,10 @@ export const ScrollContext = createContext<ScrollContextType>({
   headerHeightValue: null,
   headerHeight: new Animated.Value(0),
 
+  setSecondaryHeaderHeight: () => {},
+  secondaryHeaderHeightValue: null,
+  secondaryHeaderHeight: new Animated.Value(0),
+
   setNotificationHeight: () => {},
   notificationHeightValue: null,
   notificationHeight: new Animated.Value(0),
@@ -94,6 +103,10 @@ export const ScrollProvider: React.FC<{ children: React.ReactNode }> = ({
   const clampedHeaderY = useRef(new Animated.Value(0)).current;
   const currentClampedHeader = useRef(0);
 
+  // Secondary Header state
+  const clampedSecondaryHeaderY = useRef(new Animated.Value(0)).current;
+  const currentClampedSecondaryHeader = useRef(0);
+
   // Notification state
   const clampedNotificationY = useRef(new Animated.Value(0)).current;
   const currentClampedNotification = useRef(0);
@@ -103,8 +116,12 @@ export const ScrollProvider: React.FC<{ children: React.ReactNode }> = ({
 
   const [footerHeight, setFooterHeight] = useState<number | null>(null);
   const [headerHeightValue, setHeaderHeight] = useState<number | null>(null);
-  const [notificationHeightValue, setNotificationHeight] =
-    useState<number | null>(null);
+  const [secondaryHeaderHeightValue, setSecondaryHeaderHeight] = useState<
+    number | null
+  >(null);
+  const [notificationHeightValue, setNotificationHeight] = useState<
+    number | null
+  >(null);
 
   // Sort popup state
   const [showSortPopup, setShowSortPopup] = useState(false);
@@ -133,6 +150,7 @@ export const ScrollProvider: React.FC<{ children: React.ReactNode }> = ({
   // Safe fallbacks
   const safeFooterHeight = footerHeight ?? 60;
   const safeHeaderHeight = headerHeightValue ?? 56;
+  const safeSecondaryHeaderHeight = secondaryHeaderHeightValue ?? 48;
   const safeNotificationHeight = notificationHeightValue ?? 80;
 
   // Interpolations
@@ -145,6 +163,12 @@ export const ScrollProvider: React.FC<{ children: React.ReactNode }> = ({
   const headerHeight = clampedHeaderY.interpolate({
     inputRange: [0, safeHeaderHeight],
     outputRange: [safeHeaderHeight, 0], // collapse/expand
+    extrapolate: "clamp",
+  });
+
+  const secondaryHeaderHeight = clampedSecondaryHeaderY.interpolate({
+    inputRange: [0, safeSecondaryHeaderHeight],
+    outputRange: [safeSecondaryHeaderHeight, 0], // collapse/expand
     extrapolate: "clamp",
   });
 
@@ -191,6 +215,20 @@ export const ScrollProvider: React.FC<{ children: React.ReactNode }> = ({
         }
         clampedHeaderY.setValue(currentClampedHeader.current);
 
+        // Secondary Header behavior
+        if (scrollDirection.current === "down") {
+          currentClampedSecondaryHeader.current = Math.min(
+            safeSecondaryHeaderHeight,
+            currentClampedSecondaryHeader.current + dampedDiff
+          );
+        } else {
+          currentClampedSecondaryHeader.current = Math.max(
+            0,
+            currentClampedSecondaryHeader.current - dampedDiff
+          );
+        }
+        clampedSecondaryHeaderY.setValue(currentClampedSecondaryHeader.current);
+
         // Notification behavior
         if (scrollDirection.current === "down") {
           currentClampedNotification.current = Math.min(
@@ -211,9 +249,11 @@ export const ScrollProvider: React.FC<{ children: React.ReactNode }> = ({
     [
       clampedFooterY,
       clampedHeaderY,
+      clampedSecondaryHeaderY,
       clampedNotificationY,
       safeFooterHeight,
       safeHeaderHeight,
+      safeSecondaryHeaderHeight,
       safeNotificationHeight,
     ]
   );
@@ -280,6 +320,33 @@ export const ScrollProvider: React.FC<{ children: React.ReactNode }> = ({
       }).start();
     };
 
+    const snapSecondaryHeader = () => {
+      const currentValue = currentClampedSecondaryHeader.current;
+      const thresholdShow = 0.15 * safeSecondaryHeaderHeight;
+      const thresholdHide = 0.8 * safeSecondaryHeaderHeight;
+      let targetValue: number;
+
+      if (currentValue <= thresholdShow) {
+        targetValue = 0;
+      } else if (currentValue >= thresholdHide) {
+        targetValue = safeSecondaryHeaderHeight;
+      } else {
+        targetValue =
+          scrollDirection.current === "up"
+            ? 0
+            : currentValue > 0.5 * safeSecondaryHeaderHeight
+            ? safeSecondaryHeaderHeight
+            : 0;
+      }
+
+      currentClampedSecondaryHeader.current = targetValue;
+      Animated.timing(clampedSecondaryHeaderY, {
+        toValue: targetValue,
+        duration: 200,
+        useNativeDriver: false,
+      }).start();
+    };
+
     const snapNotification = () => {
       const currentValue = currentClampedNotification.current;
       const thresholdShow = 0.15 * safeNotificationHeight;
@@ -309,13 +376,16 @@ export const ScrollProvider: React.FC<{ children: React.ReactNode }> = ({
 
     snapFooter();
     snapHeader();
+    snapSecondaryHeader();
     snapNotification();
   }, [
     clampedFooterY,
     clampedHeaderY,
+    clampedSecondaryHeaderY,
     clampedNotificationY,
     safeFooterHeight,
     safeHeaderHeight,
+    safeSecondaryHeaderHeight,
     safeNotificationHeight,
   ]);
 
@@ -326,12 +396,20 @@ export const ScrollProvider: React.FC<{ children: React.ReactNode }> = ({
     scrollY.setValue(0);
     clampedFooterY.setValue(0);
     clampedHeaderY.setValue(0);
+    clampedSecondaryHeaderY.setValue(0);
     clampedNotificationY.setValue(0);
     currentClampedFooter.current = 0;
     currentClampedHeader.current = 0;
+    currentClampedSecondaryHeader.current = 0;
     currentClampedNotification.current = 0;
     lastScrollValue.current = 0;
-  }, [scrollY, clampedFooterY, clampedHeaderY, clampedNotificationY]);
+  }, [
+    scrollY,
+    clampedFooterY,
+    clampedHeaderY,
+    clampedSecondaryHeaderY,
+    clampedNotificationY,
+  ]);
 
   return (
     <ScrollContext.Provider
@@ -346,10 +424,13 @@ export const ScrollProvider: React.FC<{ children: React.ReactNode }> = ({
         setHeaderHeight,
         headerHeightValue,
         headerHeight,
+        setSecondaryHeaderHeight,
+        secondaryHeaderHeightValue,
+        secondaryHeaderHeight,
         setNotificationHeight,
         notificationHeightValue,
         notificationHeight,
-        
+
         // Sort popup
         showSortPopup,
         selectedSort,

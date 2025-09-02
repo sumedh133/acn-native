@@ -78,7 +78,7 @@ export function formatCost(price) {
 
 export function formatCost2(cost) {
   if (cost < 100000) return formatCost(cost);
-  
+
   return helper((cost / 100000).toFixed(2));
 }
 
