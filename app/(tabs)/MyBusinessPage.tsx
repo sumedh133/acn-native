@@ -1,6 +1,13 @@
 // React Components Import
 import { View, Text, TouchableOpacity, Platform } from "react-native";
-import { useCallback, useContext, useEffect, useState } from "react";
+import {
+  useCallback,
+  useContext,
+  useEffect,
+  useLayoutEffect,
+  useState,
+} from "react";
+import { useNavigation } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import * as Haptics from "expo-haptics";
 
@@ -36,6 +43,7 @@ const MyBusinessPage = () => {
   const [isSelectionMode, setIsSelectionMode] = useState<boolean>(false);
   const [loading, setLoading] = useState<boolean>(false);
   const [properties, setProperties] = useState<Property[]>([]);
+  const navigation = useNavigation();
 
   // Use Selector to fetch from Local States
   const cpId = useSelector((state: any) => state?.agent?.docData?.cpId);
@@ -137,6 +145,16 @@ const MyBusinessPage = () => {
     setSelectedProperties(new Set());
     setIsSelectionMode(false);
   };
+
+  // Hide footer when selection bar (multi-select) is visible
+  useLayoutEffect(() => {
+    try {
+      // Footer should be hidden if any items are selected
+      (navigation as any)?.setParams?.({
+        showFooter: selectedProperties.size === 0,
+      });
+    } catch {}
+  }, [selectedProperties.size, navigation]);
 
   const handleMarkAsAvailable = () => {
     // Add haptic feedback
