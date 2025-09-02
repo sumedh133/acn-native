@@ -1,5 +1,5 @@
 import React from "react";
-import { View, Text, TouchableOpacity } from "react-native";
+import { View, Text, TouchableOpacity, Linking } from "react-native";
 import { Property } from "@/app/types";
 import { Linking } from "react-native";
 
@@ -16,8 +16,7 @@ export const LocationSection: React.FC<LocationSectionProps> = ({ data }) => {
     path.split(".").reduce((acc, key) => acc?.[key], obj);
 
   // Sample data or from props
-  const area =
-    getFieldValue(data, "area") || "East Bangalore";
+  const area = getFieldValue(data, "area") || "East Bangalore";
   const address =
     getFieldValue(data, "address") ||
     "CIL Layout A Block, Judicial Colony, Raj Mahal Vilas 2nd Stage, Sanjayanagara, Bengaluru, Karnataka 560094";

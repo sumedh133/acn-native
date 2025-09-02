@@ -1,6 +1,6 @@
 // React Components Import
 import { View, Text } from "react-native";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useContext, useEffect, useState } from "react";
 
 // Page Components Import
 import Header from "../components/MyBusinessPage/Header";
@@ -14,6 +14,7 @@ import { logEvent } from "@react-native-firebase/analytics";
 import MoreFilters from "../components/property/propertyMoreFilters/MoreFilters";
 import { Property } from "../types";
 import { searchProperties } from "../services/property_services/propertyService";
+import { ScrollContext } from "../ScrollContext";
 
 // Icons Import
 
@@ -27,7 +28,7 @@ const MyBusinessPage = () => {
     "property"
   );
   const [isMoreFiltersModalOpen, setIsMoreFiltersModalOpen] = useState(false);
-  const [selectedProperties, setSelectedProperties] = useState<string[]>([]);
+  const selectedProperties = new Set<string>();
   const [loading, setLoading] = useState<boolean>(false);
   const [properties, setProperties] = useState<Property[]>();
 
@@ -70,6 +71,9 @@ const MyBusinessPage = () => {
     // Keyboard.dismiss();
   };
 
+  // Scroll context
+  const { resetFooterPosition } = useContext(ScrollContext);
+
   const fetchProperties = useCallback(async () => {
     try {
       setLoading(true);
@@ -84,6 +88,9 @@ const MyBusinessPage = () => {
     }
   }, []);
 
+  useEffect(() => {
+    resetFooterPosition();
+  }, []);
 
   useEffect(() => {
     fetchProperties();
@@ -105,13 +112,14 @@ const MyBusinessPage = () => {
         showTabs={false}
         isMyBusinessPage={true}
       />
-      {properties && properties.length > 0 && <PropertiesUnderReviewCard />}
+      {properties && properties.length > 0 && (
+        <PropertiesUnderReviewCard count={properties.length} />
+      )}
       <Listings
         data={searchState}
         loadMore={loadMore}
         refresh={refresh}
         selectedProperties={selectedProperties}
-        setSelectedProperties={setSelectedProperties}
         loading={loading}
       />
       <MoreFilters

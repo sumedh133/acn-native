@@ -31,6 +31,7 @@ export interface SearchFilters {
   cpId?: string[];
   stage?: string[];
   builderCategory?: string[];
+  status?: string[];
 
   // Add more filters as needed
   micromarket?: string[];
@@ -186,6 +187,7 @@ class AlgoliaInfiniteSearchService {
       { values: filters.cpId, fieldName: "cpId" },
       { values: filters.stage, fieldName: "stage" },
       { values: filters.builderCategory, fieldName: "builderCategory" },
+      { values: filters.status, fieldName: "status" },
     ];
 
     const filterParts = filterConfigs
@@ -243,7 +245,6 @@ class AlgoliaInfiniteSearchService {
 
     const { searchClient, indexName } = this.getClientAndIndex(sortBy);
     const filterString = this.buildFilterString(filters);
-    console.log(filterString)
 
     const response = await searchClient.search([
       {

@@ -26,7 +26,7 @@ import {
 // Add MediaItem interface
 interface MediaItem {
   url: string;
-  type: 'image' | 'video' | 'document';
+  type: "image" | "video" | "document";
 }
 
 const { width } = Dimensions.get("window");
@@ -56,8 +56,8 @@ export const PropertyImages: React.FC<PropertyImagesProps> = ({
     const mediaItems: MediaItem[] = [];
 
     // Add legacy images (treat as photos)
-    images.forEach(url => {
-      mediaItems.push({ url, type: 'image' });
+    images.forEach((url) => {
+      mediaItems.push({ url, type: "image" });
     });
     
     // Add current media with proper types (only photos and videos)
@@ -241,14 +241,14 @@ export const PropertyImages: React.FC<PropertyImagesProps> = ({
     } else {
       // Current media item
       switch (mediaItem.type) {
-        case 'image':
-          fileType = 'photos';
+        case "image":
+          fileType = "photos";
           break;
-        case 'video':
-          fileType = 'videos';
+        case "video":
+          fileType = "videos";
           break;
         default:
-          fileType = 'photos';
+          fileType = "photos";
       }
     }
 
@@ -273,7 +273,9 @@ export const PropertyImages: React.FC<PropertyImagesProps> = ({
                 mediaItems={allMediaItems}
                 propertyId={propId}
                 onDeleteFile={handleDeleteFromCarousel}
-                canDeleteFile={(index) => getFileInfo(allMediaItems[index], index).canDelete}
+                canDeleteFile={(index) =>
+                  getFileInfo(allMediaItems[index], index).canDelete
+                }
               />
             </View>
           )}
