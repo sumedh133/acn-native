@@ -9,10 +9,10 @@ import {
 } from "@/app/components/Listing/listingPropertyDetails";
 const PropertysDetailsScreen = () => {
   const property = useSelector(selectPropertyStateData);
-  console.log(property)
+
   return (
-    <View>
-      {property ? <FormPreview config={inventoryFormConfig} data={property} previewType="listing" /> : <Text>Loading...</Text>}
+    <View className="flex-1 bg-white"><FormPreview config={inventoryFormConfig} data={property} previewType="listing" />
+
     </View>
   );
 };

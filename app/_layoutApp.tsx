@@ -594,6 +594,14 @@ export default function LayoutApp() {
             initialParams={{ showFooter: false }}
           />
           <Stack.Screen
+            name="(pages)/EnquiriesReceived"
+            options={{
+              title: "Enquiries Received on Property",
+              headerBackVisible: true,
+            }}
+            initialParams={{ showFooter: false }}
+          />
+          <Stack.Screen
             name="(pages)/Drafts"
             options={{
               title: "Choose Inventory",
