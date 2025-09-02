@@ -107,6 +107,8 @@ export interface Enquiry {
   added: number;
   lastModified: number;
   reviews: IReview[];
+  isNew: boolean;
+  isContactShared:boolean //for checking whether seller has clicked get contact or not
 }
 
 export interface EnquiryWithProperty extends Enquiry {

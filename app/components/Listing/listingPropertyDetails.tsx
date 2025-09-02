@@ -1,5 +1,5 @@
 import React from "react";
-import { ScrollView, View } from "react-native";
+import { ScrollView, View, Text } from "react-native";
 import { FormConfig, FormField } from "@/types/FormConfig";
 import { Property } from "@/app/types";
 import { MediaUploadData } from "../../services/media_services/imageService";
@@ -9,6 +9,8 @@ import { BasicPropertyInfo } from "./property/BasicPropertyInfo";
 import { DetailsSection } from "./property/DetailsSection";
 import { LocationSection } from "./property/LocationSection";
 import { ExtraDetailsSection } from "./property/ExtraDetailsSection";
+
+import EnquiriesReceivedCard from "../MyBusinessPage/EnquiriesReceivedCard";
 
 type UIProperty = Omit<Property, "handOverDate"> & {
   handOverDate?: string;
@@ -77,7 +79,7 @@ export const FormPreview: React.FC<FormPreviewProps> = ({
     })
     .filter((s) => s.stepValues.length > 0);
 
-  const legacyImages: string[] = []; 
+  const legacyImages: string[] = [];
   const currentMedia: MediaUploadData = {
     photos: data.media?.photos ?? [],
     videos: data.media?.videos ?? [],
@@ -86,14 +88,30 @@ export const FormPreview: React.FC<FormPreviewProps> = ({
 
   return (
     <ScrollView className="flex-1 bg-gray-50">
+      <View className="absolute bg-transparent z-50 flex flex-row justify-between items-center px-6 py-4">
+        <View className="bg-[">
+          <Text>{data?.propertyId}</Text>
+        </View>
+        <View>
+          <Text>{data?.listingType}</Text>
+        </View>
+        <View>
+          <Text>{data?.rentalInfo?.isPreLeased ? "Pre-Leased" : "Not Pre-Leased"}</Text>
+        </View>
+      </View>
+
       <PropertyImages
         images={legacyImages}
         currentMedia={currentMedia}
         onMediaUpdate={onMediaUpdate}
         propId={propId}
         agentData={agentData}
+        previewType={previewType}
       />
       <BasicPropertyInfo data={data} previewType={previewType} />
+
+      <EnquiriesReceivedCard count={2} />
+
 
       {processedSteps.map((step) => {
         if (step.title === "Basic Details") return;
