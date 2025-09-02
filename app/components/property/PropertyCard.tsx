@@ -249,7 +249,7 @@ const PropertyCard: React.FC<PropertyCardProps> = ({
       lastModified: getUnixDateTime(),
       reviews: [],
       isNew: true,
-      isContactShared:false
+      isContactShared: false,
     } as Enquiry;
 
     try {
@@ -397,7 +397,7 @@ const PropertyCard: React.FC<PropertyCardProps> = ({
     }
 
     if (property) {
-      console.log("Hare Krishna")
+      console.log("Hare Krishna");
       dispatch(setPropertyDataThunk(property));
       router.push({
         pathname: "/components/property/PropertyDetailsScreen",
@@ -488,9 +488,8 @@ const PropertyCard: React.FC<PropertyCardProps> = ({
               } else {
                 // Normal mode, open property details
                 openPropertyDetails();
-              
+              }
             }}
-
             className="flex flex-col border bg-white border-[#CCCBCB] rounded-lg"
           >
             {pathname === "/MyBusinessPage" &&
