@@ -36,6 +36,12 @@ interface MobileHitsProps {
   onLoadMore: () => void; // Function to load next page
   onRefresh?: () => void; // Optional refresh function
   selectedProperties?: Set<string>;
+  isSelectionMode?: boolean;
+  onToggleSelection?: (propertyId: string) => void;
+  onLongPress?: (propertyId: string) => void;
+  onSelectAll?: () => void;
+  onDeselectAll?: () => void;
+  onExitSelectionMode?: () => void;
 }
 
 export const MobileHits = ({
@@ -49,6 +55,12 @@ export const MobileHits = ({
   onLoadMore,
   onRefresh,
   selectedProperties,
+  isSelectionMode = false,
+  onToggleSelection,
+  onLongPress,
+  onSelectAll,
+  onDeselectAll,
+  onExitSelectionMode,
 }: MobileHitsProps) => {
   const agentData = useSelector((state: RootState) => state?.agent?.docData);
   const userType = agentData?.userType || "free";
@@ -238,11 +250,21 @@ export const MobileHits = ({
             key={item.propertyId}
             property={item}
             selectedProperties={selectedProperties}
+            isSelectionMode={isSelectionMode}
+            onToggleSelection={onToggleSelection}
+            onLongPress={onLongPress}
           />
         </View>
       );
     },
-    [results.length, userType, selectedProperties]
+    [
+      results.length,
+      userType,
+      selectedProperties,
+      isSelectionMode,
+      onToggleSelection,
+      onLongPress,
+    ]
   );
 
   // Render footer with loading indicator

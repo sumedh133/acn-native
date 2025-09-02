@@ -3,6 +3,7 @@ import {
   SplashScreen,
   Stack,
   useNavigation,
+  usePathname,
   useRouter,
 } from "expo-router";
 import React, {
@@ -191,6 +192,8 @@ export default function LayoutApp() {
     Lora_700Bold,
   });
   const navigation = useNavigation();
+  const pathname = usePathname();
+  console.log(pathname, "pathname");
 
   const isConnectedToInternet = useSelector(
     (state: RootState) => state.app.isConnectedToInternet
@@ -237,6 +240,14 @@ export default function LayoutApp() {
 
     return () => unsubscribe();
   }, []);
+
+  // if not authentication re route to landing page
+  useEffect(() => {
+    if (!isAuthenticated) {
+      if (pathname === "/") return;
+      router.replace("/components/Auth/LandingPage");
+    }
+  }, [isAuthenticated]);
 
   const calculateDaysLeft = (trialStartedAt: number): number => {
     try {

@@ -1,6 +1,12 @@
 // react imports
 import { RootState } from "@/store/store";
-import { Text, View, Animated, TouchableOpacity } from "react-native";
+import {
+  Text,
+  View,
+  Animated,
+  TouchableOpacity,
+  Pressable,
+} from "react-native";
 import { useSelector } from "react-redux";
 import { useContext, useEffect, useRef } from "react";
 
@@ -12,17 +18,27 @@ import Requirement from "@/assets/icons/MyBusinessPage/requirements.svg";
 import { ScrollContext } from "@/app/ScrollContext";
 
 interface MyBusinessHeaderProps {
+  count: {
+    requirement: number;
+    property: number;
+  };
   activeCard: "property" | "requirement";
   setActiveCard: (card: "property" | "requirement") => void;
 }
 
+interface Cards {
+  key: "property" | "requirement";
+  title: string;
+  count: number;
+  img: React.ReactNode;
+}
+
 const MyBusinessHeader = ({
+  count,
   activeCard,
   setActiveCard,
 }: MyBusinessHeaderProps) => {
-  const propertyCount = useSelector(
-    (state: RootState) => state?.agent?.docData.myInventories.length
-  );
+  
   const requirementCount = useSelector(
     (state: RootState) => state?.agent?.docData.myRequirements.length
   );
@@ -39,11 +55,11 @@ const MyBusinessHeader = ({
     setSecondaryHeaderHeight(75);
   }, [setSecondaryHeaderHeight]);
 
-  const cards = [
+  const cards: Cards[] = [
     {
       key: "property",
       title: "My Properties",
-      count: propertyCount,
+      count: count.property,
       img: <Property />,
     },
     // {
@@ -61,16 +77,17 @@ const MyBusinessHeader = ({
         height: secondaryHeaderHeight,
         overflow: "hidden",
       }}
-      className="bg-white"
+      className="mt-[10px]"
     >
-      <View className="flex flex-row bg-white w-full h-[90px] gap-[14.54px] px-4 mb-[10px]">
+      <View className="flex flex-row  w-full h-[90px] gap-[14.54px] px-4 mb-[10px]">
         {cards?.map((item, idx) => {
           return (
-            <TouchableOpacity
+            <Pressable
               key={item.key}
               className={`${
                 activeCard === item.key ? "bg-[#153E3B]" : "bg-white"
               } z-10 flex flex-row w-[100%] h-[74px] items-center rounded-[14px] border border-[#BDBDBD]`} // make the w-[100%] -> w-[48%] when adding requirements
+              onPress={() => setActiveCard(item.key)}
             >
               <View className="flex flex-col pl-4">
                 <Text
@@ -93,7 +110,7 @@ const MyBusinessHeader = ({
               <View className="absolute bottom-0 right-[-1] z-[-5] overflow-hidden rounded-br-xl">
                 {item.img}
               </View>
-            </TouchableOpacity>
+            </Pressable>
           );
         })}
       </View>

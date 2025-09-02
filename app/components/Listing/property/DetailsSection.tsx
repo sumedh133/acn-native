@@ -126,7 +126,6 @@ export const DetailsSection: React.FC<DetailsSectionProps> = ({
 
     if (tags.length === 0) return null;
     const visibleTags = showAll ? tags : tags.slice(0, 8);
-    console.log("Hare Krishna is the key");
 
     return (
       <View className="bg-white px-4 py-4">

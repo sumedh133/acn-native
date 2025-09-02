@@ -86,8 +86,6 @@ export const FormPreview: React.FC<FormPreviewProps> = ({
     documents: data.media?.documents ?? [],
   };
 
-  console.log("Shree Krishna", currentMedia)
-
   return (
     <ScrollView className="flex-1 bg-gray-50">
       <View className="absolute bg-transparent z-50 flex flex-row justify-between items-center px-6 py-4">

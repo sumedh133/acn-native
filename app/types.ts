@@ -442,6 +442,11 @@ export interface Property {
     pricePerSqft?: number;
   };
 
+  sold: {
+    soldPrice?: number;
+    soldPlatform?: string;
+  }
+
   // Rental Information (unified structure)
   rentalInfo?: {
     rent: number;

@@ -1,6 +1,15 @@
 // React Components Import
-import { View, Text } from "react-native";
-import { useCallback, useContext, useEffect, useState } from "react";
+import { View, Text, TouchableOpacity, Platform } from "react-native";
+import {
+  useCallback,
+  useContext,
+  useEffect,
+  useLayoutEffect,
+  useState,
+} from "react";
+import { useNavigation } from "expo-router";
+import { Ionicons } from "@expo/vector-icons";
+import * as Haptics from "expo-haptics";
 
 // Page Components Import
 import Header from "../components/MyBusinessPage/Header";
@@ -28,9 +37,13 @@ const MyBusinessPage = () => {
     "property"
   );
   const [isMoreFiltersModalOpen, setIsMoreFiltersModalOpen] = useState(false);
-  const selectedProperties = new Set<string>();
+  const [selectedProperties, setSelectedProperties] = useState<Set<string>>(
+    new Set()
+  );
+  const [isSelectionMode, setIsSelectionMode] = useState<boolean>(false);
   const [loading, setLoading] = useState<boolean>(false);
   const [properties, setProperties] = useState<Property[]>([]);
+  const navigation = useNavigation();
 
   // Use Selector to fetch from Local States
   const cpId = useSelector((state: any) => state?.agent?.docData?.cpId);
@@ -71,6 +84,92 @@ const MyBusinessPage = () => {
     // Keyboard.dismiss();
   };
 
+  // Multiselect handlers
+  const handleToggleSelection = (propertyId: string) => {
+    setSelectedProperties((prev) => {
+      const newSet = new Set(prev);
+      if (newSet.has(propertyId)) {
+        newSet.delete(propertyId);
+      } else {
+        newSet.add(propertyId);
+      }
+
+      // Exit selection mode if no items are selected
+      if (newSet.size === 0) {
+        setIsSelectionMode(false);
+      }
+
+      return newSet;
+    });
+  };
+
+  const handleLongPress = (propertyId: string) => {
+    // Enter selection mode and select the item
+    setIsSelectionMode(true);
+    setSelectedProperties((prev) => {
+      const newSet = new Set(prev);
+      newSet.add(propertyId);
+      return newSet;
+    });
+  };
+
+  const handleSelectAll = () => {
+    if (searchState.allResults) {
+      // Add haptic feedback for bulk selection
+      if (Platform.OS === "ios") {
+        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+      } else {
+        Haptics.selectionAsync();
+      }
+
+      const allPropertyIds = searchState.allResults.map(
+        (property) => property.propertyId
+      );
+      setSelectedProperties(new Set(allPropertyIds));
+    }
+  };
+
+  const handleDeselectAll = () => {
+    // Add haptic feedback for clearing selection
+    if (Platform.OS === "ios") {
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    } else {
+      Haptics.selectionAsync();
+    }
+
+    setSelectedProperties(new Set());
+    setIsSelectionMode(false);
+  };
+
+  const handleExitSelectionMode = () => {
+    setSelectedProperties(new Set());
+    setIsSelectionMode(false);
+  };
+
+  // Hide footer when selection bar (multi-select) is visible
+  useLayoutEffect(() => {
+    try {
+      // Footer should be hidden if any items are selected
+      (navigation as any)?.setParams?.({
+        showFooter: selectedProperties.size === 0,
+      });
+    } catch {}
+  }, [selectedProperties.size, navigation]);
+
+  const handleMarkAsAvailable = () => {
+    // Add haptic feedback
+    if (Platform.OS === "ios") {
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+    } else {
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+    }
+
+    // TODO: Implement mark as available functionality
+    console.log("Mark as available:", Array.from(selectedProperties));
+    // For now, just clear selection
+    handleExitSelectionMode();
+  };
+
   // Scroll context
   const { resetFooterPosition } = useContext(ScrollContext);
 
@@ -101,8 +200,12 @@ const MyBusinessPage = () => {
   }, [fetchProperties]);
 
   return (
-    <View className="flex-1 flex-col bg-white">
-      <Header activeCard={activeTab} setActiveCard={setActiveTab} />
+    <View className="flex-1 flex-col">
+      <Header
+        activeCard={activeTab}
+        setActiveCard={setActiveTab}
+        count={{ property: searchState.allResults.length, requirement: 0 }}
+      />
       <PropertyFilters
         handleToggleMoreFilters={handleToggleMoreFilters}
         selectedLandmark={selectedLandmark}
@@ -119,13 +222,21 @@ const MyBusinessPage = () => {
       {properties && properties.length > 0 && (
         <PropertiesUnderReviewCard count={properties.length} />
       )}
-      <Listings
-        data={searchState}
-        loadMore={loadMore}
-        refresh={refresh}
-        selectedProperties={selectedProperties}
-        loading={loading}
-      />
+      <View className={`flex-1 ${selectedProperties.size > 0 ? "pb-20" : ""}`}>
+        <Listings
+          data={searchState}
+          loadMore={loadMore}
+          refresh={refresh}
+          selectedProperties={selectedProperties}
+          isSelectionMode={isSelectionMode}
+          onToggleSelection={handleToggleSelection}
+          onLongPress={handleLongPress}
+          onSelectAll={handleSelectAll}
+          onDeselectAll={handleDeselectAll}
+          onExitSelectionMode={handleExitSelectionMode}
+          loading={loading}
+        />
+      </View>
       <MoreFilters
         isOpen={isMoreFiltersModalOpen}
         setIsOpen={setIsMoreFiltersModalOpen}
@@ -137,6 +248,39 @@ const MyBusinessPage = () => {
         onFiltersChange={updateFilters}
         facets={facets}
       />
+
+      {/* Bottom Selection Bar */}
+      {selectedProperties.size > 0 && (
+        <View className="absolute bottom-0 left-0 right-0 bg-white border-t border-gray-200  shadow-lg">
+          <View className="flex-row items-center justify-between p-3">
+            <TouchableOpacity
+              onPress={handleSelectAll}
+              className="mr-4 border border-[#10302D] rounded py-2 px-4"
+            >
+              <Text className="text-[#10302D] text-sm font-lato-semibold leading-[150%]">
+                Select All
+              </Text>
+            </TouchableOpacity>
+            <View className="flex-row items-center gap-2">
+              <Text className="text-black text-sm font-montserrat-bold leading-[150%]">
+                {selectedProperties.size} Selected
+              </Text>
+              <TouchableOpacity onPress={handleExitSelectionMode}>
+                <Ionicons name="close" size={24} color="#000" />
+              </TouchableOpacity>
+            </View>
+
+            <TouchableOpacity
+              onPress={handleMarkAsAvailable}
+              className="bg-[#153E3B] rounded py-2 px-4"
+            >
+              <Text className="text-white font-lato-bold leading-[150%] text-sm">
+                Mark as Available
+              </Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      )}
     </View>
   );
 };
