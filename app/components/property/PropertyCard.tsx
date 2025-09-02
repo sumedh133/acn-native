@@ -227,6 +227,8 @@ const PropertyCard: React.FC<PropertyCardProps> = ({
       added: getUnixDateTime(),
       lastModified: getUnixDateTime(),
       reviews: [],
+      isNew: true,
+      isContactShared:false
     } as Enquiry;
 
     try {
