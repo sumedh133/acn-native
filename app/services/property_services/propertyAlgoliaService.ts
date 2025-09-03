@@ -1,5 +1,7 @@
 import algoliasearch from "algoliasearch";
 import type { SearchResponse } from "@algolia/client-search";
+import { getPropertyById, subscribeToPropertiesByIds } from "./propertyService";
+import type { Unsubscribe } from "firebase/firestore";
 
 const searchClient = algoliasearch(
   "CGRV5YKD8Y",
@@ -65,6 +67,8 @@ export interface InfiniteScrollState {
   hasMore: boolean;
   loading: boolean; // Initial search loading
   loadingMore: boolean; // Loading next page
+  loadingFirebase: boolean; // Loading property data from Firebase
+  firebaseProgress: { loaded: number; total: number } | null; // Firebase loading progress
   error: string | null;
   query: string;
   filters: SearchFilters;
@@ -74,9 +78,84 @@ export interface InfiniteScrollState {
   aroundRadius?: number;
 }
 
+export interface RealtimeSearchState extends InfiniteScrollState {
+  isRealtime: boolean;
+  unsubscribe: (() => void) | null; // Single cleanup function
+  propertyIds: string[]; // Track property IDs for real-time updates
+}
+
 class AlgoliaInfiniteSearchService {
   private currentRequest: AbortController | null = null;
   private loadMoreRequest: AbortController | null = null;
+
+  // Helper function to fetch full property data from Firestore using propertyId from Algolia hits
+  private fetchPropertyData = async (
+    algoliaHits: any[],
+    onProgress?: (loaded: number, total: number) => void
+  ): Promise<any[]> => {
+    try {
+      // Extract propertyIds from Algolia hits, trying multiple possible property fields
+      const propertyIds = algoliaHits
+        .map((hit) => hit.propertyId || hit.objectID || hit.id)
+        .filter(Boolean)
+        .filter((id, index, array) => array.indexOf(id) === index); // Remove duplicates
+
+      if (propertyIds.length === 0) {
+        console.warn("No valid propertyIds found in Algolia hits");
+        return [];
+      }
+
+      // Report initial progress
+      onProgress?.(0, propertyIds.length);
+
+      // Fetch full property data from Firestore in parallel with concurrency limit
+      const batchSize = 10; // Process in batches to avoid overwhelming Firestore
+      const batches = [];
+
+      for (let i = 0; i < propertyIds.length; i += batchSize) {
+        const batch = propertyIds.slice(i, i + batchSize);
+        batches.push(batch);
+      }
+
+      const allProperties = [];
+      let processedCount = 0;
+
+      for (const batch of batches) {
+        const batchPromises = batch.map(async (propertyId: string) => {
+          try {
+            const propertyData = await getPropertyById(propertyId);
+            if (!propertyData) {
+              console.warn(`Property not found in Firestore: ${propertyId}`);
+            }
+            return propertyData;
+          } catch (error) {
+            console.warn(
+              `Failed to fetch property ${propertyId} from Firestore:`,
+              error
+            );
+            return null;
+          }
+        });
+
+        const batchResults = await Promise.all(batchPromises);
+        allProperties.push(...batchResults);
+
+        // Update progress
+        processedCount += batch.length;
+        onProgress?.(processedCount, propertyIds.length);
+      }
+
+      // Filter out null values (failed fetches or non-existent properties)
+      const validProperties = allProperties.filter(
+        (property) => property !== null
+      );
+
+      return validProperties;
+    } catch (error) {
+      console.error("Error fetching property data from Firestore:", error);
+      return [];
+    }
+  };
 
   // Initialize empty state
   getInitialState = (): InfiniteScrollState => ({
@@ -88,9 +167,19 @@ class AlgoliaInfiniteSearchService {
     facets: {},
     loading: false,
     loadingMore: false,
+    loadingFirebase: false,
+    firebaseProgress: null,
     error: null,
     query: "",
     filters: {},
+  });
+
+  // Initialize empty real-time state
+  getInitialRealtimeState = (): RealtimeSearchState => ({
+    ...this.getInitialState(),
+    isRealtime: true,
+    unsubscribe: null,
+    propertyIds: [],
   });
 
   private buildFilterGroup = (
@@ -199,7 +288,7 @@ class AlgoliaInfiniteSearchService {
       this.buildRangeFilter(filters.sbua, "sbua"),
       this.buildRangeFilter(filters.carpetArea, "carpetArea"),
       this.buildRangeFilter(filters.totalAskPrice, "pricing.totalAskPrice"),
-      this.buildRangeFilter(filters.rent, "rentalInfo.rent "),
+      this.buildRangeFilter(filters.rent, "rentalInfo.rent"),
     ].filter((f) => f !== null) as string[];
 
     const availableFromFilter = this.buildAvailableFromFilter(
@@ -231,7 +320,8 @@ class AlgoliaInfiniteSearchService {
 
   // Core search method
   private performSearch = async (
-    params: SearchParams
+    params: SearchParams,
+    onProgressUpdate?: (loaded: number, total: number) => void
   ): Promise<AlgoliaSearchResponse> => {
     const {
       query = "",
@@ -241,6 +331,288 @@ class AlgoliaInfiniteSearchService {
       sortBy,
       aroundLatLng, // <-- NEW
       aroundRadius, // <-- NEW
+    } = params;
+
+    const { searchClient, indexName } = this.getClientAndIndex(sortBy);
+    const filterString = this.buildFilterString(filters);
+
+    // Search Algolia with minimal attributes - only fetch propertyId
+    const response = await searchClient.search([
+      {
+        indexName,
+        params: {
+          query,
+          page,
+          hitsPerPage,
+          filters: filterString,
+          facets: ["type", "micromarket"],
+          maxValuesPerFacet: 100,
+          analytics: true,
+          attributesToRetrieve: ["propertyId"], // Only fetch propertyId from Algolia
+          ...(aroundLatLng ? { aroundLatLng } : {}), // <-- NEW
+          ...(aroundRadius ? { aroundRadius } : {}), // <-- NEW
+        },
+      },
+    ]);
+
+    const result = response.results[0] as SearchResponse<any>;
+
+    // Fetch full property data from Firestore using the propertyIds
+    const fullPropertyData = await this.fetchPropertyData(
+      result.hits || [],
+      onProgressUpdate
+    );
+
+    return {
+      hits: fullPropertyData, // Return full property data instead of Algolia hits
+      nbHits: result.nbHits || 0,
+      page: result.page || 0,
+      nbPages: result.nbPages || 0,
+      hitsPerPage: result.hitsPerPage || 20,
+      processingTimeMS: result.processingTimeMS || 0,
+      facets: result.facets || {},
+    };
+  };
+
+  // Initial search - resets everything
+  search = async (
+    query: string = "",
+    filters: SearchFilters = {},
+    sortBy?: string,
+    hitsPerPage: number = 20,
+    options?: { aroundLatLng?: string; aroundRadius?: number },
+    onStateUpdate?: (state: Partial<InfiniteScrollState>) => void
+  ): Promise<InfiniteScrollState> => {
+    // Cancel any ongoing requests
+    if (this.currentRequest) {
+      this.currentRequest.abort();
+    }
+    if (this.loadMoreRequest) {
+      this.loadMoreRequest.abort();
+    }
+
+    this.currentRequest = new AbortController();
+
+    try {
+      // Update state to show Firebase loading
+      onStateUpdate?.({
+        loadingFirebase: true,
+        firebaseProgress: null,
+        error: null,
+      });
+
+      // Throttle progress updates to reduce re-renders
+      let lastProgressUpdate = 0;
+      const progressThrottle = 100; // Update at most every 100ms
+
+      const response = await this.performSearch(
+        {
+          query,
+          filters,
+          page: 0,
+          hitsPerPage,
+          sortBy,
+          ...options,
+        },
+        (loaded, total) => {
+          // Throttle progress updates
+          const now = Date.now();
+          if (now - lastProgressUpdate > progressThrottle || loaded === total) {
+            lastProgressUpdate = now;
+            onStateUpdate?.({
+              firebaseProgress: { loaded, total },
+            });
+          }
+        }
+      );
+
+      // Update state to show completion
+      onStateUpdate?.({
+        loadingFirebase: false,
+        firebaseProgress: null,
+      });
+
+      return {
+        allResults: response.hits,
+        currentPage: 1, // Next page to fetch
+        totalPages: response.nbPages,
+        totalHits: response.nbHits,
+        hasMore: response.page < response.nbPages - 1,
+        loading: false,
+        loadingMore: false,
+        loadingFirebase: false,
+        firebaseProgress: null,
+        error: null,
+        query,
+        filters,
+        facets: response.facets || {},
+        sortBy,
+        aroundLatLng: options?.aroundLatLng, // <-- NEW
+        aroundRadius: options?.aroundRadius,
+      };
+    } catch (error: any) {
+      if (error.name === "AbortError") {
+        throw error; // Let the caller handle aborted requests
+      }
+
+      onStateUpdate?.({
+        loadingFirebase: false,
+        firebaseProgress: null,
+      });
+
+      return {
+        allResults: [],
+        currentPage: 0,
+        totalPages: 0,
+        totalHits: 0,
+        hasMore: false,
+        loading: false,
+        loadingMore: false,
+        loadingFirebase: false,
+        firebaseProgress: null,
+        error: error instanceof Error ? error.message : "Search failed",
+        query,
+        filters,
+        facets: {},
+        sortBy,
+      };
+    }
+  };
+
+  // Real-time search with snapshot listeners
+  searchWithRealtime = async (
+    query: string = "",
+    filters: SearchFilters = {},
+    sortBy?: string,
+    hitsPerPage: number = 20,
+    options?: { aroundLatLng?: string; aroundRadius?: number },
+    onUpdate?: (state: RealtimeSearchState) => void
+  ): Promise<RealtimeSearchState> => {
+    // Cancel any ongoing requests
+    if (this.currentRequest) {
+      this.currentRequest.abort();
+    }
+    if (this.loadMoreRequest) {
+      this.loadMoreRequest.abort();
+    }
+
+    this.currentRequest = new AbortController();
+
+    try {
+      // First, get the Algolia search results (property IDs only)
+      const response = await this.performSearchIds({
+        query,
+        filters,
+        page: 0,
+        hitsPerPage,
+        sortBy,
+        ...options,
+      });
+
+      // Extract property IDs from Algolia results
+      const propertyIds = response.hits
+        .map((hit: any) => hit.propertyId || hit.objectID || hit.id)
+        .filter(Boolean);
+
+      // Create initial state - start with Firebase loading true to avoid gap
+      const initialState: RealtimeSearchState = {
+        allResults: [],
+        currentPage: 1,
+        totalPages: response.nbPages,
+        totalHits: response.nbHits,
+        hasMore: response.page < response.nbPages - 1,
+        loading: false,
+        loadingMore: false,
+        loadingFirebase: propertyIds.length > 0 ? true : false, // Start with Firebase loading if we have properties
+        firebaseProgress:
+          propertyIds.length > 0
+            ? { loaded: 0, total: propertyIds.length }
+            : null,
+        error: null,
+        query,
+        filters,
+        facets: response.facets || {},
+        sortBy,
+        aroundLatLng: options?.aroundLatLng,
+        aroundRadius: options?.aroundRadius,
+        isRealtime: true,
+        unsubscribe: null,
+        propertyIds,
+      };
+
+      // Set up real-time listeners for the property IDs
+      if (propertyIds.length > 0) {
+        const unsubscribe = subscribeToPropertiesByIds(
+          propertyIds,
+          (properties) => {
+            // Create new state object to avoid mutation
+            const updatedState: RealtimeSearchState = {
+              ...initialState,
+              allResults: properties.filter((p) => p !== null),
+              loadingFirebase: false,
+              firebaseProgress: null,
+              unsubscribe,
+            };
+
+            onUpdate?.(updatedState);
+          },
+          (error) => {
+            console.error("Real-time property update error:", error);
+            const errorState: RealtimeSearchState = {
+              ...initialState,
+              error: error.message || "Real-time update failed",
+              loadingFirebase: false,
+              firebaseProgress: null,
+              unsubscribe,
+            };
+            onUpdate?.(errorState);
+          },
+          (loaded, total) => {
+            // Progress updates during initial Firebase loading
+            const progressState: RealtimeSearchState = {
+              ...initialState,
+              loadingFirebase: loaded < total,
+              firebaseProgress: { loaded, total },
+              unsubscribe,
+            };
+            onUpdate?.(progressState);
+          }
+        );
+
+        initialState.unsubscribe = unsubscribe;
+      } else {
+        console.warn("No property IDs found for real-time listeners");
+      }
+
+      return initialState;
+    } catch (error: any) {
+      if (error.name === "AbortError") {
+        throw error;
+      }
+
+      return {
+        ...this.getInitialRealtimeState(),
+        error:
+          error instanceof Error ? error.message : "Real-time search failed",
+        query,
+        filters,
+        sortBy,
+      };
+    }
+  };
+
+  // Helper method to perform search and return only property IDs (for real-time)
+  private performSearchIds = async (
+    params: SearchParams
+  ): Promise<AlgoliaSearchResponse> => {
+    const {
+      query = "",
+      filters = {},
+      page = 0,
+      hitsPerPage = 20,
+      sortBy,
+      aroundLatLng,
+      aroundRadius,
     } = params;
 
     const { searchClient, indexName } = this.getClientAndIndex(sortBy);
@@ -257,8 +629,9 @@ class AlgoliaInfiniteSearchService {
           facets: ["type", "micromarket"],
           maxValuesPerFacet: 100,
           analytics: true,
-          ...(aroundLatLng ? { aroundLatLng } : {}), // <-- NEW
-          ...(aroundRadius ? { aroundRadius } : {}), // <-- NEW
+          attributesToRetrieve: ["propertyId"],
+          ...(aroundLatLng ? { aroundLatLng } : {}),
+          ...(aroundRadius ? { aroundRadius } : {}),
         },
       },
     ]);
@@ -276,69 +649,15 @@ class AlgoliaInfiniteSearchService {
     };
   };
 
-  // Initial search - resets everything
-  search = async (
-    query: string = "",
-    filters: SearchFilters = {},
-    sortBy?: string,
-    hitsPerPage: number = 20,
-    options?: { aroundLatLng?: string; aroundRadius?: number }
-  ): Promise<InfiniteScrollState> => {
-    // Cancel any ongoing requests
-    if (this.currentRequest) {
-      this.currentRequest.abort();
-    }
-    if (this.loadMoreRequest) {
-      this.loadMoreRequest.abort();
-    }
-
-    this.currentRequest = new AbortController();
-
-    try {
-      const response = await this.performSearch({
-        query,
-        filters,
-        page: 0,
-        hitsPerPage,
-        sortBy,
-        ...options,
-      });
-
-      return {
-        allResults: response.hits,
-        currentPage: 1, // Next page to fetch
-        totalPages: response.nbPages,
-        totalHits: response.nbHits,
-        hasMore: response.page < response.nbPages - 1,
-        loading: false,
-        loadingMore: false,
-        error: null,
-        query,
-        filters,
-        facets: response.facets || {},
-        sortBy,
-        aroundLatLng: options?.aroundLatLng, // <-- NEW
-        aroundRadius: options?.aroundRadius,
-      };
-    } catch (error: any) {
-      if (error.name === "AbortError") {
-        throw error; // Let the caller handle aborted requests
+  // Clean up real-time listeners
+  cleanupRealtime = (state: RealtimeSearchState): void => {
+    if (state.unsubscribe) {
+      try {
+        state.unsubscribe();
+        state.unsubscribe = null;
+      } catch (error) {
+        console.warn("Error unsubscribing from real-time listeners:", error);
       }
-
-      return {
-        allResults: [],
-        currentPage: 0,
-        totalPages: 0,
-        totalHits: 0,
-        hasMore: false,
-        loading: false,
-        loadingMore: false,
-        error: error instanceof Error ? error.message : "Search failed",
-        query,
-        filters,
-        facets: {},
-        sortBy,
-      };
     }
   };
 
@@ -416,6 +735,7 @@ class AlgoliaInfiniteSearchService {
             hitsPerPage: 0,
             facets: [facetName],
             maxValuesPerFacet: 100,
+            attributesToRetrieve: ["propertyId"], // Only fetch propertyId even for facets
           },
         },
       ]);
@@ -436,12 +756,17 @@ class AlgoliaInfiniteSearchService {
   };
 
   // Cleanup method
-  cleanup = () => {
+  cleanup = (state?: RealtimeSearchState) => {
     if (this.currentRequest) {
       this.currentRequest.abort();
     }
     if (this.loadMoreRequest) {
       this.loadMoreRequest.abort();
+    }
+
+    // Clean up real-time listeners if provided
+    if (state && state.isRealtime) {
+      this.cleanupRealtime(state);
     }
   };
 }

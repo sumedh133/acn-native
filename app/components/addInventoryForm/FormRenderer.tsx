@@ -304,12 +304,16 @@ export const FormRenderer: React.FC<FormRendererProps> = ({
                     } ${
                       value === option.value
                         ? `bg-[#F0FFFE] border-[#153E3B]`
-                        : `${currentStep ? "bg-[#FAFAFA]" : "bg-white"
-                        } border-[#BABABA]`
-                      }`}
+                        : `${
+                            currentStep ? "bg-[#FAFAFA]" : "bg-white"
+                          } border-[#BABABA]`
+                    }`}
                     onPress={() => {
-                      if (value == option.value) { setFieldValue(field.id, null) }
-                      else { setFieldValue(field.id, option.value) }
+                      if (value == option.value) {
+                        setFieldValue(field.id, null);
+                      } else {
+                        setFieldValue(field.id, option.value);
+                      }
                     }}
                   >
                     <Text
@@ -421,7 +425,7 @@ export const FormRenderer: React.FC<FormRendererProps> = ({
                 setValue={(val: string | null) => setFieldValue(field.id, val)}
                 options={[
                   { label: field.placeholder || "Please select", value: null },
-                  ...(field.options ?? [])
+                  ...(field.options ?? []),
                 ]}
                 placeholder={field.placeholder || "Select an option"}
                 required={field.required}
@@ -435,7 +439,9 @@ export const FormRenderer: React.FC<FormRendererProps> = ({
             <>
               {commonLabel}
               <TotalAskPrice
-                initialPrice={formData[field.id as keyof UIProperty] as number | undefined}
+                initialPrice={
+                  formData[field.id as keyof UIProperty] as number | undefined
+                }
                 onPriceChange={(fieldKey, value) =>
                   setFieldValue(fieldKey, value)
                 }

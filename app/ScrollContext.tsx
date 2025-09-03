@@ -302,7 +302,7 @@ export const ScrollProvider: React.FC<{ children: React.ReactNode }> = ({
       currentClampedFooter.current = targetValue;
       Animated.timing(clampedFooterY, {
         toValue: targetValue,
-        duration: 200,
+        duration: 120,
         useNativeDriver: false,
       }).start();
     };
@@ -329,7 +329,7 @@ export const ScrollProvider: React.FC<{ children: React.ReactNode }> = ({
       currentClampedHeader.current = targetValue;
       Animated.timing(clampedHeaderY, {
         toValue: targetValue,
-        duration: 200,
+        duration: 120,
         useNativeDriver: false,
       }).start();
     };
@@ -356,7 +356,7 @@ export const ScrollProvider: React.FC<{ children: React.ReactNode }> = ({
       currentClampedSecondaryHeader.current = targetValue;
       Animated.timing(clampedSecondaryHeaderY, {
         toValue: targetValue,
-        duration: 200,
+        duration: 120,
         useNativeDriver: false,
       }).start();
     };
@@ -383,7 +383,7 @@ export const ScrollProvider: React.FC<{ children: React.ReactNode }> = ({
       currentClampedNotification.current = targetValue;
       Animated.timing(clampedNotificationY, {
         toValue: targetValue,
-        duration: 200,
+        duration: 120,
         useNativeDriver: false,
       }).start();
     };

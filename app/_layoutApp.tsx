@@ -198,7 +198,6 @@ export default function LayoutApp() {
   });
   const navigation = useNavigation();
   const pathname = usePathname();
-  console.log(pathname, "pathname");
 
   const isConnectedToInternet = useSelector(
     (state: RootState) => state.app.isConnectedToInternet
@@ -477,6 +476,7 @@ export default function LayoutApp() {
         )}
         <Stack
           screenOptions={{
+
             headerStyle: { backgroundColor: "#fff" },
             headerTintColor: "#000",
             headerTitleAlign: "center",

@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback, useMemo } from "react";
 import { View, Keyboard } from "react-native";
 import PropertyFilters from "../components/property/PropertyFilters";
 // import MoreFilters from "../components/MoreFilters";
@@ -15,20 +15,31 @@ import { usePathname } from "expo-router";
 
 // At the top of RequirementsPage, create simple context
 
+// Create ScrollContext outside component to prevent recreation
+const ScrollContext = React.createContext({
+  isScrolling: false,
+  setIsScrolling: (scrolling: boolean) => {},
+});
+
 export default function PropertiesScreen() {
   const [isMoreFiltersModalOpen, setIsMoreFiltersModalOpen] = useState(false);
   const agentData = useSelector((state: RootState) => state?.agent?.docData);
   const userType = agentData?.userType || "free";
   const path = usePathname();
   const [isScrolling, setIsScrolling] = useState(false);
-  const ScrollContext = React.createContext({
-    isScrolling: false,
-    setIsScrolling: (scrolling: boolean) => {},
-  });
   const [activeTab, setActiveTab] = useState<"resale" | "rental">("resale");
 
   const isConnectedToInternet = useSelector(
     (state: RootState) => state.app.isConnectedToInternet
+  );
+
+  // Memoize the basic filter to prevent object recreation
+  const basicFilter = useMemo(
+    () => ({
+      listingType: [activeTab],
+      status: ["available", "Available"],
+    }),
+    [activeTab]
   );
 
   // Use custom Algolia search hook
@@ -45,13 +56,11 @@ export default function PropertiesScreen() {
     updateSort,
     refresh,
     loadMore,
-  } = useAlgoliaSearch({
-    listingType: [`${activeTab}`],
-    status: ["available", "Available"],
-  });
+  } = useAlgoliaSearch(basicFilter);
 
-  useEffect(() => {
-    if (!filters) return;
+  // Memoize filter updates to prevent unnecessary re-renders
+  const filteredForActiveTab = useMemo(() => {
+    if (!filters) return null;
 
     // Copy current filters and force listingType to match activeTab
     const newFilters = { ...filters, listingType: [activeTab] };
@@ -70,8 +79,18 @@ export default function PropertiesScreen() {
       delete newFilters.availableFrom;
     }
 
-    updateFilters(newFilters);
-  }, [activeTab]);
+    return newFilters;
+  }, [activeTab, filters]);
+
+  // Apply filter changes only when necessary
+  useEffect(() => {
+    if (
+      filteredForActiveTab &&
+      JSON.stringify(filteredForActiveTab) !== JSON.stringify(filters)
+    ) {
+      updateFilters(filteredForActiveTab);
+    }
+  }, [filteredForActiveTab, updateFilters]);
 
   // Track page view
   useEffect(() => {
@@ -191,6 +210,8 @@ export default function PropertiesScreen() {
             results={searchState.allResults}
             loading={searchState.loading}
             loadingMore={searchState.loadingMore}
+            loadingFirebase={searchState.loadingFirebase}
+            firebaseProgress={searchState.firebaseProgress}
             hasMore={searchState.hasMore}
             error={searchState.error}
             totalHits={searchState.totalHits}
