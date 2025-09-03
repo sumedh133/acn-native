@@ -70,7 +70,6 @@ export const useEnquiries = (options: UseEnquiriesOptions = {}): UseEnquiriesRet
       const constraints: QueryConstraint[] = [
         where('sellerCpId', '==', cpId),
         where('propertyId', '==', targetPropertyId),
-        orderBy(orderByField, orderDirection)
       ];
 
       const q = query(enquiriesRef, ...constraints);
@@ -111,7 +110,7 @@ export const useEnquiries = (options: UseEnquiriesOptions = {}): UseEnquiriesRet
       setLoading(false);
       setRefreshing(false);
     }
-  }, [cpId, targetPropertyId, orderByField, orderDirection]);
+  }, [cpId, targetPropertyId]);
 
   // Setup listener on mount and dependency changes
   useEffect(() => {

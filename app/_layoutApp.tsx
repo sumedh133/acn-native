@@ -81,6 +81,7 @@ import { doc, onSnapshot } from "firebase/firestore";
 import { db } from "@/app/config/firebase";
 import { ScrollContext, ScrollProvider } from "./ScrollContext";
 import NotificationIcon from "@/assets/icons/notificationIcon.svg";
+import { useEnquiries } from "@/hooks/enquiryHooks/useEnquiries";
 
 // Custom header component to apply the desired styling
 const CustomHeader = ({
@@ -114,12 +115,12 @@ const CustomHeader = ({
     >
       <View
         style={styles.headerContainer}
-        //         onLayout={(event) => {
-        //   if (!measured.current) {
-        //     setHeaderHeight(event.nativeEvent.layout.height);
-        //     measured.current = true;
-        //   }
-        // }}
+      //         onLayout={(event) => {
+      //   if (!measured.current) {
+      //     setHeaderHeight(event.nativeEvent.layout.height);
+      //     measured.current = true;
+      //   }
+      // }}
       >
         <View style={styles.headerContent}>
           <View style={styles.headerLeft}>
@@ -174,6 +175,10 @@ export default function LayoutApp() {
   const colorScheme = useColorScheme();
   const [topMargin, setTopMargin] = useState(10);
   const [unreadCount, setUnreadCount] = useState(0);
+  const [showNewEnquiry, setShowNewEnquiry] = useState<boolean>(false)
+  const {
+    newEnquiryCount,
+  } = useEnquiries();
 
   const [fontsLoaded] = useFonts({
     Montserrat_400Regular,
@@ -240,6 +245,15 @@ export default function LayoutApp() {
 
     return () => unsubscribe();
   }, []);
+
+  // Litsen for the new enquiries
+
+  useEffect(() => {
+    if (newEnquiryCount > 0) {
+      setShowNewEnquiry(true)
+    }
+
+  }, [newEnquiryCount])
 
   // if not authentication re route to landing page
   useEffect(() => {
@@ -503,7 +517,7 @@ export default function LayoutApp() {
           <Stack.Screen
             name="(pages)/ComingSoon"
             options={{ headerShown: false }}
-            // initialParams={{ showFooter: false }}
+          // initialParams={{ showFooter: false }}
           />
           <Stack.Screen
             name="(tabs)/properties"

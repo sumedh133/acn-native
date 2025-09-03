@@ -204,17 +204,7 @@ const EnquiriesReceived = () => {
 
     return (
         <View className="flex-1 bg-[#F5F6F7]">
-            {/* Optional: Display counts at the top */}
-            <View className="px-4 py-2 bg-white border-b border-gray-200">
-                <Text className="text-sm text-gray-600">
-                    Total Enquiries: {enquiryCount} 
-                    {newEnquiryCount > 0 && (
-                        <Text className="text-green-600 font-semibold">
-                            {" "}• {newEnquiryCount} New
-                        </Text>
-                    )}
-                </Text>
-            </View>
+            
 
             <Animated.FlatList
                 data={enquiries}

@@ -63,10 +63,13 @@ const AddInventoryForm = () => {
 
         showSuccessToast(`Property updated successfully!\n`)
       } else {
-        // create flow
-        const newProperty = await createProperty(
-          cleanData as Omit<Property, "propertyId">
-        );
+        if (cleanData.status == "draft") { }
+        else {
+          // create flow
+          const newProperty = await createProperty(
+            cleanData as Omit<Property, "propertyId">
+          );
+        }
         showSuccessToast("Property sent for verification!");
         router.dismissAll();
         router.replace("/(tabs)/dashboardTab");
