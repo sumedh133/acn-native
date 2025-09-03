@@ -15,8 +15,17 @@
 
 import { NotificationItem } from "@/app/types";
 import SwipeableNotificationCard from "./SwipeableNotificationCard";
-import React, { useState, useEffect, useCallback } from "react";
-import { View, Text, ScrollView, ActivityIndicator } from "react-native";
+import React, { useState, useEffect, useCallback, useContext } from "react";
+import {
+  View,
+  Text,
+  ActivityIndicator,
+  Animated,
+  NativeSyntheticEvent,
+  NativeScrollEvent,
+} from "react-native";
+import { FlashList } from "@shopify/flash-list";
+import { ScrollContext } from "@/app/ScrollContext";
 import NoNotificationsIcon from "@/assets/icons/InAppNotifications/noNotifications.svg";
 
 interface NotificationsProps {
@@ -45,6 +54,18 @@ const Notifications: React.FC<NotificationsProps> = ({
     useState<NotificationItem[]>(notifications);
   // Track notifications that are temporarily hidden (for undo)
   const [hiddenNotificationIds, setHiddenNotificationIds] = useState<string[]>(
+    []
+  );
+
+  // Scroll context for header/footer animations
+  const { scrollY, onScrollEndDrag, onMomentumScrollEnd } =
+    useContext(ScrollContext);
+
+  // Handle scroll events
+  const handleScroll = useCallback(
+    (event: NativeSyntheticEvent<NativeScrollEvent>) => {
+      // Additional scroll handling can be added here if needed
+    },
     []
   );
 
@@ -127,6 +148,33 @@ const Notifications: React.FC<NotificationsProps> = ({
     }
   }, [onFinalArchive, handleFinalArchiveLocal]);
 
+  // Render item function for FlashList
+  const renderNotificationItem = useCallback(
+    ({
+      item: notification,
+      index,
+    }: {
+      item: NotificationItem;
+      index: number;
+    }) => (
+      <SwipeableNotificationCard
+        notification={notification}
+        onCtaPress={onCtaPress}
+        onArchive={handleLocalArchive}
+        onToggleRead={onToggleRead}
+        addedTime={notification.addedTime}
+      />
+    ),
+    [onCtaPress, handleLocalArchive, onToggleRead]
+  );
+
+  // Key extractor for FlashList
+  const keyExtractor = useCallback(
+    (notification: NotificationItem, index: number) =>
+      `${notification.id || index}-${notification.addedTime}`,
+    []
+  );
+
   if (isLoading) {
     return (
       <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
@@ -154,21 +202,21 @@ const Notifications: React.FC<NotificationsProps> = ({
           <NoNotificationsIcon width={293} height={429} />
         </View>
       ) : (
-        <ScrollView>
-          {displayedNotifications.map((notification, index) => (
-            <React.Fragment
-              key={`${notification.id || index}-${notification.addedTime}`}
-            >
-              <SwipeableNotificationCard
-                notification={notification}
-                onCtaPress={onCtaPress}
-                onArchive={handleLocalArchive}
-                onToggleRead={onToggleRead}
-                addedTime={notification.addedTime}
-              />
-            </React.Fragment>
-          ))}
-        </ScrollView>
+        <FlashList
+          data={displayedNotifications}
+          renderItem={renderNotificationItem}
+          keyExtractor={keyExtractor}
+          estimatedItemSize={120}
+          onScroll={Animated.event(
+            [{ nativeEvent: { contentOffset: { y: scrollY } } }],
+            { useNativeDriver: false, listener: handleScroll }
+          )}
+          scrollEventThrottle={16}
+          onScrollEndDrag={onScrollEndDrag}
+          onMomentumScrollEnd={onMomentumScrollEnd}
+          showsVerticalScrollIndicator={false}
+          contentContainerStyle={{ paddingVertical: 8 }}
+        />
       )}
     </View>
   );

@@ -29,6 +29,8 @@ interface MobileHitsProps {
   results: any[]; // All accumulated results from infinite scroll
   loading: boolean; // Initial search loading
   loadingMore: boolean; // Loading next page
+  loadingFirebase?: boolean; // Loading property data from Firebase
+  firebaseProgress?: { loaded: number; total: number } | null; // Firebase loading progress
   hasMore: boolean; // Whether more results available
   error: string | null; // Error message if any
   totalHits: number; // Total number of results available
@@ -44,10 +46,12 @@ interface MobileHitsProps {
   onExitSelectionMode?: () => void;
 }
 
-export const MobileHits = ({
+const MobileHitsComponent = ({
   results = [],
   loading = false,
   loadingMore = false,
+  loadingFirebase = false,
+  firebaseProgress = null,
   hasMore = false,
   error = null,
   totalHits = 0,
@@ -390,6 +394,7 @@ export const MobileHits = ({
   }
 
   // Show empty state (no search query)
+  // Show "no results" state - only when all loading is complete
   if (results.length === 0 && !loading) {
     return (
       <View className="flex items-center justify-center h-64 px-8">
@@ -454,3 +459,38 @@ export const MobileHits = ({
     />
   );
 };
+
+// Memoize the component to prevent unnecessary re-renders
+export const MobileHits = React.memo(
+  MobileHitsComponent,
+  (prevProps, nextProps) => {
+    // Custom comparison function to optimize re-renders
+    return (
+      prevProps.loading === nextProps.loading &&
+      prevProps.loadingMore === nextProps.loadingMore &&
+      prevProps.loadingFirebase === nextProps.loadingFirebase &&
+      prevProps.hasMore === nextProps.hasMore &&
+      prevProps.error === nextProps.error &&
+      prevProps.totalHits === nextProps.totalHits &&
+      prevProps.query === nextProps.query &&
+      prevProps.isSelectionMode === nextProps.isSelectionMode &&
+      prevProps.results.length === nextProps.results.length &&
+      // Deep compare results array only if lengths are the same
+      (prevProps.results.length === 0 ||
+        prevProps.results.every(
+          (item, index) =>
+            item.propertyId === nextProps.results[index]?.propertyId
+        )) &&
+      // Compare firebaseProgress
+      prevProps.firebaseProgress?.loaded ===
+        nextProps.firebaseProgress?.loaded &&
+      prevProps.firebaseProgress?.total === nextProps.firebaseProgress?.total &&
+      // Compare selectedProperties Set
+      prevProps.selectedProperties?.size ===
+        nextProps.selectedProperties?.size &&
+      Array.from(prevProps.selectedProperties || []).every((id) =>
+        nextProps.selectedProperties?.has(id)
+      )
+    );
+  }
+);

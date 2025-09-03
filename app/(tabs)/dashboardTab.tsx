@@ -29,7 +29,6 @@ import {
   Requirement,
   Enquiry,
   EnquiryWithProperty,
-  ListingProperty,
   IReview,
 } from "../types";
 import Dashboard from "../components/dashboard/Dashboard";
@@ -53,7 +52,7 @@ interface UseEnquiriesResult {
 }
 
 interface UseListingResult {
-  myListings: ListingProperty[];
+  myListings: Property[];
   loading: boolean;
   error: string | null;
 }
@@ -426,7 +425,7 @@ const useRequirements = () => {
 };
 
 const useListings = (): UseListingResult => {
-  const [myListings, setMyListings] = useState<ListingProperty[]>([]);
+  const [myListings, setMyListings] = useState<Property[]>([]);
   const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -454,13 +453,11 @@ const useListings = (): UseListingResult => {
       const unsubscribe = onSnapshot(
         q,
         (querySnapshot) => {
-          const listingData: ListingProperty[] = querySnapshot.docs.map(
-            (doc) => {
-              return {
-                ...doc.data(),
-              } as ListingProperty;
-            }
-          );
+          const listingData: Property[] = querySnapshot.docs.map((doc) => {
+            return {
+              ...doc.data(),
+            } as Property;
+          });
 
           // Track listings data load
           try {

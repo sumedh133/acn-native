@@ -8,6 +8,7 @@ import {
   View,
 } from "react-native";
 import { styled } from "nativewind";
+import { Ionicons } from "@expo/vector-icons";
 
 type StatusInfoBottomSheetProps = {
   visible: boolean;
@@ -140,7 +141,7 @@ const StatusInfoBottomSheet = ({
       </AView>
 
       <AView
-        className="absolute left-0 right-0 bottom-0 w-full rounded-t-2xl px-4 pt-3 pb-6 shadow-lg"
+        className="absolute left-0 right-0 bottom-0 w-full"
         style={{
           position: "absolute",
           left: 0,
@@ -148,44 +149,69 @@ const StatusInfoBottomSheet = ({
           bottom: 0,
           width: "100%",
           transform: [{ translateY }],
-          elevation: 12,
-          backgroundColor: content.bgColour || "#FFFFFF",
         }}
       >
-        <View className="self-center w-10 h-[6px] rounded-full bg-gray-300 mb-3" />
-        <Text
-          className="text-base text-center mb-2 font-montserrat-bold"
-          style={{ color: content.textColour || "#2B2928" }}
-        >
-          {content.title}
-        </Text>
-        {!!content.description &&
-          (Array.isArray(content.description) ? (
-            <View className="mt-1">
-              {content.description.map(
-                (item: { title: string; description: string }) => (
-                  <View key={item.title} className="mb-2">
-                    <Text className="text-[13px] leading-[18px] text-[#2B2928] font-montserrat-bold">
-                      {item.title}
-                    </Text>
-                    <Text className="text-[13px] leading-[18px] text-[#5A5555] font-lato-regular">
-                      {item.description}
-                    </Text>
-                  </View>
-                )
-              )}
-            </View>
-          ) : (
-            <Text className="text-[13px] leading-[18px] text-[#5A5555] font-lato-regular">
-              {content.description}
-            </Text>
-          ))}
+        {/* Close button positioned above the modal */}
         <TouchableOpacity
-          className="mt-4 self-end bg-[#153E3B] px-4 py-2 rounded-lg"
           onPress={onClose}
+          style={{
+            position: "absolute",
+            top: -60, // Position above the modal content
+            left: "50%",
+            transform: [{ translateX: -20 }],
+            width: 40,
+            height: 40,
+            borderRadius: 20,
+            backgroundColor: "#FFFFFF",
+            justifyContent: "center",
+            alignItems: "center",
+            zIndex: 201,
+            shadowColor: "#000",
+            shadowOffset: { width: 0, height: 2 },
+            shadowOpacity: 0.25,
+            shadowRadius: 4,
+            elevation: 5,
+          }}
         >
-          <Text className="text-white font-lato-semibold">Close</Text>
+          <Ionicons name="close" size={24} color="#333" />
         </TouchableOpacity>
+
+        {/* Modal content */}
+        <View
+          className="rounded-t-2xl pt-5 shadow-lg px-6"
+          style={{
+            elevation: 12,
+            backgroundColor: content.bgColour || "#FFFFFF",
+          }}
+        >
+          <Text
+            className="text-base text-center mb-2 font-montserrat-bold"
+            style={{ color: content.textColour || "#2B2928" }}
+          >
+            {content.title}
+          </Text>
+          {!!content.description &&
+            (Array.isArray(content.description) ? (
+              <View className="pt-6 pb-12">
+                {content.description.map(
+                  (item: { title: string; description: string }) => (
+                    <View key={item.title} className="mb-2">
+                      <Text className="text-[13px] leading-[18px] text-[#2B2928] font-montserrat-bold">
+                        {item.title}
+                      </Text>
+                      <Text className="text-[13px] leading-[18px] text-[#5A5555] font-lato-regular">
+                        {item.description}
+                      </Text>
+                    </View>
+                  )
+                )}
+              </View>
+            ) : (
+              <Text className="text-[13px] leading-[18px] text-[#5A5555] font-lato-regular pt-6 pb-12">
+                {content.description}
+              </Text>
+            ))}
+        </View>
       </AView>
     </View>
   );
