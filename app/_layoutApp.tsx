@@ -12,11 +12,13 @@ import React, {
   useEffect,
   useRef,
   useState,
+  useLayoutEffect
 } from "react";
 import Toast from "react-native-toast-message";
 import { StatusBar } from "expo-status-bar";
 import { toastConfig } from "@/utils/toastUtils";
 import OnboardingFlow, { useOnboardingContext } from "./components/Onboarding";
+import { showSuccessToast } from "@/utils/toastUtils";
 import { updateAgentDocData } from "@/store/slices/agentSlice";
 import {
   Keyboard,
@@ -82,6 +84,7 @@ import { db } from "@/app/config/firebase";
 import { ScrollContext, ScrollProvider } from "./ScrollContext";
 import NotificationIcon from "@/assets/icons/notificationIcon.svg";
 import { useEnquiries } from "@/hooks/enquiryHooks/useEnquiries";
+import { setItem, getItem, clearStorage } from "@/storage";
 
 // Custom header component to apply the desired styling
 const CustomHeader = ({
@@ -168,6 +171,7 @@ const CustomHeader = ({
 };
 
 export default function LayoutApp() {
+  const { openNewEnquiryPopup, showNewEnquiryPopup } = useContext(ScrollContext)
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isMaintenanceMode, setIsMaintenanceMode] = useState(false);
   const [isScrolling, setIsScrolling] = useState(false);
@@ -175,10 +179,17 @@ export default function LayoutApp() {
   const colorScheme = useColorScheme();
   const [topMargin, setTopMargin] = useState(10);
   const [unreadCount, setUnreadCount] = useState(0);
-  const [showNewEnquiry, setShowNewEnquiry] = useState<boolean>(false)
+
+
+
   const {
-    newEnquiryCount,
+    enquiryCount,
   } = useEnquiries();
+
+
+  console.log("enquiryCount", getItem<number>("enquiryCount"))
+
+
 
   const [fontsLoaded] = useFonts({
     Montserrat_400Regular,
@@ -246,14 +257,26 @@ export default function LayoutApp() {
     return () => unsubscribe();
   }, []);
 
-  // Litsen for the new enquiries
+  // Listen for new enquiries
+  useLayoutEffect(() => {
 
-  useEffect(() => {
-    if (newEnquiryCount > 0) {
-      setShowNewEnquiry(true)
+
+    if (getItem<number>("enquiryCount")) {
+      const storedCount = getItem<number>("enquiryCount") || 0;
+      console.log("i must be here")
+      if (enquiryCount && enquiryCount > storedCount) {
+        console.log("i must be here also")
+        openNewEnquiryPopup();
+        console.log(showNewEnquiryPopup)
+         setItem("enquiryCount", enquiryCount)
+
+      }
     }
-
-  }, [newEnquiryCount])
+    else if (enquiryCount) {
+      console.log("i am here")
+      setItem("enquiryCount", enquiryCount)
+    }
+  }, [enquiryCount]);
 
   // if not authentication re route to landing page
   useEffect(() => {
@@ -336,7 +359,6 @@ export default function LayoutApp() {
 
   // Logout and redirect to BlacklistedPage if the user gets blackListed while already logged in
   useEffect(() => {
-    console.log(isBlacklisted, "isBlacklisted");
     if (isBlacklisted && isAuthenticated) {
       (async () => {
         try {

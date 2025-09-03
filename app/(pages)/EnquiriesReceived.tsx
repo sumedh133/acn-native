@@ -8,6 +8,7 @@ import {
 import Offline from "../components/Offline";
 import { useSelector } from "react-redux";
 import { RootState } from "@/store/store";
+import { selectPropertyStateData } from "@/store/slices/propertySlice";
 import { analytics } from "../config/firebase";
 import { logEvent } from "@react-native-firebase/analytics";
 import EnquiryCard from "../components/MyBusinessPage/EnquiryCard";
@@ -20,6 +21,15 @@ import { updateEnquiry } from "../services/user_services/enquiryService";
 import { useEnquiries } from "@/hooks/enquiryHooks/useEnquiries";
 
 const EnquiriesReceived = () => {
+
+    // Redux State
+
+    const agentData = useSelector((state: RootState) => state?.agent?.docData);
+    const isConnectedToInternet = useSelector(
+        (state: RootState) => state.app.isConnectedToInternet
+    );
+    const property = useSelector(selectPropertyStateData);
+
     // Use the custom hook
     const {
         enquiries,
@@ -29,14 +39,9 @@ const EnquiriesReceived = () => {
         refreshing,
         error,
         handleRefresh
-    } = useEnquiries();
+    } = useEnquiries({ propertyId: property.propertyId });
 
-    // Other selectors and state
-    const agentData = useSelector((state: RootState) => state?.agent?.docData);
-    const isConnectedToInternet = useSelector(
-        (state: RootState) => state.app.isConnectedToInternet
-    );
-
+    // Other state
     const userType = agentData?.userType || "free";
     const scrollY = useSharedValue(0);
     const viewabilityConfig = useRef({
@@ -204,7 +209,7 @@ const EnquiriesReceived = () => {
 
     return (
         <View className="flex-1 bg-[#F5F6F7]">
-            
+
 
             <Animated.FlatList
                 data={enquiries}

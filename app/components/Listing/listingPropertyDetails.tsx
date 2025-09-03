@@ -47,7 +47,7 @@ export const FormPreview: React.FC<FormPreviewProps> = ({
     enquiryCount,
     newEnquiryCount,
 
-  } = useEnquiries();
+  } = useEnquiries({propertyId:data?.propertyId});
 
   const getFieldValue = (obj: any, path: string) =>
     path.split(".").reduce((acc, key) => acc?.[key], obj);
