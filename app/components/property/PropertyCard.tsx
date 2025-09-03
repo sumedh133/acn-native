@@ -624,9 +624,9 @@ const PropertyCard: React.FC<PropertyCardProps> = ({
                       </Text>
                       <Text className="text-sm font-semibold text-[#111827]">
                         {property?.pricing?.pricePerSqft
-                          ? formatCost(property.pricing.pricePerSqft)
-                          : property?.pricing.pricePerSqft
-                          ? formatCost(property.pricing.pricePerSqft)
+                          ? formatCost(property.pricing?.pricePerSqft)
+                          : property?.pricing?.pricePerSqft
+                          ? formatCost(property.pricing?.pricePerSqft)
                           : null}
                       </Text>
                     </View>

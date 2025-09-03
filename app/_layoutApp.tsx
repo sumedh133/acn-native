@@ -471,13 +471,13 @@ export default function LayoutApp() {
                     unreadCount={unreadCount}
                   />
 
-                  {params.showNotificationBanner &&
+                  {/* {params.showNotificationBanner &&
                     agentData?.userType !== "premium" && (
                       <TrialStatusNotification
-                        showNotification={trialData.showNotification}
+                        showNotification={trialData?.showNotification}
                         onDismiss={handleDismiss}
                       />
-                    )}
+                    )} */}
                 </>
               );
             },

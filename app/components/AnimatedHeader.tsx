@@ -39,7 +39,7 @@ const AnimatedHeader: React.FC<AnimatedHeaderProps> = ({
   showNotificationBanner = false,
   customMessage,
 }) => {
-  // const { headerTranslateY } = useContext(ScrollContext);
+   const { headerHeight } = useContext(ScrollContext);
   const monthlyCredits = useSelector(
     (state: RootState) => state.agent?.docData?.monthlyCredits || 0
   );
@@ -114,7 +114,7 @@ const AnimatedHeader: React.FC<AnimatedHeaderProps> = ({
   if (dismissed) return null;
 
   return (
-    <Animated.View style={{ transform: [{ translateY: headerTranslateY }], zIndex: 10 }}>
+    <Animated.View style={{ transform: [{ translateY: headerHeight }], zIndex: 10 }}>
       <View style={{ height: HEADER_HEIGHT, flexDirection: "row", alignItems: "center", justifyContent: "space-between", paddingHorizontal: 15, backgroundColor: "#fff" }}>
         <TouchableOpacity onPress={() => onMenuPress(headerBackVisible)}>
           <Text>{headerBackVisible ? "<" : "☰"}</Text>

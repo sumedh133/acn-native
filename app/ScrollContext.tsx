@@ -91,7 +91,7 @@ export const ScrollContext = createContext<ScrollContextType>({
 });
 
 export const ScrollProvider: React.FC<{ children: React.ReactNode }> = ({
-  children,
+  children
 }) => {
   const scrollY = useRef(new Animated.Value(0)).current;
 

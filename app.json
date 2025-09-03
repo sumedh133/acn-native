@@ -18,9 +18,12 @@
         "ITSAppUsesNonExemptEncryption": false,
         "UIBackgroundModes": [
           "fetch",
+          "remote-notification",
+          "fetch",
           "remote-notification"
         ],
         "LSApplicationQueriesSchemes": [
+          "itms-apps",
           "itms-apps"
         ]
       },
@@ -80,6 +83,12 @@
       "eas": {
         "projectId": "bed248dc-419b-4fd9-80c2-49ba8d271313"
       }
+    },
+    "runtimeVersion": {
+      "policy": "appVersion"
+    },
+    "updates": {
+      "url": "https://u.expo.dev/bed248dc-419b-4fd9-80c2-49ba8d271313"
     }
   }
 }
