@@ -16,6 +16,7 @@ import { RootState } from "@/store/store";
 import { ScrollContext } from "@/app/ScrollContext";
 import ModularPopup from "./ModularPopup";
 import StatusInfoBottomSheet from "../app/components/property/StatusInfoBottomSheet";
+import NewEnquiriesModal from "@/app/components/property/NewEnquiriesModal";
 import { ModalType, getModalItems } from "@/app/constants/footerModalOptions";
 import { getPopupItems, menuItems } from "@/app/constants/footerConstants";
 
@@ -61,6 +62,12 @@ const FooterNavigation = () => {
     selectedCategory,
     closeCategoryPopup,
     setSelectedCategory,
+
+    //New Enquiry
+    showNewEnquiryPopup,
+    closeNewEnquiryPopup,
+    openNewEnquiryPopup,
+
 
     setFooterHeight,
     footerHeight,
@@ -457,6 +464,11 @@ const FooterNavigation = () => {
         visible={isStatusInfoOpen}
         status={currentStatusInfo}
         onClose={closeStatusInfo}
+      />
+      <NewEnquiriesModal
+        visible={showNewEnquiryPopup}
+        onClose={closeNewEnquiryPopup}
+        onCheckNow={() => { }}
       />
     </>
   );

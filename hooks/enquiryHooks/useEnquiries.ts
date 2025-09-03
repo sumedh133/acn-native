@@ -1,17 +1,17 @@
-import { useState, useEffect, useCallback, useRef } from 'react';
-import { useSelector } from 'react-redux';
-import { RootState } from '@/store/store';
-import { selectPropertyStateData } from '@/store/slices/propertySlice';
-import { Enquiry } from '@/app/types';
-import { db } from '@/app/config/firebase';
+import { useState, useEffect, useCallback, useRef } from "react";
+import { useSelector } from "react-redux";
+import { RootState } from "@/store/store";
+import { selectPropertyStateData } from "@/store/slices/propertySlice";
+import { Enquiry } from "@/app/types";
+import { db } from "@/app/config/firebase";
 import {
   collection,
   query,
   where,
   orderBy,
   onSnapshot,
-  QueryConstraint
-} from 'firebase/firestore';
+  QueryConstraint,
+} from "firebase/firestore";
 
 interface UseEnquiriesReturn {
   enquiries: Enquiry[];
@@ -26,14 +26,16 @@ interface UseEnquiriesReturn {
 interface UseEnquiriesOptions {
   propertyId?: string;
   orderByField?: string;
-  orderDirection?: 'asc' | 'desc';
+  orderDirection?: "asc" | "desc";
 }
 
-export const useEnquiries = (options: UseEnquiriesOptions = {}): UseEnquiriesReturn => {
+export const useEnquiries = (
+  options: UseEnquiriesOptions = {}
+): UseEnquiriesReturn => {
   const {
     propertyId,
-    orderByField = 'createdAt',
-    orderDirection = 'desc'
+    orderByField = "createdAt",
+    orderDirection = "desc",
   } = options;
 
   // State
@@ -47,16 +49,12 @@ export const useEnquiries = (options: UseEnquiriesOptions = {}): UseEnquiriesRet
 
   // Selectors
   const cpId = useSelector((state: RootState) => state?.agent?.docData?.cpId);
-  const property = useSelector(selectPropertyStateData);
 
-  // Determine which property ID to use
-  const targetPropertyId = propertyId || property?.propertyId;
-
-  // Setup enquiries listener
+  // ✅ Setup enquiries listener
   const setupEnquiriesListener = useCallback(() => {
-    if (!cpId || !targetPropertyId) {
+    if (!cpId) {
       setLoading(false);
-      setError('Missing required data (cpId or propertyId)');
+      setError("Missing required data (cpId)");
       return;
     }
 
@@ -64,13 +62,14 @@ export const useEnquiries = (options: UseEnquiriesOptions = {}): UseEnquiriesRet
     setError(null);
 
     try {
-      const enquiriesRef = collection(db, 'acnEnquiries');
+      const enquiriesRef = collection(db, "acnEnquiries");
 
-      // Build query constraints
-      const constraints: QueryConstraint[] = [
-        where('sellerCpId', '==', cpId),
-        where('propertyId', '==', targetPropertyId),
-      ];
+      // ✅ Build query constraints dynamically
+      const constraints: QueryConstraint[] = [where("sellerCpId", "==", cpId)];
+
+      if (propertyId) {
+        constraints.push(where("propertyId", "==", propertyId));
+      }
 
       const q = query(enquiriesRef, ...constraints);
 
@@ -78,25 +77,25 @@ export const useEnquiries = (options: UseEnquiriesOptions = {}): UseEnquiriesRet
         q,
         (snapshot) => {
           if (snapshot.empty) {
-            console.log('No enquiries found');
+            console.log("No enquiries found");
             setEnquiries([]);
           } else {
             const enquiriesData: Enquiry[] = snapshot.docs.map(
-              (doc) => ({
-                enquiryId: doc.id,
-                ...doc.data(),
-              } as Enquiry)
+              (doc) =>
+                ({
+                  enquiryId: doc.id,
+                  ...doc.data(),
+                } as Enquiry)
             );
 
-            console.log(`Fetched ${enquiriesData.length} enquiries`, enquiriesData);
             setEnquiries(enquiriesData);
           }
           setLoading(false);
           setRefreshing(false);
         },
         (error) => {
-          console.error('Error in enquiries listener:', error);
-          setError('Failed to load enquiries');
+          console.error("Error in enquiries listener:", error);
+          setError("Failed to load enquiries");
           setLoading(false);
           setRefreshing(false);
         }
@@ -105,18 +104,17 @@ export const useEnquiries = (options: UseEnquiriesOptions = {}): UseEnquiriesRet
       // Save unsubscribe function
       unsubscribeRef.current = unsubscribe;
     } catch (error) {
-      console.error('Error setting up enquiries listener:', error);
-      setError('Failed to setup real-time updates');
+      console.error("Error setting up enquiries listener:", error);
+      setError("Failed to setup real-time updates");
       setLoading(false);
       setRefreshing(false);
     }
-  }, [cpId, targetPropertyId]);
+  }, [cpId, propertyId, orderByField, orderDirection]);
 
-  // Setup listener on mount and dependency changes
+  // ✅ Setup listener on mount and dependency changes
   useEffect(() => {
     setupEnquiriesListener();
 
-    // Cleanup subscription on unmount or dependency change
     return () => {
       if (unsubscribeRef.current) {
         unsubscribeRef.current();
@@ -125,25 +123,25 @@ export const useEnquiries = (options: UseEnquiriesOptions = {}): UseEnquiriesRet
     };
   }, [setupEnquiriesListener]);
 
-  // Handle refresh
+  // ✅ Handle refresh
   const handleRefresh = useCallback(async () => {
     setRefreshing(true);
     setError(null);
 
-    // Re-establish the listener for manual refresh
     if (unsubscribeRef.current) {
       unsubscribeRef.current();
     }
 
-    // Small delay to show refresh animation
     setTimeout(() => {
       setupEnquiriesListener();
     }, 100);
   }, [setupEnquiriesListener]);
 
-  // Calculate counts
+  // ✅ Calculate counts
   const enquiryCount = enquiries.length;
-  const newEnquiryCount = enquiries.filter(enquiry => enquiry.isNew === true).length;
+  const newEnquiryCount = enquiries.filter(
+    (enquiry) => enquiry.isNew === true
+  ).length;
 
   return {
     enquiries,
@@ -152,6 +150,6 @@ export const useEnquiries = (options: UseEnquiriesOptions = {}): UseEnquiriesRet
     loading,
     refreshing,
     error,
-    handleRefresh
+    handleRefresh,
   };
 };

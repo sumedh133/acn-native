@@ -41,6 +41,11 @@ interface ScrollContextType {
   closeStatusPopup: () => void;
   setSelectedStatus: (value: string) => void;
 
+  // New Enquiry Popup
+  showNewEnquiryPopup: boolean,
+  openNewEnquiryPopup: () => void;
+  closeNewEnquiryPopup: () => void;
+
   // Category filter popup
   showCategoryPopup: boolean;
   selectedCategory: string | null;
@@ -59,47 +64,51 @@ export const ScrollContext = createContext<ScrollContextType>({
   scrollY: new Animated.Value(0),
 
   footerTranslateY: new Animated.Value(0),
-  resetFooterPosition: () => {},
-  onScrollEndDrag: () => {},
-  onMomentumScrollEnd: () => {},
-  setFooterHeight: () => {},
+  resetFooterPosition: () => { },
+  onScrollEndDrag: () => { },
+  onMomentumScrollEnd: () => { },
+  setFooterHeight: () => { },
   footerHeight: null,
 
-  setHeaderHeight: () => {},
+  setHeaderHeight: () => { },
   headerHeightValue: null,
   headerHeight: new Animated.Value(0),
 
-  setSecondaryHeaderHeight: () => {},
+  setSecondaryHeaderHeight: () => { },
   secondaryHeaderHeightValue: null,
   secondaryHeaderHeight: new Animated.Value(0),
 
-  setNotificationHeight: () => {},
+  setNotificationHeight: () => { },
   notificationHeightValue: null,
   notificationHeight: new Animated.Value(0),
 
   showSortPopup: false,
   selectedSort: null,
-  openSortPopup: () => {},
-  closeSortPopup: () => {},
-  setSelectedSort: () => {},
+  openSortPopup: () => { },
+  closeSortPopup: () => { },
+  setSelectedSort: () => { },
 
   showStatusPopup: false,
   selectedStatus: null,
-  openStatusPopup: () => {},
-  closeStatusPopup: () => {},
-  setSelectedStatus: () => {},
+  openStatusPopup: () => { },
+  closeStatusPopup: () => { },
+  setSelectedStatus: () => { },
+
+  showNewEnquiryPopup: false,
+  openNewEnquiryPopup: () => { },
+  closeNewEnquiryPopup: () => { },
 
   showCategoryPopup: false,
   selectedCategory: null,
-  openCategoryPopup: () => {},
-  closeCategoryPopup: () => {},
-  setSelectedCategory: () => {},
+  openCategoryPopup: () => { },
+  closeCategoryPopup: () => { },
+  setSelectedCategory: () => { },
 
   // Status info bottom sheet
   isStatusInfoOpen: false,
   currentStatusInfo: null,
-  openStatusInfo: () => {},
-  closeStatusInfo: () => {},
+  openStatusInfo: () => { },
+  closeStatusInfo: () => { },
 });
 
 export const ScrollProvider: React.FC<{ children: React.ReactNode }> = ({
@@ -153,11 +162,16 @@ export const ScrollProvider: React.FC<{ children: React.ReactNode }> = ({
     null
   );
 
+  // New Enquiry info bottom sheet state
+  const [showNewEnquiryPopup, setShowNewEnquiryPopup] = useState<boolean>(false);
+
   // Popup methods
   const openSortPopup = () => setShowSortPopup(true);
   const closeSortPopup = () => setShowSortPopup(false);
   const openStatusPopup = () => setShowStatusPopup(true);
   const closeStatusPopup = () => setShowStatusPopup(false);
+  const openNewEnquiryPopup = () => setShowNewEnquiryPopup(true);
+  const closeNewEnquiryPopup = () => setShowNewEnquiryPopup(false);
   const openCategoryPopup = () => setShowCategoryPopup(true);
   const closeCategoryPopup = () => setShowCategoryPopup(false);
 
@@ -295,8 +309,8 @@ export const ScrollProvider: React.FC<{ children: React.ReactNode }> = ({
           scrollDirection.current === "up"
             ? 0
             : currentValue > 0.5 * safeFooterHeight
-            ? safeFooterHeight
-            : 0;
+              ? safeFooterHeight
+              : 0;
       }
 
       currentClampedFooter.current = targetValue;
@@ -322,8 +336,8 @@ export const ScrollProvider: React.FC<{ children: React.ReactNode }> = ({
           scrollDirection.current === "up"
             ? 0
             : currentValue > 0.5 * safeHeaderHeight
-            ? safeHeaderHeight
-            : 0;
+              ? safeHeaderHeight
+              : 0;
       }
 
       currentClampedHeader.current = targetValue;
@@ -349,8 +363,8 @@ export const ScrollProvider: React.FC<{ children: React.ReactNode }> = ({
           scrollDirection.current === "up"
             ? 0
             : currentValue > 0.5 * safeSecondaryHeaderHeight
-            ? safeSecondaryHeaderHeight
-            : 0;
+              ? safeSecondaryHeaderHeight
+              : 0;
       }
 
       currentClampedSecondaryHeader.current = targetValue;
@@ -376,8 +390,8 @@ export const ScrollProvider: React.FC<{ children: React.ReactNode }> = ({
           scrollDirection.current === "up"
             ? 0
             : currentValue > 0.5 * safeNotificationHeight
-            ? safeNotificationHeight
-            : 0;
+              ? safeNotificationHeight
+              : 0;
       }
 
       currentClampedNotification.current = targetValue;
@@ -465,6 +479,11 @@ export const ScrollProvider: React.FC<{ children: React.ReactNode }> = ({
         openCategoryPopup,
         closeCategoryPopup,
         setSelectedCategory,
+
+        //New Enquiry popup
+        showNewEnquiryPopup,
+        openNewEnquiryPopup,
+        closeNewEnquiryPopup,
 
         // Status info bottom sheet
         isStatusInfoOpen,
