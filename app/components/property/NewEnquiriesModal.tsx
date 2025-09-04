@@ -8,7 +8,7 @@ import {
   View,
   Image,
 } from "react-native";
-import { LinearGradient } from 'expo-linear-gradient'; // or 'react-native-linear-gradient'
+import { LinearGradient } from "expo-linear-gradient"; // or 'react-native-linear-gradient'
 import { styled } from "nativewind";
 import ListingsIcon from "@/assets/icons/listingWithGradient.svg";
 import ConfettiCannon from "react-native-confetti-cannon";
@@ -52,13 +52,19 @@ const NewEnquiriesModal = ({
   }, [visible, translateY, backdropOpacity]);
 
   const AView = styled(Animated.View);
-  if (!visible) return (null)
 
-
+  // Don't return null immediately - let animations complete
   return (
     <View
       className={`absolute inset-0 z-[200]`}
-      style={{ position: "absolute", top: 0, left: 0, right: 0, bottom: 0 }}
+      style={{
+        position: "absolute",
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0,
+        pointerEvents: visible ? "auto" : "none", // Prevent interaction when not visible
+      }}
     >
       <AView
         className="absolute inset-0 bg-black/40"
@@ -84,13 +90,14 @@ const NewEnquiriesModal = ({
           alignSelf: "center",
           bottom: "29%", // Position relative to screen instead of modal
           zIndex: 30,
-          transform: [{
-            translateY: translateY.interpolate({
-              inputRange: [0, SCREEN_HEIGHT],
-              outputRange: [-55, SCREEN_HEIGHT],
-
-            })
-          }],
+          transform: [
+            {
+              translateY: translateY.interpolate({
+                inputRange: [0, SCREEN_HEIGHT],
+                outputRange: [-55, SCREEN_HEIGHT],
+              }),
+            },
+          ],
         }}
       >
         <TouchableOpacity
@@ -121,23 +128,22 @@ const NewEnquiriesModal = ({
           width: "100%",
           transform: [{ translateY }],
           elevation: 12,
-          overflow: 'hidden', // Important for rounded corners with gradient
+          overflow: "hidden", // Important for rounded corners with gradient
         }}
       >
         {/* Gradient Background */}
         <LinearGradient
-          colors={['#FFFFFF', '#A0E2DD']}
+          colors={["#FFFFFF", "#A0E2DD"]}
           start={{ x: 0, y: 0 }}
           end={{ x: 0, y: 1 }}
           style={{
-            position: 'absolute',
+            position: "absolute",
             left: 0,
             right: 0,
             top: 0,
             bottom: 0,
           }}
         />
-
 
         {/* Content */}
         <View className="items-center px-5 mt-2">
@@ -171,14 +177,13 @@ const NewEnquiriesModal = ({
       </AView>
 
       <ConfettiCannon
-        count={150}           // smaller burst
+        count={150} // smaller burst
         origin={{ x: 0, y: 0 }}
         autoStart={true}
         fadeOut={true}
-        explosionSpeed={500}// remove particles after animation
-        fallSpeed={3000}      // adjust speed for performance
+        explosionSpeed={500} // remove particles after animation
+        fallSpeed={3000} // adjust speed for performance
       />
-
     </View>
   );
 };

@@ -68,7 +68,6 @@ const FooterNavigation = () => {
     closeNewEnquiryPopup,
     openNewEnquiryPopup,
 
-
     setFooterHeight,
     footerHeight,
 
@@ -468,7 +467,10 @@ const FooterNavigation = () => {
       <NewEnquiriesModal
         visible={showNewEnquiryPopup}
         onClose={closeNewEnquiryPopup}
-        onCheckNow={() => { }}
+        onCheckNow={() => {
+          console.log("NewEnquiriesModal: Check Now clicked");
+          closeNewEnquiryPopup();
+        }}
       />
     </>
   );

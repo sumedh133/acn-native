@@ -1,18 +1,13 @@
 import React, { useState } from "react";
-import {
-  View,
-  Text,
-  TouchableOpacity,
-  StyleSheet,
-  Image,
-  Platform,
-} from "react-native";
+import { View, Text, StyleSheet } from "react-native";
 
 import { DocsToUpload } from "@/app/types";
 
 import FileUpload from "./FileUpload";
-import UploadFiles from "@/assets/icons/svg/AddInventory/UploadFiles";
 import FilePreview from "./FilePreview";
+
+// icons
+import UploadFiles from "@/assets/icons/svg/PropertyListing/ListingFlow/UploadFiles.svg";
 
 interface DocumentProps {
   docsToUpload: DocsToUpload;
@@ -25,9 +20,16 @@ const Document: React.FC<DocumentProps> = ({
 }) => {
   return (
     <View style={styles.container}>
-      <View style={styles.header}>
-        <UploadFiles />
-        <Text style={styles.headerText}>Upload files</Text>
+      <View
+        style={styles.header}
+      >
+        <View style={styles.header}>
+          <View className="border border-[#CBD0DC] rounded-full p-[7px]">
+            <UploadFiles />
+          </View>
+          <Text style={styles.headerText}>Upload files</Text>
+        </View>
+        <Text style={styles.headerText}>{docsToUpload.document.length}</Text>
       </View>
 
       <FileUpload

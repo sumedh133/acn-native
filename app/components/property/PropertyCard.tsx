@@ -560,26 +560,42 @@ const PropertyCard: React.FC<PropertyCardProps> = ({
                   {/* Property ID on the left - using width fit-content approach */}
                   <View className="flex-1 shrink flex-row justify-between">
                     <View className="self-start flex-row gap-2.5">
-                      <Text className="text-[#5A5555] text-sm border-b border-b-[#E3E3E3] font-[Lato] font-semibold leading-[21px] tracking-wide pb-0.5">
+                      <Text className="text-[#5A5555] text-sm font-[Lato] font-semibold leading-[21px] tracking-wide pb-0.5">
                         {property.propertyId}
                       </Text>
                     </View>
-                    {property.status === "available" &&
+                    {property.added &&
+                      property.status === "available" &&
                       pathname === "/properties" &&
                       (getDaysDifference(
                         property.added,
                         Math.floor(Date.now() / 1000)
-                      ) > 10 ? (
-                        <View>
-                          <Text className="text-[#726C6C] text-sm font-[Lato] font-semibold leading-[21px] border-b border-b-[#E3E3E3]">{`Status updated ${getDaysFrom(
-                            property.dateOfLastChecked
-                          )} ago`}</Text>
-                        </View>
-                      ) : (
+                      ) < 1 ? (
                         <View className="bg-[#E93B3E] px-2 py-1 rounded">
                           <Text className="text-white font-[Lato] text-xs font-medium leading-[18px]">
                             Newly Added
                           </Text>
+                        </View>
+                      ) : getDaysDifference(
+                          property.added,
+                          Math.floor(Date.now() / 1000)
+                        ) < 10 ? (
+                        <View>
+                          <Text className="text-[#726C6C] text-sm font-[Lato] font-semibold leading-[21px]">{`Added ${getDaysFrom(
+                            property.added
+                          )} ${
+                            getDaysFrom(property.added) === 1 ? "day" : "days"
+                          } ago`}</Text>
+                        </View>
+                      ) : (
+                        <View>
+                          <Text className="text-[#726C6C] text-sm font-[Lato] font-semibold leading-[21px]">{`Updated ${getDaysFrom(
+                            property.dateOfLastChecked
+                          )} ${
+                            getDaysFrom(property.dateOfLastChecked) === 1
+                              ? "day"
+                              : "days"
+                          } ago`}</Text>
                         </View>
                       ))}
                   </View>
@@ -716,7 +732,7 @@ const PropertyCard: React.FC<PropertyCardProps> = ({
 
                   {/* share button*/}
                   <TouchableOpacity
-                    className="w-[34px] h-[34px] rounded p-1.5 bg-[#E3E3E3] justify-center items-center border border-[#153E3B]"
+                    className="w-[34px] h-[34px] rounded p-1.5 justify-center items-center border border-[#153E3B]"
                     onPress={handleShareButton}
                   >
                     <Share />

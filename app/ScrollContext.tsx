@@ -1,4 +1,10 @@
-import React, { createContext, useCallback, useRef, useState } from "react";
+import React, {
+  createContext,
+  useCallback,
+  useRef,
+  useState,
+  useEffect,
+} from "react";
 import { Animated } from "react-native";
 
 interface ScrollContextType {
@@ -42,7 +48,7 @@ interface ScrollContextType {
   setSelectedStatus: (value: string) => void;
 
   // New Enquiry Popup
-  showNewEnquiryPopup: boolean,
+  showNewEnquiryPopup: boolean;
   openNewEnquiryPopup: () => void;
   closeNewEnquiryPopup: () => void;
 
@@ -64,51 +70,51 @@ export const ScrollContext = createContext<ScrollContextType>({
   scrollY: new Animated.Value(0),
 
   footerTranslateY: new Animated.Value(0),
-  resetFooterPosition: () => { },
-  onScrollEndDrag: () => { },
-  onMomentumScrollEnd: () => { },
-  setFooterHeight: () => { },
+  resetFooterPosition: () => {},
+  onScrollEndDrag: () => {},
+  onMomentumScrollEnd: () => {},
+  setFooterHeight: () => {},
   footerHeight: null,
 
-  setHeaderHeight: () => { },
+  setHeaderHeight: () => {},
   headerHeightValue: null,
   headerHeight: new Animated.Value(0),
 
-  setSecondaryHeaderHeight: () => { },
+  setSecondaryHeaderHeight: () => {},
   secondaryHeaderHeightValue: null,
   secondaryHeaderHeight: new Animated.Value(0),
 
-  setNotificationHeight: () => { },
+  setNotificationHeight: () => {},
   notificationHeightValue: null,
   notificationHeight: new Animated.Value(0),
 
   showSortPopup: false,
   selectedSort: null,
-  openSortPopup: () => { },
-  closeSortPopup: () => { },
-  setSelectedSort: () => { },
+  openSortPopup: () => {},
+  closeSortPopup: () => {},
+  setSelectedSort: () => {},
 
   showStatusPopup: false,
   selectedStatus: null,
-  openStatusPopup: () => { },
-  closeStatusPopup: () => { },
-  setSelectedStatus: () => { },
+  openStatusPopup: () => {},
+  closeStatusPopup: () => {},
+  setSelectedStatus: () => {},
 
   showNewEnquiryPopup: false,
-  openNewEnquiryPopup: () => { },
-  closeNewEnquiryPopup: () => { },
+  openNewEnquiryPopup: () => {},
+  closeNewEnquiryPopup: () => {},
 
   showCategoryPopup: false,
   selectedCategory: null,
-  openCategoryPopup: () => { },
-  closeCategoryPopup: () => { },
-  setSelectedCategory: () => { },
+  openCategoryPopup: () => {},
+  closeCategoryPopup: () => {},
+  setSelectedCategory: () => {},
 
   // Status info bottom sheet
   isStatusInfoOpen: false,
   currentStatusInfo: null,
-  openStatusInfo: () => { },
-  closeStatusInfo: () => { },
+  openStatusInfo: () => {},
+  closeStatusInfo: () => {},
 });
 
 export const ScrollProvider: React.FC<{ children: React.ReactNode }> = ({
@@ -163,7 +169,8 @@ export const ScrollProvider: React.FC<{ children: React.ReactNode }> = ({
   );
 
   // New Enquiry info bottom sheet state
-  const [showNewEnquiryPopup, setShowNewEnquiryPopup] = useState<boolean>(false);
+  const [showNewEnquiryPopup, setShowNewEnquiryPopup] =
+    useState<boolean>(false);
 
   // Popup methods
   const openSortPopup = () => setShowSortPopup(true);
@@ -310,8 +317,8 @@ const closeNewEnquiryPopup = () => setShowNewEnquiryPopup(false);
           scrollDirection.current === "up"
             ? 0
             : currentValue > 0.5 * safeFooterHeight
-              ? safeFooterHeight
-              : 0;
+            ? safeFooterHeight
+            : 0;
       }
 
       currentClampedFooter.current = targetValue;
@@ -337,8 +344,8 @@ const closeNewEnquiryPopup = () => setShowNewEnquiryPopup(false);
           scrollDirection.current === "up"
             ? 0
             : currentValue > 0.5 * safeHeaderHeight
-              ? safeHeaderHeight
-              : 0;
+            ? safeHeaderHeight
+            : 0;
       }
 
       currentClampedHeader.current = targetValue;
@@ -364,8 +371,8 @@ const closeNewEnquiryPopup = () => setShowNewEnquiryPopup(false);
           scrollDirection.current === "up"
             ? 0
             : currentValue > 0.5 * safeSecondaryHeaderHeight
-              ? safeSecondaryHeaderHeight
-              : 0;
+            ? safeSecondaryHeaderHeight
+            : 0;
       }
 
       currentClampedSecondaryHeader.current = targetValue;
@@ -391,8 +398,8 @@ const closeNewEnquiryPopup = () => setShowNewEnquiryPopup(false);
           scrollDirection.current === "up"
             ? 0
             : currentValue > 0.5 * safeNotificationHeight
-              ? safeNotificationHeight
-              : 0;
+            ? safeNotificationHeight
+            : 0;
       }
 
       currentClampedNotification.current = targetValue;
