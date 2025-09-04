@@ -6,6 +6,7 @@ import { formatUnixDate } from '@/app/helpers/getUnixDateTime';
 import WhatsappIcon from "@/assets/icons/MyBusinessPage/whatsapp.svg";
 import CallIcon from "@/assets/icons/MyBusinessPage/call.svg";
 import ProfileIcon from "@/assets/icons/MyBusinessPage/profile.svg";
+import { Linking } from 'react-native';
 import { Enquiry } from '@/app/types';
 
 interface EnquiryCardProps {
@@ -34,6 +35,34 @@ const EnquiryCard: React.FC<EnquiryCardProps> = ({ enquiry }) => {
             await updateEnquiry(enquiryId, { isContactShared: true });
         } catch (error) {
             console.error('Error sharing contact:', error);
+        }
+    };
+    const handleCall = (): void => {
+        if (!enquiry?.buyerNumber) return;
+
+
+        Linking.openURL(`tel:${enquiry.buyerNumber}`);
+    };
+
+    const handleWhatsAppEnquiry = (): void => {
+        if (!enquiry?.buyerNumber) return;
+
+
+
+        if (enquiry != null) {
+            const message = `Hi ${enquiry?.buyerName},
+
+I came across your property on ACN and I'm interested in ${enquiry?.propertyName} (ID: ${enquiry?.propertyId}). 
+Could you please share:
+ 
+- Current pricing  
+- When can the site visit happen?  
+- Any other key details  
+
+Thanks,
+${enquiry?.sellerName}
+${enquiry?.sellerNumber}`;
+            Linking.openURL(`https://wa.me/${enquiry.buyerNumber}?text=${message}`);
         }
     };
 
@@ -95,14 +124,14 @@ const EnquiryCard: React.FC<EnquiryCardProps> = ({ enquiry }) => {
                     <View className="flex-row space-x-3 items-center justify-center py-[10px]">
 
                         <View className="flex-row justify-between mt-4 gap-[10px]">
-                            <TouchableOpacity className="flex-row items-center border border-[#10302D] px-4 py-[6px] rounded-[6px] bg-white">
+                            <TouchableOpacity className="flex-row items-center border border-[#10302D] px-4 py-[6px] rounded-[6px] bg-white" onPress={handleCall}>
                                 <CallIcon height={18} width={18} />
                                 <Text className="text-[#10302D] text-center font-semibold leading-[21px] ml-2">
                                     Call Agent
                                 </Text>
                             </TouchableOpacity>
 
-                            <TouchableOpacity className="flex-row items-center border border-[#10302D] px-4 py-[6px] rounded-[6px] bg-white">
+                            <TouchableOpacity className="flex-row items-center border border-[#10302D] px-4 py-[6px] rounded-[6px] bg-white" onPress={handleWhatsAppEnquiry}>
                                 <WhatsappIcon height={18} width={18} />
                                 <Text className="text-[#10302D] text-center font-semibold leading-[21px] ml-2">
                                     WhatsApp Agent

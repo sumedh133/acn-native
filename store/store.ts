@@ -11,6 +11,7 @@ import listenerReducer from "./slices/listenerSlice";
 import appReducer from "./slices/appSlice";
 import propertyReducer from "./slices/propertySlice";
 import requirementReducer from "./slices/requirementSlice";
+import uiReducer from "./slices/uiSlice";
 // import  paymentReducer from "./slices/paymentSlics";
 
 const rootReducer = combineReducers({
@@ -22,6 +23,7 @@ const rootReducer = combineReducers({
   app: appReducer,
   property: propertyReducer,
   requirement: requirementReducer,
+  ui:uiReducer
   // payment: paymentReducer,
 });
 

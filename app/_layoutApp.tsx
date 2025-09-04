@@ -85,6 +85,8 @@ import { ScrollContext, ScrollProvider } from "./ScrollContext";
 import NotificationIcon from "@/assets/icons/notificationIcon.svg";
 import { useEnquiries } from "@/hooks/enquiryHooks/useEnquiries";
 import { setItem, getItem, clearStorage } from "@/storage";
+import NewEnquiriesModal from "./components/property/NewEnquiriesModal";
+import { useUI } from "./uiContext";
 
 // Custom header component to apply the desired styling
 const CustomHeader = ({
@@ -100,6 +102,7 @@ const CustomHeader = ({
 }) => {
   const { headerHeight, setHeaderHeight } = useContext(ScrollContext)!;
   const [measured, setMeasured] = useState(false);
+
 
   const monthlyCredits = useSelector(
     (state: RootState) => state?.agent?.docData?.monthlyCredits
@@ -118,12 +121,12 @@ const CustomHeader = ({
     >
       <View
         style={styles.headerContainer}
-        //         onLayout={(event) => {
-        //   if (!measured.current) {
-        //     setHeaderHeight(event.nativeEvent.layout.height);
-        //     measured.current = true;
-        //   }
-        // }}
+      //         onLayout={(event) => {
+      //   if (!measured.current) {
+      //     setHeaderHeight(event.nativeEvent.layout.height);
+      //     measured.current = true;
+      //   }
+      // }}
       >
         <View style={styles.headerContent}>
           <View style={styles.headerLeft}>
@@ -171,8 +174,9 @@ const CustomHeader = ({
 };
 
 export default function LayoutApp() {
-  const { openNewEnquiryPopup, showNewEnquiryPopup } =
-    useContext(ScrollContext);
+  const dispatch = useDispatch<ThunkDispatch<RootState, unknown, AnyAction>>();
+  const { showNewEnquiryPopup, setShowNewEnquiryPopup, storedCount, setStoredCount } = useUI();
+  console.log("Hare Krishna",showNewEnquiryPopup)
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isMaintenanceMode, setIsMaintenanceMode] = useState(false);
   const [isScrolling, setIsScrolling] = useState(false);
@@ -259,18 +263,20 @@ export default function LayoutApp() {
 
       if (enquiryCount > storedCountValue) {
         console.log(
-          `🎉 New enquiries detected! ${
-            enquiryCount - storedCountValue
+          `🎉 New enquiries detected! ${enquiryCount - storedCountValue
           } new enquiries - opening modal`
         );
-        openNewEnquiryPopup();
+        setStoredCount(enquiryCount - storedCountValue
+
+        );
+        setShowNewEnquiryPopup(true);
         setItem("enquiryCount", enquiryCount);
       }
     } else if (enquiryCount > 0) {
       // First time - just store the count, don't show popup
       setItem("enquiryCount", enquiryCount);
     }
-  }, [enquiryCount, openNewEnquiryPopup]);
+  }, [enquiryCount]);
 
   // if not authentication re route to landing page
   // useEffect(() => {
@@ -340,7 +346,7 @@ export default function LayoutApp() {
     setTrialData((prev) => ({ ...prev, credits: agentData?.monthlyCredits }));
   }, [agentData?.monthlyCredits]);
 
-  const dispatch = useDispatch<ThunkDispatch<RootState, unknown, AnyAction>>();
+
   const router = useRouter();
 
   const myKamId = useSelector(selectMyKam);
@@ -533,7 +539,7 @@ export default function LayoutApp() {
           <Stack.Screen
             name="(pages)/ComingSoon"
             options={{ headerShown: false }}
-            // initialParams={{ showFooter: false }}
+          // initialParams={{ showFooter: false }}
           />
           <Stack.Screen
             name="(tabs)/properties"
@@ -732,8 +738,20 @@ export default function LayoutApp() {
         <Toast config={toastConfig} />
         <StatusBar style="auto" />
         <KamManager />
+        {isAuthenticated && <FooterNavigation/>}
 
-        {isAuthenticated && <FooterNavigation />}
+        {
+          isAuthenticated && (
+            <NewEnquiriesModal
+              visible={showNewEnquiryPopup} // from Redux
+              onClose={() => setShowNewEnquiryPopup(false)}
+              onCheckNow={() => {
+
+              }}
+              enquiryCount={storedCount} // your enquiry count
+            />
+          )
+        }
 
       </View>
     </ScrollProvider>

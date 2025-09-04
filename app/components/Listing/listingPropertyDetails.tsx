@@ -133,7 +133,8 @@ export const FormPreview: React.FC<FormPreviewProps> = ({
 
       {previewType == 'myBusiness' && (<>
         <PropertiesStatusCard data={data} />
-        <EnquiriesReceivedCard totalCount={enquiryCount} newCount={newEnquiryCount} />
+        {enquiryCount > 0 && (<>
+          <EnquiriesReceivedCard totalCount={enquiryCount} newCount={newEnquiryCount} /></>)}
       </>)}
 
 

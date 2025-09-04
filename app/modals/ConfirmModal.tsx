@@ -5,7 +5,6 @@ import {
   View,
   Text,
   TouchableOpacity,
-  StyleSheet,
   ActivityIndicator,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -14,6 +13,7 @@ import { analytics } from "@/app/config/firebase";
 import { logEvent } from "@react-native-firebase/analytics";
 import { useSelector } from "react-redux";
 import { RootState } from "@/store/store";
+import CloseIcon from "@/assets/icons/svg/CloseIcon";
 
 type ConfirmModalProps = {
   title: string;
@@ -105,30 +105,49 @@ const ConfirmModal: React.FC<ConfirmModalProps> = ({
       animationType="fade"
       onDismiss={handleModalHide}
     >
-      <View style={styles.overlay}>
+      <View className="flex-1 bg-black/50 justify-center items-center">
         <Toast config={toastConfig} />
-        <View style={styles.modalContainer}>
+        <View className="bg-white rounded-xl px-8 py-9 w-full max-w-[340px]">
+          <TouchableOpacity
+            className="absolute top-3 right-4 z-50"
+            onPress={(e: any) => {
+              e.stopPropagation();
+              handleCancel()
+            }}
+          >
+            <CloseIcon height={28} width={28} />
+          </TouchableOpacity>
           {generatingEnquiry ? (
-            <View style={styles.loadingContainer}>
+            <View className="items-center justify-center p-5 gap-4">
               <ActivityIndicator size="large" color="#153E3B" />
-              <Text style={styles.loadingText}>Processing your enquiry...</Text>
+              <Text className="text-base font-semibold text-[#153E3B] text-center font-['Montserrat_600SemiBold']">
+                Processing your enquiry...
+              </Text>
             </View>
           ) : (
             <>
-              <Text style={styles.title}>{title}</Text>
-              <Text style={styles.message}>{message}</Text>
-              <View style={styles.buttonContainer}>
+              <Text className="text-base font-bold text-[#153E3B] mb-2.5 font-['Montserrat_700Bold']">
+                {title}
+              </Text>
+              <Text className="text-sm text-[#433F3E] mb-5 font-['Lato']">
+                {message}
+              </Text>
+              <View className="flex-row gap-2.5">
                 <TouchableOpacity
                   onPress={handleCancel}
-                  style={styles.cancelButton}
+                  className="flex-1 border-[1.5px] border-[#10302D] py-2.5 rounded-[4px] items-center"
                 >
-                  <Text style={styles.cancelText}>Cancel</Text>
+                  <Text className="text-[#153E3B] font-semibold text-sm">
+                    Close
+                  </Text>
                 </TouchableOpacity>
                 <TouchableOpacity
                   onPress={handleConfirm}
-                  style={styles.confirmButton}
+                  className="flex-1 bg-[#10302D] py-2.5 rounded-[4px] items-center"
                 >
-                  <Text style={styles.confirmText}>Yes</Text>
+                  <Text className="text-[#FAFBFC] font-semibold text-sm">
+                    Confirm
+                  </Text>
                 </TouchableOpacity>
               </View>
             </>
@@ -138,74 +157,5 @@ const ConfirmModal: React.FC<ConfirmModalProps> = ({
     </Modal>
   );
 };
-
-const styles = StyleSheet.create({
-  overlay: {
-    flex: 1,
-    backgroundColor: "rgba(0,0,0,0.5)",
-    justifyContent: "center",
-    alignItems: "center",
-    paddingHorizontal: 20,
-  },
-  modalContainer: {
-    backgroundColor: "white",
-    borderRadius: 12,
-    padding: 20,
-    width: "100%",
-    maxWidth: 340,
-  },
-  loadingContainer: {
-    alignItems: "center",
-    justifyContent: "center",
-    padding: 20,
-    gap: 16,
-  },
-  loadingText: {
-    fontSize: 16,
-    fontFamily: "Montserrat_600SemiBold",
-    color: "#153E3B",
-    textAlign: "center",
-  },
-  title: {
-    fontSize: 16,
-    fontFamily: "Montserrat_700Bold",
-    marginBottom: 10,
-  },
-  message: {
-    fontSize: 14,
-    color: "#433F3E",
-    fontFamily: "Lato",
-    marginBottom: 20,
-  },
-  buttonContainer: {
-    flexDirection: "row",
-    gap: 10,
-  },
-  cancelButton: {
-    flex: 1,
-    borderWidth: 1,
-    borderColor: "#153E3B",
-    paddingVertical: 10,
-    borderRadius: 4,
-    alignItems: "center",
-  },
-  confirmButton: {
-    flex: 1,
-    backgroundColor: "#153E3B",
-    paddingVertical: 10,
-    borderRadius: 4,
-    alignItems: "center",
-  },
-  cancelText: {
-    color: "#153E3B",
-    fontWeight: "600",
-    fontSize: 14,
-  },
-  confirmText: {
-    color: "#FAFBFC",
-    fontWeight: "600",
-    fontSize: 14,
-  },
-});
 
 export default ConfirmModal;
