@@ -378,7 +378,7 @@ export default function PropertyFilters({
                 ],
               }}
             >
-              <Ionicons name="chevron-down" size={20} color="#555" />
+              {/* <Ionicons name="chevron-down" size={20} color="#555" /> */}
             </Animated.View>
           </TouchableOpacity>
 

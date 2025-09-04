@@ -156,9 +156,9 @@ function getRandomInt(min, max) {
 }
 
 export const getDaysFrom = (dateString) => {
-  const date = new Date(dateString);
+  const date = new Date(dateString * 1000);
   const now = new Date();
-  const diffTime = Math.abs(Math.floor(now / 1000) - date);
+  const diffTime = Math.abs(Math.floor(now) - Math.floor(date));
   return Math.ceil(diffTime / (1000 * 60 * 60 * 24));
 };
 

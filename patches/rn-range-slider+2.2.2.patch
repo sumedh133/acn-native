@@ -1,0 +1,13 @@
+diff --git a/node_modules/rn-range-slider/index.tsx b/node_modules/rn-range-slider/index.tsx
+index 37163ae..eb415c6 100644
+--- a/node_modules/rn-range-slider/index.tsx
++++ b/node_modules/rn-range-slider/index.tsx
+@@ -188,7 +188,7 @@ const Slider: React.FC<SliderProps> = ({
+   const {panHandlers} = useMemo(
+     () =>
+       PanResponder.create({
+-        onStartShouldSetPanResponderCapture: falseFunc,
++        onStartShouldSetPanResponderCapture: trueFunc,
+         onMoveShouldSetPanResponderCapture: falseFunc,
+         onPanResponderTerminationRequest: falseFunc,
+         onPanResponderTerminate: trueFunc,
