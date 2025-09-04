@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import { useSelector } from "react-redux";
 import { RootState } from "@/store/store";
 import {
+  ActivityIndicator,
   SafeAreaView,
   BackHandler,
   StatusBar,
@@ -50,12 +51,14 @@ interface PropertyFormScreenProps {
   initialData?: Partial<UIProperty>;
   onComplete: (data: Partial<UIProperty>) => void;
   isEdit?: boolean;
+  isSubmitting?: boolean;
 }
 
 export const PropertyFormScreen: React.FC<PropertyFormScreenProps> = ({
   initialData,
   onComplete,
   isEdit = false,
+  isSubmitting = false
 }) => {
   // --------------------  Redux State --------------------
 
@@ -276,7 +279,7 @@ export const PropertyFormScreen: React.FC<PropertyFormScreenProps> = ({
     }
   }, [selectedPlace]);
 
-   useEffect(() => {
+  useEffect(() => {
     // Back button handler
     const backHandler = BackHandler.addEventListener(
       "hardwareBackPress",
@@ -287,7 +290,7 @@ export const PropertyFormScreen: React.FC<PropertyFormScreenProps> = ({
           formData.propertyName
         ) {
           setShowDraftModal(true);
-          return true; 
+          return true;
         }
         return false;
       }
@@ -480,11 +483,17 @@ export const PropertyFormScreen: React.FC<PropertyFormScreenProps> = ({
           <TouchableOpacity
             className="flex-1 py-2 px-5 rounded-[4px] bg-[#153E3B] border border-[#153E3B]"
             onPress={() => onComplete(formData)}
+            disabled={isSubmitting} 
           >
-            <Text className="text-center text-base font-semibold text-white">
-              {isEdit ? "Update" : "Submit"}
-            </Text>
+            {isSubmitting ? (
+              <ActivityIndicator color="#fff" /> 
+            ) : (
+              <Text className="text-center text-base font-semibold text-white">
+                {isEdit ? "Update" : "Submit"}
+              </Text>
+            )}
           </TouchableOpacity>
+
         </View>
       </SafeAreaView>
     );

@@ -13,6 +13,7 @@ type UIProperty = Omit<Property, "handOverDate"> & {
 
 const AddInventoryForm = () => {
   const { item, formType } = useLocalSearchParams();
+  const [isSubmitting, setIsSubmitting] = useState<boolean>(false)
 
   const [editData, _] = useState<Partial<UIProperty> | undefined>(() => {
     if (item) {
@@ -46,6 +47,7 @@ const AddInventoryForm = () => {
 
   const handleFormComplete = async (data: Partial<UIProperty>) => {
     try {
+      setIsSubmitting(true)
       // Normalize and clean data
       const normalizedData = normalizePropertyBeforeSubmit(data);
       const cleanData = JSON.parse(
@@ -59,7 +61,7 @@ const AddInventoryForm = () => {
         await updateProperty(cleanData.propertyId, cleanData, "qc", true);
         console.log("Property updated in QC review:", cleanData);
         showSuccessToast(`Property updated successfully and sent for QC review!`);
-
+        setIsSubmitting(false)
         router.back();
         return;
       }
@@ -69,6 +71,7 @@ const AddInventoryForm = () => {
         await updateProperty(cleanData.propertyId, cleanData, "verified", true);
         console.log("Property updated in Verified stage:", cleanData);
         showSuccessToast(`Property updated successfully in verified stage!`);
+        setIsSubmitting(false)
         router.back();
         return;
       }
@@ -76,6 +79,7 @@ const AddInventoryForm = () => {
       // If property is draft → move to pending
       if (cleanData.status === "draft") {
         await updateProperty(cleanData.propertyId, { ...cleanData, status: "pending" }, "qc");
+
         console.log("Draft property moved to pending QC:", cleanData);
         showSuccessToast(`Draft property submitted for QC verification!`);
 
@@ -93,6 +97,7 @@ const AddInventoryForm = () => {
           },
         }
       );
+      setIsSubmitting(false)
 
       // Navigation after success for create or draft update
       router.dismissAll();
@@ -108,6 +113,7 @@ const AddInventoryForm = () => {
         showErrorToast(`Something went wrong while saving the property. Please try again.`);
       }
     }
+
   };
 
   return (
@@ -115,6 +121,7 @@ const AddInventoryForm = () => {
       initialData={editData}
       onComplete={handleFormComplete}
       isEdit={formType == "underReviewEdit" || formType == "verifiedEdit" ? true : false}
+      isSubmitting={isSubmitting}
     />
   );
 };
