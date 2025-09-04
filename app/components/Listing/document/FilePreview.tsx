@@ -3,6 +3,9 @@ import { FontAwesome6, Ionicons } from "@expo/vector-icons";
 import React, { useCallback } from "react";
 import RNFS from "react-native-fs";
 import { View, Text, StyleSheet, TouchableOpacity } from "react-native";
+
+// icons
+import PDFIcon from "@/assets/icons/svg/PropertyListing/ListingFlow/PDFIcon.svg";
 import TrashIcon from "@/assets/icons/svg/Common/TrashIcon";
 
 interface FilePreviewProps {
@@ -33,11 +36,9 @@ const FilePreview: React.FC<FilePreviewProps> = ({
   };
 
   const getFileIcon = useCallback((fileType: string | null | undefined) => {
-    if (fileType?.startsWith("photo"))
-      return <FontAwesome6 name="file-image" size={24} color="black" />;
-    else if (fileType?.startsWith("video"))
-      return <FontAwesome6 name="file-video" size={24} color="black" />;
-    else return <FontAwesome6 name="file-pdf" size={24} color="black" />;
+    if (fileType?.startsWith("application/pdf"))
+      return <PDFIcon width={24} height={24} />;
+    else return <PDFIcon width={24} height={24} />;
   }, []);
 
   const formatFileSize = (bytes?: number | null): string => {
@@ -59,14 +60,10 @@ const FilePreview: React.FC<FilePreviewProps> = ({
   const renderDocs = useCallback(() => {
     if (!docsToUpload) return;
 
-    return ["photo", "video", "document"].map(
+    return ["document"].map(
       (type) =>
         docsToUpload[type]?.length > 0 && (
           <View key={type} style={styles.sectionContainer}>
-            <Text style={styles.sectionTitle}>
-              {type.charAt(0).toUpperCase() + type.slice(1)} Files
-            </Text>
-
             <View style={styles.fileListContainer}>
               {docsToUpload[type].map((file, index) => (
                 <View key={index} style={styles.fileContainer}>

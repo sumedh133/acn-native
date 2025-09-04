@@ -20,7 +20,7 @@ export const setItem = (
 };
 
 export const getItem = <T>(key: string): T | undefined => {
-  try {storage.getNumber("enquiryCount")
+  try {
     // Try to get number first
     const numValue = storage.getNumber(key);
     if (numValue !== undefined) return numValue as unknown as T;

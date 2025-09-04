@@ -12,7 +12,7 @@ import React, {
   useEffect,
   useRef,
   useState,
-  useLayoutEffect
+  useLayoutEffect,
 } from "react";
 import Toast from "react-native-toast-message";
 import { StatusBar } from "expo-status-bar";
@@ -118,12 +118,12 @@ const CustomHeader = ({
     >
       <View
         style={styles.headerContainer}
-      //         onLayout={(event) => {
-      //   if (!measured.current) {
-      //     setHeaderHeight(event.nativeEvent.layout.height);
-      //     measured.current = true;
-      //   }
-      // }}
+        //         onLayout={(event) => {
+        //   if (!measured.current) {
+        //     setHeaderHeight(event.nativeEvent.layout.height);
+        //     measured.current = true;
+        //   }
+        // }}
       >
         <View style={styles.headerContent}>
           <View style={styles.headerLeft}>
@@ -171,7 +171,8 @@ const CustomHeader = ({
 };
 
 export default function LayoutApp() {
-  const { openNewEnquiryPopup, showNewEnquiryPopup } = useContext(ScrollContext)
+  const { openNewEnquiryPopup, showNewEnquiryPopup } =
+    useContext(ScrollContext);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isMaintenanceMode, setIsMaintenanceMode] = useState(false);
   const [isScrolling, setIsScrolling] = useState(false);
@@ -180,16 +181,7 @@ export default function LayoutApp() {
   const [topMargin, setTopMargin] = useState(10);
   const [unreadCount, setUnreadCount] = useState(0);
 
-
-
-  const {
-    enquiryCount,
-  } = useEnquiries();
-
-
-  console.log("enquiryCount", getItem<number>("enquiryCount"))
-
-
+  const { enquiryCount } = useEnquiries();
 
   const [fontsLoaded] = useFonts({
     Montserrat_400Regular,
@@ -257,33 +249,36 @@ export default function LayoutApp() {
   }, []);
 
   // Listen for new enquiries
-  useLayoutEffect(() => {
+  useEffect(() => {
+    if (!enquiryCount) return;
 
+    const storedCount = getItem<number>("enquiryCount");
 
-    if (getItem<number>("enquiryCount")) {
-      const storedCount = getItem<number>("enquiryCount") || 0;
-      console.log("i must be here")
-      if (enquiryCount && enquiryCount > storedCount) {
-        console.log("i must be here also")
+    if (storedCount !== null && storedCount !== undefined) {
+      const storedCountValue = storedCount || 0;
+
+      if (enquiryCount > storedCountValue) {
+        console.log(
+          `🎉 New enquiries detected! ${
+            enquiryCount - storedCountValue
+          } new enquiries - opening modal`
+        );
         openNewEnquiryPopup();
-        console.log(showNewEnquiryPopup)
-         setItem("enquiryCount", enquiryCount)
-
+        setItem("enquiryCount", enquiryCount);
       }
+    } else if (enquiryCount > 0) {
+      // First time - just store the count, don't show popup
+      setItem("enquiryCount", enquiryCount);
     }
-    else if (enquiryCount) {
-      console.log("i am here")
-      setItem("enquiryCount", enquiryCount)
-    }
-  }, [enquiryCount]);
+  }, [enquiryCount, openNewEnquiryPopup]);
 
   // if not authentication re route to landing page
-  useEffect(() => {
-    if (!isAuthenticated) {
-      if (pathname === "/") return;
-      router.replace("/components/Auth/LandingPage");
-    }
-  }, [isAuthenticated]);
+  // useEffect(() => {
+  //   if (!isAuthenticated) {
+  //     if (pathname === "/") return;
+  //     router.push("/components/Auth/Signin");
+  //   }
+  // }, [isAuthenticated]);
 
   const calculateDaysLeft = (trialStartedAt: number): number => {
     try {
@@ -498,7 +493,6 @@ export default function LayoutApp() {
         )}
         <Stack
           screenOptions={{
-
             headerStyle: { backgroundColor: "#fff" },
             headerTintColor: "#000",
             headerTitleAlign: "center",
@@ -539,7 +533,7 @@ export default function LayoutApp() {
           <Stack.Screen
             name="(pages)/ComingSoon"
             options={{ headerShown: false }}
-          // initialParams={{ showFooter: false }}
+            // initialParams={{ showFooter: false }}
           />
           <Stack.Screen
             name="(tabs)/properties"
