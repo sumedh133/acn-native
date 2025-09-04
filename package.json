@@ -69,6 +69,8 @@
     "firebase": "^11.6.0",
     "highcharts": "^12.2.0",
     "libphonenumber-js": "^1.12.6",
+    "lottie-ios": "^4.5.1",
+    "lottie-react-native": "^7.3.4",
     "nativewind": "^2.0.11",
     "p-limit": "^6.2.0",
     "p-throttle": "^7.0.0",

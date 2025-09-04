@@ -21,8 +21,7 @@ import {
 } from "@/utils/toastUtils";
 
 // import external
-import ConfettiCannon from "react-native-confetti-cannon";
-
+import LottieView from "lottie-react-native";
 import CloseIcon from "@/assets/icons/svg/CloseIcon";
 import Toast from "react-native-toast-message";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -277,10 +276,11 @@ ${user?.phoneNumber}`;
       {/* <Text style={styles.modalOverlay}>Hi</Text> */}
       {visible && (
         <View style={styles.ConfettiContainer}>
-          <ConfettiCannon
-            count={500}
-            origin={{ x: -50, y: 50 }}
-            autoStart={true}
+          <LottieView
+            source={require("@/assets/LottieAnimation/confetti.json")} // Path to your JSON
+            autoPlay
+            loop={false} // set true if you want continuous confetti
+            style={{ width: Dimensions.get("window").width, height: Dimensions.get("window").height }}
           />
         </View>
       )}

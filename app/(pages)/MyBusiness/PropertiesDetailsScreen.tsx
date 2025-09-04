@@ -4,6 +4,7 @@ import { Text, View, TouchableOpacity } from "react-native";
 import { useSelector } from "react-redux";
 import { RootState } from "@/store/store";
 import { inventoryFormConfig } from "@/app/config/AddInventoryFormConfig/inventoryFormConfig";
+import { router } from "expo-router";
 import {
   FormPreview
 
@@ -24,14 +25,26 @@ const PropertysDetailsScreen = () => {
     setShowShareModal(true);
   }
 
+  const handleEditButtonPress = () => {
+    const formType = property.stage != 'live' ? "underReviewEdit" : "verifiedEdit";
+    router.push({
+      pathname: "/(tabs)/AddInventoryForm",
+      params: {
+        item: JSON.stringify(property),
+        formType: formType
+      },
+    });
+
+  }
+
   return (
-    <View className="flex-1 bg-white"><FormPreview config={inventoryFormConfig} data={property} previewType="listing" />
+    <View className="flex-1 bg-white"><FormPreview config={inventoryFormConfig} data={property} previewType="myBusiness" />
       {/* Navigation Buttons */}
       <View className="flex flex-row items-center justify-center gap-[13px] px-4 py-[14.5px]">
         {property?.stage !== 'live' && (
           <TouchableOpacity
             className="w-full py-2 px-5 rounded-[4px] bg-[#10302D] gap-2"
-            onPress={() => { }}
+            onPress={handleEditButtonPress}
           >
             <View className="flex flex-row items-center justify-center space-x-2 h-[18px]">
               <EditIcon2 height={18} width={18} />
@@ -45,7 +58,7 @@ const PropertysDetailsScreen = () => {
 
           <TouchableOpacity
             className="w-[50%] py-2 px-5 rounded-[4px] bg-white border-[1.5px] border-[#153E3B] gap-2"
-            onPress={() => { }}
+            onPress={handleEditButtonPress}
           >
             <View className="flex flex-row items-center justify-center space-x-2 h-[18px]">
               <EditIcon height={18} width={18} />

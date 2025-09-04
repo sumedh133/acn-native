@@ -10,18 +10,38 @@ import {
   where,
   orderBy,
   limit,
-  increment,
-  addDoc,
-  serverTimestamp,
   onSnapshot,
   Unsubscribe,
 } from "firebase/firestore";
 import { db } from "../../config/firebase"; // your Firebase config
 import { Property } from "../../types";
 
+import { getUnixDateTime } from "@/app/helpers/getUnixDateTime";
+
 // Firestore Collections
 const ADMIN_COLLECTION = "acn-admin";
-const INVENTORY_COLLECTION = "acnTestProperties";
+const INVENTORY_COLLECTION = "acnTestProperties"; // verified stage
+const QC_INVENTORY_COLLECTION = "acnQCInventoriesTest"; // qc stage
+
+// Types
+type InventoryStage = "qc" | "verified";
+
+interface EditHistoryRecord {
+  editId: string;
+  timestamp: number;
+  changes: Record<string, any>; // Object with field names as keys and new values
+}
+
+/**
+ * Get the appropriate collection name based on inventory stage
+ */
+const getCollectionName = (
+  inventoryStage: InventoryStage = "verified"
+): string => {
+  return inventoryStage === "qc"
+    ? QC_INVENTORY_COLLECTION
+    : INVENTORY_COLLECTION;
+};
 
 /**
  * Generate a new unique Property ID using `acn-admin/lastQcId`.
@@ -54,21 +74,22 @@ export const generatePropertyId = async (): Promise<string> => {
 };
 
 /**
- * Create a new property in `acnQCInventories`.
+ * Create a new property in the specified inventory stage.
  */
 export const createProperty = async (
-  property: Omit<Property, "propertyId">
+  property: Omit<Property, "propertyId">,
+  inventoryStage: InventoryStage = "verified"
 ) => {
   const propertyId = await generatePropertyId();
-
-  const ref = doc(collection(db, INVENTORY_COLLECTION), propertyId);
+  const collectionName = getCollectionName(inventoryStage);
+  const ref = doc(collection(db, collectionName), propertyId);
 
   const newProperty: Property = {
     ...property,
     propertyId,
-    added: Date.now() / 1000,
-    lastModified: Date.now() / 1000,
-    status: property.status || "active",
+    added: getUnixDateTime(),
+    lastModified: getUnixDateTime(),
+    status: property.status ?? "pending",
   };
 
   await setDoc(ref, newProperty);
@@ -77,26 +98,30 @@ export const createProperty = async (
 };
 
 /**
- * Fetch a property by ID.
+ * Fetch a property by ID from the specified inventory stage.
  */
 export const getPropertyById = async (
-  propertyId: string
+  propertyId: string,
+  inventoryStage: InventoryStage = "verified"
 ): Promise<Property | null> => {
-  const ref = doc(db, INVENTORY_COLLECTION, propertyId);
+  const collectionName = getCollectionName(inventoryStage);
+  const ref = doc(db, collectionName, propertyId);
   const snapshot = await getDoc(ref);
 
   return snapshot.exists() ? (snapshot.data() as Property) : null;
 };
 
 /**
- * Listen to real-time updates for a property by ID.
+ * Listen to real-time updates for a property by ID from the specified inventory stage.
  */
 export const subscribeToPropertyById = (
   propertyId: string,
   onUpdate: (property: Property | null) => void,
+  inventoryStage: InventoryStage = "verified",
   onError?: (error: Error) => void
 ): Unsubscribe => {
-  const ref = doc(db, INVENTORY_COLLECTION, propertyId);
+  const collectionName = getCollectionName(inventoryStage);
+  const ref = doc(db, collectionName, propertyId);
 
   return onSnapshot(
     ref,
@@ -122,11 +147,12 @@ export const subscribeToPropertyById = (
 };
 
 /**
- * Listen to real-time updates for multiple properties by IDs.
+ * Listen to real-time updates for multiple properties by IDs from the specified inventory stage.
  */
 export const subscribeToPropertiesByIds = (
   propertyIds: string[],
   onUpdate: (properties: (Property | null)[]) => void,
+  inventoryStage: InventoryStage = "verified",
   onError?: (error: Error) => void,
   onProgress?: (loaded: number, total: number) => void
 ): (() => void) => {
@@ -166,6 +192,7 @@ export const subscribeToPropertiesByIds = (
           updateCallback();
         }
       },
+      inventoryStage,
       onError
     );
     unsubscribers.push(unsubscribe);
@@ -184,14 +211,18 @@ export const subscribeToPropertiesByIds = (
 };
 
 /**
- * Fetch all properties (optionally filtered).
+ * Fetch all properties from the specified inventory stage (optionally filtered).
  */
-export const getAllProperties = async (filters?: {
-  listingType?: "resale" | "rental";
-  propertyType?: "residential" | "commercial";
-  status?: string;
-}) => {
-  let q = collection(db, INVENTORY_COLLECTION);
+export const getAllProperties = async (
+  inventoryStage: InventoryStage = "verified",
+  filters?: {
+    listingType?: "resale" | "rental";
+    propertyType?: "residential" | "commercial";
+    status?: string;
+  }
+) => {
+  const collectionName = getCollectionName(inventoryStage);
+  let q = collection(db, collectionName);
 
   // Apply filters dynamically
   const conditions: any[] = [];
@@ -209,88 +240,143 @@ export const getAllProperties = async (filters?: {
 };
 
 /**
- * Update a property by ID.
+ * Update a property by ID in the specified inventory stage.
  */
 export const updateProperty = async (
   propertyId: string,
-  updates: Partial<Property>
+  updates: Partial<Property>,
+  inventoryStage: InventoryStage = "verified",
+  isEdit: boolean = false
 ) => {
-  const ref = doc(db, INVENTORY_COLLECTION, propertyId);
+  const collectionName = getCollectionName(inventoryStage);
+  const ref = doc(db, collectionName, propertyId);
 
-  await updateDoc(ref, {
+  // Get current property for change tracking
+  const currentSnapshot = await getDoc(ref);
+  const currentData = currentSnapshot.exists()
+    ? (currentSnapshot.data() as Property)
+    : null;
+
+  const updateData = {
     ...updates,
-    lastModified: Date.now() / 1000,
-  });
+    lastModified: getUnixDateTime(),
+  };
+
+  await updateDoc(ref, updateData);
+  console.log("Hare Krishna")
+
+  // Log changes in edit history
+  if (currentData && isEdit) {
+    const changes: Record<string, any> = {};
+
+    // Only include fields that have changed
+    Object.keys(updates).forEach((field) => {
+      if ((currentData as any)[field] !== (updates as any)[field]) {
+        changes[field] = (updates as any)[field];
+      }
+    });
+
+    if (Object.keys(changes).length > 0) {
+      await addEditHistory(
+        propertyId,
+        {
+          changes,
+        },
+        inventoryStage
+      );
+    }
+  }
 };
 
 /**
- *dia Update a whole property object by property ID.
+ * Update a whole property object by property ID in the specified inventory stage.
  */
 export const updateWholeProperty = async (
   propertyId: string,
-  updates: Partial<Property>
+  updates: Partial<Property>,
+  inventoryStage: InventoryStage = "verified"
 ) => {
-  const ref = doc(db, INVENTORY_COLLECTION, propertyId);
+  const collectionName = getCollectionName(inventoryStage);
+  const ref = doc(db, collectionName, propertyId);
 
-  await setDoc(ref, {
+  const updateData = {
     ...updates,
-    lastModified: Date.now() / 1000,
-  });
+    lastModified: getUnixDateTime(),
+  };
+
+  await setDoc(ref, updateData);
 };
 
 /**
- * Delete a property by ID.
+ * Delete a property by ID from the specified inventory stage.
  */
-export const deleteProperty = async (propertyId: string) => {
-  const ref = doc(db, INVENTORY_COLLECTION, propertyId);
+export const deleteProperty = async (
+  propertyId: string,
+  inventoryStage: InventoryStage = "verified"
+) => {
+  const collectionName = getCollectionName(inventoryStage);
+  const ref = doc(db, collectionName, propertyId);
   await deleteDoc(ref);
 };
 
 /**
- * Assign a KAM to a property.
+ * Assign a KAM to a property in the specified inventory stage.
  */
 export const assignKamToProperty = async (
   propertyId: string,
   kamId: string,
-  kamName: string
+  kamName: string,
+  inventoryStage: InventoryStage = "verified"
 ) => {
-  await updateProperty(propertyId, { kamId, kamName, kamStatus: "assigned" });
+  await updateProperty(
+    propertyId,
+    { kamId, kamName, kamStatus: "assigned" },
+    inventoryStage
+  );
 };
 
 /**
- * Change QC status of a property.
+ * Change QC status of a property in the specified inventory stage.
  */
 export const updateQcStatus = async (
   propertyId: string,
   kamStatus: string,
   dataStatus: string,
-  stage: string
+  stage: string,
+  inventoryStage: InventoryStage = "verified"
 ) => {
-  await updateProperty(propertyId, { kamStatus, dataStatus, stage });
+  await updateProperty(
+    propertyId,
+    { kamStatus, dataStatus, stage },
+    inventoryStage
+  );
 };
 
 /**
- * Search properties by agent phone number or property name.
+ * Search properties by agent phone number, property name, or cpId in the specified inventory stage.
  */
 export const searchProperties = async (
   field: "agentPhoneNumber" | "propertyName" | "cpId",
-  value: string
+  value: string,
+  inventoryStage: InventoryStage = "verified"
 ) => {
-  const q = query(
-    collection(db, INVENTORY_COLLECTION),
-    where(field, "==", value)
-  );
+  const collectionName = getCollectionName(inventoryStage);
+  const q = query(collection(db, collectionName), where(field, "==", value));
 
   const snapshot = await getDocs(q);
   return snapshot.docs.map((doc) => doc.data() as Property);
 };
 
 /**
- * Get recent properties (sorted by added date).
+ * Get recent properties from the specified inventory stage (sorted by added date).
  */
-export const getRecentProperties = async (limitCount = 10) => {
+export const getRecentProperties = async (
+  limitCount = 10,
+  inventoryStage: InventoryStage = "verified"
+) => {
+  const collectionName = getCollectionName(inventoryStage);
   const q = query(
-    collection(db, INVENTORY_COLLECTION),
+    collection(db, collectionName),
     orderBy("added", "desc"),
     limit(limitCount)
   );
@@ -300,21 +386,77 @@ export const getRecentProperties = async (limitCount = 10) => {
 };
 
 /**
- * Test function to validate snapshot functionality
+ * Add an edit history record to the property's subcollection.
  */
-export const testSnapshotConnection = async (): Promise<{
+export const addEditHistory = async (
+  propertyId: string,
+  editData: {
+    changes: Record<string, any>; // Object with field names as keys and new values
+  },
+  inventoryStage: InventoryStage = "verified"
+): Promise<string> => {
+  const collectionName = getCollectionName(inventoryStage);
+  const timestamp = getUnixDateTime();
+  const editId = timestamp.toString();
+  const historyRef = doc(db, collectionName, propertyId, "editHistory", editId);
+
+  const editRecord: EditHistoryRecord = {
+    editId,
+    timestamp,
+    changes: editData.changes,
+  };
+
+  await setDoc(historyRef, editRecord);
+
+  return editId;
+};
+
+/**
+ * Get edit history for a property from the specified inventory stage.
+ */
+export const getEditHistory = async (
+  propertyId: string,
+  inventoryStage: InventoryStage = "verified",
+  limitCount?: number
+): Promise<EditHistoryRecord[]> => {
+  const collectionName = getCollectionName(inventoryStage);
+  const historyRef = collection(db, collectionName, propertyId, "editHistory");
+
+  let q = query(historyRef, orderBy("timestamp", "desc"));
+
+  if (limitCount) {
+    q = query(q, limit(limitCount));
+  }
+
+  const snapshot = await getDocs(q);
+
+  return snapshot.docs.map(
+    (doc) =>
+      ({
+        editId: doc.id,
+        ...doc.data(),
+      } as EditHistoryRecord)
+  );
+};
+
+/**
+ * Test function to validate snapshot functionality for the specified inventory stage
+ */
+export const testSnapshotConnection = async (
+  inventoryStage: InventoryStage = "verified"
+): Promise<{
   success: boolean;
   message: string;
   propertyIds?: string[];
 }> => {
   try {
     // First, get some property IDs to test with
-    const recentProperties = await getRecentProperties(3);
+    const recentProperties = await getRecentProperties(3, inventoryStage);
 
     if (recentProperties.length === 0) {
       return {
         success: false,
-        message: "No properties found in database to test with",
+        message: `No properties found in ${inventoryStage} database to test with`,
       };
     }
 
@@ -333,10 +475,11 @@ export const testSnapshotConnection = async (): Promise<{
 
           resolve({
             success: true,
-            message: `Snapshot working correctly for property ${testPropertyId}`,
+            message: `Snapshot working correctly for property ${testPropertyId} in ${inventoryStage} inventory`,
             propertyIds,
           });
         },
+        inventoryStage,
         (error) => {
           console.error("Test snapshot error:", error);
           unsubscribe();
@@ -370,3 +513,6 @@ export const testSnapshotConnection = async (): Promise<{
     };
   }
 };
+
+// Export types for use in other files
+export type { InventoryStage, EditHistoryRecord };

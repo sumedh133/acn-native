@@ -22,7 +22,7 @@ export const residentialApartmentFields: FormField[] = [
     required: true,
     placeholder: "Select apartment type",
     options: [
-      { label: "Simple", value: "simple" },
+      { label: "Simplex", value: "simplex" },
       { label: "Duplex", value: "duplex" },
       { label: "Triplex", value: "triplex" },
       { label: "Penthouse", value: "penthouse" },

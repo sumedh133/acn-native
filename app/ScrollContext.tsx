@@ -170,8 +170,9 @@ export const ScrollProvider: React.FC<{ children: React.ReactNode }> = ({
   const closeSortPopup = () => setShowSortPopup(false);
   const openStatusPopup = () => setShowStatusPopup(true);
   const closeStatusPopup = () => setShowStatusPopup(false);
-  const openNewEnquiryPopup = () => setShowNewEnquiryPopup(true);
-  const closeNewEnquiryPopup = () => setShowNewEnquiryPopup(false);
+ const openNewEnquiryPopup = () => setShowNewEnquiryPopup(true);
+const closeNewEnquiryPopup = () => setShowNewEnquiryPopup(false);
+
   const openCategoryPopup = () => setShowCategoryPopup(true);
   const closeCategoryPopup = () => setShowCategoryPopup(false);
 

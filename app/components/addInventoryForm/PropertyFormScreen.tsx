@@ -3,6 +3,7 @@ import { useSelector } from "react-redux";
 import { RootState } from "@/store/store";
 import {
   SafeAreaView,
+  BackHandler,
   StatusBar,
   View,
   Text,
@@ -16,6 +17,7 @@ import {
   updateProperty,
   updateWholeProperty
 } from "@/app/services/property_services/propertyService";
+import { useBackToSaveDraft } from "@/hooks/useBackToSaveDraft";
 import { convertMonthYearToUnix } from "@/app/helpers/format/format";
 import { showSuccessToast, showErrorToast } from "@/utils/toastUtils";
 import { FormRenderer } from "./FormRenderer";
@@ -78,7 +80,7 @@ export const PropertyFormScreen: React.FC<PropertyFormScreenProps> = ({
       stage: "kam",
       media: initialData?.media || defaultMedia,
       ...initialData,
-      
+
     };
   });
 
@@ -199,8 +201,11 @@ export const PropertyFormScreen: React.FC<PropertyFormScreenProps> = ({
   /**
    * Filters visible fields based on conditional logic.
    */
-  const getVisibleFields = (fields: FormField[]): FormFieldWithMeta[] =>
-    fields.filter((field) => isFieldVisible(field)) as FormFieldWithMeta[];
+  const getVisibleFields = (fields: FormField[]): FormFieldWithMeta[] => {
+    const visibleFields = fields.filter((field) => isFieldVisible(field));
+
+    return visibleFields as FormFieldWithMeta[];
+  };
 
   /**
    * Get the value of a nested field in an object based on dot notation.
@@ -247,9 +252,9 @@ export const PropertyFormScreen: React.FC<PropertyFormScreenProps> = ({
           lng: selectedPlace.lng,
         },
       }));
-    } else if (!selectedPlace && formData.propertyName && initialData) {
+    } else if (!selectedPlace && initialData) {
       setSelectedPlace({
-        name: formData?.propertyName,
+        name: formData?.propertyName || null,
         lat: formData?._geoloc?.lat || null,
         lng: formData?._geoloc?.lng || null,
         address: formData?.address || null,
@@ -270,6 +275,26 @@ export const PropertyFormScreen: React.FC<PropertyFormScreenProps> = ({
       }));
     }
   }, [selectedPlace]);
+
+   useEffect(() => {
+    // Back button handler
+    const backHandler = BackHandler.addEventListener(
+      "hardwareBackPress",
+      () => {
+        if (
+          !showDraftModal &&
+          formData.assetType &&
+          formData.propertyName
+        ) {
+          setShowDraftModal(true);
+          return true; 
+        }
+        return false;
+      }
+    );
+
+    return () => backHandler.remove();
+  }, [showDraftModal, formData]);
 
   /**
    * Validate all fields in the current step.
@@ -375,7 +400,7 @@ export const PropertyFormScreen: React.FC<PropertyFormScreenProps> = ({
   const propId = formData.propertyId || `temp-${Date.now()}`;
 
   const handleFormCancel = () => {
-    if (formData.propertyType || (formData.assetType && formData.propertyName))
+    if (((formData.propertyType || formData.assetType && formData.propertyName) && !isEdit))
       setShowDraftModal(true);
     else router.back();
   };
@@ -397,13 +422,14 @@ export const PropertyFormScreen: React.FC<PropertyFormScreenProps> = ({
         await updateWholeProperty(cleanData.propertyId, {
           ...cleanData,
           status: "draft",
-        });
+
+        }, "qc");
         showSuccessToast(`Draft updated successfully!`);
       } else {
         const newProperty = await createProperty({
           ...(cleanData as Omit<Property, "propertyId">),
           status: "draft",
-        });
+        }, "qc");
         showSuccessToast(
           `Draft saved successfully!\nID: ${newProperty.propertyId}`
         );
@@ -621,20 +647,20 @@ export const PropertyFormScreen: React.FC<PropertyFormScreenProps> = ({
 
         {/* Navigation Buttons */}
         <View className="flex flex-row items-center justify-center gap-[13px] px-4 py-[14.5px] bg-red border-t border-t-[#EEEEEE]">
-          {currentStepIndex && (
+          {currentStepIndex ? (
             <TouchableOpacity
               className="w-[50%] py-2 px-5 rounded-[4px] bg-white border border-[#153E3B]"
               onPress={handleBack}
             >
               <Text className="text-center text-base font-semibold text-black">
-                {currentStepIndex === visibleSteps.length
-                  ? "Edit"
-                  : "Back"}
+                {currentStepIndex === visibleSteps.length ? "Edit" : "Back"}
               </Text>
             </TouchableOpacity>
-          )}
+          ) : null}
+
           <TouchableOpacity
-            className="w-[50%] py-2 px-5 rounded-[4px] bg-[#153E3B] border border-[#153E3B]"
+            className={`py-2 px-5 rounded-[4px] bg-[#153E3B] border border-[#153E3B] ${currentStepIndex ? "w-[50%]" : "w-full"
+              }`}
             onPress={handleNext}
           >
             <Text className="text-center text-base font-semibold text-white leading-normal">
@@ -646,6 +672,7 @@ export const PropertyFormScreen: React.FC<PropertyFormScreenProps> = ({
             </Text>
           </TouchableOpacity>
         </View>
+
       </View>
       <SaveAsDraft
         visible={showDraftModal}

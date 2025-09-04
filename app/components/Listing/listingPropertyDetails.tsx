@@ -47,7 +47,7 @@ export const FormPreview: React.FC<FormPreviewProps> = ({
     enquiryCount,
     newEnquiryCount,
 
-  } = useEnquiries({propertyId:data?.propertyId});
+  } = useEnquiries({ propertyId: data?.propertyId });
 
   const getFieldValue = (obj: any, path: string) =>
     path.split(".").reduce((acc, key) => acc?.[key], obj);
@@ -131,9 +131,10 @@ export const FormPreview: React.FC<FormPreviewProps> = ({
       />
       <BasicPropertyInfo data={data} previewType={previewType} />
 
-     
-      <PropertiesStatusCard data={data} />
-       <EnquiriesReceivedCard totalCount={enquiryCount} newCount={newEnquiryCount} />
+      {previewType == 'myBusiness' && (<>
+        <PropertiesStatusCard data={data} />
+        <EnquiriesReceivedCard totalCount={enquiryCount} newCount={newEnquiryCount} />
+      </>)}
 
 
       {processedSteps.map((step) => {

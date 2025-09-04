@@ -94,9 +94,11 @@ const styles = StyleSheet.create({
     borderColor: "#133836",
   },
   label: {
-    fontSize: 14,
+    fontSize: 16,
     fontFamily: "sans-serif",
     color: "#000000",
+    fontWeight:700
+
   },
 });
 
