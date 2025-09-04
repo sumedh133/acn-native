@@ -207,7 +207,7 @@ export const FormRenderer: React.FC<FormRendererProps> = ({
     const value = getFieldValue(formData, field.id);
     const error = errors[field.id];
     const fieldWidth = getFieldWidth(field);
-    if (field.type == 'boolean') {
+    if (field.type == "boolean") {
       if (!value) {
         setFieldValue(field.id, true);
       }
@@ -267,8 +267,9 @@ export const FormRenderer: React.FC<FormRendererProps> = ({
             <>
               {commonLabel}
               <TextInput
-                className={`border rounded-lg p-3 text-base bg-white min-h-[100px] ${error ? "border-[#d32f2f]" : "border-[#ddd]"
-                  }`}
+                className={`border rounded-lg p-3 text-base bg-white min-h-[100px] ${
+                  error ? "border-[#d32f2f]" : "border-[#ddd]"
+                }`}
                 style={{ textAlignVertical: "top" }}
                 value={value?.toString() || ""}
                 onChangeText={(text) => setFieldValue(field.id, text)}
@@ -309,11 +310,15 @@ export const FormRenderer: React.FC<FormRendererProps> = ({
                   return (
                     <TouchableOpacity
                       key={option.value}
-                      className={`px-3 py-2 border ${currentStep ? "rounded-[8px]" : "rounded-[30px]"
-                        } ${isSelected
+                      className={`px-3 py-2 border ${
+                        currentStep ? "rounded-[8px]" : "rounded-[30px]"
+                      } ${
+                        isSelected
                           ? `bg-[#F0FFFE] border-[#153E3B]`
-                          : `${currentStep ? "bg-[#FAFAFA]" : "bg-white"} border-[#BABABA]`
-                        }`}
+                          : `${
+                              currentStep ? "bg-[#FAFAFA]" : "bg-white"
+                            } border-[#BABABA]`
+                      }`}
                       onPress={() => {
                         if (isDisabled) {
                           showErrorToast("You cannot edit these fields");
@@ -327,10 +332,13 @@ export const FormRenderer: React.FC<FormRendererProps> = ({
                       }}
                     >
                       <Text
-                        className={`${currentStep ? "" : "px-[10px]"} text-sm font-medium ${isSelected
+                        className={`${
+                          currentStep ? "" : "px-[10px]"
+                        } text-sm font-medium ${
+                          isSelected
                             ? "text-[#153E3B] font-bold"
                             : "text-[#2B2928]"
-                          } leading-normal`}
+                        } leading-normal`}
                       >
                         {option.label}
                       </Text>
@@ -341,7 +349,6 @@ export const FormRenderer: React.FC<FormRendererProps> = ({
               {errorMessage}
             </>
           );
-
 
         case "multiselect":
           const multiValue = value || [];
@@ -360,8 +367,8 @@ export const FormRenderer: React.FC<FormRendererProps> = ({
                   const bgColor = isSelected
                     ? "bg-[#F0FFFE] border-[#153E3B]"
                     : currentStep
-                      ? "bg-[#FAFAFA] border-[#BABABA]"
-                      : "bg-white border-[#BABABA]";
+                    ? "bg-[#FAFAFA] border-[#BABABA]"
+                    : "bg-white border-[#BABABA]";
 
                   return (
                     <TouchableOpacity
@@ -377,11 +384,13 @@ export const FormRenderer: React.FC<FormRendererProps> = ({
                       <View className="flex-row items-center gap-[5px]">
                         {isSelected ? <CorrectIcon /> : <PlusIcon />}
                         <Text
-                          className={`${currentStep ? "" : "px-[10px]"
-                            } text-sm font-medium ${isSelected
+                          className={`${
+                            currentStep ? "" : "px-[10px]"
+                          } text-sm font-medium ${
+                            isSelected
                               ? "text-[#153E3B] font-bold"
                               : "text-[#2B2928]"
-                            }`}
+                          }`}
                         >
                           {option.label}
                         </Text>
@@ -446,9 +455,7 @@ export const FormRenderer: React.FC<FormRendererProps> = ({
             <>
               {commonLabel}
               <TotalAskPrice
-                initialPrice={
-                  getFieldValue(formData, field.id)
-                }
+                initialPrice={getFieldValue(formData, field.id)}
                 onPriceChange={(fieldKey, value) =>
                   setFieldValue(fieldKey, value)
                 }

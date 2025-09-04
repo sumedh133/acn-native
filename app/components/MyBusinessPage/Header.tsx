@@ -38,10 +38,9 @@ const MyBusinessHeader = ({
   activeCard,
   setActiveCard,
 }: MyBusinessHeaderProps) => {
-  
-  const requirementCount = useSelector(
-    (state: RootState) => state?.agent?.docData.myRequirements.length
-  );
+  // const requirementCount = useSelector(
+  //   (state: RootState) => state?.agent?.docData.myRequirements.length || 0
+  // );
 
   // Use the scroll context
   const { secondaryHeaderHeight, setSecondaryHeaderHeight } =

@@ -275,7 +275,7 @@ ${user?.phoneNumber}`;
       </View>
       {/* <Text style={styles.modalOverlay}>Hi</Text> */}
       {visible && (
-        <View style={styles.ConfettiContainer}>
+        <View >
           <LottieView
             source={require("@/assets/LottieAnimation/confetti.json")} // Path to your JSON
             autoPlay
@@ -388,9 +388,6 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: "bold",
     color: "#313131",
-  },
-  ConfettiContainer: {
-    zIndex: 9998,
   },
 });
 

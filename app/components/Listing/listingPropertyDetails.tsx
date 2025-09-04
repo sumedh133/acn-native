@@ -19,7 +19,7 @@ import EnquiriesReceivedCard from "../MyBusinessPage/EnquiriesReceivedCard";
 import PropertiesStatusCard from "../MyBusinessPage/PropertyStatusCard";
 import { TouchableOpacity } from "react-native";
 
-type UIProperty = Omit<Property, "handOverDate"> & {
+export type UIProperty = Omit<Property, "handOverDate"> & {
   handOverDate?: string;
   media?: MediaUploadData;
 };

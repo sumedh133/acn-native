@@ -177,7 +177,6 @@ const MyBusinessPage = () => {
     try {
       setLoading(true);
       const propertyResults: Property[] = await searchProperties("cpId", cpId);
-      console.log(propertyResults, "fetched properties");
       setProperties(propertyResults || []);
     } catch (error) {
       console.error("Error fetching properties:", error);

@@ -27,8 +27,21 @@ import Video, { VideoRef } from "react-native-video";
 import Icon from "@/assets/icons/svg/PropertyListing/ListingFlow/PhotoVideoPicker.svg";
 import { getIcon } from "@/utils/iconUtils";
 
-const PhotoVideoPicker: React.FC = () => {
-  const [selectedMedia, setSelectedMedia] = useState<Asset[]>([]);
+// Emit object arrays (not strings) to the parent
+type MediaObj = { uri: string; name?: string; type?: string; size?: number };
+
+interface PhotoVideoPickerProps {
+  onChange?: (data: { photos: MediaObj[]; videos: MediaObj[] }) => void;
+  selectedMedia?: Asset[];
+  setSelectedMedia?: (media: Asset[]) => void;
+}
+
+const PhotoVideoPicker: React.FC<PhotoVideoPickerProps> = ({
+  onChange,
+  selectedMedia = [],
+  setSelectedMedia = () => {},
+}) => {
+  // const [selectedMedia, setSelectedMedia] = useState<Asset[]>([]);
   const [modalVisible, setModalVisible] = useState(false);
   const [selectedImageIndex, setSelectedImageIndex] = useState(0);
   const [playingVideoIndex, setPlayingVideoIndex] = useState<number | null>(
@@ -41,6 +54,33 @@ const PhotoVideoPicker: React.FC = () => {
 
   const fullscreenScrollRef = useRef<ScrollView>(null);
   const thumbnailScrollRef = useRef<ScrollView>(null);
+
+  // Emit media upwards whenever local selection changes
+  React.useEffect(() => {
+    if (!onChange) return;
+    const toObj = (m: Asset): MediaObj => ({
+      uri: m.uri as string,
+      name: m.fileName,
+      type: m.type,
+      size: m.fileSize,
+    });
+    const photos = selectedMedia
+      .filter((m) =>
+        m.type
+          ? !m.type.startsWith("video")
+          : !m.fileName?.toLowerCase().endsWith(".mp4")
+      )
+      .map(toObj);
+    const videos = selectedMedia
+      .filter((m) =>
+        m.type
+          ? m.type.startsWith("video")
+          : m.fileName?.toLowerCase().endsWith(".mp4")
+      )
+      .map(toObj);
+    onChange({ photos, videos });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedMedia]);
 
   const openImageModal = (index: number): void => {
     setSelectedImageIndex(index);
