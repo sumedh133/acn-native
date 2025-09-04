@@ -1,4 +1,5 @@
 import React from "react";
+import { useEffect } from "react";
 import {
   View,
   Text,
@@ -207,11 +208,7 @@ export const FormRenderer: React.FC<FormRendererProps> = ({
     const value = getFieldValue(formData, field.id);
     const error = errors[field.id];
     const fieldWidth = getFieldWidth(field);
-    if (field.type == "boolean") {
-      if (!value) {
-        setFieldValue(field.id, true);
-      }
-    }
+
 
     const commonLabel = (
       <Text className="text-base font-semibold mb-3">
@@ -231,6 +228,7 @@ export const FormRenderer: React.FC<FormRendererProps> = ({
             <View>
               <PlacesSearch
                 selectedPlace={selectedPlace}
+
                 setSelectedPlace={setSelectedPlace}
                 communityType={formData.communityType}
                 disabled={isEdit}
@@ -332,13 +330,10 @@ export const FormRenderer: React.FC<FormRendererProps> = ({
                       }}
                     >
                       <Text
-                        className={`${
-                          currentStep ? "" : "px-[10px]"
-                        } text-sm font-medium ${
-                          isSelected
-                            ? "text-[#153E3B] font-bold"
-                            : "text-[#2B2928]"
-                        } leading-normal`}
+                        className={`${currentStep ? "" : "px-[10px]"} text-sm font-medium ${isSelected
+                          ? "text-[#153E3B] font-bold"
+                          : "text-[#2B2928]"
+                          } leading-normal`}
                       >
                         {option.label}
                       </Text>
@@ -575,6 +570,26 @@ export const FormRenderer: React.FC<FormRendererProps> = ({
       </View>
     );
   };
+  // -------------------- Effect --------------------
+
+  useEffect(() => {
+    if (!visibleSteps[currentStep]) return;
+
+    const currentStepConfig = visibleSteps[currentStep];
+    const visibleFields = getVisibleFields(currentStepConfig.fields);
+
+    visibleFields.forEach((field) => {
+      if (field.type === "boolean") {
+        const value = getFieldValue(formData, field.id);
+        if (value === undefined) {
+          setFieldValue(field.id, false);
+        }
+      }
+    });
+  }, [visibleSteps, currentStep]);
+
+
+
 
   // -------------------- Render --------------------
   if (!visibleSteps[currentStep]) return null;

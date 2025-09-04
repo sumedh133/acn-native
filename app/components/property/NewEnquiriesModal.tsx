@@ -6,9 +6,8 @@ import {
   Text,
   TouchableOpacity,
   View,
-  Image,
 } from "react-native";
-import { LinearGradient } from "expo-linear-gradient"; // or 'react-native-linear-gradient'
+import { LinearGradient } from 'expo-linear-gradient';
 import { styled } from "nativewind";
 import ListingsIcon from "@/assets/icons/listingWithGradient.svg";
 
@@ -51,52 +50,27 @@ const NewEnquiriesModal = ({
   }, [visible, translateY, backdropOpacity]);
 
   const AView = styled(Animated.View);
+  if (!visible) return null;
 
-  // Don't return null immediately - let animations complete
   return (
-    <View
-      className={`absolute inset-0 z-[200]`}
-      style={{
-        position: "absolute",
-        top: 0,
-        left: 0,
-        right: 0,
-        bottom: 0,
-        pointerEvents: visible ? "auto" : "none", // Prevent interaction when not visible
-      }}
-    >
+    <View className={`absolute inset-0 z-[200]`} style={{ position: "absolute" }}>
       <AView
         className="absolute inset-0 bg-black/40"
-        style={{
-          opacity: backdropOpacity,
-          position: "absolute",
-          top: 0,
-          left: 0,
-          right: 0,
-          bottom: 0,
-        }}
-      >
-        <TouchableOpacity
-          activeOpacity={1}
-          className="flex-1"
-          onPress={onClose}
-        />
-      </AView>
-      {/* Close button - Moved outside modal content to prevent clipping */}
+        style={{ opacity: backdropOpacity }}
+      />
+
       <AView
         style={{
           position: "absolute",
           alignSelf: "center",
-          bottom: "29%", // Position relative to screen instead of modal
+          bottom: "29%",
           zIndex: 30,
-          transform: [
-            {
-              translateY: translateY.interpolate({
-                inputRange: [0, SCREEN_HEIGHT],
-                outputRange: [-55, SCREEN_HEIGHT],
-              }),
-            },
-          ],
+          transform: [{
+            translateY: translateY.interpolate({
+              inputRange: [0, SCREEN_HEIGHT],
+              outputRange: [-55, SCREEN_HEIGHT],
+            })
+          }],
         }}
       >
         <TouchableOpacity
@@ -104,10 +78,7 @@ const NewEnquiriesModal = ({
           onPress={onClose}
           style={{
             shadowColor: "#000",
-            shadowOffset: {
-              width: 0,
-              height: 2,
-            },
+            shadowOffset: { width: 0, height: 2 },
             shadowOpacity: 0.25,
             shadowRadius: 3.84,
             elevation: 5,
@@ -120,31 +91,18 @@ const NewEnquiriesModal = ({
       <AView
         className="absolute left-0 right-0 bottom-0 w-full rounded-t-[24px] pt-[40px] pb-6 shadow-lg"
         style={{
-          position: "absolute",
-          left: 0,
-          right: 0,
-          bottom: 0,
-          width: "100%",
           transform: [{ translateY }],
           elevation: 12,
-          overflow: "hidden", // Important for rounded corners with gradient
+          overflow: 'hidden',
         }}
       >
-        {/* Gradient Background */}
         <LinearGradient
-          colors={["#FFFFFF", "#A0E2DD"]}
+          colors={['#FFFFFF', '#A0E2DD']}
           start={{ x: 0, y: 0 }}
           end={{ x: 0, y: 1 }}
-          style={{
-            position: "absolute",
-            left: 0,
-            right: 0,
-            top: 0,
-            bottom: 0,
-          }}
+          style={{ position: 'absolute', left: 0, right: 0, top: 0, bottom: 0 }}
         />
 
-        {/* Content */}
         <View className="items-center px-5 mt-2">
           <View className="mb-[15px]">
             <ListingsIcon />
@@ -161,10 +119,7 @@ const NewEnquiriesModal = ({
             onPress={onCheckNow}
             style={{
               shadowColor: "#000",
-              shadowOffset: {
-                width: 0,
-                height: 2,
-              },
+              shadowOffset: { width: 0, height: 2 },
               shadowOpacity: 0.25,
               shadowRadius: 3.84,
               elevation: 3,
@@ -174,8 +129,25 @@ const NewEnquiriesModal = ({
           </TouchableOpacity>
         </View>
       </AView>
+
+      <ConfettiCannon
+        count={150}
+        origin={{ x: 0, y: 0 }}
+        autoStart={true}
+        fadeOut={true}
+        explosionSpeed={500}
+        fallSpeed={3000}
+      />
     </View>
   );
 };
 
-export default NewEnquiriesModal;
+// Memoize with props comparison
+export default React.memo(NewEnquiriesModal, (prev, next) => {
+  return (
+    prev.visible === next.visible &&
+    prev.enquiryCount === next.enquiryCount &&
+    prev.onClose === next.onClose &&
+    prev.onCheckNow === next.onCheckNow
+  );
+});

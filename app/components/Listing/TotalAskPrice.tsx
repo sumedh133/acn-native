@@ -20,7 +20,7 @@ interface UnitOption {
 }
 
 interface TotalAskPricetProps {
-  onPriceChange: (unit: string, price: number) => void; // Changed to number
+  onPriceChange: (unit: string, price?: number) => void; // Changed to number
   initialPrice?: number; // Changed to number
   title?: string;
   required?: boolean;
@@ -72,7 +72,7 @@ const TotalAskPrice: React.FC<TotalAskPricetProps> = ({
       // Remove commas before converting to number
       const numericPrice = validPrice
         ? parseFloat(validPrice.replace(/,/g, ""))
-        : 0;
+        : undefined;
       onPriceChange(selectedOption.value, numericPrice);
     }
   };
@@ -96,7 +96,7 @@ const TotalAskPrice: React.FC<TotalAskPricetProps> = ({
 
   const handleSelect = (option: UnitOption) => {
     // Clear the old value with the previous unit
-    onPriceChange(selectedOption.value, 0);
+    onPriceChange(selectedOption.value, undefined);
 
     // CHANGE HERE: Reset the price state to empty string
     setPrice("");
@@ -106,12 +106,12 @@ const TotalAskPrice: React.FC<TotalAskPricetProps> = ({
     setModalVisible(false);
 
     // Since the price is now reset to empty, we're passing 0 to the callback
-    onPriceChange(option.value, 0);
+    onPriceChange(option.value, undefined);
   };
 
   const selectUnit = (option: UnitOption) => {
     // Clear the old value with the previous unit
-    onPriceChange(selectedOption.value, 0);
+    onPriceChange(selectedOption.value, undefined);
 
     // CHANGE HERE: Reset the price state to empty string
     setPrice("");
@@ -121,7 +121,7 @@ const TotalAskPrice: React.FC<TotalAskPricetProps> = ({
     setModalVisible(false);
 
     // Since the price is now reset to empty, we're passing 0 to the callback
-    onPriceChange(option.value, 0);
+    onPriceChange(option.value, undefined);
   };
 
   // Calculate the total in words (for display below the input)

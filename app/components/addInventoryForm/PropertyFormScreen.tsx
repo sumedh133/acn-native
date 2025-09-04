@@ -76,6 +76,9 @@ export const PropertyFormScreen: React.FC<PropertyFormScreenProps> = ({
     console.log(formData, "formData");
 
     return {
+      listingType: "resale",
+      propertyType: "residential",
+      assetType: "apartment",
       cpId: initialData?.cpId || agentData?.cpId,
       agentName: initialData?.agentName || agentData?.name,
       agentPhoneNumber: initialData?.agentPhoneNumber || agentData?.phone,
@@ -96,7 +99,8 @@ export const PropertyFormScreen: React.FC<PropertyFormScreenProps> = ({
     document: [],
   });
   const [currentStepIndex, setCurrentStepIndex] = useState<number>(0);
-  const [maxStepIndex, setMaxStepIndex] = useState<number>(-1);
+  const [maxStepIndex, setMaxStepIndex] = useState<number>(0);
+  const [isForwardStepChangeDisabled, setIsForwardStepChangeDisabled] = useState<boolean>(false)
   const [isFormEmpty, setIsFormEmpty] = useState<boolean>(
     Object.keys(initialData || {}).length === 0
   );
@@ -333,10 +337,10 @@ export const PropertyFormScreen: React.FC<PropertyFormScreenProps> = ({
 
     const visibleSteps = getVisibleSteps();
     if (currentStepIndex < visibleSteps.length - 1) {
+      setCurrentStepIndex((prev) => prev + 1);
       if (currentStepIndex > maxStepIndex) {
         setMaxStepIndex(currentStepIndex);
       }
-      setCurrentStepIndex((prev) => prev + 1);
     } else {
       setShowPreview(true);
     }
@@ -386,11 +390,12 @@ export const PropertyFormScreen: React.FC<PropertyFormScreenProps> = ({
 
   const handleStepChange = (index: number) => {
     setErrors({});
+
     if (currentStepIndex <= maxStepIndex) {
       if (!validateCurrentStep()) return;
     }
     const visibleSteps = getVisibleSteps();
-    if (index <= maxStepIndex || index < visibleSteps.length) {
+    if (index <= maxStepIndex) {
       setCurrentStepIndex(index);
     }
   };
@@ -452,6 +457,14 @@ export const PropertyFormScreen: React.FC<PropertyFormScreenProps> = ({
   };
   // -------------------- Effects --------------------
 
+  useEffect(() => {
+    if (currentStepIndex === 0) {
+      if (!isEdit) {
+        setMaxStepIndex(0);
+      }
+    }
+  }, [formData])
+ 
   // -------------------- Derived Values --------------------
   const visibleSteps = getVisibleSteps();
 
