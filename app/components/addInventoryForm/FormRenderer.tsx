@@ -7,6 +7,7 @@ import {
   ScrollView,
   DimensionValue,
 } from "react-native";
+import { showErrorToast } from "@/utils/toastUtils";
 import { FormConfig, FormStep } from "@/types/FormConfig";
 import { DocsToUpload, Places, Property } from "@/app/types";
 import MonthYearPicker from "../Listing/MonthYearPicker";
@@ -59,6 +60,7 @@ export const FormRenderer: React.FC<FormRendererProps> = ({
   config,
   formData,
   errors,
+  isEdit,
   currentStep,
   visibleSteps,
   onFormUpdate,
@@ -205,6 +207,11 @@ export const FormRenderer: React.FC<FormRendererProps> = ({
     const value = getFieldValue(formData, field.id);
     const error = errors[field.id];
     const fieldWidth = getFieldWidth(field);
+    if (field.type == 'boolean') {
+      if (!value) {
+        setFieldValue(field.id, true);
+      }
+    }
 
     const commonLabel = (
       <Text className="text-base font-semibold mb-3">
@@ -226,6 +233,7 @@ export const FormRenderer: React.FC<FormRendererProps> = ({
                 selectedPlace={selectedPlace}
                 setSelectedPlace={setSelectedPlace}
                 communityType={formData.communityType}
+                disabled={isEdit}
               />
               {errorMessage}
             </View>
@@ -259,9 +267,8 @@ export const FormRenderer: React.FC<FormRendererProps> = ({
             <>
               {commonLabel}
               <TextInput
-                className={`border rounded-lg p-3 text-base bg-white min-h-[100px] ${
-                  error ? "border-[#d32f2f]" : "border-[#ddd]"
-                }`}
+                className={`border rounded-lg p-3 text-base bg-white min-h-[100px] ${error ? "border-[#d32f2f]" : "border-[#ddd]"
+                  }`}
                 style={{ textAlignVertical: "top" }}
                 value={value?.toString() || ""}
                 onChangeText={(text) => setFieldValue(field.id, text)}
@@ -296,43 +303,45 @@ export const FormRenderer: React.FC<FormRendererProps> = ({
             <>
               {commonLabel}
               <View className="flex-row flex-wrap gap-2">
-                {field.options?.map((option) => (
-                  <TouchableOpacity
-                    key={option.value}
-                    className={`px-3 py-2 border ${
-                      currentStep ? "rounded-[8px]" : "rounded-[30px]"
-                    } ${
-                      value === option.value
-                        ? `bg-[#F0FFFE] border-[#153E3B]`
-                        : `${
-                            currentStep ? "bg-[#FAFAFA]" : "bg-white"
-                          } border-[#BABABA]`
-                    }`}
-                    onPress={() => {
-                      if (value == option.value) {
-                        setFieldValue(field.id, null);
-                      } else {
-                        setFieldValue(field.id, option.value);
-                      }
-                    }}
-                  >
-                    <Text
-                      className={`${
-                        currentStep ? "" : "px-[10px]"
-                      } text-sm font-medium ${
-                        value === option.value
-                          ? "text-[#153E3B] font-bold"
-                          : "text-[#2B2928]"
-                      } leading-normal`}
+                {field.options?.map((option) => {
+                  const isSelected = value === option.value;
+                  const isDisabled = currentStep === 0 && isEdit; // Disable condition
+                  return (
+                    <TouchableOpacity
+                      key={option.value}
+                      className={`px-3 py-2 border ${currentStep ? "rounded-[8px]" : "rounded-[30px]"
+                        } ${isSelected
+                          ? `bg-[#F0FFFE] border-[#153E3B]`
+                          : `${currentStep ? "bg-[#FAFAFA]" : "bg-white"} border-[#BABABA]`
+                        }`}
+                      onPress={() => {
+                        if (isDisabled) {
+                          showErrorToast("You cannot edit these fields");
+                          return;
+                        }
+                        if (isSelected) {
+                          setFieldValue(field.id, null);
+                        } else {
+                          setFieldValue(field.id, option.value);
+                        }
+                      }}
                     >
-                      {option.label}
-                    </Text>
-                  </TouchableOpacity>
-                ))}
+                      <Text
+                        className={`${currentStep ? "" : "px-[10px]"} text-sm font-medium ${isSelected
+                            ? "text-[#153E3B] font-bold"
+                            : "text-[#2B2928]"
+                          } leading-normal`}
+                      >
+                        {option.label}
+                      </Text>
+                    </TouchableOpacity>
+                  );
+                })}
               </View>
               {errorMessage}
             </>
           );
+
 
         case "multiselect":
           const multiValue = value || [];
@@ -351,8 +360,8 @@ export const FormRenderer: React.FC<FormRendererProps> = ({
                   const bgColor = isSelected
                     ? "bg-[#F0FFFE] border-[#153E3B]"
                     : currentStep
-                    ? "bg-[#FAFAFA] border-[#BABABA]"
-                    : "bg-white border-[#BABABA]";
+                      ? "bg-[#FAFAFA] border-[#BABABA]"
+                      : "bg-white border-[#BABABA]";
 
                   return (
                     <TouchableOpacity
@@ -368,13 +377,11 @@ export const FormRenderer: React.FC<FormRendererProps> = ({
                       <View className="flex-row items-center gap-[5px]">
                         {isSelected ? <CorrectIcon /> : <PlusIcon />}
                         <Text
-                          className={`${
-                            currentStep ? "" : "px-[10px]"
-                          } text-sm font-medium ${
-                            isSelected
+                          className={`${currentStep ? "" : "px-[10px]"
+                            } text-sm font-medium ${isSelected
                               ? "text-[#153E3B] font-bold"
                               : "text-[#2B2928]"
-                          }`}
+                            }`}
                         >
                           {option.label}
                         </Text>
@@ -440,7 +447,7 @@ export const FormRenderer: React.FC<FormRendererProps> = ({
               {commonLabel}
               <TotalAskPrice
                 initialPrice={
-                  formData[field.id as keyof UIProperty] as number | undefined
+                  getFieldValue(formData, field.id)
                 }
                 onPriceChange={(fieldKey, value) =>
                   setFieldValue(fieldKey, value)

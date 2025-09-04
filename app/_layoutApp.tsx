@@ -734,6 +734,7 @@ export default function LayoutApp() {
         <KamManager />
 
         {isAuthenticated && <FooterNavigation />}
+
       </View>
     </ScrollProvider>
   );

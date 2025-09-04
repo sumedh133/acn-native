@@ -1,3 +1,4 @@
+// 2022BCS00157 || Deepak Goyal
 import React, { useState, useEffect } from "react";
 import {
   StyleSheet,
@@ -11,7 +12,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { DimensionValue } from "react-native";
 
 interface MonthYearPickerProps {
-  value: string | undefined;
+  value: string | undefined; // Will store Unix timestamp
   setValue: (value: string) => void;
   title?: string;
   placeholder?: string;
@@ -19,7 +20,7 @@ interface MonthYearPickerProps {
   minYear?: number;
   maxYear?: number;
   disabled: boolean;
-  width?: DimensionValue
+  width?: DimensionValue;
 }
 
 const MonthYearPicker = ({
@@ -31,20 +32,23 @@ const MonthYearPicker = ({
   minYear = 1900,
   maxYear = 2100,
   disabled = false,
-  width
+  width,
 }: MonthYearPickerProps) => {
   const [open, setOpen] = useState(false);
   const [isFocused, setIsFocused] = useState(false);
   const [date, setDate] = useState<Date>(new Date());
+  const [displayValue, setDisplayValue] = useState("");
 
-  // Parse the current value to initialize date when opening picker
-  const formattedValue = value || "";
-
+  // When value changes (Unix timestamp), update displayValue (MM/YYYY)
   useEffect(() => {
     if (value) {
-      const [mm, yyyy] = value.split("/");
-      if (mm && yyyy) {
-        setDate(new Date(Number(yyyy), Number(mm) - 1, 1));
+      const timestamp = Number(value);
+      if (!isNaN(timestamp)) {
+        const d = new Date(timestamp * 1000); // Convert seconds to ms
+        const month = String(d.getMonth() + 1).padStart(2, "0");
+        const year = d.getFullYear();
+        setDisplayValue(`${month}/${year}`);
+        setDate(d);
       }
     }
   }, [value]);
@@ -61,10 +65,16 @@ const MonthYearPicker = ({
     setIsFocused(false);
     setDate(selectedDate);
 
-    // store timestamp (seconds)
+    // Convert selected date to Unix timestamp in seconds
+    const unixTimestamp = Math.floor(selectedDate.getTime() / 1000);
+
+    // Save timestamp as value
+    setValue(unixTimestamp.toString());
+
+    // Show MM/YYYY for UI
     const month = String(selectedDate.getMonth() + 1).padStart(2, "0");
     const year = selectedDate.getFullYear();
-    setValue(`${month}/${year}`);
+    setDisplayValue(`${month}/${year}`);
   };
 
   const handleCancel = () => {
@@ -72,13 +82,14 @@ const MonthYearPicker = ({
     setIsFocused(false);
   };
 
-  return (<>
+  return (
     <View style={[styles.section, { width: width }]}>
-      {title &&
-        (<View style={[styles.headingContainer]}>
+      {title && (
+        <View style={[styles.headingContainer]}>
           <Text style={styles.sectionHeading}>{title}</Text>
           {required && <Text style={styles.compulsoryStar}>*</Text>}
-        </View>)}
+        </View>
+      )}
 
       <TouchableOpacity
         style={[
@@ -92,7 +103,7 @@ const MonthYearPicker = ({
       >
         <TextInput
           style={[styles.inputField, disabled && styles.disabledText]}
-          value={value}
+          value={displayValue}
           placeholder={placeholder}
           placeholderTextColor="#A0A0A0"
           editable={false}
@@ -101,7 +112,7 @@ const MonthYearPicker = ({
         <Ionicons
           name="calendar-outline"
           size={18}
-          color={disabled ? "#BBBBBB" : "#757575"} // Lighter color when disabled
+          color={disabled ? "#BBBBBB" : "#757575"}
         />
       </TouchableOpacity>
 
@@ -119,8 +130,6 @@ const MonthYearPicker = ({
         theme="light"
       />
     </View>
-
-  </>
   );
 };
 
@@ -170,7 +179,7 @@ const styles = StyleSheet.create({
     padding: 0,
   },
   disabledText: {
-    color: '#999999'
+    color: "#999999",
   },
   disabledInputContainer: {
     backgroundColor: "#F5F5F5",

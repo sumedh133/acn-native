@@ -133,7 +133,7 @@ export interface Landmark {
 }
 
 export interface Places {
-  name: string;
+  name: string |null;
   lat: number |null;
   lng: number|null;
   address: string |null;
