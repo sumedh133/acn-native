@@ -489,11 +489,11 @@ export default function LayoutApp() {
             options={{ headerShown: false }}
             initialParams={{ showFooter: false }}
           />
-          <Stack.Screen
+          {/* <Stack.Screen
             name="(pages)/ComingSoon"
             options={{ headerShown: false }}
             // initialParams={{ showFooter: false }}
-          />
+          /> */}
           <Stack.Screen
             name="(tabs)/properties"
             options={{ title: "Properties" }}

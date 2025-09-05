@@ -84,9 +84,7 @@
         "projectId": "bed248dc-419b-4fd9-80c2-49ba8d271313"
       }
     },
-    "runtimeVersion": {
-      "policy": "appVersion"
-    },
+    "runtimeVersion": "1.0.0",
     "updates": {
       "url": "https://u.expo.dev/bed248dc-419b-4fd9-80c2-49ba8d271313"
     }
