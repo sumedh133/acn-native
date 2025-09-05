@@ -12,7 +12,11 @@
       "distribution": "internal"
     },
     "production": {
-      "autoIncrement": true
+      "ios": {
+        "buildType": "release"
+      },
+      "autoIncrement": true,
+      "prebuildCommand": "npm i --force"
     }
   },
   "submit": {
