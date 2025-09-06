@@ -4,6 +4,7 @@
     "displayName": "ACN",
     "slug": "acn-native",
     "version": "1.0.4",
+    "scheme": "com.acnonline",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
     "userInterfaceStyle": "light",
