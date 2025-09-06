@@ -45,8 +45,8 @@ jobs:
       # 7. Build iOS app locally (Unsigned IPA)
       - name: Build iOS App
         run: |
-          eas build --platform ios --local \
-          --profile ci \
+          eas build --platform ios --local --non-interactive \
+          --profile simulator \
           --output build.ipa
         env:
           EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
