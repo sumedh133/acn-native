@@ -42,7 +42,7 @@ const UnderReviewProperties = () => {
   const fetchProperties = useCallback(async () => {
     try {
       setLoading(true);
-      const propertyResults: Property[] = await searchProperties("cpId", cpId);
+      const propertyResults: Property[] = await searchProperties("cpId", cpId,"qc");
       console.log(propertyResults, "fetched properties");
       setProperties(propertyResults || []);
     } catch (error) {

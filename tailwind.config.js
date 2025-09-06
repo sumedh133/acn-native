@@ -15,6 +15,7 @@ module.exports = {
         "lato-light": ["Lato_300Light"],
         "lato-normal": ["Lato_400Normal"],
         "lato-medium": ["Lato_500Medium"],
+        "lato-semibold": ["Lato_600SemiBold"],
         "lato-bold": ["Lato_700Bold"],
         "lato-black": ["Lato_900Black"],
 

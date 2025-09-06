@@ -15,6 +15,8 @@ import { useSelector } from "react-redux";
 import { RootState } from "@/store/store";
 import { ScrollContext } from "@/app/ScrollContext";
 import ModularPopup from "./ModularPopup";
+import StatusInfoBottomSheet from "../app/components/property/StatusInfoBottomSheet";
+import NewEnquiriesModal from "@/app/components/property/NewEnquiriesModal";
 import { ModalType, getModalItems } from "@/app/constants/footerModalOptions";
 import { getPopupItems, menuItems } from "@/app/constants/footerConstants";
 
@@ -42,27 +44,37 @@ const FooterNavigation = () => {
   const {
     footerTranslateY,
     resetFooterPosition,
-    
+
     // Sort
     showSortPopup,
     selectedSort,
     closeSortPopup,
     setSelectedSort,
-    
+
     // Status
     showStatusPopup,
     selectedStatus,
     closeStatusPopup,
     setSelectedStatus,
-    
+
     // Category
     showCategoryPopup,
     selectedCategory,
     closeCategoryPopup,
     setSelectedCategory,
-    
+
+    //New Enquiry
+    showNewEnquiryPopup,
+    closeNewEnquiryPopup,
+    openNewEnquiryPopup,
+
     setFooterHeight,
     footerHeight,
+
+    // Status info sheet state
+    isStatusInfoOpen,
+    currentStatusInfo,
+    closeStatusInfo,
   } = useContext(ScrollContext);
 
   const rotate = rotateAnimation.interpolate({
@@ -84,33 +96,33 @@ const FooterNavigation = () => {
     }
 
     switch (type) {
-      case 'sort':
+      case "sort":
         setSelectedSort(value);
         closeSortPopup();
         break;
-      case 'status':
+      case "status":
         setSelectedStatus(value);
         closeStatusPopup();
         break;
-      case 'category':
+      case "listingType":
         setSelectedCategory(value);
         closeCategoryPopup();
         break;
     }
-    
+
     setActiveModal(null);
   };
 
   // Unified close handler
   const closeActiveModal = () => {
     switch (activeModal) {
-      case 'sort':
+      case "sort":
         closeSortPopup();
         break;
-      case 'status':
+      case "status":
         closeStatusPopup();
         break;
-      case 'category':
+      case "listingType":
         closeCategoryPopup();
         break;
     }
@@ -285,19 +297,20 @@ const FooterNavigation = () => {
 
   // Unified modal effect
   useEffect(() => {
-    const isAnyModalOpen = showSortPopup || showStatusPopup || showCategoryPopup;
-    
+    const isAnyModalOpen =
+      showSortPopup || showStatusPopup || showCategoryPopup;
+
     if (isAnyModalOpen) {
       // Close popup modal if it's open
       setPopupAnimationFlag(false);
-      
+
       // Reset footer position when any modal opens
       resetFooterPosition?.();
-      
+
       // Set active modal type
-      if (showSortPopup) setActiveModal('sort');
-      else if (showStatusPopup) setActiveModal('status');
-      else if (showCategoryPopup) setActiveModal('category');
+      if (showSortPopup) setActiveModal("sort");
+      else if (showStatusPopup) setActiveModal("status");
+      else if (showCategoryPopup) setActiveModal("listingType");
     } else {
       setActiveModal(null);
     }
@@ -316,8 +329,18 @@ const FooterNavigation = () => {
       useNativeDriver: true,
     });
 
-    Animated.parallel([modalSlideAnimationTemp, modalOpacityAnimationTemp]).start();
-  }, [showSortPopup, showStatusPopup, showCategoryPopup, modalSlideAnimation, modalOpacityAnimation, height]);
+    Animated.parallel([
+      modalSlideAnimationTemp,
+      modalOpacityAnimationTemp,
+    ]).start();
+  }, [
+    showSortPopup,
+    showStatusPopup,
+    showCategoryPopup,
+    modalSlideAnimation,
+    modalOpacityAnimation,
+    height,
+  ]);
 
   if (params?.showFooter === false) return null;
 
@@ -356,7 +379,7 @@ const FooterNavigation = () => {
           </TouchableOpacity>
         </Animated.View>
       )}
-      
+
       {/* Unified Modal for Sort/Status/Category */}
       {activeModal && (
         <Animated.View
@@ -434,6 +457,21 @@ const FooterNavigation = () => {
           );
         })}
       </Animated.View>
+
+      {/* Mounted at footer so it anchors to bottom nav */}
+      <StatusInfoBottomSheet
+        visible={isStatusInfoOpen}
+        status={currentStatusInfo}
+        onClose={closeStatusInfo}
+      />
+      <NewEnquiriesModal
+        visible={showNewEnquiryPopup}
+        onClose={closeNewEnquiryPopup}
+        onCheckNow={() => {
+          console.log("NewEnquiriesModal: Check Now clicked");
+          closeNewEnquiryPopup();
+        }}
+      />
     </>
   );
 };

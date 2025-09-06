@@ -7,6 +7,12 @@ interface MyBusinessListingsProps {
   loadMore: any;
   refresh: any;
   selectedProperties: Set<string>;
+  isSelectionMode: boolean;
+  onToggleSelection: (propertyId: string, propertyStatus: string) => void;
+  onLongPress: (propertyId: string, propertyStatus: string) => void;
+  onSelectAll: () => void;
+  onDeselectAll: () => void;
+  onExitSelectionMode: () => void;
   loading: boolean;
 }
 
@@ -15,6 +21,12 @@ const MyBusinessListings = ({
   loadMore,
   refresh,
   selectedProperties,
+  isSelectionMode,
+  onToggleSelection,
+  onLongPress,
+  onSelectAll,
+  onDeselectAll,
+  onExitSelectionMode,
   loading,
 }: MyBusinessListingsProps) => {
   return (
@@ -29,6 +41,12 @@ const MyBusinessListings = ({
         onLoadMore={loadMore}
         onRefresh={refresh}
         selectedProperties={selectedProperties}
+        isSelectionMode={isSelectionMode}
+        onToggleSelection={onToggleSelection}
+        onLongPress={onLongPress}
+        onSelectAll={onSelectAll}
+        onDeselectAll={onDeselectAll}
+        onExitSelectionMode={onExitSelectionMode}
       />
     </View>
   );

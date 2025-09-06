@@ -107,6 +107,8 @@ export interface Enquiry {
   added: number;
   lastModified: number;
   reviews: IReview[];
+  isNew: boolean;
+  isContactShared:boolean //for checking whether seller has clicked get contact or not
 }
 
 export interface EnquiryWithProperty extends Enquiry {
@@ -131,7 +133,7 @@ export interface Landmark {
 }
 
 export interface Places {
-  name: string;
+  name: string |null;
   lat: number |null;
   lng: number|null;
   address: string |null;
@@ -439,6 +441,11 @@ export interface Property {
     totalAskPrice?: number;
     pricePerSqft?: number;
   };
+
+  sold: {
+    soldPrice?: number;
+    soldPlatform?: string;
+  }
 
   // Rental Information (unified structure)
   rentalInfo?: {

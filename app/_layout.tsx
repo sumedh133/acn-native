@@ -11,6 +11,7 @@ import { withIAPContext } from "react-native-iap";
 import SessionTracker from "./services/SessionTracker";
 import { useSelector } from "react-redux";
 import { RootState } from "@/store/store";
+import { UIProvider } from "./uiContext";
 
 SplashScreen.preventAutoHideAsync();
 
@@ -101,7 +102,9 @@ function RootLayout() {
     <ReduxProvider>
       <SafeAreaProvider>
         <SafeAreaView style={{ flex: 1 }}>
-          <LayoutApp />
+          <UIProvider>
+            <LayoutApp />
+          </UIProvider>
         </SafeAreaView>
       </SafeAreaProvider>
     </ReduxProvider>

@@ -115,7 +115,7 @@ const DraftsScreen: React.FC = () => {
   const initialRender = async () => {
     const count = await getCountFromServer(
       query(
-        collection(db, "acnPropertiesTest"),
+        collection(db, "acnQCInventoriesTest"),
         where("cpId", "==", cpId),
         where("status", "==", "draft")
       )
@@ -124,7 +124,7 @@ const DraftsScreen: React.FC = () => {
       router.replace("/(tabs)/AddInventoryForm");
     const drafts = await getDocs(
       query(
-        collection(db, "acnPropertiesTest"),
+        collection(db, "acnQCInventoriesTest"),
         where("cpId", "==", cpId),
         where("status", "==", "draft")
       )

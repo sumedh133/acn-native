@@ -35,6 +35,7 @@ interface PlacesSearchProps {
   selectedPlace?: Places;
   setSelectedPlace: (place?: Places) => void;
   communityType: string | null | undefined;
+  disabled?: boolean
 }
 
 // Note: In production, use environment variables or a secure config approach
@@ -44,6 +45,7 @@ const PlacesSearch = ({
   selectedPlace,
   setSelectedPlace,
   communityType,
+  disabled = false
 }: PlacesSearchProps) => {
   const [searchQuery, setSearchQuery] = useState("");
   const [searchResults, setSearchResults] = useState<PlacePrediction[]>([]);
@@ -269,7 +271,9 @@ const PlacesSearch = ({
             onChangeText={handleSearchInputChange}
             onFocus={handleSearchFocus}
             onBlur={handleSearchBlur}
+            editable={!disabled}
           />
+
 
           {isLoading ? (
             <ActivityIndicator
@@ -277,7 +281,7 @@ const PlacesSearch = ({
               size="small"
               color="#153E3B"
             />
-          ) : searchQuery ? (
+          ) : searchQuery && !disabled? (
             <TouchableOpacity
               onPress={handleClearSearch}
               style={styles.rightIcon}
@@ -339,7 +343,7 @@ const styles = StyleSheet.create({
   sectionHeading: {
     fontFamily: "Lato-Bold",
     fontSize: 16,
-    fontWeight:"700"
+    fontWeight: "700"
   },
   compulsoryStar: {
     fontSize: 16,
@@ -354,7 +358,7 @@ const styles = StyleSheet.create({
     backgroundColor: "#FAFAFA",
     paddingHorizontal: 12,
     paddingVertical: 8,
-    height:32,
+    height: 32,
     gap: 8,
   },
   textInput: {
@@ -363,7 +367,7 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontWeight: "400",
     color: "#333333",
-    height:20
+    height: 20
   },
   notSelectedState: { borderColor: "#D92D20" },
   rightIcon: {

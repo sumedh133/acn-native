@@ -2,7 +2,9 @@ import React, { useEffect, useState } from "react";
 import { useSelector } from "react-redux";
 import { RootState } from "@/store/store";
 import {
+  ActivityIndicator,
   SafeAreaView,
+  BackHandler,
   StatusBar,
   View,
   Text,
@@ -14,8 +16,9 @@ import { router } from "expo-router";
 import {
   createProperty,
   updateProperty,
-  updateWholeProperty
+  updateWholeProperty,
 } from "@/app/services/property_services/propertyService";
+import { useBackToSaveDraft } from "@/hooks/useBackToSaveDraft";
 import { convertMonthYearToUnix } from "@/app/helpers/format/format";
 import { showSuccessToast, showErrorToast } from "@/utils/toastUtils";
 import { FormRenderer } from "./FormRenderer";
@@ -35,7 +38,7 @@ interface FormFieldWithMeta extends FormField {
 }
 
 type UIProperty = Omit<Property, "handOverDate"> & {
-  address?: string | null
+  address?: string | null;
   handOverDate?: string;
   media?: {
     photos: string[];
@@ -48,12 +51,14 @@ interface PropertyFormScreenProps {
   initialData?: Partial<UIProperty>;
   onComplete: (data: Partial<UIProperty>) => void;
   isEdit?: boolean;
+  isSubmitting?: boolean;
 }
 
 export const PropertyFormScreen: React.FC<PropertyFormScreenProps> = ({
   initialData,
   onComplete,
   isEdit = false,
+  isSubmitting = false,
 }) => {
   // --------------------  Redux State --------------------
 
@@ -68,7 +73,12 @@ export const PropertyFormScreen: React.FC<PropertyFormScreenProps> = ({
       documents: [],
     };
 
+    console.log(formData, "formData");
+
     return {
+      listingType: "resale",
+      propertyType: "residential",
+      assetType: "apartment",
       cpId: initialData?.cpId || agentData?.cpId,
       agentName: initialData?.agentName || agentData?.name,
       agentPhoneNumber: initialData?.agentPhoneNumber || agentData?.phone,
@@ -78,7 +88,6 @@ export const PropertyFormScreen: React.FC<PropertyFormScreenProps> = ({
       stage: "kam",
       media: initialData?.media || defaultMedia,
       ...initialData,
-      
     };
   });
 
@@ -90,7 +99,8 @@ export const PropertyFormScreen: React.FC<PropertyFormScreenProps> = ({
     document: [],
   });
   const [currentStepIndex, setCurrentStepIndex] = useState<number>(0);
-  const [maxStepIndex, setMaxStepIndex] = useState<number>(-1);
+  const [maxStepIndex, setMaxStepIndex] = useState<number>(0);
+  const [isForwardStepChangeDisabled, setIsForwardStepChangeDisabled] = useState<boolean>(false)
   const [isFormEmpty, setIsFormEmpty] = useState<boolean>(
     Object.keys(initialData || {}).length === 0
   );
@@ -98,7 +108,6 @@ export const PropertyFormScreen: React.FC<PropertyFormScreenProps> = ({
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [showPreview, setShowPreview] = useState<boolean>(false);
   const [showDraftModal, setShowDraftModal] = useState<boolean>(false);
-
 
   // -------------------- Media Upload Handler --------------------
   const handleMediaUpdate = (media: {
@@ -199,8 +208,11 @@ export const PropertyFormScreen: React.FC<PropertyFormScreenProps> = ({
   /**
    * Filters visible fields based on conditional logic.
    */
-  const getVisibleFields = (fields: FormField[]): FormFieldWithMeta[] =>
-    fields.filter((field) => isFieldVisible(field)) as FormFieldWithMeta[];
+  const getVisibleFields = (fields: FormField[]): FormFieldWithMeta[] => {
+    const visibleFields = fields.filter((field) => isFieldVisible(field));
+
+    return visibleFields as FormFieldWithMeta[];
+  };
 
   /**
    * Get the value of a nested field in an object based on dot notation.
@@ -247,9 +259,9 @@ export const PropertyFormScreen: React.FC<PropertyFormScreenProps> = ({
           lng: selectedPlace.lng,
         },
       }));
-    } else if (!selectedPlace && formData.propertyName && initialData) {
+    } else if (!selectedPlace && initialData) {
       setSelectedPlace({
-        name: formData?.propertyName,
+        name: formData?.propertyName || null,
         lat: formData?._geoloc?.lat || null,
         lng: formData?._geoloc?.lng || null,
         address: formData?.address || null,
@@ -270,6 +282,22 @@ export const PropertyFormScreen: React.FC<PropertyFormScreenProps> = ({
       }));
     }
   }, [selectedPlace]);
+
+  useEffect(() => {
+    // Back button handler
+    const backHandler = BackHandler.addEventListener(
+      "hardwareBackPress",
+      () => {
+        if (!showDraftModal && formData.assetType && formData.propertyName) {
+          setShowDraftModal(true);
+          return true;
+        }
+        return false;
+      }
+    );
+
+    return () => backHandler.remove();
+  }, [showDraftModal, formData]);
 
   /**
    * Validate all fields in the current step.
@@ -309,10 +337,10 @@ export const PropertyFormScreen: React.FC<PropertyFormScreenProps> = ({
 
     const visibleSteps = getVisibleSteps();
     if (currentStepIndex < visibleSteps.length - 1) {
+      setCurrentStepIndex((prev) => prev + 1);
       if (currentStepIndex > maxStepIndex) {
         setMaxStepIndex(currentStepIndex);
       }
-      setCurrentStepIndex((prev) => prev + 1);
     } else {
       setShowPreview(true);
     }
@@ -362,11 +390,12 @@ export const PropertyFormScreen: React.FC<PropertyFormScreenProps> = ({
 
   const handleStepChange = (index: number) => {
     setErrors({});
+
     if (currentStepIndex <= maxStepIndex) {
       if (!validateCurrentStep()) return;
     }
     const visibleSteps = getVisibleSteps();
-    if (index <= maxStepIndex || index < visibleSteps.length) {
+    if (index <= maxStepIndex) {
       setCurrentStepIndex(index);
     }
   };
@@ -375,7 +404,11 @@ export const PropertyFormScreen: React.FC<PropertyFormScreenProps> = ({
   const propId = formData.propertyId || `temp-${Date.now()}`;
 
   const handleFormCancel = () => {
-    if (formData.propertyType || (formData.assetType && formData.propertyName))
+    if (
+      (formData.propertyType ||
+        (formData.assetType && formData.propertyName)) &&
+      !isEdit
+    )
       setShowDraftModal(true);
     else router.back();
   };
@@ -394,16 +427,23 @@ export const PropertyFormScreen: React.FC<PropertyFormScreenProps> = ({
       );
 
       if (cleanData.propertyId) {
-        await updateWholeProperty(cleanData.propertyId, {
-          ...cleanData,
-          status: "draft",
-        });
+        await updateWholeProperty(
+          cleanData.propertyId,
+          {
+            ...cleanData,
+            status: "draft",
+          },
+          "qc"
+        );
         showSuccessToast(`Draft updated successfully!`);
       } else {
-        const newProperty = await createProperty({
-          ...(cleanData as Omit<Property, "propertyId">),
-          status: "draft",
-        });
+        const newProperty = await createProperty(
+          {
+            ...(cleanData as Omit<Property, "propertyId">),
+            status: "draft",
+          },
+          "qc"
+        );
         showSuccessToast(
           `Draft saved successfully!\nID: ${newProperty.propertyId}`
         );
@@ -417,6 +457,14 @@ export const PropertyFormScreen: React.FC<PropertyFormScreenProps> = ({
   };
   // -------------------- Effects --------------------
 
+  useEffect(() => {
+    if (currentStepIndex === 0) {
+      if (!isEdit) {
+        setMaxStepIndex(0);
+      }
+    }
+  }, [formData])
+ 
   // -------------------- Derived Values --------------------
   const visibleSteps = getVisibleSteps();
 
@@ -454,10 +502,15 @@ export const PropertyFormScreen: React.FC<PropertyFormScreenProps> = ({
           <TouchableOpacity
             className="flex-1 py-2 px-5 rounded-[4px] bg-[#153E3B] border border-[#153E3B]"
             onPress={() => onComplete(formData)}
+            disabled={isSubmitting}
           >
-            <Text className="text-center text-base font-semibold text-white">
-              {isEdit ? "Update" : "Submit"}
-            </Text>
+            {isSubmitting ? (
+              <ActivityIndicator color="#fff" />
+            ) : (
+              <Text className="text-center text-base font-semibold text-white">
+                {isEdit ? "Update" : "Submit"}
+              </Text>
+            )}
           </TouchableOpacity>
         </View>
       </SafeAreaView>
@@ -488,8 +541,9 @@ export const PropertyFormScreen: React.FC<PropertyFormScreenProps> = ({
             onPress={handleClear}
           >
             <Text
-              className={`font-montserrat text-base font-bold underline ${isFormEmpty ? "text-[#9E9E9E]" : "text-[#D92D20]"
-                }`}
+              className={`font-montserrat text-base font-bold underline ${
+                isFormEmpty ? "text-[#9E9E9E]" : "text-[#D92D20]"
+              }`}
             >
               Clear
             </Text>
@@ -621,20 +675,21 @@ export const PropertyFormScreen: React.FC<PropertyFormScreenProps> = ({
 
         {/* Navigation Buttons */}
         <View className="flex flex-row items-center justify-center gap-[13px] px-4 py-[14.5px] bg-red border-t border-t-[#EEEEEE]">
-          {currentStepIndex && (
+          {currentStepIndex ? (
             <TouchableOpacity
               className="w-[50%] py-2 px-5 rounded-[4px] bg-white border border-[#153E3B]"
               onPress={handleBack}
             >
               <Text className="text-center text-base font-semibold text-black">
-                {currentStepIndex === visibleSteps.length
-                  ? "Edit"
-                  : "Back"}
+                {currentStepIndex === visibleSteps.length ? "Edit" : "Back"}
               </Text>
             </TouchableOpacity>
-          )}
+          ) : null}
+
           <TouchableOpacity
-            className="w-[50%] py-2 px-5 rounded-[4px] bg-[#153E3B] border border-[#153E3B]"
+            className={`py-2 px-5 rounded-[4px] bg-[#153E3B] border border-[#153E3B] ${
+              currentStepIndex ? "w-[50%]" : "w-full"
+            }`}
             onPress={handleNext}
           >
             <Text className="text-center text-base font-semibold text-white leading-normal">

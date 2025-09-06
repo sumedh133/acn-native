@@ -1,10 +1,12 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import type { Landmark } from "@/app/types";
 import {
   algoliaInfiniteSearch,
   type InfiniteScrollState,
   type SearchFilters,
+  type RealtimeSearchState,
 } from "../../app/services/property_services/propertyAlgoliaService";
+import { testSnapshotConnection } from "../../app/services/property_services/propertyService";
 
 export const useAlgoliaSearch = (basicFilter: SearchFilters) => {
   const [searchState, setSearchState] = useState<InfiniteScrollState>(
@@ -16,6 +18,9 @@ export const useAlgoliaSearch = (basicFilter: SearchFilters) => {
     null
   );
   const [sortBy, setSortBy] = useState<string>("relevance");
+
+  // Track current real-time state for cleanup
+  const currentRealtimeState = useRef<RealtimeSearchState | null>(null);
 
   // 🔑 facet states
   const [facets, setFacets] = useState<Record<string, Record<string, number>>>(
@@ -65,7 +70,19 @@ export const useAlgoliaSearch = (basicFilter: SearchFilters) => {
       landmark?: Landmark | null,
       sort?: string
     ) => {
-      setSearchState((prev) => ({ ...prev, loading: true, error: null }));
+      // Clean up previous real-time listeners
+      if (currentRealtimeState.current) {
+        algoliaInfiniteSearch.cleanupRealtime(currentRealtimeState.current);
+        currentRealtimeState.current = null;
+      }
+
+      setSearchState((prev) => ({
+        ...prev,
+        loading: true,
+        loadingFirebase: false,
+        firebaseProgress: null,
+        error: null,
+      }));
 
       try {
         const geoOptions =
@@ -75,26 +92,85 @@ export const useAlgoliaSearch = (basicFilter: SearchFilters) => {
                 aroundRadius: landmark.radius || 10000,
               }
             : undefined;
+        console.log(geoOptions)
+        // Use a ref to track if component is still mounted to prevent state updates
+        let isMounted = true;
+        const updateStateIfMounted = (updates: any) => {
+          if (isMounted) {
+            setSearchState((prev) => ({ ...prev, ...updates }));
+          }
+        };
 
-        const newState = await algoliaInfiniteSearch.search(
+        const newState = await algoliaInfiniteSearch.searchWithRealtime(
           searchQuery,
           searchFilters,
           sort,
           20,
-          geoOptions
+          geoOptions,
+          (updatedState) => {
+            if (!isMounted) return;
+
+            // Batch state updates to reduce re-renders
+            const stateUpdates: any = {
+              allResults: updatedState.allResults,
+              // Keep main loading true until Firebase fetching is completely done
+              loading: updatedState.loadingFirebase !== false, // Stay true until explicitly false
+              loadingFirebase: updatedState.loadingFirebase || false,
+              firebaseProgress: updatedState.firebaseProgress,
+              error: updatedState.error,
+            };
+
+            updateStateIfMounted(stateUpdates);
+
+            // Update facets if available - use current masterFacets value
+            if (updatedState.facets) {
+              const currentMasterFacets = masterFacets;
+              if (
+                currentMasterFacets &&
+                Object.keys(currentMasterFacets).length > 0
+              ) {
+                const merged: Record<string, Record<string, number>> = {};
+                for (const [facetKey, valueSet] of Object.entries(
+                  currentMasterFacets
+                )) {
+                  merged[facetKey] = {};
+                  valueSet.forEach((val) => {
+                    merged[facetKey][val] =
+                      updatedState.facets?.[facetKey]?.[val] ?? 0;
+                  });
+                }
+                if (isMounted) setFacets(merged);
+              } else {
+                if (isMounted) setFacets(updatedState.facets || {});
+              }
+            }
+          }
         );
 
-        setSearchState((prev) => ({
-          ...prev,
-          ...newState,
-          loading: false,
-        }));
+        if (!isMounted) return;
 
-        // merge with master facet list
-        if (masterFacets && Object.keys(masterFacets).length > 0) {
+        // Store the real-time state for cleanup
+        currentRealtimeState.current = newState;
+
+        const finalStateUpdate = {
+          ...newState,
+          // Keep loading true until Firebase is explicitly complete (loadingFirebase === false)
+          loading: newState.loadingFirebase !== false,
+        };
+
+        updateStateIfMounted(finalStateUpdate);
+
+        // merge with master facet list - use current value
+        const currentMasterFacets = masterFacets;
+        if (
+          currentMasterFacets &&
+          Object.keys(currentMasterFacets).length > 0
+        ) {
           const merged: Record<string, Record<string, number>> = {};
 
-          for (const [facetKey, valueSet] of Object.entries(masterFacets)) {
+          for (const [facetKey, valueSet] of Object.entries(
+            currentMasterFacets
+          )) {
             merged[facetKey] = {};
             valueSet.forEach((val) => {
               merged[facetKey][val] = newState.facets?.[facetKey]?.[val] ?? 0;
@@ -106,6 +182,11 @@ export const useAlgoliaSearch = (basicFilter: SearchFilters) => {
           // fallback if master not ready yet
           setFacets(newState.facets || {});
         }
+
+        // Cleanup function to prevent state updates after unmount
+        return () => {
+          isMounted = false;
+        };
       } catch (error) {
         console.error("Search error:", error);
         setSearchState((prev) => ({
@@ -115,7 +196,7 @@ export const useAlgoliaSearch = (basicFilter: SearchFilters) => {
         }));
       }
     },
-    [masterFacets]
+    [] // Remove masterFacets from dependencies to prevent constant re-renders
   );
 
   useEffect(() => {
@@ -165,7 +246,21 @@ export const useAlgoliaSearch = (basicFilter: SearchFilters) => {
   // run an initial search when mounted
   useEffect(() => {
     performSearch(query, filters, selectedLandmark, sortBy);
-    return () => algoliaInfiniteSearch.cleanup();
+    return () => {
+      // Clean up real-time listeners
+      if (currentRealtimeState.current) {
+        algoliaInfiniteSearch.cleanupRealtime(currentRealtimeState.current);
+        currentRealtimeState.current = null;
+      }
+      // Clean up regular search
+      algoliaInfiniteSearch.cleanup();
+    };
+  }, []);
+
+  // Test function to validate real-time functionality
+  const testRealtime = useCallback(async () => {
+    const result = await testSnapshotConnection();
+    return result;
   }, []);
 
   return {
@@ -181,5 +276,13 @@ export const useAlgoliaSearch = (basicFilter: SearchFilters) => {
     updateSort,
     refresh,
     loadMore,
+    testRealtime, // Test function for debugging
+    realtimeInfo: currentRealtimeState.current
+      ? {
+          isRealtime: currentRealtimeState.current.isRealtime,
+          propertyCount: currentRealtimeState.current.propertyIds.length,
+          hasListeners: !!currentRealtimeState.current.unsubscribe,
+        }
+      : null,
   };
 };

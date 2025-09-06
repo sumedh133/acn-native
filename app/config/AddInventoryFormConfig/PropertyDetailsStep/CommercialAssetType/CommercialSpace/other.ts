@@ -88,7 +88,7 @@ export const OtherFields: FormField[] = [
     conditional: true,
   },
   {
-    id: "handoverDate",
+    id: "handOverDate",
     label: "Handover Date",
     type: "date",
     required: true,
@@ -120,7 +120,7 @@ export const OtherFields: FormField[] = [
     conditional: true,
   },
   {
-    id: "handoverDate",
+    id: "handOverDate",
     label: "Available From",
     type: "date",
     required: true,

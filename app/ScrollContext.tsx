@@ -1,4 +1,10 @@
-import React, { createContext, useCallback, useRef, useState } from "react";
+import React, {
+  createContext,
+  useCallback,
+  useRef,
+  useState,
+  useEffect,
+} from "react";
 import { Animated } from "react-native";
 
 interface ScrollContextType {
@@ -41,12 +47,23 @@ interface ScrollContextType {
   closeStatusPopup: () => void;
   setSelectedStatus: (value: string) => void;
 
+  // New Enquiry Popup
+  showNewEnquiryPopup: boolean;
+  openNewEnquiryPopup: () => void;
+  closeNewEnquiryPopup: () => void;
+
   // Category filter popup
   showCategoryPopup: boolean;
   selectedCategory: string | null;
   openCategoryPopup: () => void;
   closeCategoryPopup: () => void;
   setSelectedCategory: (value: string) => void;
+
+  // Status info bottom sheet
+  isStatusInfoOpen: boolean;
+  currentStatusInfo: string | null;
+  openStatusInfo: (status: string | null) => void;
+  closeStatusInfo: () => void;
 }
 
 export const ScrollContext = createContext<ScrollContextType>({
@@ -83,11 +100,21 @@ export const ScrollContext = createContext<ScrollContextType>({
   closeStatusPopup: () => {},
   setSelectedStatus: () => {},
 
+  showNewEnquiryPopup: false,
+  openNewEnquiryPopup: () => {},
+  closeNewEnquiryPopup: () => {},
+
   showCategoryPopup: false,
   selectedCategory: null,
   openCategoryPopup: () => {},
   closeCategoryPopup: () => {},
   setSelectedCategory: () => {},
+
+  // Status info bottom sheet
+  isStatusInfoOpen: false,
+  currentStatusInfo: null,
+  openStatusInfo: () => {},
+  closeStatusInfo: () => {},
 });
 
 export const ScrollProvider: React.FC<{ children: React.ReactNode }> = ({
@@ -135,15 +162,24 @@ export const ScrollProvider: React.FC<{ children: React.ReactNode }> = ({
   const [showCategoryPopup, setShowCategoryPopup] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
 
-  // Sort popup methods
+  // Status info bottom sheet state
+  const [isStatusInfoOpen, setIsStatusInfoOpen] = useState<boolean>(false);
+  const [currentStatusInfo, setCurrentStatusInfo] = useState<string | null>(
+    null
+  );
+
+  // New Enquiry info bottom sheet state
+  const [showNewEnquiryPopup, setShowNewEnquiryPopup] =
+    useState<boolean>(false);
+
+  // Popup methods
   const openSortPopup = () => setShowSortPopup(true);
   const closeSortPopup = () => setShowSortPopup(false);
-
-  // Status filter popup methods
   const openStatusPopup = () => setShowStatusPopup(true);
   const closeStatusPopup = () => setShowStatusPopup(false);
+ const openNewEnquiryPopup = () => setShowNewEnquiryPopup(true);
+const closeNewEnquiryPopup = () => setShowNewEnquiryPopup(false);
 
-  // Category filter popup methods
   const openCategoryPopup = () => setShowCategoryPopup(true);
   const closeCategoryPopup = () => setShowCategoryPopup(false);
 
@@ -288,7 +324,7 @@ export const ScrollProvider: React.FC<{ children: React.ReactNode }> = ({
       currentClampedFooter.current = targetValue;
       Animated.timing(clampedFooterY, {
         toValue: targetValue,
-        duration: 200,
+        duration: 120,
         useNativeDriver: false,
       }).start();
     };
@@ -315,7 +351,7 @@ export const ScrollProvider: React.FC<{ children: React.ReactNode }> = ({
       currentClampedHeader.current = targetValue;
       Animated.timing(clampedHeaderY, {
         toValue: targetValue,
-        duration: 200,
+        duration: 120,
         useNativeDriver: false,
       }).start();
     };
@@ -342,7 +378,7 @@ export const ScrollProvider: React.FC<{ children: React.ReactNode }> = ({
       currentClampedSecondaryHeader.current = targetValue;
       Animated.timing(clampedSecondaryHeaderY, {
         toValue: targetValue,
-        duration: 200,
+        duration: 120,
         useNativeDriver: false,
       }).start();
     };
@@ -369,7 +405,7 @@ export const ScrollProvider: React.FC<{ children: React.ReactNode }> = ({
       currentClampedNotification.current = targetValue;
       Animated.timing(clampedNotificationY, {
         toValue: targetValue,
-        duration: 200,
+        duration: 120,
         useNativeDriver: false,
       }).start();
     };
@@ -451,6 +487,23 @@ export const ScrollProvider: React.FC<{ children: React.ReactNode }> = ({
         openCategoryPopup,
         closeCategoryPopup,
         setSelectedCategory,
+
+        //New Enquiry popup
+        showNewEnquiryPopup,
+        openNewEnquiryPopup,
+        closeNewEnquiryPopup,
+
+        // Status info bottom sheet
+        isStatusInfoOpen,
+        currentStatusInfo,
+        openStatusInfo: (status: string | null) => {
+          setCurrentStatusInfo(status ?? null);
+          setIsStatusInfoOpen(true);
+        },
+        closeStatusInfo: () => {
+          setIsStatusInfoOpen(false);
+          setCurrentStatusInfo(null);
+        },
       }}
     >
       {children}

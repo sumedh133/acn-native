@@ -12,6 +12,8 @@ import {
   orderBy,
   addDoc,
   deleteDoc,
+  limit, QueryConstraint,
+   WhereFilterOp 
 } from "firebase/firestore";
 import { db } from "../../config/firebase"; // your firebase config
 import { Enquiry, EnquiryWithProperty, IReview } from "../../types";
@@ -182,3 +184,37 @@ export const getEnquiriesByPropertyID = async (
   const snap = await getDocs(q);
   return snap.docs.length;
 };
+
+/**
+ * Fetch enquiries based on dynamic conditions
+ * @param conditions - Array of { field, operator, value }
+ * @param options - Optional ordering and limit
+ */
+export const getEnquiriesWithConditions = async (
+  conditions: { field: string; operator: WhereFilterOp; value: any }[],
+  options?: { orderByField?: string; orderDirection?: "asc" | "desc"; limitCount?: number }
+): Promise<Enquiry[]> => {
+  let constraints: QueryConstraint[] = [];
+
+  // Add where conditions
+  conditions.forEach((cond) => {
+    constraints.push(where(cond.field, cond.operator, cond.value));
+  });
+
+  // Add optional orderBy
+  if (options?.orderByField) {
+    constraints.push(orderBy(options.orderByField, options.orderDirection || "asc"));
+  }
+
+  // Add optional limit
+  if (options?.limitCount) {
+    constraints.push(limit(options.limitCount));
+  }
+
+  const q = query(enquiriesCollection, ...constraints);
+  const snap = await getDocs(q);
+
+  return snap.docs.map((doc) => doc.data() as Enquiry);
+};
+
+

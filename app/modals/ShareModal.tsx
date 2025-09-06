@@ -7,7 +7,6 @@ import {
   TouchableWithoutFeedback,
   Image,
   Clipboard,
-  StyleSheet,
   Platform,
 } from "react-native";
 import { useDispatch, useSelector } from "react-redux";
@@ -109,46 +108,45 @@ const ShareModal: React.FC<ShareModalProps> = ({
   return (
     <Modal visible={visible} animationType="fade" transparent>
       <TouchableWithoutFeedback onPress={handleClose}>
-        <View style={styles.overlay}>
+        <View className="flex-1 bg-black/30 justify-center items-center px-4">
           <Toast config={toastConfig} />
           <TouchableWithoutFeedback>
-            <View style={styles.modalContainer}>
-              <View style={styles.header}>
-                <Text style={styles.title}>Share</Text>
-                <Text style={styles.description}>
-                  Copy or share details on WhatsApp with your contact
-                  information included.
+            <View className="w-full max-w-[380px] bg-[#FAFAFA] py-6 px-5 rounded-xl relative">
+              <View className="mb-6">
+                <Text className="text-base font-bold text-[#153E3B] mb-2">Share this Property</Text>
+                <Text className="text-sm text-[#313131]">
+                  Share these details, including your contact information, with your clients via WhatsApp.
                 </Text>
               </View>
-              <View style={styles.buttonGroup}>
+              <View className="flex-row justify-between gap-2.5">
                 <TouchableOpacity
-                  style={styles.actionButton}
+                  className="flex-1 flex-row items-center rounded-[4px] h-[37px] border-[1.5px] border-[#10302D] px-4 py-[6px] bg-white"
                   onPress={handleShare}
                 >
-                  <View style={styles.iconWrapper}>
+                  <View className="w-10 h-full items-center justify-center">
                     <MaterialCommunityIcons
                       name="whatsapp"
-                      size={28}
+                      size={18}
                       color="#25D366"
                     />
                   </View>
-                  <Text style={styles.buttonText}>WhatsApp</Text>
+                  <Text className="flex-1 text-sm font-bold text-black text-center -ml-2.5">WhatsApp</Text>
                 </TouchableOpacity>
 
                 <TouchableOpacity
-                  style={styles.actionButton}
+                  className="flex-1 flex-row items-center rounded-[4px] h-[37px] border-[1.5px] border-[#10302D] px-4 py-[6px] bg-white"
                   onPress={handleCopy}
                 >
-                  <View style={styles.iconWrapper}>
-                    <Ionicons name="copy-outline" size={24} color="#555" />
+                  <View className="w-10 h-full items-center justify-center">
+                    <Ionicons name="copy-outline" size={18} color="#555" />
                   </View>
-                  <Text style={styles.buttonText}>Copy Details</Text>
+                  <Text className="flex-1 text-sm font-bold text-black text-center -ml-2.5">Copy Details</Text>
                 </TouchableOpacity>
               </View>
 
               <TouchableOpacity
                 onPress={handleClose}
-                style={styles.closeButton}
+                className="absolute top-4 right-4 w-[30px] h-[30px] items-center justify-center"
               >
                 <CloseIcon />
               </TouchableOpacity>
@@ -161,76 +159,3 @@ const ShareModal: React.FC<ShareModalProps> = ({
 };
 
 export default ShareModal;
-
-const styles = StyleSheet.create({
-  overlay: {
-    flex: 1,
-    backgroundColor: "rgba(0,0,0,0.3)",
-    justifyContent: "center",
-    alignItems: "center",
-    paddingHorizontal: 16,
-  },
-  modalContainer: {
-    width: "100%",
-    maxWidth: 380,
-    backgroundColor: "#FAFAFA",
-    paddingVertical: 24,
-    paddingHorizontal: 20,
-    borderRadius: 12,
-    borderWidth: 2,
-    borderColor: "#E5E5E5",
-    position: "relative",
-  },
-  header: {
-    marginBottom: 24,
-  },
-  title: {
-    fontSize: 16,
-    fontWeight: "bold",
-    color: "#153E3B",
-    marginBottom: 8,
-  },
-  description: {
-    fontSize: 14,
-    color: "#313131",
-  },
-  buttonGroup: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    gap: 10,
-  },
-  actionButton: {
-    flex: 1,
-    flexDirection: "row",
-    alignItems: "center",
-    borderRadius: 28,
-    height: 58,
-    borderWidth: 1,
-    borderColor: "#E3E3E3",
-    paddingHorizontal: 12,
-    backgroundColor: "#FFFFFF",
-  },
-  iconWrapper: {
-    width: 40,
-    height: "100%",
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  buttonText: {
-    flex: 1,
-    fontSize: 14,
-    fontWeight: "bold",
-    color: "#000",
-    textAlign: "center",
-    marginLeft: -10,
-  },
-  closeButton: {
-    position: "absolute",
-    top: 16,
-    right: 16,
-    width: 30,
-    height: 30,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-});

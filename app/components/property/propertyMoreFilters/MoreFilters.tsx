@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useContext } from "react";
 import { usePathname } from "expo-router";
 import {
   View,
@@ -27,6 +27,7 @@ import {
   commercialSubTypes,
   facingOptions,
   floorOptions,
+  furnishingOptions,
   possessionOptions,
   preferredTenantsOptions,
   residentialPropertyTypes,
@@ -35,6 +36,8 @@ import {
 import DropdownTailwind from "../../DropdownTailwind";
 import NumberRangeFilter from "./NumberRangeFilter";
 import BudgetRangeFilter from "./BudgetFilter";
+import StatusInfoBottomSheet from "../StatusInfoBottomSheet";
+import { ScrollContext } from "@/app/ScrollContext";
 
 const defaultRanges: Record<string, [string, string]> = {
   rent: ["5000", "100000"],
@@ -88,7 +91,10 @@ const MoreFilters = ({
   const [localSelectedLandmark, setLocalSelectedLandmark] =
     useState<Landmark | null>(selectedLandmark);
 
-  const path = usePathname()
+  const { isStatusInfoOpen, currentStatusInfo, closeStatusInfo } =
+    useContext(ScrollContext);
+
+  const path = usePathname();
 
   // Update local state when props change
   useEffect(() => {
@@ -356,7 +362,6 @@ const MoreFilters = ({
             </>
           )}
 
-
           {/* Rest of the filters */}
           <View className="flex-col mt-1">
             <FilterChipList
@@ -462,7 +467,15 @@ const MoreFilters = ({
                 />
               )}
             {viewMode == "residential" &&
-              localFilters?.assetType?.includes("apartment") && (
+              localFilters?.assetType?.some((type) =>
+                [
+                  "apartment",
+                  "independent house",
+                  "row house",
+                  "villa",
+                  "villament",
+                ].includes(type)
+              ) && (
                 <FilterChipList
                   title={`Apartment Type`}
                   items={apartmentTypes}
@@ -478,7 +491,7 @@ const MoreFilters = ({
                 />
               )}
             {viewMode == "residential" &&
-              !localFilters?.assetType?.includes("plot") && (
+              localFilters?.assetType?.includes("apartment") && (
                 <FilterChipList
                   title={`Bedroom`}
                   items={bedroomOptions}
@@ -494,9 +507,7 @@ const MoreFilters = ({
                 />
               )}
 
-
-
-            {(path === "/properties") && (
+            {path === "/properties" && (
               <>
                 {/* Budget Filter */}
                 <BudgetRangeFilter
@@ -511,10 +522,11 @@ const MoreFilters = ({
                     toggleFilterValue(attr, range);
                   }}
                   type={
-                    filters.listingType?.includes("rental") ? "rental" : "resale"
+                    filters.listingType?.includes("rental")
+                      ? "rental"
+                      : "resale"
                   }
                 />
-
                 <NumberRangeFilter
                   attribute="sbua"
                   title="SBUA (sqft)"
@@ -523,6 +535,17 @@ const MoreFilters = ({
                     toggleFilterValue(attr, range);
                   }}
                 />
+
+                {localFilters.assetType?.includes("plot") && (
+                  <NumberRangeFilter
+                    attribute="plotArea"
+                    title="Plot Area (sqft)"
+                    localFilters={localFilters}
+                    onChangeRange={(attr, range) => {
+                      toggleFilterValue(attr, range);
+                    }}
+                  />
+                )}
 
                 <View className="flex-row mb-9">
                   <DropdownTailwind
@@ -550,7 +573,7 @@ const MoreFilters = ({
                     multiSelect={true}
                     value={localFilters.furnishing ?? null}
                     setValue={(val) => toggleFilterValue("furnishing", val)}
-                    options={floorOptions}
+                    options={furnishingOptions}
                     placeholder="Select"
                     title="Furnishing"
                     containerClassName="flex-1"
@@ -559,7 +582,9 @@ const MoreFilters = ({
                     <DropdownTailwind
                       multiSelect={true}
                       value={localFilters.preferredTenants ?? null}
-                      setValue={(val) => toggleFilterValue("preferredTenants", val)}
+                      setValue={(val) =>
+                        toggleFilterValue("preferredTenants", val)
+                      }
                       options={preferredTenantsOptions}
                       placeholder="Select"
                       title="Preferred Tenant"
@@ -577,10 +602,11 @@ const MoreFilters = ({
                       }
                     >
                       <View
-                        className={`w-4 h-4 rounded border mr-3 ${localFilters.nonVegAllowed?.includes("true")
-                          ? "bg-[#153E3B] border-[#153E3B]"
-                          : "bg-white border-gray-400"
-                          }`}
+                        className={`w-4 h-4 rounded border mr-3 ${
+                          localFilters.nonVegAllowed?.includes("true")
+                            ? "bg-[#153E3B] border-[#153E3B]"
+                            : "bg-white border-gray-400"
+                        }`}
                       >
                         {localFilters.nonVegAllowed?.includes("true") && (
                           <Text className="text-white text-xs text-center leading-4">
@@ -598,13 +624,16 @@ const MoreFilters = ({
 
                     <TouchableOpacity
                       className="flex-row items-center py-2"
-                      onPress={() => toggleFilterValue("petsAllowed", "true", true)}
+                      onPress={() =>
+                        toggleFilterValue("petsAllowed", "true", true)
+                      }
                     >
                       <View
-                        className={`w-4 h-4 rounded border mr-3 ${localFilters.petsAllowed?.includes("true")
-                          ? "bg-[#153E3B] border-[#153E3B]"
-                          : "bg-white border-gray-400"
-                          }`}
+                        className={`w-4 h-4 rounded border mr-3 ${
+                          localFilters.petsAllowed?.includes("true")
+                            ? "bg-[#153E3B] border-[#153E3B]"
+                            : "bg-white border-gray-400"
+                        }`}
                       >
                         {localFilters.petsAllowed?.includes("true") && (
                           <Text className="text-white text-xs text-center leading-4">
@@ -624,11 +653,13 @@ const MoreFilters = ({
 
                 {filters.listingType?.includes("resale") && (
                   <FilterChipList
-                    title="possession"
+                    title="Possession"
                     items={possessionOptions}
                     attribute="possession"
                     localFilters={localFilters}
-                    onToggleFilterValue={(attr, val) => toggleFilterValue(attr, val)}
+                    onToggleFilterValue={(attr, val) =>
+                      toggleFilterValue(attr, val)
+                    }
                     containerClassName="gap-2 flex-wrap"
                     chipClassName="px-3 py-1.5 rounded-lg"
                     titleClassName="text-sm"
@@ -641,7 +672,9 @@ const MoreFilters = ({
                     items={availabilityOptions}
                     attribute="availableFrom"
                     localFilters={localFilters}
-                    onToggleFilterValue={(attr, val) => toggleFilterValue(attr, val)}
+                    onToggleFilterValue={(attr, val) =>
+                      toggleFilterValue(attr, val)
+                    }
                     containerClassName="gap-2 flex-wrap"
                     chipClassName="px-3 py-1.5 rounded-lg"
                     titleClassName="text-sm"
@@ -653,26 +686,28 @@ const MoreFilters = ({
                   items={zoneOptions}
                   attribute="zone"
                   localFilters={localFilters}
-                  onToggleFilterValue={(attr, val) => toggleFilterValue(attr, val)}
+                  onToggleFilterValue={(attr, val) =>
+                    toggleFilterValue(attr, val)
+                  }
                   containerClassName="gap-2 flex-wrap"
                   chipClassName="px-3 py-1.5 rounded-lg"
                   titleClassName="text-sm"
                 />
               </>
             )}
-
           </View>
 
-          {localFilters.listingType?.includes("resale") && (path === "/properties") && (
-            <NumberRangeFilter
-              attribute="carpetArea"
-              title="Carpet Area (sqft)"
-              localFilters={localFilters}
-              onChangeRange={(attr, range) => {
-                toggleFilterValue(attr, range);
-              }}
-            />
-          )}
+          {localFilters.listingType?.includes("resale") &&
+            path === "/properties" && (
+              <NumberRangeFilter
+                attribute="carpetArea"
+                title="Carpet Area (sqft)"
+                localFilters={localFilters}
+                onChangeRange={(attr, range) => {
+                  toggleFilterValue(attr, range);
+                }}
+              />
+            )}
         </ScrollView>
 
         {/* Footer */}
@@ -689,6 +724,11 @@ const MoreFilters = ({
             </Text>
           </TouchableOpacity>
         </View>
+        <StatusInfoBottomSheet
+          visible={isStatusInfoOpen}
+          status={currentStatusInfo}
+          onClose={closeStatusInfo}
+        />
       </View>
     </Modal>
   );

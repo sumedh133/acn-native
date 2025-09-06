@@ -7,7 +7,7 @@ import {
   Keyboard,
   Animated,
 } from "react-native";
-import { Ionicons } from '@expo/vector-icons'; // or 'react-native-vector-icons/Ionicons'
+import { Ionicons } from "@expo/vector-icons"; // or 'react-native-vector-icons/Ionicons'
 import { analytics } from "@/app/config/firebase";
 import { logEvent } from "@react-native-firebase/analytics";
 import { useSelector } from "react-redux";
@@ -93,17 +93,17 @@ export default function PropertyFilters({
   // Create rotation interpolations
   const statusRotateInterpolate = statusRotateAnim.interpolate({
     inputRange: [0, 1],
-    outputRange: ['0deg', '180deg'],
+    outputRange: ["0deg", "180deg"],
   });
 
   const categoryRotateInterpolate = categoryRotateAnim.interpolate({
     inputRange: [0, 1],
-    outputRange: ['0deg', '180deg'],
+    outputRange: ["0deg", "180deg"],
   });
 
   const sortRotateInterpolate = sortRotateAnim.interpolate({
     inputRange: [0, 1],
-    outputRange: ['0deg', '180deg'],
+    outputRange: ["0deg", "180deg"],
   });
 
   // Track popup states (you'll need to get these from your context or manage them locally)
@@ -207,42 +207,42 @@ export default function PropertyFilters({
     if (
       selectedStatus &&
       selectedStatus !== "all" &&
-      selectedStatus !== filters.stage?.join(",")
+      selectedStatus !== filters.status?.join(",")
     ) {
-      const newFilters = { ...filters, stage: [selectedStatus] };
+      const newFilters = { ...filters, status: [selectedStatus] };
       onFiltersChange(newFilters);
     }
     // Remove filter if "all" is selected
     else if (
       selectedStatus === "all" &&
-      filters.stage &&
-      filters.stage.length > 0
+      filters.status &&
+      filters.status.length > 0
     ) {
-      const newFilters = { ...filters, stage: [] };
+      const newFilters = { ...filters, status: [] };
       onFiltersChange(newFilters);
     }
-  }, [selectedStatus, filters.stage, onFiltersChange]);
+  }, [selectedStatus, filters.status, onFiltersChange]);
 
   useEffect(() => {
     // Handle category changes from context
     if (
       selectedCategory &&
       selectedCategory !== "all" &&
-      selectedCategory !== filters.builderCategory?.join(",")
+      selectedCategory !== filters.listingType?.join(",")
     ) {
-      const newFilters = { ...filters, builderCategory: [selectedCategory] };
+      const newFilters = { ...filters, listingType: [selectedCategory] };
       onFiltersChange(newFilters);
     }
     // Remove filter if "all" is selected
     else if (
       selectedCategory === "all" &&
-      filters.builderCategory &&
-      filters.builderCategory.length > 0
+      filters.listingType &&
+      filters.listingType.length > 0
     ) {
-      const newFilters = { ...filters, builderCategory: [] };
+      const newFilters = { ...filters, listingType: [] };
       onFiltersChange(newFilters);
     }
-  }, [selectedCategory, filters.builderCategory, onFiltersChange]);
+  }, [selectedCategory]);
 
   useEffect(() => {
     // Sync selectedSort with sortBy prop (when sortBy changes from parent)
@@ -324,7 +324,12 @@ export default function PropertyFilters({
             onPress={handleOpenStatusPopup}
             className="flex-row items-center justify-center rounded-lg border border-[#B5B3B3] bg-white h-10 relative pr-8 pl-4 "
           >
-            <Text className="text-sm text-black" style={{fontFamily: "Lato_400Regular"}}>Status</Text>
+            <Text
+              className="text-sm text-black"
+              style={{ fontFamily: "Lato_400Regular" }}
+            >
+              Status
+            </Text>
             <Animated.View
               style={{
                 position: "absolute",
@@ -345,7 +350,12 @@ export default function PropertyFilters({
             onPress={handleOpenCategoryPopup}
             className="flex-1 flex-row items-center justify-center rounded-lg border border-[#B5B3B3] bg-white h-10 relative pr-8 pl-4"
           >
-            <Text className="text-sm text-black" style={{fontFamily: "Lato_400Regular"}}>Category</Text>
+            <Text
+              className="text-sm text-black"
+              style={{ fontFamily: "Lato_400Regular" }}
+            >
+              Category
+            </Text>
             <Animated.View
               style={{
                 position: "absolute",
@@ -366,7 +376,12 @@ export default function PropertyFilters({
             onPress={handleOpenSortPopup}
             className="flex-row items-center justify-center rounded-lg border border-[#B5B3B3] bg-white h-10 relative pr-8 pl-4"
           >
-            <Text className="text-sm text-black" style={{fontFamily: "Lato_400Regular"}}>Sort</Text>
+            <Text
+              className="text-sm text-black"
+              style={{ fontFamily: "Lato_400Regular" }}
+            >
+              Sort
+            </Text>
             <Animated.View
               style={{
                 position: "absolute",
@@ -378,7 +393,7 @@ export default function PropertyFilters({
                 ],
               }}
             >
-              <Ionicons name="chevron-down" size={20} color="#555" />
+              {/* <Ionicons name="chevron-down" size={20} color="#555" /> */}
             </Animated.View>
           </TouchableOpacity>
 
@@ -443,7 +458,12 @@ export default function PropertyFilters({
           onPress={handleOpenSortPopup}
           className="h-10 w-fit items-center justify-center rounded-lg border border-[#B5B3B3] bg-white relative pl-4 pr-8"
         >
-          <Text className="text-sm text-black" style={{fontFamily: "Lato_400Regular"}}>Sort</Text>
+          <Text
+            className="text-sm text-black"
+            style={{ fontFamily: "Lato_400Regular" }}
+          >
+            Sort
+          </Text>
           <Animated.View
             style={{
               position: "absolute",

@@ -8,19 +8,18 @@ import {
   TouchableOpacity,
   Alert,
   ActivityIndicator,
-} from "react-native";  
+} from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import * as DocumentPicker from 'expo-document-picker';
-import { Ionicons } from "@expo/vector-icons";
 import { UploadFileIcon } from "../../../../assets/icons/svg/PropertyListing/UploadFileIcon";
 import ImageCarousel from "../../../components/property/ImageCarousel";
-import { 
+import {
   MultipleFilesUploadService,
-  SelectedFile, 
-  UploadResult, 
+  SelectedFile,
+  UploadResult,
   MediaUploadData,
   FilePickerResult,
-  MultipleUploadConfig 
+  MultipleUploadConfig
 } from "../../../services/media_services/mediaService";
 
 // Add MediaItem interface
@@ -30,7 +29,7 @@ interface MediaItem {
 }
 
 const { width } = Dimensions.get("window");
-const TUS_ENDPOINT  = "https://tus-protocol-dot-iqol-crm.uc.r.appspot.com/files/"
+const TUS_ENDPOINT = "https://tus-protocol-dot-iqol-crm.uc.r.appspot.com/files/"
 
 interface PropertyImagesProps {
   images?: string[];
@@ -59,7 +58,7 @@ export const PropertyImages: React.FC<PropertyImagesProps> = ({
     images.forEach((url) => {
       mediaItems.push({ url, type: "image" });
     });
-    
+
     // Add current media with proper types (only photos and videos)
     currentMedia.photos.forEach(url => {
       mediaItems.push({ url, type: 'image' });
@@ -68,7 +67,7 @@ export const PropertyImages: React.FC<PropertyImagesProps> = ({
     currentMedia.videos.forEach(url => {
       mediaItems.push({ url, type: 'video' });
     });
-    
+
     return mediaItems;
   };
 
@@ -90,7 +89,7 @@ export const PropertyImages: React.FC<PropertyImagesProps> = ({
           type: asset.mimeType || 'application/octet-stream',
           size: asset.size || 0,
         }));
-        
+
         uploadFiles(files);
       }
     } catch (error) {
@@ -199,9 +198,9 @@ export const PropertyImages: React.FC<PropertyImagesProps> = ({
       // Show success message
       const totalSuccess = Object.values(successfulUploads).reduce((sum, arr) => sum + arr.length, 0);
       const totalFailed = validFiles.length - totalSuccess;
-      
+
       if (totalSuccess > 0) {
-        const message = totalSuccess === validFiles.length 
+        const message = totalSuccess === validFiles.length
           ? `All ${totalSuccess} files uploaded successfully!`
           : `${totalSuccess} files uploaded successfully`;
         Alert.alert('Upload Successful', message);
@@ -231,7 +230,7 @@ export const PropertyImages: React.FC<PropertyImagesProps> = ({
   const getFileInfo = (mediaItem: MediaItem, index: number) => {
     let fileType: keyof MediaUploadData;
     let canDelete = true;
-    
+
     const legacyImagesCount = images.length;
 
     if (index < legacyImagesCount) {
@@ -263,7 +262,7 @@ export const PropertyImages: React.FC<PropertyImagesProps> = ({
   };
 
   return (
-    <View className="rounded-[16px] bg-white overflow-hidden">
+    <View className="rounded-b-[16px] bg-white overflow-hidden">
       {hasAnyFiles ? (
         <View>
           {/* Enhanced Media Carousel for Images and Videos only */}
@@ -279,7 +278,7 @@ export const PropertyImages: React.FC<PropertyImagesProps> = ({
               />
             </View>
           )}
-          
+
         </View>
       ) : (
         <LinearGradient
@@ -297,9 +296,9 @@ export const PropertyImages: React.FC<PropertyImagesProps> = ({
                 No Images Found
               </Text>
               <Text className="text-sm font-medium text-[#757575] pb-3">
-                The listing doesn't have any images or videos yet.
+                Generally properties with images gets 5x enquires.
               </Text>
-              {(previewType == 'add' || previewType == 'edit' || previewType === 'my-business' || true) && (
+              {(previewType == 'add' || previewType == 'edit' || previewType === 'myBusiness') && (
                 <TouchableOpacity
                   onPress={openFilePicker}
                   className="bg-[#2D5A52] px-6 py-[9px] rounded-lg flex-row items-center space-x-2"

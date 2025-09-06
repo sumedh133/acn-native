@@ -1,6 +1,7 @@
 import React, { ReactNode, useRef } from "react";
 import {
   Animated,
+  Easing,
   PanResponder,
   Text,
   TouchableOpacity,
@@ -26,7 +27,8 @@ interface ModularPopupProps {
   slideAnimation: Animated.Value;
   onDragDown: () => void;
   onItemPress?: (item: PopupItem) => void; // Optional global handler
-  dragThreshold?: number; // Optional, defaults to 10
+  dragThreshold?: number; // Optional, defaults to 100 (pixels)
+  velocityThreshold?: number; // Optional, defaults to 0.5 (velocity)
 }
 
 const ModularPopup = ({
@@ -34,14 +36,28 @@ const ModularPopup = ({
   slideAnimation,
   onDragDown,
   onItemPress,
-  dragThreshold = 10,
+  dragThreshold = 100,
+  velocityThreshold = 0.5,
 }: ModularPopupProps) => {
   const dragY = useRef(new Animated.Value(0)).current;
+  const fadeOpacity = useRef(new Animated.Value(1)).current;
+  const scaleValue = useRef(new Animated.Value(1)).current;
 
   const panResponder = useRef(
     PanResponder.create({
-      onStartShouldSetPanResponder: () => true,
-      onMoveShouldSetPanResponder: () => true,
+      onStartShouldSetPanResponder: (evt, gestureState) => {
+        // Only start pan responder for vertical movements
+        return Math.abs(gestureState.dy) > Math.abs(gestureState.dx);
+      },
+      onMoveShouldSetPanResponder: (evt, gestureState) => {
+        // Require minimum movement to start gesture (prevents accidental triggers)
+        return Math.abs(gestureState.dy) > 5;
+      },
+
+      onPanResponderGrant: () => {
+        // Set offset when starting drag
+        dragY.setOffset((dragY as any)._value);
+      },
 
       onPanResponderMove: (evt, gestureState) => {
         // Only allow downward dragging
@@ -51,23 +67,74 @@ const ModularPopup = ({
       },
 
       onPanResponderRelease: (evt, gestureState) => {
-        if (gestureState.dy > dragThreshold) {
-          onDragDown && onDragDown();
+        dragY.flattenOffset();
+
+        // Enhanced threshold check: distance OR velocity
+        if (
+          gestureState.dy > dragThreshold ||
+          gestureState.vy > velocityThreshold
+        ) {
+          // Calculate dynamic duration based on velocity and remaining distance
+          const remainingDistance = 300 - gestureState.dy; // Assume 300px total dismiss distance
+          const baseVelocity = Math.max(Math.abs(gestureState.vy), 0.5); // Minimum velocity
+          const dynamicDuration = Math.max(
+            150,
+            Math.min(400, remainingDistance / baseVelocity)
+          );
+
+          // Animate close with improved easing, dynamic duration, fade and scale effects
+          Animated.parallel([
+            Animated.timing(dragY, {
+              toValue: 300, // Animate further down for smoother exit
+              duration: dynamicDuration,
+              easing: Easing.out(Easing.cubic),
+              useNativeDriver: true,
+            }),
+            Animated.timing(fadeOpacity, {
+              toValue: 0, // Fade out during dismiss
+              duration: dynamicDuration * 0.8, // Fade slightly faster than slide
+              easing: Easing.out(Easing.quad),
+              useNativeDriver: true,
+            }),
+            Animated.timing(scaleValue, {
+              toValue: 0.95, // Subtle scale down for natural feel
+              duration: dynamicDuration,
+              easing: Easing.out(Easing.cubic),
+              useNativeDriver: true,
+            }),
+          ]).start(() => {
+            // Reset values for next use
+            dragY.setValue(0);
+            fadeOpacity.setValue(1);
+            scaleValue.setValue(1);
+            onDragDown && onDragDown();
+          });
         } else {
-          // Snap back to original position if drag wasn't enough
+          // Snap back to original position with improved spring animation
           Animated.spring(dragY, {
             toValue: 0,
             useNativeDriver: true,
-            tension: 100,
-            friction: 8,
+            tension: 120,
+            friction: 7,
+            velocity: -gestureState.vy, // Use release velocity for more natural feel
           }).start();
         }
+      },
+
+      onPanResponderTerminate: () => {
+        // Handle gesture termination (e.g., when another gesture takes over)
+        dragY.flattenOffset();
+        Animated.spring(dragY, {
+          toValue: 0,
+          useNativeDriver: true,
+          tension: 120,
+          friction: 7,
+        }).start();
       },
     })
   ).current;
 
   const handleItemPress = (item: PopupItem) => {
-    console.log('hullalalalallallalalalalala')
     // Call global handler if provided
     onItemPress && onItemPress(item);
     // Call item's specific handler
@@ -85,12 +152,17 @@ const ModularPopup = ({
       <Animated.View
         className="w-full bg-[#FBFCFB] rounded-t-3xl pb-9"
         style={{
-          transform: [{ translateY: slideAnimation }, { translateY: dragY }],
+          transform: [
+            { translateY: slideAnimation },
+            { translateY: dragY },
+            { scale: scaleValue },
+          ],
+          opacity: fadeOpacity,
         }}
-         // 👈 attach here
+        {...panResponder.panHandlers}
       >
         {/* Drag Handle */}
-        <View className="pt-3 w-full mb-4 flex items-center justify-center" {...panResponder.panHandlers}>
+        <View className="pt-3 w-full mb-4 flex items-center justify-center">
           <View className="w-32 h-1 rounded bg-black/60" />
         </View>
 
@@ -105,7 +177,7 @@ const ModularPopup = ({
               <LinearGradient
                 colors={
                   item.selected
-                    ? ["#C8E6C9","#E6F4EA" ] // light green gradient for selected
+                    ? ["#C8E6C9", "#E6F4EA"] // light green gradient for selected
                     : item.colors || ["#FFFFFF", "#FFFFFF"] // default
                 } // Default to white
                 start={{ x: 0, y: 0 }}

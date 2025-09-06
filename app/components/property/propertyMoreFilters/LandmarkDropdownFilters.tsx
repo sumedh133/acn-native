@@ -8,6 +8,7 @@ import {
   ActivityIndicator,
   Keyboard,
   Image,
+  Pressable,
 } from "react-native";
 import Slider from "@react-native-community/slider";
 import { Ionicons } from "@expo/vector-icons";
@@ -19,6 +20,7 @@ import { useSelector } from "react-redux";
 import { RootState } from "@/store/store";
 import LocationSearchBarIcon from "@/assets/icons/svg/PropertiesPage/locationSearchBarIcon";
 import InfoIcon from "@/assets/icons/propertiesMoreFilters/info-icon.svg";
+import { ScrollContext } from "@/app/ScrollContext";
 
 // import { PLACES_API_KEY } from '@env';
 
@@ -64,6 +66,8 @@ const LandmarkDropdownFilters = ({
   const [userInitiatedSearch, setUserInitiatedSearch] = useState(false);
   const userType =
     useSelector((state: RootState) => state.agent?.docData?.userType) || "free";
+
+  const { openStatusInfo } = React.useContext(ScrollContext);
 
   const searchTimeout = useRef<NodeJS.Timeout | null>(null);
   // Track if component has mounted
@@ -380,7 +384,11 @@ const LandmarkDropdownFilters = ({
       {selectedLandmark && (
         <View className="my-4">
           {/* Title with info icon */}
-          <View className="flex-row space-x-2 items-center mb-2">
+          <Pressable
+            hitSlop={10}
+            onPress={() => openStatusInfo("search-radius")}
+            className="flex-row space-x-2 items-center mb-2"
+          >
             <Text
               className="font-semibold text-sm text-gray-700"
               style={{ fontFamily: "Montserrat_600SemiBold" }}
@@ -388,7 +396,7 @@ const LandmarkDropdownFilters = ({
               Search Radius
             </Text>
             <InfoIcon width={18} height={18} />
-          </View>
+          </Pressable>
 
           {/* Labels above slider */}
           <View className="flex-row justify-between px-1 mb-1">
@@ -408,7 +416,7 @@ const LandmarkDropdownFilters = ({
             onSlidingComplete={handleSlidingComplete}
             minimumTrackTintColor="#184C43" // dark green like screenshot
             maximumTrackTintColor="#E5E5E5" // light gray
-            thumbTintColor="#FFFFFF" // white thumb
+            thumbTintColor="#000000" // black thumb
           />
         </View>
       )}
