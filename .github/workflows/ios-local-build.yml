@@ -1,8 +1,10 @@
 name: iOS Local Build (Unsigned)
 
-on:
-  workflow_dispatch: # Trigger manually
 
+on:
+  push:
+    branches:
+      - ios-develop-testing
 jobs:
   build-ios:
     runs-on: macos-latest
