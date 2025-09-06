@@ -59,6 +59,7 @@ const EnquiryCPModal: React.FC<EnquiryCPModalProps> = ({
 
   useEffect(() => {
     if (visible) {
+      setShowConfetti(true);
       try {
         logEvent(analytics, "enquiry_cp_modal_show", {
           event_category: "modal",
@@ -189,6 +190,7 @@ ${user?.phoneNumber}`;
   };
 
   const [forceRender, setForceRender] = useState(false);
+  const [showConfetti, setShowConfetti] = useState(false);
 
   return (
     <Modal
@@ -206,6 +208,7 @@ ${user?.phoneNumber}`;
             onPress={(e: any) => {
               e.stopPropagation();
               setIsEnquiryCPModelOpen(false);
+              onClose();
             }}
           >
             <CloseIcon />
@@ -249,13 +252,15 @@ ${user?.phoneNumber}`;
                 </View>
               )}
 
-             <View className="flex flex-row items-center space-x-[10px] justify-between">
+              <View className="flex flex-row items-center space-x-[10px] justify-between">
                 <TouchableOpacity
                   onPress={handleWhatsAppEnquiry}
                   className="flex-1 flex-row items-center justify-center space-x-2 border-[1.5px] border-[#153E3B] rounded-[4px] bg-white h-[37px]"
                 >
                   <Ionicons name="logo-whatsapp" size={18} color="#25D366" />
-                  <Text className="text-sm font-bold text-[#313131]">WhatsApp</Text>
+                  <Text className="text-sm font-bold text-[#313131]">
+                    WhatsApp
+                  </Text>
                 </TouchableOpacity>
 
                 <TouchableOpacity
@@ -263,26 +268,29 @@ ${user?.phoneNumber}`;
                   className="flex-1 flex-row items-center justify-center space-x-2 border-[1.5px] border-[#153E3B] rounded-[4px] bg-white h-[37px]"
                 >
                   <Ionicons name="call-outline" size={18} color="#313131" />
-                  <Text className="text-sm font-bold text-[#313131]">Call Agent</Text>
+                  <Text className="text-sm font-bold text-[#313131]">
+                    Call Agent
+                  </Text>
                 </TouchableOpacity>
               </View>
-
-
-
             </View>
           </View>
         </View>
       </View>
-      {/* {visible && (
-        <View className="z-50">
+      {showConfetti && (
+        <View className="absolute z-50">
           <LottieView
             source={require("@/assets/LottieAnimation/confetti.json")}
             autoPlay
             loop={false}
-            style={{ width: Dimensions.get("window").width, height: Dimensions.get("window").height }}
+            onAnimationFinish={() => setShowConfetti(false)}
+            style={{
+              width: Dimensions.get("window").width,
+              height: Dimensions.get("window").height,
+            }}
           />
         </View>
-      )} */}
+      )}
     </Modal>
   );
 };

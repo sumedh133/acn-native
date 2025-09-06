@@ -10,7 +10,6 @@ import {
 import { LinearGradient } from 'expo-linear-gradient';
 import { styled } from "nativewind";
 import ListingsIcon from "@/assets/icons/listingWithGradient.svg";
-import ConfettiCannon from "react-native-confetti-cannon";
 
 type NewEnquiriesModalProps = {
   visible: boolean;
@@ -130,15 +129,6 @@ const NewEnquiriesModal = ({
           </TouchableOpacity>
         </View>
       </AView>
-
-      <ConfettiCannon
-        count={150}
-        origin={{ x: 0, y: 0 }}
-        autoStart={true}
-        fadeOut={true}
-        explosionSpeed={500}
-        fallSpeed={3000}
-      />
     </View>
   );
 };

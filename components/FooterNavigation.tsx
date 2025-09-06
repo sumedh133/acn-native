@@ -104,7 +104,7 @@ const FooterNavigation = () => {
         setSelectedStatus(value);
         closeStatusPopup();
         break;
-      case "category":
+      case "listingType":
         setSelectedCategory(value);
         closeCategoryPopup();
         break;
@@ -122,7 +122,7 @@ const FooterNavigation = () => {
       case "status":
         closeStatusPopup();
         break;
-      case "category":
+      case "listingType":
         closeCategoryPopup();
         break;
     }
@@ -310,7 +310,7 @@ const FooterNavigation = () => {
       // Set active modal type
       if (showSortPopup) setActiveModal("sort");
       else if (showStatusPopup) setActiveModal("status");
-      else if (showCategoryPopup) setActiveModal("category");
+      else if (showCategoryPopup) setActiveModal("listingType");
     } else {
       setActiveModal(null);
     }

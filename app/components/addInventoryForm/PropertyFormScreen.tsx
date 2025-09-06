@@ -16,7 +16,7 @@ import { router } from "expo-router";
 import {
   createProperty,
   updateProperty,
-  updateWholeProperty
+  updateWholeProperty,
 } from "@/app/services/property_services/propertyService";
 import { useBackToSaveDraft } from "@/hooks/useBackToSaveDraft";
 import { convertMonthYearToUnix } from "@/app/helpers/format/format";
@@ -38,7 +38,7 @@ interface FormFieldWithMeta extends FormField {
 }
 
 type UIProperty = Omit<Property, "handOverDate"> & {
-  address?: string | null
+  address?: string | null;
   handOverDate?: string;
   media?: {
     photos: string[];
@@ -58,7 +58,7 @@ export const PropertyFormScreen: React.FC<PropertyFormScreenProps> = ({
   initialData,
   onComplete,
   isEdit = false,
-  isSubmitting = false
+  isSubmitting = false,
 }) => {
   // --------------------  Redux State --------------------
 
@@ -73,6 +73,8 @@ export const PropertyFormScreen: React.FC<PropertyFormScreenProps> = ({
       documents: [],
     };
 
+    console.log(formData, "formData");
+
     return {
       listingType: "resale",
       propertyType: "residential",
@@ -86,7 +88,6 @@ export const PropertyFormScreen: React.FC<PropertyFormScreenProps> = ({
       stage: "kam",
       media: initialData?.media || defaultMedia,
       ...initialData,
-
     };
   });
 
@@ -107,7 +108,6 @@ export const PropertyFormScreen: React.FC<PropertyFormScreenProps> = ({
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [showPreview, setShowPreview] = useState<boolean>(false);
   const [showDraftModal, setShowDraftModal] = useState<boolean>(false);
-
 
   // -------------------- Media Upload Handler --------------------
   const handleMediaUpdate = (media: {
@@ -288,11 +288,7 @@ export const PropertyFormScreen: React.FC<PropertyFormScreenProps> = ({
     const backHandler = BackHandler.addEventListener(
       "hardwareBackPress",
       () => {
-        if (
-          !showDraftModal &&
-          formData.assetType &&
-          formData.propertyName
-        ) {
+        if (!showDraftModal && formData.assetType && formData.propertyName) {
           setShowDraftModal(true);
           return true;
         }
@@ -408,7 +404,11 @@ export const PropertyFormScreen: React.FC<PropertyFormScreenProps> = ({
   const propId = formData.propertyId || `temp-${Date.now()}`;
 
   const handleFormCancel = () => {
-    if (((formData.propertyType || formData.assetType && formData.propertyName) && !isEdit))
+    if (
+      (formData.propertyType ||
+        (formData.assetType && formData.propertyName)) &&
+      !isEdit
+    )
       setShowDraftModal(true);
     else router.back();
   };
@@ -427,17 +427,23 @@ export const PropertyFormScreen: React.FC<PropertyFormScreenProps> = ({
       );
 
       if (cleanData.propertyId) {
-        await updateWholeProperty(cleanData.propertyId, {
-          ...cleanData,
-          status: "draft",
-
-        }, "qc");
+        await updateWholeProperty(
+          cleanData.propertyId,
+          {
+            ...cleanData,
+            status: "draft",
+          },
+          "qc"
+        );
         showSuccessToast(`Draft updated successfully!`);
       } else {
-        const newProperty = await createProperty({
-          ...(cleanData as Omit<Property, "propertyId">),
-          status: "draft",
-        }, "qc");
+        const newProperty = await createProperty(
+          {
+            ...(cleanData as Omit<Property, "propertyId">),
+            status: "draft",
+          },
+          "qc"
+        );
         showSuccessToast(
           `Draft saved successfully!\nID: ${newProperty.propertyId}`
         );
@@ -506,7 +512,6 @@ export const PropertyFormScreen: React.FC<PropertyFormScreenProps> = ({
               </Text>
             )}
           </TouchableOpacity>
-
         </View>
       </SafeAreaView>
     );
@@ -536,8 +541,9 @@ export const PropertyFormScreen: React.FC<PropertyFormScreenProps> = ({
             onPress={handleClear}
           >
             <Text
-              className={`font-montserrat text-base font-bold underline ${isFormEmpty ? "text-[#9E9E9E]" : "text-[#D92D20]"
-                }`}
+              className={`font-montserrat text-base font-bold underline ${
+                isFormEmpty ? "text-[#9E9E9E]" : "text-[#D92D20]"
+              }`}
             >
               Clear
             </Text>
@@ -681,8 +687,9 @@ export const PropertyFormScreen: React.FC<PropertyFormScreenProps> = ({
           ) : null}
 
           <TouchableOpacity
-            className={`py-2 px-5 rounded-[4px] bg-[#153E3B] border border-[#153E3B] ${currentStepIndex ? "w-[50%]" : "w-full"
-              }`}
+            className={`py-2 px-5 rounded-[4px] bg-[#153E3B] border border-[#153E3B] ${
+              currentStepIndex ? "w-[50%]" : "w-full"
+            }`}
             onPress={handleNext}
           >
             <Text className="text-center text-base font-semibold text-white leading-normal">
@@ -694,7 +701,6 @@ export const PropertyFormScreen: React.FC<PropertyFormScreenProps> = ({
             </Text>
           </TouchableOpacity>
         </View>
-
       </View>
       <SaveAsDraft
         visible={showDraftModal}

@@ -288,6 +288,8 @@ export const updateProperty = async (
   };
 
   await updateDoc(ref, updateData);
+
+  // Log changes in edit history
   if (currentData && isEdit) {
     const changes = getChangedFields(currentData, updates);
 

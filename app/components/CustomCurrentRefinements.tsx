@@ -77,6 +77,15 @@ export default function CustomCurrentRefinements({
       className="flex-row"
     >
       <View className="flex-row items-center px-4 space-x-2">
+        {(items.length > 0 || selectedLandmark) && (
+          <TouchableOpacity onPress={handleClearAll} className="ml-1">
+            <View className="flex-row items-center border border-red-600 bg-red-600/10 px-2 py-1.5 rounded-full">
+              <Text className="font-montserrat-semibold text-xs text-red-600">
+                Clear All
+              </Text>
+            </View>
+          </TouchableOpacity>
+        )}
         {selectedLandmark && (
           <TouchableOpacity
             onPress={() => {
@@ -118,16 +127,6 @@ export default function CustomCurrentRefinements({
             <Text className="text-base text-gray-500">×</Text>
           </TouchableOpacity>
         ))}
-
-        {(items.length > 0 || selectedLandmark) && (
-          <TouchableOpacity onPress={handleClearAll} className="ml-1">
-            <View className="flex-row items-center border border-red-600 bg-red-600/10 px-2 py-1.5 rounded-full">
-              <Text className="font-montserrat-semibold text-xs text-red-600">
-                Clear All
-              </Text>
-            </View>
-          </TouchableOpacity>
-        )}
       </View>
     </ScrollView>
   );

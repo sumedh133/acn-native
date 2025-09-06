@@ -22,8 +22,15 @@ import PropertyFilters from "../components/property/PropertyFilters";
 import { logEvent } from "@react-native-firebase/analytics";
 import MoreFilters from "../components/property/propertyMoreFilters/MoreFilters";
 import { Property } from "../types";
-import { searchProperties } from "../services/property_services/propertyService";
+import {
+  searchProperties,
+  updateProperty,
+} from "../services/property_services/propertyService";
 import { ScrollContext } from "../ScrollContext";
+import MultiStatusUpdateModal, {
+  SelectedStatuses,
+} from "../components/MyBusinessPage/MultiStatusUpdateModal";
+import { getUnixDateTime } from "../helpers/getUnixDateTime";
 
 // Icons Import
 
@@ -37,6 +44,30 @@ const MyBusinessPage = () => {
     "property"
   );
   const [isMoreFiltersModalOpen, setIsMoreFiltersModalOpen] = useState(false);
+  const [showStatusModal, setShowStatusModal] = useState(false);
+  const [isUpdatingStatus, setIsUpdatingStatus] = useState(false);
+  const [statusMap, setStatusMap] = useState<SelectedStatuses>({
+    available: {
+      selected: false,
+      propertyIds: [],
+    },
+    hold: {
+      selected: false,
+      propertyIds: [],
+    },
+    sold: {
+      selected: false,
+      propertyIds: [],
+    },
+    tenanted: {
+      selected: false,
+      propertyIds: [],
+    },
+    "de-listed": {
+      selected: false,
+      propertyIds: [],
+    },
+  });
   const [selectedProperties, setSelectedProperties] = useState<Set<string>>(
     new Set()
   );
@@ -85,7 +116,10 @@ const MyBusinessPage = () => {
   };
 
   // Multiselect handlers
-  const handleToggleSelection = (propertyId: string) => {
+  const handleToggleSelection = (
+    propertyId: string,
+    propertyStatus: string
+  ) => {
     setSelectedProperties((prev) => {
       const newSet = new Set(prev);
       if (newSet.has(propertyId)) {
@@ -101,9 +135,27 @@ const MyBusinessPage = () => {
 
       return newSet;
     });
+
+    switch (propertyStatus) {
+      case "available":
+        statusMap.available.propertyIds.push(propertyId);
+        break;
+      case "hold":
+        statusMap.hold.propertyIds.push(propertyId);
+        break;
+      case "sold":
+        statusMap.sold.propertyIds.push(propertyId);
+        break;
+      case "tenanted":
+        statusMap.tenanted.propertyIds.push(propertyId);
+        break;
+      case "de-listed":
+        statusMap["de-listed"].propertyIds.push(propertyId);
+        break;
+    }
   };
 
-  const handleLongPress = (propertyId: string) => {
+  const handleLongPress = (propertyId: string, propertyStatus: string) => {
     // Enter selection mode and select the item
     setIsSelectionMode(true);
     setSelectedProperties((prev) => {
@@ -111,6 +163,46 @@ const MyBusinessPage = () => {
       newSet.add(propertyId);
       return newSet;
     });
+
+    switch (propertyStatus) {
+      case "available":
+        statusMap.available.propertyIds.push(propertyId);
+        break;
+      case "hold":
+        statusMap.hold.propertyIds.push(propertyId);
+        break;
+      case "sold":
+        statusMap.sold.propertyIds.push(propertyId);
+        break;
+      case "tenanted":
+        statusMap.tenanted.propertyIds.push(propertyId);
+        break;
+      case "de-listed":
+        statusMap["de-listed"].propertyIds.push(propertyId);
+        break;
+    }
+  };
+
+  const handleStatusUpdate = () => {
+    const finalPropertyIdsToUpdate = [];
+    if (statusMap.available.selected)
+      finalPropertyIdsToUpdate.push(statusMap.available.propertyIds);
+
+    if (statusMap.sold.selected)
+      finalPropertyIdsToUpdate.push(statusMap.sold.propertyIds);
+
+    if (statusMap.hold.selected)
+      finalPropertyIdsToUpdate.push(statusMap.hold.propertyIds);
+    if (statusMap.tenanted.selected)
+      finalPropertyIdsToUpdate.push(statusMap.tenanted.propertyIds);
+    if (statusMap["de-listed"].selected)
+      finalPropertyIdsToUpdate.push(statusMap["de-listed"].propertyIds);
+    for (const i in finalPropertyIdsToUpdate) {
+      updateProperty(i, {
+        status: "available",
+        dateOfLastChecked: getUnixDateTime(),
+      });
+    }
   };
 
   const handleSelectAll = () => {
@@ -146,6 +238,8 @@ const MyBusinessPage = () => {
     setIsSelectionMode(false);
   };
 
+  // update function for multi selected properties
+
   // Hide footer when selection bar (multi-select) is visible
   useLayoutEffect(() => {
     try {
@@ -165,7 +259,7 @@ const MyBusinessPage = () => {
     }
 
     // TODO: Implement mark as available functionality
-    console.log("Mark as available:", Array.from(selectedProperties));
+    setShowStatusModal(true);
     // For now, just clear selection
     handleExitSelectionMode();
   };
@@ -177,7 +271,6 @@ const MyBusinessPage = () => {
     try {
       setLoading(true);
       const propertyResults: Property[] = await searchProperties("cpId", cpId);
-      console.log(propertyResults, "fetched properties");
       setProperties(propertyResults || []);
     } catch (error) {
       console.error("Error fetching properties:", error);
@@ -280,6 +373,39 @@ const MyBusinessPage = () => {
             </TouchableOpacity>
           </View>
         </View>
+      )}
+      {showStatusModal && (
+        <MultiStatusUpdateModal
+          visible={showStatusModal}
+          statusMap={statusMap}
+          onClose={() => {
+            setStatusMap({
+              available: {
+                selected: false,
+                propertyIds: [],
+              },
+              hold: {
+                selected: false,
+                propertyIds: [],
+              },
+              sold: {
+                selected: false,
+                propertyIds: [],
+              },
+              tenanted: {
+                selected: false,
+                propertyIds: [],
+              },
+              "de-listed": {
+                selected: false,
+                propertyIds: [],
+              },
+            });
+            setShowStatusModal(false);
+          }}
+          onConfirm={handleStatusUpdate}
+          isUpdating={isUpdatingStatus}
+        />
       )}
     </View>
   );

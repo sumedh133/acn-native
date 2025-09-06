@@ -556,7 +556,8 @@ class AlgoliaInfiniteSearchService {
 
             onUpdate?.(updatedState);
           },
-          (error) => {
+          undefined,
+          (error: Error) => {
             console.error("Real-time property update error:", error);
             const errorState: RealtimeSearchState = {
               ...initialState,
@@ -567,7 +568,7 @@ class AlgoliaInfiniteSearchService {
             };
             onUpdate?.(errorState);
           },
-          (loaded, total) => {
+          (loaded: number, total: number) => {
             // Progress updates during initial Firebase loading
             const progressState: RealtimeSearchState = {
               ...initialState,
