@@ -15,8 +15,8 @@
       "autoIncrement": true,
       "prebuildCommand": "npm i --force",
       "ios": {
-        "credentialsSource": "local",
-        "buildConfiguration": "Release",
+        "credentialsSource": "remote",
+        "buildConfiguration": "Release"
       }
     }
   },
