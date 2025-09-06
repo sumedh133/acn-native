@@ -16,7 +16,7 @@
       "prebuildCommand": "npm i --force",
       "ios": {
         "credentialsSource": "local",
-        "buildConfiguration": "Release"
+        "buildConfiguration": "Release",
       }
     }
   },

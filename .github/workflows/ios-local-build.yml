@@ -50,6 +50,7 @@ jobs:
           --output build.ipa
         env:
           EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
+          credentials.json: ${{secrets.GCP_SA_KEY}}
       
       # 8. Upload the IPA as GitHub Artifact
       - name: Upload Production IPA Artifact
