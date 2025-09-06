@@ -1,4 +1,4 @@
-name: iOS Local Build (Unsigned)
+name: iOS Production Build
 on:
   push:
     branches:
@@ -42,18 +42,18 @@ jobs:
         env:
           EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
       
-      # 7. Build iOS app locally (Unsigned IPA)
-      - name: Build iOS App
+      # 7. Build iOS app for production
+      - name: Build iOS App (Production)
         run: |
           eas build --platform ios --local --non-interactive \
-          --profile simulator \
+          --profile production \
           --output build.ipa
         env:
           EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
       
       # 8. Upload the IPA as GitHub Artifact
-      - name: Upload IPA Artifact
+      - name: Upload Production IPA Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: ios-build
+          name: ios-production-build
           path: build.ipa

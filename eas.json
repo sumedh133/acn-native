@@ -13,7 +13,11 @@
     },
     "production": {
       "autoIncrement": true,
-      "prebuildCommand": "npm i --force"
+      "prebuildCommand": "npm i --force",
+      "ios": {
+        "credentialsSource": "local",
+        "buildConfiguration": "Release"
+      }
     },
     "simulator": {
       "ios": {
