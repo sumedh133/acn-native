@@ -48,7 +48,7 @@ jobs:
       # 7. Build iOS app locally (Unsigned IPA)
       - name: Build iOS App
         run: |
-          eas build --platform ios --local --non-interactive \
+          eas build --platform ios --local \
           --profile development \
           --output build.ipa
         env:
