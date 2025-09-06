@@ -27,6 +27,12 @@ jobs:
       # 4. Install EAS CLI globally
       - name: Install EAS CLI
         run: npm install -g eas-cli
+      
+      # ✅ Authenticate with Expo
+      - name: Verify Expo Authentication
+        run: eas whoami
+        env:
+          EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
 
       # 5. Build iOS app locally (Unsigned)
       - name: Build iOS App
