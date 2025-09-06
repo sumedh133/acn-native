@@ -37,7 +37,7 @@ jobs:
 
       # 6. Upload the IPA as GitHub Artifact
       - name: Upload IPA Artifact
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: ios-build
           path: build.ipa
