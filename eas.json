@@ -23,7 +23,6 @@
       "ios": {
         "simulator": true,
         "buildConfiguration": "Debug",
-        "credentialsSource": "local"
       },
       "android": {
         "buildType": "apk"
