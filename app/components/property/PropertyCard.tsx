@@ -9,6 +9,7 @@ import {
   Pressable,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
+import * as Haptics from "expo-haptics";
 import EnquiryCPModal from "@/app/modals/EnquiryCPModal";
 import ConfirmModal from "@/app/modals/ConfirmModal";
 import ShareModal from "@/app/modals/ShareModal";
@@ -55,14 +56,20 @@ import Share from "@/assets/icons/svg/PropertyFolder/shareButton.svg";
 import Cross from "@/assets/icons/PropertyCard/cross.svg";
 import Tick from "@/assets/icons/PropertyCard/ticke.svg";
 import Selected from "@/assets/icons/PropertyCard/selected.svg";
+import Info from "@/assets/icons/PropertyCard/info.svg";
 
 // service
 import { getEnquiriesByPropertyID } from "@/app/services/user_services/enquiryService";
 import StatusUpdateModal from "./statusUpdateModal";
+import { updateProperty } from "@/app/services/property_services/propertyService";
+import { ScrollContext } from "@/app/ScrollContext";
 
 interface PropertyCardProps {
   property: any;
   selectedProperties?: Set<string>;
+  isSelectionMode?: boolean;
+  onToggleSelection?: (propertyId: string, propertyStatus: string) => void;
+  onLongPress?: (propertyId: string, propertyStatus: string) => void;
 }
 
 interface IdGenerationResult {
@@ -73,6 +80,9 @@ interface IdGenerationResult {
 const PropertyCard: React.FC<PropertyCardProps> = ({
   property,
   selectedProperties,
+  isSelectionMode = false,
+  onToggleSelection,
+  onLongPress: onLongPressProp,
 }) => {
   const dispatch = useDispatch<ThunkDispatch<RootState, unknown, AnyAction>>();
   const boosterCredits =
@@ -88,6 +98,7 @@ const PropertyCard: React.FC<PropertyCardProps> = ({
   const [enquiries, setEnquiries] = useState(0);
   const [statusUpdateModalOpen, setStatusUpdateModalOpen] =
     useState<boolean>(false);
+  const { openStatusInfo } = React.useContext(ScrollContext);
   const [longPressed, setLongPressed] = useState<boolean>(false);
   const agentData = useSelector((state: RootState) => state.agent.docData);
   const phoneNumber = useSelector(
@@ -103,6 +114,33 @@ const PropertyCard: React.FC<PropertyCardProps> = ({
   const enquiryConfirmed = useRef<Boolean>(false);
 
   const pathname = usePathname();
+
+  // ✅ SAFE TEXT RENDERER - Ensures all values are safely converted to strings
+  const safeText = (value: any, fallback: string = "-"): string => {
+    if (value === null || value === undefined) return fallback;
+    if (typeof value === "string") return value.trim() || fallback;
+    if (typeof value === "number") return value.toString();
+    if (typeof value === "boolean") return value.toString();
+    if (typeof value === "object") return fallback; // Don't render objects
+    return String(value) || fallback;
+  };
+
+  // ✅ SAFE NUMERIC RENDERER - Ensures numbers are safely handled
+  const safeNumber = (value: any, fallback: number = 0): number => {
+    if (typeof value === "number" && !isNaN(value)) return value;
+    const parsed = parseFloat(value);
+    return !isNaN(parsed) ? parsed : fallback;
+  };
+
+  // Early return if property data is invalid
+  if (!property) {
+    return null;
+  }
+
+  if (!property.propertyId) {
+    console.warn("PropertyCard: Missing propertyId");
+    return null;
+  }
 
   const getIcon = () => {
     switch (property.assetType) {
@@ -152,11 +190,36 @@ const PropertyCard: React.FC<PropertyCardProps> = ({
     }
   };
 
-  // Get property name with first letter capitalized
-  const getPropertyName = () => {
-    const name = property.propertyName || "";
+  // ✅ SAFE Get property name with first letter capitalized
+  const getPropertyName = (): string => {
+    if (!property.propertyName || typeof property.propertyName !== "string") {
+      return "Unnamed Property";
+    }
+    const name = property.propertyName.trim();
     if (!name) return "Unnamed Property";
     return name.charAt(0).toUpperCase() + name.slice(1);
+  };
+
+  // ✅ SAFE Days difference calculation
+  const safeDaysDifference = (timestamp1: any, timestamp2: any): number => {
+    try {
+      const result = getDaysDifference(timestamp1, timestamp2);
+      return typeof result === "number" && !isNaN(result) ? result : 0;
+    } catch (error) {
+      console.warn("Error calculating days difference:", error);
+      return 0;
+    }
+  };
+
+  // ✅ SAFE Days from calculation
+  const safeDaysFrom = (timestamp: any): number => {
+    try {
+      const result = getDaysFrom(timestamp);
+      return typeof result === "number" && !isNaN(result) ? result : 0;
+    } catch (error) {
+      console.warn("Error calculating days from:", error);
+      return 0;
+    }
   };
 
   // Handle enquire button click
@@ -227,6 +290,8 @@ const PropertyCard: React.FC<PropertyCardProps> = ({
       added: getUnixDateTime(),
       lastModified: getUnixDateTime(),
       reviews: [],
+      isNew: true,
+      isContactShared: false,
     } as Enquiry;
 
     try {
@@ -375,48 +440,75 @@ const PropertyCard: React.FC<PropertyCardProps> = ({
 
     if (property) {
       dispatch(setPropertyDataThunk(property));
-      router.push({
-        pathname: "/components/property/PropertyDetailsScreen",
-        params: {
-          parent: "properties",
-        },
-      });
+      if (
+        pathname == "/MyBusinessPage" ||
+        pathname === "/UnderReviewProperties"
+      ) {
+        router.push({
+          pathname: "/(pages)/MyBusiness/PropertiesDetailsScreen",
+          params: {
+            parent: "myBusiness",
+          },
+        });
+      } else {
+        router.push({
+          pathname: "/components/property/PropertyDetailsScreen",
+          params: {
+            parent: "properties",
+          },
+        });
+      }
+    }
+  };
+
+  const handleSelectionToggle = () => {
+    if (onToggleSelection) {
+      // Add light haptic feedback for selection toggle
+      if (Platform.OS === "ios") {
+        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+      } else {
+        Haptics.selectionAsync();
+      }
+      onToggleSelection(property.propertyId, property.status);
     }
   };
 
   const handleLongPress = () => {
-    if (selectedProperties && selectedProperties.has(property.propertyId)) {
-      selectedProperties.delete(property.propertyId);
-      return;
+    if (onLongPressProp) {
+      // Add haptic feedback for selection
+      if (Platform.OS === "ios") {
+        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+      } else {
+        // For Android, use notification impact which is more noticeable
+        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+      }
+      onLongPressProp(property.propertyId, property.status);
     }
-    if (selectedProperties) {
-      selectedProperties.add(property.propertyId);
-    }
+  };
+
+  const handleUpdateStatus = () => {
+    updateProperty(property.propertyId, {
+      status: "available",
+      dateOfLastChecked: getUnixDateTime(),
+    });
   };
 
   return (
     <View>
       {/* Property Card */}
       <View className="flex flex-row items-center gap-3">
-        {pathname === "/MyBusinessPage" &&
-          selectedProperties &&
-          selectedProperties.has(property.propertyId) && (
-            <Pressable
-              onPress={() => {
-                console.log("remove");
-                handleLongPress();
-              }}
-            >
-              {selectedProperties &&
-              selectedProperties.has(property.propertyId) ? (
-                <View className="min-w-[25px] min-h-[25]">
-                  <Selected />
-                </View>
-              ) : (
-                <View className="min-w-[25px] min-h-[25] border border-[#E3E3E3] rounded-full"></View>
-              )}
-            </Pressable>
-          )}
+        {pathname === "/MyBusinessPage" && isSelectionMode && (
+          <Pressable onPress={handleSelectionToggle}>
+            {selectedProperties &&
+            selectedProperties.has(property.propertyId) ? (
+              <View className="min-w-[25px] min-h-[25] ">
+                <Selected />
+              </View>
+            ) : (
+              <View className="min-w-[25px] min-h-[25] border border-[#CCCBCB] rounded-full"></View>
+            )}
+          </Pressable>
+        )}
         <View className="flex-1">
           {(pathname === "/MyBusinessPage" ||
             pathname === "/UnderReviewProperties") && (
@@ -425,64 +517,67 @@ const PropertyCard: React.FC<PropertyCardProps> = ({
                 property.listingType === "rental"
                   ? "bg-[#FCE9BA]"
                   : "bg-[#EADDFF]"
-              } max-w-[56px] max-h-[19px] items-center ml-4 px-[11px] pt-1 rounded-t-sm`}
+              } max-w-[56px] max-h-[19px] items-center ml-4 px-[11px] pt-1 rounded-t-lg`}
             >
               <Text className="text-[#10302D] text-xs font-medium leading-[150%]">
-                {toCapitalizedWords(property.listingType)}
+                {safeText(toCapitalizedWords(property.listingType))}
               </Text>
             </View>
           )}
           <Pressable
-            delayLongPress={1000}
+            delayLongPress={500}
             onLongPress={() => {
-              setLongPressed(true);
-            }}
-            onPressOut={() => {
-              if (longPressed) {
-                console.log(1);
+              if (pathname === "/MyBusinessPage") {
+                setLongPressed(true);
                 handleLongPress();
-              } else {
-                console.log(2);
-                // openPropertyDetails();
               }
             }}
             onPress={() => {
-              if (
-                pathname === "/MyBusinessPage" &&
-                selectedProperties &&
-                selectedProperties.size >= 0
-              ) {
-                handleLongPress();
+              if (pathname === "/MyBusinessPage" && isSelectionMode) {
+                // In selection mode, tap should toggle selection
+                handleSelectionToggle();
               } else {
+                // Normal mode, open property details
                 openPropertyDetails();
               }
             }}
             className="flex flex-col border bg-white border-[#CCCBCB] rounded-lg"
           >
+            {/* ✅ FIXED: Status update section with safe rendering */}
             {pathname === "/MyBusinessPage" &&
               (property.status === "de-listed" ||
                 property.status === "hold" ||
                 property.status === "sold" ||
                 (property.status === "available" &&
-                  getDaysDifference(
+                  property.dateOfStatusLastChecked &&
+                  safeDaysDifference(
                     property.dateOfStatusLastChecked + 60 * 60 * 24 * 15,
                     Math.floor(Date.now() / 1000)
-                  ))) && (
+                  ) > 0)) && (
                 <View className="flex flex-row items-center justify-between bg-[#E3E3E3] rounded-t-lg px-4 py-2">
                   <View className="flex flex-col">
-                    {getDaysDifference(
-                      property.dateOfStatusLastChecked + 60 * 60 * 24 * 15,
-                      Math.floor(Date.now() / 1000)
-                    ) <= 4 &&
+                    {property.dateOfStatusLastChecked &&
+                      safeDaysDifference(
+                        property.dateOfStatusLastChecked + 60 * 60 * 24 * 15,
+                        Math.floor(Date.now() / 1000)
+                      ) <= 4 &&
+                      safeDaysDifference(
+                        property.dateOfStatusLastChecked + 60 * 60 * 24 * 15,
+                        Math.floor(Date.now() / 1000)
+                      ) > 0 &&
                       property.status === "available" && (
                         <Text className="font-[Lato] text-sm font-bold leading-[150%] tracking-[0.25px]">
-                          Will get de-listed in{" "}
-                          {getDaysDifference(
-                            property.dateOfStatusLastChecked +
-                              60 * 60 * 24 * 15,
-                            Math.floor(Date.now() / 1000)
-                          )}{" "}
-                          days,
+                          <Text>Will get de-listed in </Text>
+                          <Text>
+                            {safeText(
+                              safeDaysDifference(
+                                property.dateOfStatusLastChecked +
+                                  60 * 60 * 24 * 15,
+                                Math.floor(Date.now() / 1000)
+                              )
+                            )}
+                          </Text>
+                          <Text> days,</Text>
                         </Text>
                       )}
                     <Text className="font-[Lato] text-sm font-bold leading-[150%] tracking-[0.25px]">
@@ -499,7 +594,7 @@ const PropertyCard: React.FC<PropertyCardProps> = ({
                     </Pressable>
                     <Pressable
                       onPress={() => {
-                        setStatusUpdateModalOpen(true);
+                        handleUpdateStatus();
                       }}
                     >
                       <Tick />
@@ -514,28 +609,63 @@ const PropertyCard: React.FC<PropertyCardProps> = ({
                   {/* Property ID on the left - using width fit-content approach */}
                   <View className="flex-1 shrink flex-row justify-between">
                     <View className="self-start flex-row gap-2.5">
-                      <Text className="text-[#5A5555] text-sm border-b border-b-[#E3E3E3] font-[Lato] font-semibold leading-[21px] tracking-wide pb-0.5">
-                        {property.propertyId}
+                      <Text className="text-[#5A5555] text-sm font-[Lato] font-semibold leading-[21px] tracking-wide pb-0.5">
+                        {safeText(property.propertyId)}
                       </Text>
                     </View>
-                    {property.status === "available" &&
+                    {/* ✅ FIXED: Safe rendering of date-based labels */}
+                    {property.added &&
+                      property.status === "available" &&
                       pathname === "/properties" &&
-                      (getDaysDifference(
-                        property.added,
-                        Math.floor(Date.now() / 1000)
-                      ) > 10 ? (
-                        <View>
-                          <Text className="text-[#726C6C] text-sm font-[Lato] font-semibold leading-[21px] border-b border-b-[#E3E3E3]">{`Status updated ${getDaysFrom(
+                      (() => {
+                        const daysSinceAdded = safeDaysDifference(
+                          property.added,
+                          Math.floor(Date.now() / 1000)
+                        );
+
+                        if (daysSinceAdded < 1) {
+                          return (
+                            <View className="bg-[#E93B3E] px-2 py-1 rounded">
+                              <Text className="text-white font-[Lato] text-xs font-medium leading-[18px]">
+                                Newly Added
+                              </Text>
+                            </View>
+                          );
+                        } else if (daysSinceAdded < 10) {
+                          const daysFromAdded = safeDaysFrom(property.added);
+                          return (
+                            <View>
+                              <Text className="text-[#726C6C] text-sm font-[Lato] font-semibold leading-[21px]">
+                                <Text>Added </Text>
+                                <Text>{safeText(daysFromAdded)}</Text>
+                                <Text>
+                                  {" "}
+                                  {daysFromAdded === 1 ? "day" : "days"} ago
+                                </Text>
+                              </Text>
+                            </View>
+                          );
+                        } else {
+                          const daysFromLastChecked = safeDaysFrom(
                             property.dateOfLastChecked
-                          )} ago`}</Text>
-                        </View>
-                      ) : (
-                        <View className="bg-[#E93B3E] px-2 py-1 rounded">
-                          <Text className="text-white font-[Lato] text-xs font-medium leading-[18px]">
-                            Newly Added
-                          </Text>
-                        </View>
-                      ))}
+                          );
+                          return (
+                            <View>
+                              <Text className="text-[#726C6C] text-sm font-[Lato] font-semibold leading-[21px]">
+                                <Text>Updated </Text>
+                                <Text>{safeText(daysFromLastChecked)}</Text>
+                                <Text>
+                                  {" "}
+                                  {daysFromLastChecked === 1
+                                    ? "day"
+                                    : "days"}{" "}
+                                  ago
+                                </Text>
+                              </Text>
+                            </View>
+                          );
+                        }
+                      })()}
                   </View>
                 </View>
 
@@ -553,29 +683,46 @@ const PropertyCard: React.FC<PropertyCardProps> = ({
                       <View className="flex-row items-center gap-0.5">
                         <Location width={16} height={16} />
                         <Text className="text-sm">
-                          {property.micromarket || "-"}
+                          {safeText(property.micromarket)}
                         </Text>
                       </View>
                     </View>
                   </View>
                 </View>
 
-                {/* Tags section for Asset Type, Unit Type, and Facing */}
+                {/* ✅ FIXED: Tags section with safe filtering and rendering */}
                 <View className="flex-row flex-wrap gap-2 mb-3">
-                  {[property.assetType, property.unitType, property.facing]
-                    .filter(Boolean) // Filter out any falsy values
+                  {[
+                    toCapitalizedWords(property.assetType),
+                    property.noOfBedrooms &&
+                      property.noOfBedrooms !== null &&
+                      `${property.noOfBedrooms} BHK`,
+                    property.assetType === "plot" &&
+                      `${property.plotArea} Sqft`,
+                    property.facing &&
+                      property.facing !== null &&
+                      toCapitalizedWords(property.facing),
+                  ]
+                    .filter(
+                      (tag) => tag !== null && tag !== undefined && tag !== ""
+                    )
+                    .filter(
+                      (tag) => typeof tag === "string" && tag.toString().trim()
+                    )
                     .map((tag, index) => (
                       <View
                         key={index}
                         className="border border-[#205E59] px-3 py-1 rounded-3xl bg-[#F3FFFE]"
                       >
-                        <Text className="text-xs text-[#525252]">{tag}</Text>
+                        <Text className="text-xs text-[#525252]">
+                          {safeText(tag)}
+                        </Text>
                       </View>
                     ))}
                 </View>
               </View>
 
-              {/* Price and SBUA (Super Built-Up Area) section */}
+              {/* ✅ FIXED: Price and SBUA section with safe formatting */}
               <View className="flex-row justify-between items-start border-t border-t-[#E3E3E3] pt-2 mb-3">
                 {/* Total Ask Price */}
                 <View className="flex-col items-start border-r border-r-[#E3E3E3] pr-5">
@@ -585,9 +732,11 @@ const PropertyCard: React.FC<PropertyCardProps> = ({
                         Rent
                       </Text>
                       <Text className="text-sm font-semibold text-[#111827]">
-                        {property.rentalInfo.rent
-                          ? formatCost2(property?.rentalInfo?.rent)
-                          : null}
+                        {safeText(
+                          property?.rentalInfo?.rent
+                            ? formatCost2(property.rentalInfo.rent)
+                            : undefined
+                        )}
                       </Text>
                     </View>
                   ) : (
@@ -596,9 +745,11 @@ const PropertyCard: React.FC<PropertyCardProps> = ({
                         Ask Price
                       </Text>
                       <Text className="text-sm font-semibold text-[#111827]">
-                        {property?.pricing?.totalAskPrice
-                          ? formatCost2(property.pricing.totalAskPrice)
-                          : null}
+                        {safeText(
+                          property?.pricing?.totalAskPrice
+                            ? formatCost2(property.pricing.totalAskPrice)
+                            : undefined
+                        )}
                       </Text>
                     </View>
                   )}
@@ -612,9 +763,11 @@ const PropertyCard: React.FC<PropertyCardProps> = ({
                         Deposit
                       </Text>
                       <Text className="text-sm font-semibold text-[#111827]">
-                        {property?.rentalInfo?.deposit
-                          ? formatCost2(property?.rentalInfo?.deposit)
-                          : null}
+                        {safeText(
+                          property?.rentalInfo?.deposit
+                            ? formatCost2(property?.rentalInfo?.deposit)
+                            : undefined
+                        )}
                       </Text>
                     </View>
                   ) : (
@@ -623,11 +776,11 @@ const PropertyCard: React.FC<PropertyCardProps> = ({
                         Per Sqft Price
                       </Text>
                       <Text className="text-sm font-semibold text-[#111827]">
-                        {property?.pricing?.pricePerSqft
-                          ? formatCost(property.pricing?.pricePerSqft)
-                          : property?.pricing?.pricePerSqft
-                          ? formatCost(property.pricing?.pricePerSqft)
-                          : null}
+                        {safeText(
+                          property?.pricing?.pricePerSqft
+                            ? formatCost(property.pricing.pricePerSqft)
+                            : undefined
+                        )}
                       </Text>
                     </View>
                   )}
@@ -640,7 +793,11 @@ const PropertyCard: React.FC<PropertyCardProps> = ({
                       Plot Size
                     </Text>
                     <Text className="text-sm font-semibold text-[#111827]">
-                      {property.plotArea ? `${property.plotArea} Sq Ft` : "-"}
+                      {property.plotArea ? (
+                        <Text>{safeText(property.plotArea)} Sq Ft</Text>
+                      ) : (
+                        <Text>-</Text>
+                      )}
                     </Text>
                   </View>
                 ) : (
@@ -649,7 +806,11 @@ const PropertyCard: React.FC<PropertyCardProps> = ({
                       SBUA
                     </Text>
                     <Text className="text-sm font-semibold text-[#111827]">
-                      {property.sbua ? `${property.sbua} Sq Ft` : "-"}
+                      {property.sbua ? (
+                        <Text>{safeText(property.sbua)} Sq Ft</Text>
+                      ) : (
+                        <Text>-</Text>
+                      )}
                     </Text>
                   </View>
                 )}
@@ -669,7 +830,7 @@ const PropertyCard: React.FC<PropertyCardProps> = ({
 
                   {/* share button*/}
                   <TouchableOpacity
-                    className="w-[34px] h-[34px] rounded p-1.5 bg-[#E3E3E3] justify-center items-center border border-[#153E3B]"
+                    className="w-[34px] h-[34px] rounded p-1.5 justify-center items-center border border-[#153E3B]"
                     onPress={handleShareButton}
                   >
                     <Share />
@@ -677,16 +838,17 @@ const PropertyCard: React.FC<PropertyCardProps> = ({
                 </View>
               )}
             </View>
+            {/* ✅ FIXED: Business page footer with safe enquiries rendering */}
             {pathname === "/MyBusinessPage" && (
               <View
                 className={`flex flex-row justify-between rounded-b-lg px-4 py-2 ${
-                  property.status.toLowerCase() === "available"
+                  property.status?.toLowerCase() === "available"
                     ? "bg-[#EAFFEF]"
-                    : property.status.toLowerCase() === "sold"
+                    : property.status?.toLowerCase() === "sold"
                     ? "bg-[#F2F2F2]"
-                    : property.status.toLowerCase() === "hold"
+                    : property.status?.toLowerCase() === "hold"
                     ? "bg-[#FFFCF0]"
-                    : property.status.toLowerCase() === "de-listed"
+                    : property.status?.toLowerCase() === "de-listed"
                     ? "bg-[#FFF0F0]"
                     : ""
                 }`}
@@ -696,18 +858,39 @@ const PropertyCard: React.FC<PropertyCardProps> = ({
                     Enquiries Recieved
                   </Text>
                   <Text className="text-[#2B2928] text-sm font-bold leading-[150%]">
-                    {`${enquiries} ${
-                      enquiries === 1 ? "Enquiry" : "Enquiries"
-                    }`}
+                    <Text>{safeText(safeNumber(enquiries))}</Text>
+                    <Text> {enquiries === 1 ? "Enquiry" : "Enquiries"}</Text>
                   </Text>
                 </View>
                 <View className="flex flex-col gap-[2px]">
                   <Text className="text-[#5A5555] text-xs font-medium leading-[150%] tracking-[0.25px]">
                     Status
                   </Text>
-                  <Text className="text-[#2B2928] text-sm font-bold leading-[150%]">
-                    {toCapitalizedWords(property.status)}
-                  </Text>
+                  <View className="flex flex-row items-center gap-1">
+                    <Text
+                      className={`text-sm font-bold leading-[150%] ${
+                        property?.status?.toLowerCase() === "available"
+                          ? "text-[#34C759]"
+                          : property?.status?.toLowerCase() === "sold"
+                          ? "text-[#5A5555]"
+                          : property?.status?.toLowerCase() === "hold"
+                          ? "text-[#FFCC00]"
+                          : property?.status?.toLowerCase() === "de-listed"
+                          ? "text-[#DE1135]"
+                          : "text-[#2B2928]"
+                      }`}
+                    >
+                      {safeText(toCapitalizedWords(property?.status))}
+                    </Text>
+                    {property.status?.toLowerCase() === "de-listed" && (
+                      <Pressable
+                        hitSlop={10}
+                        onPress={() => openStatusInfo(property?.status || null)}
+                      >
+                        <Info />
+                      </Pressable>
+                    )}
+                  </View>
                 </View>
               </View>
             )}
@@ -725,10 +908,8 @@ const PropertyCard: React.FC<PropertyCardProps> = ({
       />
 
       <ConfirmModal
-        title="Confirm Enquiry"
-        message={`Are you sure you want to enquire? You have ${
-          monthlyCredits + boosterCredits
-        } credits remaining for this month.`}
+        title="Confirm Enquiry?"
+        message={`1 credit will be used when you enquire.`}
         onConfirm={onConfirmEnquiry}
         onCancel={handleCancel}
         onModalHide={() => {
@@ -760,9 +941,11 @@ const PropertyCard: React.FC<PropertyCardProps> = ({
           onClose={() => {
             setStatusUpdateModalOpen(false);
           }}
-          selectedProperty={new Set(property.propertyId)}
+          selectedProperty={new Set([property.propertyId])}
         />
       )}
+
+      {/* Bottom sheet rendered in FooterNavigation via context */}
     </View>
   );
 };

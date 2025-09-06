@@ -59,7 +59,7 @@ export const useAlgoliaSearch = (basicFilter: SearchFilters) => {
   }, []);
 
   // --- debounced search ---
-  const [searchTimeout, setSearchTimeout] = useState<NodeJS.Timeout | null>(
+  const [searchTimeout, setSearchTimeout] = useState<ReturnType<typeof setTimeout> | null>(
     null
   );
 

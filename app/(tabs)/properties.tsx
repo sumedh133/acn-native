@@ -37,7 +37,7 @@ export default function PropertiesScreen() {
   const basicFilter = useMemo(
     () => ({
       listingType: [activeTab],
-      // status: ["available", "Available"],
+      status: ["available", "Available"],
     }),
     [activeTab]
   );
