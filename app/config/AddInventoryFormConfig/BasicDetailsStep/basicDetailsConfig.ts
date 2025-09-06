@@ -56,7 +56,6 @@ export const basicDetailsStep: FormStep = {
         logicOperator: "AND",
       },
       colspan: 12,
-      
     },
     {
       id: "assetType",
@@ -84,7 +83,6 @@ export const basicDetailsStep: FormStep = {
         logicOperator: "AND",
       },
       colspan: 12,
-      
     },
     {
       id: "commercialPropertyType",
@@ -101,7 +99,6 @@ export const basicDetailsStep: FormStep = {
         values: ["commercial"],
       },
       colspan: 12,
-      
     },
     {
       id: "commercialSubType",
@@ -109,7 +106,10 @@ export const basicDetailsStep: FormStep = {
       type: "select",
       required: true,
       options: [
-        { label: "Independent Office Space", value: "independent office space" },
+        {
+          label: "Independent Office Space",
+          value: "independent office space",
+        },
         { label: "IT Park", value: "it park" },
         { label: "Co-Working Space", value: "co-working space" },
       ],
@@ -154,7 +154,6 @@ export const basicDetailsStep: FormStep = {
         values: ["commercial space"],
       },
       colspan: 12,
-      
     },
     {
       id: "communityType",
@@ -170,7 +169,6 @@ export const basicDetailsStep: FormStep = {
         values: ["residential"],
       },
       colspan: 12,
-      
     },
   ],
 };

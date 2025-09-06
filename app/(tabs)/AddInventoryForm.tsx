@@ -85,7 +85,7 @@ const AddInventoryForm = () => {
 
       } else {
         // New property creation
-        await createProperty(cleanData as Omit<Property, "propertyId">, "qc");
+        await createProperty(cleanData as Omit<Property, "propertyId">, "verified");
         console.log("New property created:", cleanData);
         showSuccessToast(`New property created and sent for verification!`);
       } fetch(
