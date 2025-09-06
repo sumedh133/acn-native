@@ -15,6 +15,7 @@ import {
 } from "firebase/firestore";
 import { db } from "../../config/firebase"; // your Firebase config
 import { Property } from "../../types";
+import _ from "lodash";
 
 import { getUnixDateTime } from "@/app/helpers/getUnixDateTime";
 
@@ -30,6 +31,30 @@ interface EditHistoryRecord {
   editId: string;
   timestamp: number;
   changes: Record<string, any>; // Object with field names as keys and new values
+}
+
+/**
+ * Utility function for comparing objects
+ */
+
+function getChangedFields(oldObj: any, newObj: any): any {
+  const changes: any = {};
+
+  Object.keys(newObj).forEach((key) => {
+    const oldValue = _.get(oldObj, key);
+    const newValue = newObj[key];
+
+    if (_.isPlainObject(newValue)) {
+      const nestedChanges = getChangedFields(oldValue || {}, newValue);
+      if (!_.isEmpty(nestedChanges)) {
+        changes[key] = nestedChanges;
+      }
+    } else if (!_.isEqual(oldValue, newValue)) {
+      changes[key] = newValue;
+    }
+  });
+
+  return changes;
 }
 
 /**
@@ -266,23 +291,10 @@ export const updateProperty = async (
 
   // Log changes in edit history
   if (currentData && isEdit) {
-    const changes: Record<string, any> = {};
+    const changes = getChangedFields(currentData, updates);
 
-    // Only include fields that have changed
-    Object.keys(updates).forEach((field) => {
-      if ((currentData as any)[field] !== (updates as any)[field]) {
-        changes[field] = (updates as any)[field];
-      }
-    });
-
-    if (Object.keys(changes).length > 0) {
-      await addEditHistory(
-        propertyId,
-        {
-          changes,
-        },
-        inventoryStage
-      );
+    if (!_.isEmpty(changes)) {
+      await addEditHistory(propertyId, { changes }, inventoryStage);
     }
   }
 };
