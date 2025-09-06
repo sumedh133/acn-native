@@ -28,6 +28,7 @@
         <key>CFBundleURLSchemes</key>
         <array>
           <string>com.acnonline.in</string>
+          <string>com.acnonline.in</string>
         </array>
       </dict>
       <dict>
