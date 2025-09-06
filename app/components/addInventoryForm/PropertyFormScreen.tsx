@@ -281,7 +281,7 @@ export const PropertyFormScreen: React.FC<PropertyFormScreenProps> = ({
         },
       }));
     }
-  }, []);
+  }, [selectedPlace]);
 
   useEffect(() => {
     // Back button handler

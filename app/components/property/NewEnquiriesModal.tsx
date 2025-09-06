@@ -129,15 +129,6 @@ const NewEnquiriesModal = ({
           </TouchableOpacity>
         </View>
       </AView>
-
-      <ConfettiCannon
-        count={150}
-        origin={{ x: 0, y: 0 }}
-        autoStart={true}
-        fadeOut={true}
-        explosionSpeed={500}
-        fallSpeed={3000}
-      />
     </View>
   );
 };

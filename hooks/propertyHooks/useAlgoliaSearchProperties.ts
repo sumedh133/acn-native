@@ -92,7 +92,7 @@ export const useAlgoliaSearch = (basicFilter: SearchFilters) => {
                 aroundRadius: landmark.radius || 10000,
               }
             : undefined;
-
+        console.log(geoOptions)
         // Use a ref to track if component is still mounted to prevent state updates
         let isMounted = true;
         const updateStateIfMounted = (updates: any) => {

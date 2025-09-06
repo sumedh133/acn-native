@@ -8,8 +8,8 @@ interface MyBusinessListingsProps {
   refresh: any;
   selectedProperties: Set<string>;
   isSelectionMode: boolean;
-  onToggleSelection: (propertyId: string) => void;
-  onLongPress: (propertyId: string) => void;
+  onToggleSelection: (propertyId: string, propertyStatus: string) => void;
+  onLongPress: (propertyId: string, propertyStatus: string) => void;
   onSelectAll: () => void;
   onDeselectAll: () => void;
   onExitSelectionMode: () => void;

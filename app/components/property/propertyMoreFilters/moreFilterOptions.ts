@@ -11,7 +11,6 @@ import commercialSpaceIcon from "@/assets/icons/propertiesMoreFilters/commercial
 import React from "react";
 import { DropdownOption } from "../../DropdownTailwind";
 
-
 export const residentialPropertyTypes: {
   label: string;
   value: string;
@@ -47,7 +46,6 @@ export const residentialPropertyTypes: {
     value: "row house",
     icon: React.createElement(rowHouseIcon, { width: 40, height: 40 }),
   },
-  
 ];
 
 export const commercialSubTypes: Record<string, FilterChipItem[]> = {
@@ -110,16 +108,25 @@ export const facingOptions: DropdownOption[] = [
   { label: "West", value: "West", count: 2 },
 ];
 export const floorOptions: DropdownOption[] = [
-  { label: "Lower Floors", value: "Lower Floors"},
-  { label: "Middle Floors", value: "Middle Floors"},
-  { label: "Upper Floors", value: "Upper Floors"},
-  { label: "Penthouse", value: "Penthouse"},
+  { label: "Ground", value: "ground" },
+  { label: "Lower Floors", value: "" },
+  { label: "Middle Floors", value: "Middle Floors" },
+  { label: "Upper Floors", value: "Upper Floors" },
+  { label: "Penthouse", value: "Penthouse" },
 ];
 export const preferredTenantsOptions: DropdownOption[] = [
-  { label: "Anyone", value: "Anyone"},
-  { label: "Family", value: "Family"},
-  { label: "Bachelor Male", value: "Bachelor Male"},
-  { label: "Bachelor Female", value: "Bachelor Female"},
+  { label: "Anyone", value: "Anyone" },
+  { label: "Family", value: "Family" },
+  { label: "Bachelor Male", value: "Bachelor Male" },
+  { label: "Bachelor Female", value: "Bachelor Female" },
+];
+export const furnishingOptions: DropdownOption[] = [
+  { label: "Unfurnished", value: "unfurnished" },
+  { label: "Semi-Furnished", value: "semi-furnished" },
+  { label: "Fully Furnished", value: "fully-furnished" },
+  { label: "Bare Shell", value: "bare-shell" },
+  { label: "Warm Shell", value: "warm-shell" },
+  { label: "Plug & Play", value: "plug-and-play" },
 ];
 export const zoneOptions: FilterChipItem[] = [
   { label: "Center Bangalore", value: "Center Bangalore" },
@@ -127,7 +134,7 @@ export const zoneOptions: FilterChipItem[] = [
   { label: "South Bangalore", value: "South Bangalore" },
   { label: "South-East Bangalore", value: "South-East Bangalore" },
   { label: "East Bangalore", value: "East Bangalore" },
-  { label: "West Bangalore", value: "West Bangalore" }
+  { label: "West Bangalore", value: "West Bangalore" },
 ];
 export const possessionOptions: FilterChipItem[] = [
   { label: "Ready To Move", value: "Ready To Move" },

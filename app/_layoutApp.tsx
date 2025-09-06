@@ -176,7 +176,6 @@ const CustomHeader = ({
 export default function LayoutApp() {
   const dispatch = useDispatch<ThunkDispatch<RootState, unknown, AnyAction>>();
   const { showNewEnquiryPopup, setShowNewEnquiryPopup, storedCount, setStoredCount } = useUI();
-  console.log("Hare Krishna",showNewEnquiryPopup)
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isMaintenanceMode, setIsMaintenanceMode] = useState(false);
   const [isScrolling, setIsScrolling] = useState(false);

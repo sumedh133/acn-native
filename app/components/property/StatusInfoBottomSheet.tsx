@@ -119,7 +119,7 @@ const StatusInfoBottomSheet = ({
 
   return (
     <View
-      className={`absolute inset-0 z-[200] `}
+      className={`absolute inset-0 z-[9999] `}
       style={{ position: "absolute", top: 0, left: 0, right: 0, bottom: 0 }}
     >
       <AView

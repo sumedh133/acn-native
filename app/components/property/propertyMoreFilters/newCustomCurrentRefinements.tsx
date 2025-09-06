@@ -6,6 +6,7 @@ import { useSelector } from "react-redux";
 import { RootState } from "@/store/store";
 import { SearchFilters } from "../../../services/property_services/propertyAlgoliaService";
 import { formatCostSuffix } from "@/app/helpers/common";
+import { toCapitalize } from "@/app/helpers/format/format";
 
 interface CustomCurrentRefinementsProps {
   selectedLandmark?: any;
@@ -26,7 +27,10 @@ export default function CustomCurrentRefinements({
   // Convert filters object into an array of {key, value}
   // Convert filters object into an array of {key, value, isRange?}
   const allRefinements = Object.entries(filters)
-    .filter(([key]) => key !== "listingType" && key !== "stage" && key !== "builderCategory")
+    .filter(
+      ([key]) =>
+        key !== "listingType" && key !== "stage" && key !== "builderCategory"
+    )
     .filter(([key]) => key !== "cpId")
     .filter(([key]) => key !== "status")
     .flatMap(([key, values]) => {
@@ -149,7 +153,10 @@ export default function CustomCurrentRefinements({
     }
 
     // Keep type, reset everything else
-    onFiltersChange({ listingType: filters.listingType });
+    onFiltersChange({
+      listingType: filters.listingType,
+      status: ["available", "Available"],
+    });
 
     if (setSelectedLandmark) {
       setSelectedLandmark(null);
@@ -163,6 +170,15 @@ export default function CustomCurrentRefinements({
       className="flex-row"
     >
       <View className="flex-row items-center px-4 space-x-2 mb-2">
+        {(allRefinements.length > 0 || selectedLandmark) && (
+          <TouchableOpacity onPress={handleClearAll} className="ml-1">
+            <View className="flex-row items-center border border-[#DE1135] bg-[#FFE8EC]/10 px-2 py-1.5 rounded-3xl">
+              <Text className="font-lato-semibold text-sm leading-[154%] text-[#313534] overflow-hidden">
+                Clear All
+              </Text>
+            </View>
+          </TouchableOpacity>
+        )}
         {selectedLandmark && (
           <TouchableOpacity
             onPress={() => {
@@ -179,12 +195,12 @@ export default function CustomCurrentRefinements({
               }
               setSelectedLandmark && setSelectedLandmark(null);
             }}
-            className="flex-row items-center bg-gray-200 px-3 py-1.5 rounded-full"
+            className="flex-row items-center bg-[#FCE9BA] px-3 py-1.5 rounded-full"
           >
-            <Text className="font-montserrat text-sm text-gray-700 mr-1">
+            <Text className="font-lato-semibold text-sm text-[#313534] mr-2">
               {selectedLandmark.name} ({selectedLandmark.radius / 1000}km)
             </Text>
-            <Text className="text-base text-gray-500">×</Text>
+            <Text className="text-base text-[#313534]">×</Text>
           </TouchableOpacity>
         )}
 
@@ -192,24 +208,16 @@ export default function CustomCurrentRefinements({
           <TouchableOpacity
             key={`${item.attribute}-${item.value}-${index}`}
             onPress={() => handleRefinementRemove(item.attribute, item.value)}
-            className="flex-row items-center bg-gray-200 px-3 py-1.5 rounded-full"
+            className="flex-row items-center bg-[#FCE9BA] px-3 py-1.5 rounded-full"
           >
-            <Text className="font-montserrat text-sm text-gray-700 mr-1">
-              {item.attribute === "agentCpid" ? "My Requirements" : item.value}
+            <Text className="font-lato-semibold text-sm text-[#313534] mr-2">
+              {item.attribute === "agentCpid"
+                ? "My Requirements"
+                : toCapitalize(item.value)}
             </Text>
-            <Text className="text-base text-gray-500">×</Text>
+            <Text className="text-base text-[#313534]">×</Text>
           </TouchableOpacity>
         ))}
-
-        {(allRefinements.length > 0 || selectedLandmark) && (
-          <TouchableOpacity onPress={handleClearAll} className="ml-1">
-            <View className="flex-row items-center border border-red-600 bg-red-600/10 px-2 py-1.5 rounded-full">
-              <Text className="font-montserrat-semibold text-xs text-red-600">
-                Clear All
-              </Text>
-            </View>
-          </TouchableOpacity>
-        )}
       </View>
     </ScrollView>
   );

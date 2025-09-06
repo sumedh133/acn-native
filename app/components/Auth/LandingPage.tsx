@@ -6,6 +6,7 @@ import {
   TouchableOpacity,
   ImageBackground,
   Dimensions,
+  Image,
 } from "react-native";
 import { useRouter } from "expo-router";
 import { useSelector } from "react-redux";
@@ -113,34 +114,38 @@ export default function LandingPage() {
   const router = useRouter();
   const dispatch = useDispatch<ThunkDispatch<RootState, unknown, AnyAction>>();
   const isAuthenticated = useSelector(
-    (state: RootState) => state.auth.isAuthenticated,
+    (state: RootState) => state.auth.isAuthenticated
   );
-  const userType = useSelector((state: RootState) => state?.agent?.docData?.userType) || "free";
+  const userType =
+    useSelector((state: RootState) => state?.agent?.docData?.userType) ||
+    "free";
 
   useEffect(() => {
     try {
-      logEvent(analytics, 'view_landing_page', {
-        event_category: 'auth',
-        event_label: 'landing_view',
+      logEvent(analytics, "view_landing_page", {
+        event_category: "auth",
+        event_label: "landing_view",
         is_authenticated: isAuthenticated,
-        user_type: userType
+        user_type: userType,
       });
     } catch (error) {
-      console.error('Error logging landing page view:', error);
+      console.error("Error logging landing page view:", error);
     }
   }, [isAuthenticated, userType]);
 
   const handleNavigate = async () => {
     try {
-      logEvent(analytics, 'landing_page_navigation', {
-        event_category: 'auth',
-        event_label: 'landing_interaction',
-        action: isAuthenticated ? 'continue' : 'login_signup',
-        destination: isAuthenticated ? '/(tabs)/properties' : '/components/Auth/Signin',
-        user_type: userType
+      logEvent(analytics, "landing_page_navigation", {
+        event_category: "auth",
+        event_label: "landing_interaction",
+        action: isAuthenticated ? "continue" : "login_signup",
+        destination: isAuthenticated
+          ? "/(tabs)/properties"
+          : "/components/Auth/Signin",
+        user_type: userType,
       });
     } catch (error) {
-      console.error('Error logging navigation:', error);
+      console.error("Error logging navigation:", error);
     }
 
     if (!isAuthenticated) {
@@ -162,19 +167,16 @@ export default function LandingPage() {
       <View style={styles.container}>
         <View style={styles.contentWrapper}>
           <View style={styles.logoContainer}>
-            <Text style={styles.title}>ACN</Text>
+            <Image
+              source={require("@/assets/images/home-screen.png")}
+              style={{ maxHeight: "40%", maxWidth: "55%" }}
+            />
             <View style={styles.subtitleRow}>
-              <Text style={[styles.subtitle]}>
-                Connect
-              </Text>
+              <Text style={[styles.subtitle]}>Connect</Text>
               <Text style={[styles.subtitle]}>|</Text>
-              <Text style={[styles.subtitle]}>
-                Collaborate
-              </Text>
+              <Text style={[styles.subtitle]}>Collaborate</Text>
               <Text style={[styles.subtitle]}>|</Text>
-              <Text style={[styles.subtitle]}>
-                Succeed
-              </Text>
+              <Text style={[styles.subtitle]}>Succeed</Text>
             </View>
           </View>
 
@@ -251,6 +253,7 @@ const styles = StyleSheet.create({
   logoContainer: {
     alignItems: "center",
     marginBottom: height * 0.1,
+    gap: 10,
   },
   title: {
     fontSize: 48,

@@ -68,8 +68,8 @@ interface PropertyCardProps {
   property: any;
   selectedProperties?: Set<string>;
   isSelectionMode?: boolean;
-  onToggleSelection?: (propertyId: string) => void;
-  onLongPress?: (propertyId: string) => void;
+  onToggleSelection?: (propertyId: string, propertyStatus: string) => void;
+  onLongPress?: (propertyId: string, propertyStatus: string) => void;
 }
 
 interface IdGenerationResult {
@@ -469,7 +469,7 @@ const PropertyCard: React.FC<PropertyCardProps> = ({
       } else {
         Haptics.selectionAsync();
       }
-      onToggleSelection(property.propertyId);
+      onToggleSelection(property.propertyId, property.status);
     }
   };
 
@@ -482,7 +482,7 @@ const PropertyCard: React.FC<PropertyCardProps> = ({
         // For Android, use notification impact which is more noticeable
         Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
       }
-      onLongPressProp(property.propertyId);
+      onLongPressProp(property.propertyId, property.status);
     }
   };
 
@@ -692,7 +692,17 @@ const PropertyCard: React.FC<PropertyCardProps> = ({
 
                 {/* ✅ FIXED: Tags section with safe filtering and rendering */}
                 <View className="flex-row flex-wrap gap-2 mb-3">
-                  {[property.assetType, property.unitType, property.facing]
+                  {[
+                    toCapitalizedWords(property.assetType),
+                    property.noOfBedrooms &&
+                      property.noOfBedrooms !== null &&
+                      `${property.noOfBedrooms} BHK`,
+                    property.assetType === "plot" &&
+                      `${property.plotArea} Sqft`,
+                    property.facing &&
+                      property.facing !== null &&
+                      toCapitalizedWords(property.facing),
+                  ]
                     .filter(
                       (tag) => tag !== null && tag !== undefined && tag !== ""
                     )

@@ -263,7 +263,6 @@ export const updateProperty = async (
   };
 
   await updateDoc(ref, updateData);
-  console.log("Hare Krishna")
 
   // Log changes in edit history
   if (currentData && isEdit) {
