@@ -20,28 +20,41 @@ jobs:
         with:
           node-version: 18
 
-      # 3. Install project dependencies
+      # 3. Cache Node modules for faster builds
+      - name: Cache Node Modules
+        uses: actions/cache@v4
+        with:
+          path: |
+            node_modules
+            ~/.npm
+          key: ${{ runner.os }}-npm-${{ hashFiles('package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-npm-
+
+      # 4. Install project dependencies
       - name: Install Dependencies
         run: npm install
 
-      # 4. Install EAS CLI globally
+      # 5. Install EAS CLI globally
       - name: Install EAS CLI
         run: npm install -g eas-cli
-      
-      # ✅ Authenticate with Expo
+
+      # 6. Verify Expo Authentication
       - name: Verify Expo Authentication
         run: eas whoami
         env:
           EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
 
-      # 5. Build iOS app locally (Unsigned)
+      # 7. Build iOS app locally (Unsigned IPA)
       - name: Build iOS App
         run: |
           eas build --platform ios --local --non-interactive \
           --profile development \
           --output build.ipa
+        env:
+          EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
 
-      # 6. Upload the IPA as GitHub Artifact
+      # 8. Upload the IPA as GitHub Artifact
       - name: Upload IPA Artifact
         uses: actions/upload-artifact@v4
         with:
