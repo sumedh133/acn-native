@@ -18,15 +18,6 @@
         "credentialsSource": "local",
         "buildConfiguration": "Release"
       }
-    },
-    "simulator": {
-      "ios": {
-        "simulator": true,
-        "buildConfiguration": "Debug",
-      },
-      "android": {
-        "buildType": "apk"
-      }
     }
   },
   "submit": {
