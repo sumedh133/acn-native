@@ -1,6 +1,4 @@
 name: iOS Local Build (Unsigned)
-
-
 on:
   push:
     branches:
@@ -8,18 +6,17 @@ on:
 jobs:
   build-ios:
     runs-on: macos-latest
-
     steps:
       # 1. Checkout the code
       - name: Checkout Repository
         uses: actions/checkout@v4
-
+      
       # 2. Set up Node.js
       - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
           node-version: 18
-
+      
       # 3. Cache Node modules for faster builds
       - name: Cache Node Modules
         uses: actions/cache@v4
@@ -30,30 +27,30 @@ jobs:
           key: ${{ runner.os }}-npm-${{ hashFiles('package-lock.json') }}
           restore-keys: |
             ${{ runner.os }}-npm-
-
+      
       # 4. Install project dependencies
       - name: Install Dependencies
         run: npm install
-
+      
       # 5. Install EAS CLI globally
       - name: Install EAS CLI
         run: npm install -g eas-cli
-
+      
       # 6. Verify Expo Authentication
       - name: Verify Expo Authentication
         run: eas whoami
         env:
           EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
-
+      
       # 7. Build iOS app locally (Unsigned IPA)
       - name: Build iOS App
         run: |
           eas build --platform ios --local \
-          --profile development \
+          --profile ci \
           --output build.ipa
         env:
           EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
-
+      
       # 8. Upload the IPA as GitHub Artifact
       - name: Upload IPA Artifact
         uses: actions/upload-artifact@v4
