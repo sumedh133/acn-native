@@ -84,7 +84,7 @@ export const listenToPropertyChanges =
   (propertyId: string): ThunkAction<void, RootState, unknown, AnyAction> =>
   (dispatch, getState) => {
     dispatch(clearPropertyListener());
-    const docRef = doc(db, "acnProperties", propertyId);
+    const docRef = doc(db, "acnTestProperties", propertyId);
     const unsubscribe = onSnapshot(docRef, (docSnap) => {
       if (docSnap.exists()) {
         dispatch(setPropertyData(docSnap.data() as Property));

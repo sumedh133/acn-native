@@ -1,6 +1,6 @@
 import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import React, { useState } from "react";
-import { ListingProperty } from "@/app/types";
+import { Property } from "@/app/types";
 import TrashIcon from "@/assets/icons/svg/Common/TrashIcon";
 import { formatUnixDate, getUnixDateTime } from "@/app/helpers/getUnixDateTime";
 import DeleteDraft from "@/app/modals/DeleteDraft";
@@ -10,18 +10,17 @@ const DraftCard = ({
   deleteDraft,
   pressCard,
 }: {
-  item: ListingProperty;
+  item: Property;
   deleteDraft: (id: string) => void;
-  pressCard: (item: ListingProperty) => void;
+  pressCard: (item: Property) => void;
 }) => {
-  const[deleteModal, setDeleteModal] = useState(false);
+  const [deleteModal, setDeleteModal] = useState(false);
   const [propertyId, setPropertyId] = useState("")
   const cardSubText = React.useMemo(() => {
     const parts = [];
 
-    // Add unitType, plotSize, or sbua (first non-empty value)
-    if (item.unitType) parts.push(item.unitType);
-    else if (item.plotSize) parts.push(item.plotSize + " Sqft");
+
+    if (item.plotArea) parts.push(item.plotArea + " Sqft");
     else if (item.sbua) parts.push(item.sbua + " Sqft");
 
     // Add assetType if it exists
@@ -40,32 +39,32 @@ const DraftCard = ({
   }
   return (
     <View>
-    <TouchableOpacity
-      style={styles.propertyItem}
-      onPress={() => pressCard(item)}
-    >
-      <View style={styles.propertyInfo}>
-        <Text style={styles.propertyName}>{item.propertyName}</Text>
-        <Text style={styles.propertyDetails}>{cardSubText}</Text>
-        <Text style={styles.propertyDetails}>
-          {item.sbua} {item.sbua && "|"} {item.furnishing}
-        </Text>
-        <Text style={styles.editedDate}>
-          Last Edited :{" "}
-          <Text style={styles.lastEditedText}>
-            {formatUnixDate(item.lastModified)}
-          </Text>
-        </Text>
-      </View>
       <TouchableOpacity
-        onPress={() => {
-          item.propertyId && handleDeleteModalClicked(item.propertyId);
-        }}
+        style={styles.propertyItem}
+        onPress={() => pressCard(item)}
       >
-        <TrashIcon />
+        <View style={styles.propertyInfo}>
+          <Text style={styles.propertyName}>{item.propertyName}</Text>
+          <Text style={styles.propertyDetails}>{cardSubText}</Text>
+          <Text style={styles.propertyDetails}>
+            {item.sbua} {item.sbua && "|"} {item.furnishing}
+          </Text>
+          <Text style={styles.editedDate}>
+            Last Edited :{" "}
+            <Text style={styles.lastEditedText}>
+              {formatUnixDate(item.lastModified)}
+            </Text>
+          </Text>
+        </View>
+        <TouchableOpacity
+          onPress={() => {
+            item.propertyId && handleDeleteModalClicked(item.propertyId);
+          }}
+        >
+          <TrashIcon />
+        </TouchableOpacity>
       </TouchableOpacity>
-    </TouchableOpacity>
-    <DeleteDraft
+      <DeleteDraft
         visible={deleteModal}
         onClose={() => setDeleteModal(false)}
         handleDelete={() => deleteDraft(propertyId)}

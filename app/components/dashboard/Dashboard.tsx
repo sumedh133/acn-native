@@ -4,6 +4,7 @@ import React, {
   useMemo,
   useEffect,
   useRef,
+  useContext,
 } from "react";
 import {
   View,
@@ -16,6 +17,7 @@ import {
   Linking,
   ActivityIndicator,
   StyleSheet,
+  Animated,
 } from "react-native";
 import { StatusBar } from "expo-status-bar";
 import {
@@ -35,10 +37,10 @@ import {
   Requirement,
   EnquiryWithProperty,
   Enquiry,
-  ListingProperty,
 } from "@/app/types";
 import { formatCost2, toCapitalizedWords } from "@/app/helpers/common";
 import DashboardDropdown from "./DashboardDropdown";
+import { ScrollContext } from "@/app/ScrollContext";
 import {
   collection,
   doc,
@@ -97,7 +99,7 @@ type DashboardProps = {
   myEnquiries: EnquiryWithProperty[];
   myProperties: Property[];
   myRequirements: Requirement[];
-  myListing: ListingProperty[];
+  myListing: Property[];
   loading: {
     enquiriesLoading: boolean;
     propertiesLoading: boolean;
@@ -114,13 +116,13 @@ export default function Dashboard({
   loading,
 }: DashboardProps) {
   const route = useRoute<DashboardRouteProp>();
-  const tab = route.params?.tab || "inventories";
+  const tab = route.params?.tab || "requirements";
 
-  const [activeTab, setActiveTab] = useState(tab || "inventories");
+  const [activeTab, setActiveTab] = useState(tab || "requirements");
   const [properties, setProperties] = useState<Property[] | []>([]);
   const [requirements, setRequirements] = useState<Requirement[] | []>([]);
   const [enquiries, setEnquiries] = useState<EnquiryWithProperty[] | []>([]);
-  const [listings, setListings] = useState<ListingProperty[] | []>([]);
+  const [listings, setListings] = useState<Property[] | []>([]);
   const [monthFilter, setMonthFilter] = useState<string>("");
   const [monthFilterOptions, setMonthFilterOptions] = useState<
     Array<{ label: string; value: any }>
@@ -135,6 +137,18 @@ export default function Dashboard({
 
   const isBatchSizePendingLock = useRef(false);
   const initalLoad = useRef(true);
+
+  // Scroll context for header/footer animations
+  const { scrollY, onScrollEndDrag, onMomentumScrollEnd } =
+    useContext(ScrollContext);
+
+  // Handle scroll events for analytics or other dashboard-specific logic
+  const handleScroll = useCallback(
+    (event: NativeSyntheticEvent<NativeScrollEvent>) => {
+      // Dashboard-specific scroll handling can be added here if needed
+    },
+    []
+  );
 
   const kam_number = useSelector(selectKamNumber);
   const userType =
@@ -490,13 +504,13 @@ export default function Dashboard({
   ]);
 
   const tabData = [
-    {
-      key: "inventories",
-      label: "My Inventories",
-      icon: MyInverntoriesIcon,
-      count: myProperties.length + myListing.length,
-      loading: loading.propertiesLoading,
-    },
+    // {
+    //   key: "inventories",
+    //   label: "My Inventories",
+    //   icon: MyInverntoriesIcon,
+    //   count: myProperties.length + myListing.length,
+    //   loading: loading.propertiesLoading,
+    // },
     {
       key: "requirements",
       label: "My Requirements",
@@ -657,7 +671,16 @@ export default function Dashboard({
       )}
 
       {/* Content Area */}
-      <StyledScrollView contentContainerStyle={{ flexGrow: 1 }}>
+      <Animated.ScrollView
+        contentContainerStyle={{ flexGrow: 1 }}
+        onScroll={Animated.event(
+          [{ nativeEvent: { contentOffset: { y: scrollY } } }],
+          { useNativeDriver: false, listener: handleScroll }
+        )}
+        scrollEventThrottle={16}
+        onScrollEndDrag={onScrollEndDrag}
+        onMomentumScrollEnd={onMomentumScrollEnd}
+      >
         {renderTabContent && (
           <StyledView onLayout={renderMore} style={{ flex: 1 }}>
             {renderTabContent}
@@ -669,7 +692,7 @@ export default function Dashboard({
             color="#153E3B"
           />
         )}
-      </StyledScrollView>
+      </Animated.ScrollView>
     </StyledView>
   );
 }

@@ -32,9 +32,10 @@ interface PlaceDetails {
 }
 
 interface PlacesSearchProps {
-  selectedPlace: Places | null;
-  setSelectedPlace: (place: Places | null) => void;
+  selectedPlace?: Places;
+  setSelectedPlace: (place?: Places) => void;
   communityType: string | null | undefined;
+  disabled?: boolean
 }
 
 // Note: In production, use environment variables or a secure config approach
@@ -44,6 +45,7 @@ const PlacesSearch = ({
   selectedPlace,
   setSelectedPlace,
   communityType,
+  disabled = false
 }: PlacesSearchProps) => {
   const [searchQuery, setSearchQuery] = useState("");
   const [searchResults, setSearchResults] = useState<PlacePrediction[]>([]);
@@ -174,12 +176,12 @@ const PlacesSearch = ({
   const handleSearchInputChange = (text: string) => {
     setSearchQuery(text);
     setUserInitiatedSearch(true);
-    setSelectedPlace(null);
+    setSelectedPlace(undefined);
     setBlurredAndNotSelected(false);
     // If user clears the input, reset everything
     if (!text.trim()) {
       setBlurredAndNotSelected(false);
-      setSelectedPlace(null);
+      setSelectedPlace(undefined);
       setSearchResults([]);
       setShowResults(false);
     }
@@ -218,7 +220,7 @@ const PlacesSearch = ({
   // Clear search
   const handleClearSearch = useCallback(() => {
     setSearchQuery("");
-    setSelectedPlace(null);
+    setSelectedPlace(undefined);
     setSearchResults([]);
     setShowResults(false);
     setUserInitiatedSearch(false);
@@ -256,20 +258,22 @@ const PlacesSearch = ({
             blurredAndNotSelected ? styles.notSelectedState : {},
           ]}
         >
-          <Ionicons name="search-outline" size={20} color="#726C6C" />
+          <Ionicons name="search-outline" height={20} width={20} color="#726C6C" />
           <TextInput
             style={styles.textInput}
             placeholder={
-              communityType === "Independent"
-                ? "Nearby LandMark"
-                : "Project Name"
+              communityType === "independent"
+                ? "Search Nearby LandMark"
+                : "Search Project Name"
             }
             placeholderTextColor="#7A7B7C"
             value={searchQuery}
             onChangeText={handleSearchInputChange}
             onFocus={handleSearchFocus}
             onBlur={handleSearchBlur}
+            editable={!disabled}
           />
+
 
           {isLoading ? (
             <ActivityIndicator
@@ -277,7 +281,7 @@ const PlacesSearch = ({
               size="small"
               color="#153E3B"
             />
-          ) : searchQuery ? (
+          ) : searchQuery && !disabled? (
             <TouchableOpacity
               onPress={handleClearSearch}
               style={styles.rightIcon}
@@ -292,6 +296,7 @@ const PlacesSearch = ({
           <View style={styles.resultsContainer}>
             <FlatList
               data={searchResults}
+              onScroll={() => Keyboard.dismiss()}
               keyExtractor={(item) => item.place_id}
               renderItem={({ item }) => (
                 <TouchableOpacity
@@ -306,7 +311,9 @@ const PlacesSearch = ({
               keyboardShouldPersistTaps="handled"
               scrollEnabled={true}
               nestedScrollEnabled={true}
+              showsVerticalScrollIndicator={true} // Shows scroll indicator
               style={styles.resultsList}
+              contentContainerStyle={styles.resultsListContent} // Add this
             />
           </View>
         )}
@@ -331,16 +338,15 @@ const styles = StyleSheet.create({
   headingContainer: {
     display: "flex",
     flexDirection: "row",
-    gap: 6,
+    gap: 0,
   },
   sectionHeading: {
-    fontFamily: "Montserrat_600SemiBold",
-    fontSize: 14,
+    fontFamily: "Lato-Bold",
+    fontSize: 16,
+    fontWeight: "700"
   },
   compulsoryStar: {
-    fontFamily: "sans-serif",
-    color: "#DC3545",
-    fontSize: 14,
+    fontSize: 16,
     fontWeight: "400",
   },
   inputContainer: {
@@ -352,6 +358,7 @@ const styles = StyleSheet.create({
     backgroundColor: "#FAFAFA",
     paddingHorizontal: 12,
     paddingVertical: 8,
+    height: 32,
     gap: 8,
   },
   textInput: {
@@ -360,6 +367,7 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontWeight: "400",
     color: "#333333",
+    height: 20
   },
   notSelectedState: { borderColor: "#D92D20" },
   rightIcon: {
@@ -374,8 +382,8 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
   },
   resultsContainer: {
-     position: "absolute",
-    bottom: 50,
+    position: "absolute",
+    top: 50,
     left: 0,
     right: 0,
     backgroundColor: "white",
@@ -389,6 +397,10 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.15,
     shadowRadius: 4,
+  },
+  resultsListContent: {
+    flexGrow: 1,
+    paddingBottom: 10, // Add some bottom padding
   },
   resultsList: {
     width: "100%",

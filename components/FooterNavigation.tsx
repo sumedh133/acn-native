@@ -1,14 +1,5 @@
-import ActiveDashboardIcon from "@/assets/icons/svg/Footer/ActiveDashboardIcon";
-import ActiveNotificationIcon from "@/assets/icons/svg/Footer/ActiveNotificationsIcon";
-import ActivePropertiesIcon from "@/assets/icons/svg/Footer/ActivePropertiesIcon";
-import ActiveRequirementsIcon from "@/assets/icons/svg/Footer/ActiveRequirementsIcon";
-import DashboardIcon from "@/assets/icons/svg/Footer/DashboardIcon";
-import NotificationIcon from "@/assets/icons/svg/Footer/NotificationIcon";
-import PropertiesIcon from "@/assets/icons/svg/Footer/PropertiesIcon";
-import RequirementsIcon from "@/assets/icons/svg/Footer/RequirementsIcon";
-import PlusIcon from "@/assets/icons/svg/Common/PlusIcon";
 import { useNavigation, usePathname, useRouter } from "expo-router";
-import React, { ReactNode, useState, useRef, useEffect } from "react";
+import React, { useState, useRef, useEffect, useContext } from "react";
 import {
   Text,
   TouchableOpacity,
@@ -17,53 +8,17 @@ import {
   BackHandler,
 } from "react-native";
 import { StyleSheet, View, Dimensions } from "react-native";
-import AddPopup from "./AddPopup";
 import { useFocusEffect } from "@react-navigation/native";
 import { analytics } from "@/app/config/firebase";
 import { logEvent } from "@react-native-firebase/analytics";
 import { useSelector } from "react-redux";
 import { RootState } from "@/store/store";
-import useNotification from "@/app/components/Notification/useNotification";
-
-interface MenuItem {
-  title: string;
-  path: string;
-  icon: ReactNode;
-  activeIcon: ReactNode;
-}
-
-const menuItems: MenuItem[] = [
-  {
-    title: "Properties",
-    path: "/properties",
-    icon: <PropertiesIcon width={24} height={24} />,
-    activeIcon: <ActivePropertiesIcon width={24} height={24} />,
-  },
-  {
-    title: "Requirements",
-    path: "/requirements",
-    icon: <RequirementsIcon width={24} height={24} />,
-    activeIcon: <ActiveRequirementsIcon width={24} height={24} />,
-  },
-  {
-    title: "",
-    path: "/add",
-    icon: <PlusIcon width={24} height={24} />,
-    activeIcon: null,
-  },
-  {
-    title: "Notifications",
-    path: "/NotificationPage",
-    icon: <NotificationIcon width={24} height={24} />,
-    activeIcon: <ActiveNotificationIcon width={24} height={24} />,
-  },
-  {
-    title: "Dashboard",
-    path: "/dashboardTab",
-    icon: <DashboardIcon width={24} height={24} />,
-    activeIcon: <ActiveDashboardIcon width={24} height={24} />,
-  },
-];
+import { ScrollContext } from "@/app/ScrollContext";
+import ModularPopup from "./ModularPopup";
+import StatusInfoBottomSheet from "../app/components/property/StatusInfoBottomSheet";
+import NewEnquiriesModal from "@/app/components/property/NewEnquiriesModal";
+import { ModalType, getModalItems } from "@/app/constants/footerModalOptions";
+import { getPopupItems, menuItems } from "@/app/constants/footerConstants";
 
 const FooterNavigation = () => {
   const pathname = usePathname();
@@ -73,8 +28,6 @@ const FooterNavigation = () => {
   const userType =
     useSelector((state: RootState) => state?.agent?.docData?.userType) ||
     "free";
-  const { unreadCount } = useNotification();
-
   const [popupAnimationFlag, setPopupAnimationFlag] = useState<boolean>(false);
   const [showPopup, setShowPopup] = useState<boolean>(false);
   const navigateAtEndOfAnimation = useRef<string | null>(null);
@@ -83,10 +36,123 @@ const FooterNavigation = () => {
   const slideAnimation = useRef(new Animated.Value(height)).current;
   const opacityAnimation = useRef(new Animated.Value(0)).current;
 
+  // Unified modal state
+  const [activeModal, setActiveModal] = useState<ModalType>(null);
+  const modalSlideAnimation = useRef(new Animated.Value(height)).current;
+  const modalOpacityAnimation = useRef(new Animated.Value(0)).current;
+
+  const {
+    footerTranslateY,
+    resetFooterPosition,
+
+    // Sort
+    showSortPopup,
+    selectedSort,
+    closeSortPopup,
+    setSelectedSort,
+
+    // Status
+    showStatusPopup,
+    selectedStatus,
+    closeStatusPopup,
+    setSelectedStatus,
+
+    // Category
+    showCategoryPopup,
+    selectedCategory,
+    closeCategoryPopup,
+    setSelectedCategory,
+
+    //New Enquiry
+    showNewEnquiryPopup,
+    closeNewEnquiryPopup,
+    openNewEnquiryPopup,
+
+    setFooterHeight,
+    footerHeight,
+
+    // Status info sheet state
+    isStatusInfoOpen,
+    currentStatusInfo,
+    closeStatusInfo,
+  } = useContext(ScrollContext);
+
   const rotate = rotateAnimation.interpolate({
     inputRange: [0, 1],
     outputRange: ["0deg", "45deg"],
   });
+
+  // Unified selection handler
+  const handleSelection = (type: string, value: string) => {
+    try {
+      logEvent(analytics, `property_${type}_change`, {
+        event_category: type,
+        event_label: "property",
+        [`${type}_value`]: value,
+        user_type: userType,
+      });
+    } catch (error) {
+      console.error(`Error logging ${type} change:`, error);
+    }
+
+    switch (type) {
+      case "sort":
+        setSelectedSort(value);
+        closeSortPopup();
+        break;
+      case "status":
+        setSelectedStatus(value);
+        closeStatusPopup();
+        break;
+      case "listingType":
+        setSelectedCategory(value);
+        closeCategoryPopup();
+        break;
+    }
+
+    setActiveModal(null);
+  };
+
+  // Unified close handler
+  const closeActiveModal = () => {
+    switch (activeModal) {
+      case "sort":
+        closeSortPopup();
+        break;
+      case "status":
+        closeStatusPopup();
+        break;
+      case "listingType":
+        closeCategoryPopup();
+        break;
+    }
+    setActiveModal(null);
+  };
+
+  const handleCardPress = (item: any) => {
+    try {
+      const getDestinationFromId = (id: string) => {
+        switch (id) {
+          case "add_inventory":
+            return "(pages)/Drafts";
+          case "add_requirement":
+            return "(tabs)/UserRequirementForm";
+          default:
+            return "";
+        }
+      };
+
+      logEvent(analytics, "add_popup_selection", {
+        event_category: "interaction",
+        event_label: "selection",
+        selected_option: item.id,
+        destination: getDestinationFromId(item.id),
+        user_type: userType,
+      });
+    } catch (error) {
+      console.error("Error logging popup selection:", error);
+    }
+  };
 
   const handleNavigation = (path: string) => {
     if (popupAnimationFlag) {
@@ -132,8 +198,21 @@ const FooterNavigation = () => {
     navigateAtEndOfAnimation.current = path;
   };
 
+  useEffect(() => {
+    if (resetFooterPosition) {
+      resetFooterPosition();
+    }
+  }, [pathname, resetFooterPosition]);
+
   const handlePopupClick = () => {
     const newState = !popupAnimationFlag;
+
+    if (newState) {
+      // Close any active modals
+      closeActiveModal();
+    }
+
+    setPopupAnimationFlag(newState);
 
     try {
       logEvent(analytics, newState ? "open_add_popup" : "close_add_popup", {
@@ -146,8 +225,6 @@ const FooterNavigation = () => {
     } catch (error) {
       console.error("Error logging popup interaction:", error);
     }
-
-    setPopupAnimationFlag(newState);
   };
 
   const params = navigation?.getState()?.routes?.at(-1)?.params as {
@@ -161,20 +238,22 @@ const FooterNavigation = () => {
           setPopupAnimationFlag(false);
           return true;
         }
+        if (activeModal) {
+          closeActiveModal();
+          return true;
+        }
         return false;
       };
 
-      // Add back press event listener
       const subscription = BackHandler.addEventListener(
         "hardwareBackPress",
         handleBackPress
       );
 
-      // Cleanup
       return () => {
         subscription.remove();
       };
-    }, [popupAnimationFlag])
+    }, [popupAnimationFlag, activeModal])
   );
 
   useEffect(() => {
@@ -216,7 +295,63 @@ const FooterNavigation = () => {
     });
   }, [popupAnimationFlag, rotateAnimation, slideAnimation, height]);
 
+  // Unified modal effect
+  useEffect(() => {
+    const isAnyModalOpen =
+      showSortPopup || showStatusPopup || showCategoryPopup;
+
+    if (isAnyModalOpen) {
+      // Close popup modal if it's open
+      setPopupAnimationFlag(false);
+
+      // Reset footer position when any modal opens
+      resetFooterPosition?.();
+
+      // Set active modal type
+      if (showSortPopup) setActiveModal("sort");
+      else if (showStatusPopup) setActiveModal("status");
+      else if (showCategoryPopup) setActiveModal("listingType");
+    } else {
+      setActiveModal(null);
+    }
+
+    const modalSlideAnimationTemp = Animated.timing(modalSlideAnimation, {
+      toValue: isAnyModalOpen ? 0 : height,
+      duration: 300,
+      easing: Easing.linear,
+      useNativeDriver: true,
+    });
+
+    const modalOpacityAnimationTemp = Animated.timing(modalOpacityAnimation, {
+      toValue: isAnyModalOpen ? 1 : 0,
+      duration: 300,
+      easing: Easing.linear,
+      useNativeDriver: true,
+    });
+
+    Animated.parallel([
+      modalSlideAnimationTemp,
+      modalOpacityAnimationTemp,
+    ]).start();
+  }, [
+    showSortPopup,
+    showStatusPopup,
+    showCategoryPopup,
+    modalSlideAnimation,
+    modalOpacityAnimation,
+    height,
+  ]);
+
   if (params?.showFooter === false) return null;
+
+  const popupItems = getPopupItems(handlePopupCardClick);
+  const modalItems = getModalItems(
+    activeModal,
+    selectedSort,
+    selectedStatus,
+    selectedCategory,
+    handleSelection
+  );
 
   return (
     <>
@@ -234,15 +369,54 @@ const FooterNavigation = () => {
             style={styles.popupTouch}
             onPress={(e) => handlePopupClick()}
           >
-            <AddPopup
-              handlePopupCardPress={handlePopupCardClick}
+            <ModularPopup
+              items={popupItems}
               slideAnimation={slideAnimation}
               onDragDown={() => handlePopupClick()}
+              onItemPress={handleCardPress}
+              dragThreshold={10}
             />
           </TouchableOpacity>
         </Animated.View>
       )}
-      <View style={styles.footer}>
+
+      {/* Unified Modal for Sort/Status/Category */}
+      {activeModal && (
+        <Animated.View
+          style={[
+            styles.popupContainerOverFooter,
+            { opacity: modalOpacityAnimation },
+          ]}
+        >
+          <TouchableOpacity
+            activeOpacity={1}
+            style={styles.popupTouchOverFooter}
+            onPress={closeActiveModal}
+          >
+            <ModularPopup
+              items={modalItems}
+              slideAnimation={modalSlideAnimation}
+              onDragDown={closeActiveModal}
+              dragThreshold={10}
+            />
+          </TouchableOpacity>
+        </Animated.View>
+      )}
+
+      <Animated.View
+        onLayout={(e) => {
+          const { height } = e.nativeEvent.layout;
+          if (footerHeight === null) {
+            setFooterHeight(height + 25);
+          }
+        }}
+        style={[
+          styles.footer,
+          {
+            transform: [{ translateY: footerTranslateY }],
+          },
+        ]}
+      >
         {menuItems?.map((item, idx) => {
           const active = item?.path === pathname;
           if (item?.path === "/add") {
@@ -265,7 +439,6 @@ const FooterNavigation = () => {
               </TouchableOpacity>
             );
           }
-          const isNotificationsTab = item?.path === "/NotificationPage";
           return (
             <TouchableOpacity
               onPress={() => handleNavigation(item?.path)}
@@ -275,9 +448,6 @@ const FooterNavigation = () => {
                 {active && <View style={styles.activeBar}></View>}
                 <View style={{ position: "relative" }}>
                   {active ? item?.activeIcon : item?.icon}
-                  {isNotificationsTab && unreadCount > 0 && (
-                    <View style={styles.notificationDot} />
-                  )}
                 </View>
                 <Text style={active ? styles.itemActiveText : styles.itemText}>
                   {item?.title}
@@ -286,7 +456,22 @@ const FooterNavigation = () => {
             </TouchableOpacity>
           );
         })}
-      </View>
+      </Animated.View>
+
+      {/* Mounted at footer so it anchors to bottom nav */}
+      <StatusInfoBottomSheet
+        visible={isStatusInfoOpen}
+        status={currentStatusInfo}
+        onClose={closeStatusInfo}
+      />
+      <NewEnquiriesModal
+        visible={showNewEnquiryPopup}
+        onClose={closeNewEnquiryPopup}
+        onCheckNow={() => {
+          console.log("NewEnquiriesModal: Check Now clicked");
+          closeNewEnquiryPopup();
+        }}
+      />
     </>
   );
 };
@@ -299,6 +484,13 @@ const styles = StyleSheet.create({
     height: "100%",
     backgroundColor: "#00000033",
   },
+  popupContainerOverFooter: {
+    position: "absolute",
+    zIndex: 105,
+    width: "100%",
+    height: "100%",
+    backgroundColor: "#00000033",
+  },
   popupTouch: {
     width: "100%",
     height: "100%",
@@ -307,14 +499,27 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "flex-end",
     gap: 12,
-    paddingBottom: 59,
+    paddingBottom: 55,
+  },
+  popupTouchOverFooter: {
+    width: "100%",
+    height: "100%",
+    display: "flex",
+    flexDirection: "column",
+    alignItems: "center",
+    justifyContent: "flex-end",
+    gap: 12,
+    zIndex: 105,
   },
   footer: {
+    position: "absolute",
+    bottom: 0,
+    left: 0,
+    right: 0,
     display: "flex",
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
-    height: 59,
     paddingHorizontal: 9.5,
     backgroundColor: "#FFFFFF",
     borderTopWidth: 1,

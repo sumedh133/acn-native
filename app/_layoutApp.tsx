@@ -3,13 +3,22 @@ import {
   SplashScreen,
   Stack,
   useNavigation,
+  usePathname,
   useRouter,
 } from "expo-router";
-import React, { useCallback, useEffect, useState } from "react";
+import React, {
+  useCallback,
+  useContext,
+  useEffect,
+  useRef,
+  useState,
+  useLayoutEffect,
+} from "react";
 import Toast from "react-native-toast-message";
 import { StatusBar } from "expo-status-bar";
 import { toastConfig } from "@/utils/toastUtils";
 import OnboardingFlow, { useOnboardingContext } from "./components/Onboarding";
+import { showSuccessToast } from "@/utils/toastUtils";
 import { updateAgentDocData } from "@/store/slices/agentSlice";
 import {
   Keyboard,
@@ -19,6 +28,7 @@ import {
   TouchableOpacity,
   useColorScheme,
   View,
+  Animated,
 } from "react-native";
 import {
   useFonts,
@@ -71,18 +81,29 @@ import Maintenance from "./maintainance";
 import VersionChecker from "./VersionChecker";
 import { doc, onSnapshot } from "firebase/firestore";
 import { db } from "@/app/config/firebase";
+import { ScrollContext, ScrollProvider } from "./ScrollContext";
+import NotificationIcon from "@/assets/icons/notificationIcon.svg";
+import { useEnquiries } from "@/hooks/enquiryHooks/useEnquiries";
+import { setItem, getItem, clearStorage } from "@/storage";
+import NewEnquiriesModal from "./components/property/NewEnquiriesModal";
+import { useUI } from "./uiContext";
 
 // Custom header component to apply the desired styling
 const CustomHeader = ({
   title,
   onMenuPress,
   headerBackVisible,
+  unreadCount,
 }: {
   title: string;
   onMenuPress: (backHeader: boolean) => void;
   headerBackVisible: boolean;
+  unreadCount: number;
 }) => {
-  const insets = useSafeAreaInsets();
+  const { headerHeight, setHeaderHeight } = useContext(ScrollContext)!;
+  const [measured, setMeasured] = useState(false);
+
+
   const monthlyCredits = useSelector(
     (state: RootState) => state?.agent?.docData?.monthlyCredits
   );
@@ -91,41 +112,80 @@ const CustomHeader = ({
     0;
 
   return (
-    <View style={styles.headerContainer}>
-      <View style={styles.headerContent}>
-        <View style={styles.headerLeft}>
-          <TouchableOpacity onPress={() => onMenuPress(headerBackVisible)}>
-            {headerBackVisible ? (
-              <ArrowLeftIcon />
-            ) : (
-              <UserIcon width={32} height={32} />
-            )}
-          </TouchableOpacity>
-          <Text style={styles.headerTitle}>{title}</Text>
+    <Animated.View
+      style={{
+        height: headerHeight, // <- animated height from context
+        zIndex: 10,
+        overflow: "hidden", // hide collapsing content
+      }}
+    >
+      <View
+        style={styles.headerContainer}
+      //         onLayout={(event) => {
+      //   if (!measured.current) {
+      //     setHeaderHeight(event.nativeEvent.layout.height);
+      //     measured.current = true;
+      //   }
+      // }}
+      >
+        <View style={styles.headerContent}>
+          <View style={styles.headerLeft}>
+            <TouchableOpacity onPress={() => onMenuPress(headerBackVisible)}>
+              {headerBackVisible ? (
+                <ArrowLeftIcon />
+              ) : (
+                <UserIcon width={32} height={32} />
+              )}
+            </TouchableOpacity>
+            <Text style={styles.headerTitle}>{title}</Text>
+          </View>
+
+          {!headerBackVisible && (
+            <View className="flex flex-row items-center gap-2">
+              <TouchableOpacity
+                className="relative border p-[6px] rounded-md border-[#9F9C9C]"
+                onPress={() => {
+                  router.push("/(tabs)/NotificationPage");
+                }}
+              >
+                {unreadCount > 0 && (
+                  <Text className="absolute text-white top-[2px] right-[3px] bg-[#EB5757] rounded-full px-[4px] py-[1px] text-[10px] z-10">
+                    {unreadCount}
+                  </Text>
+                )}
+                <NotificationIcon width={21} height={21} className="z-0" />
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={styles.headerRight}
+                onPress={() => router.push("/(pages)/Credits")}
+              >
+                <Text style={styles.creditsText}>
+                  {monthlyCredits + boosterCredits}
+                </Text>
+                <CoinIcon width={18} height={18} />
+              </TouchableOpacity>
+            </View>
+          )}
         </View>
-        {!headerBackVisible && (
-          <TouchableOpacity
-            style={styles.headerRight}
-            onPress={() => router.push("/(pages)/Credits")}
-          >
-            <Text style={styles.creditsText}>
-              {monthlyCredits + boosterCredits}
-            </Text>
-            <CoinIcon width={18} height={18} />
-          </TouchableOpacity>
-        )}
       </View>
-    </View>
+    </Animated.View>
   );
 };
 
 export default function LayoutApp() {
+  const dispatch = useDispatch<ThunkDispatch<RootState, unknown, AnyAction>>();
+  const { showNewEnquiryPopup, setShowNewEnquiryPopup, storedCount, setStoredCount } = useUI();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isMaintenanceMode, setIsMaintenanceMode] = useState(false);
-
+  const [isScrolling, setIsScrolling] = useState(false);
   const [showOnboarding, setShowOnboarding] = useState(true);
   const colorScheme = useColorScheme();
   const [topMargin, setTopMargin] = useState(10);
+  const [unreadCount, setUnreadCount] = useState(0);
+
+  const { enquiryCount } = useEnquiries();
+
   const [fontsLoaded] = useFonts({
     Montserrat_400Regular,
     Montserrat_500Medium,
@@ -143,6 +203,7 @@ export default function LayoutApp() {
     Lora_700Bold,
   });
   const navigation = useNavigation();
+  const pathname = usePathname();
 
   const isConnectedToInternet = useSelector(
     (state: RootState) => state.app.isConnectedToInternet
@@ -189,6 +250,40 @@ export default function LayoutApp() {
 
     return () => unsubscribe();
   }, []);
+
+  // Listen for new enquiries
+  useEffect(() => {
+    if (!enquiryCount) return;
+
+    const storedCount = getItem<number>("enquiryCount");
+
+    if (storedCount !== null && storedCount !== undefined) {
+      const storedCountValue = storedCount || 0;
+
+      if (enquiryCount > storedCountValue) {
+        console.log(
+          `🎉 New enquiries detected! ${enquiryCount - storedCountValue
+          } new enquiries - opening modal`
+        );
+        setStoredCount(enquiryCount - storedCountValue
+
+        );
+        setShowNewEnquiryPopup(true);
+        setItem("enquiryCount", enquiryCount);
+      }
+    } else if (enquiryCount > 0) {
+      // First time - just store the count, don't show popup
+      setItem("enquiryCount", enquiryCount);
+    }
+  }, [enquiryCount]);
+
+  // if not authentication re route to landing page
+  // useEffect(() => {
+  //   if (!isAuthenticated) {
+  //     if (pathname === "/") return;
+  //     router.push("/components/Auth/Signin");
+  //   }
+  // }, [isAuthenticated]);
 
   const calculateDaysLeft = (trialStartedAt: number): number => {
     try {
@@ -250,7 +345,7 @@ export default function LayoutApp() {
     setTrialData((prev) => ({ ...prev, credits: agentData?.monthlyCredits }));
   }, [agentData?.monthlyCredits]);
 
-  const dispatch = useDispatch<ThunkDispatch<RootState, unknown, AnyAction>>();
+
   const router = useRouter();
 
   const myKamId = useSelector(selectMyKam);
@@ -263,7 +358,6 @@ export default function LayoutApp() {
 
   // Logout and redirect to BlacklistedPage if the user gets blackListed while already logged in
   useEffect(() => {
-    console.log(isBlacklisted, "isBlacklisted");
     if (isBlacklisted && isAuthenticated) {
       (async () => {
         try {
@@ -317,9 +411,9 @@ export default function LayoutApp() {
     if (
       agentData &&
       (agentData?.onboardingComplete === true ||
-      agentData?.userType.toLowerCase() === "premium" ||
-      agentData?.userType.toLowerCase() === "trial" ||
-      agentData?.trialUsed === true) &&
+        agentData?.userType.toLowerCase() === "premium" ||
+        agentData?.userType.toLowerCase() === "trial" ||
+        agentData?.trialUsed === true) &&
       agentData?.userType.toLowerCase() !== "basic"
     ) {
       setShowOnboarding(false);
@@ -362,6 +456,10 @@ export default function LayoutApp() {
     }
   }, [isAuthenticated, cpId]);
 
+  useEffect(() => {
+    setUnreadCount(notification.unreadCount);
+  }, [notification]);
+
   useCustomBackBehavior();
   if (!fontsLoaded) {
     return null;
@@ -381,233 +479,281 @@ export default function LayoutApp() {
     setShowOnboarding(false);
   };
 
-  if (!isConnectedToInternet) return <Offline />;
+  // if (!isConnectedToInternet) return <Offline />;
 
   return (
-    <View style={{ flex: 1 }} onLayout={onLayoutRootView}>
-      <VersionChecker />
-      {showOnboarding && isAuthenticated && (
-        <OnboardingFlow
-          visible={showOnboarding}
-          onComplete={() => {
-            setShowOnboarding(false);
-          }}
-          onClose={() => {
-            setShowOnboarding(false);
-          }}
-        />
-      )}
-      <Stack
-        screenOptions={{
-          headerStyle: { backgroundColor: "#fff" },
-          headerTintColor: "#000",
-          headerTitleAlign: "center",
-          headerBackVisible: false,
-          header: ({ route, options }) => {
-            const title = options.title || route.name;
-            const headerBackVisible = options.headerBackVisible || false;
-            const params = navigation?.getState()?.routes?.at(-1)?.params as {
-              showNotificationBanner?: boolean;
-            };
-            return (
-              <>
-                <CustomHeader
-                  title={title}
-                  onMenuPress={onMenuPress}
-                  headerBackVisible={headerBackVisible}
-                />
+    <ScrollProvider>
+      <View style={{ flex: 1 }} onLayout={onLayoutRootView}>
+        <VersionChecker />
+        {showOnboarding && isAuthenticated && (
+          <OnboardingFlow
+            visible={showOnboarding}
+            onComplete={() => {
+              setShowOnboarding(false);
+            }}
+            onClose={() => {
+              setShowOnboarding(false);
+            }}
+          />
+        )}
+        <Stack
+          screenOptions={{
+            headerStyle: { backgroundColor: "#fff" },
+            headerTintColor: "#000",
+            headerTitleAlign: "center",
+            headerBackVisible: false,
+            header: ({ route, options }) => {
+              const title = options.title || route.name;
+              const headerBackVisible = options.headerBackVisible || false;
+              const params = navigation?.getState()?.routes?.at(-1)?.params as {
+                showNotificationBanner?: boolean;
+              };
+              return (
+                <>
+                  <CustomHeader
+                    title={title}
+                    onMenuPress={onMenuPress}
+                    headerBackVisible={headerBackVisible}
+                    unreadCount={unreadCount}
+                  />
 
-                {params.showNotificationBanner &&
-                  agentData?.userType !== "premium" && (
-                    <TrialStatusNotification
-                      showNotification={trialData.showNotification}
-                      onDismiss={handleDismiss}
-                    />
-                  )}
-              </>
-            );
-          },
-          animation: "fade",
-        }}
-      >
-        <Stack.Screen
-          name="(tabs)/index"
-          options={{ headerShown: false }}
-          initialParams={{ showFooter: false }}
-        />
-        <Stack.Screen
-          name="(tabs)/properties"
-          options={{ title: "Resale Inventories" }}
-          initialParams={{ showNotificationBanner: true }}
-        />
-        <Stack.Screen
-          name="(tabs)/requirements"
-          options={{ title: "Requirements" }}
-          initialParams={{ showNotificationBanner: true }}
-        />
-        <Stack.Screen
-          name="(tabs)/AddInventoryForm"
-          // options={{ title: "Add Inventory", headerBackVisible: true }}
-          options={{ headerShown: false }}
-          initialParams={{ showFooter: false }}
-        />
-        <Stack.Screen
-          name="(tabs)/UserRequirementForm"
-          options={{ title: "Add Requirement", headerBackVisible: true }}
-          initialParams={{ showFooter: false }}
-        />
-        <Stack.Screen
-          name="(tabs)/billings"
-          options={{ title: "Billing", headerBackVisible: true }}
-          initialParams={{ showFooter: false, showNotificationBanner: false }}
-        />
-        <Stack.Screen
-          name="(tabs)/help"
-          options={{ title: "Help", headerBackVisible: true }}
-          initialParams={{ showFooter: false }}
-        />
-        <Stack.Screen
-          name="(tabs)/dashboardTab"
-          options={{ title: "Dashboard" }}
-          initialParams={{ showNotificationBanner: true }}
-        />
-        <Stack.Screen
-          name="(tabs)/NotificationPage"
-          options={{ title: "Notifications", headerShown: false }}
-          initialParams={{ showNotificationBanner: true }}
-        />
+                  {params.showNotificationBanner &&
+                    agentData?.userType !== "premium" && (
+                      <TrialStatusNotification
+                        showNotification={trialData.showNotification}
+                        onDismiss={handleDismiss}
+                      />
+                    )}
+                </>
+              );
+            },
+            animation: "fade",
+          }}
+        >
+          <Stack.Screen
+            name="(tabs)/index"
+            options={{ headerShown: false }}
+            initialParams={{ showFooter: false }}
+          />
+          <Stack.Screen
+            name="(pages)/ComingSoon"
+            options={{ headerShown: false }}
+          // initialParams={{ showFooter: false }}
+          />
+          <Stack.Screen
+            name="(tabs)/properties"
+            options={{ title: "Properties" }}
+            initialParams={{ showNotificationBanner: true }}
+          />
+          <Stack.Screen
+            name="(tabs)/requirements"
+            options={{ title: "Requirements" }}
+            initialParams={{ showNotificationBanner: true }}
+          />
+          <Stack.Screen
+            name="(tabs)/AddInventoryForm"
+            // options={{ title: "Add Inventory", headerBackVisible: true }}
+            options={{ headerShown: false }}
+            initialParams={{ showFooter: false }}
+          />
+          <Stack.Screen
+            name="(tabs)/UserRequirementForm"
+            options={{ title: "Add Requirement", headerBackVisible: true }}
+            initialParams={{ showFooter: false }}
+          />
+          <Stack.Screen
+            name="(tabs)/billings"
+            options={{ title: "Billing", headerBackVisible: true }}
+            initialParams={{ showFooter: false, showNotificationBanner: false }}
+          />
+          <Stack.Screen
+            name="(tabs)/help"
+            options={{ title: "Help", headerBackVisible: true }}
+            initialParams={{ showFooter: false }}
+          />
+          <Stack.Screen
+            name="(tabs)/dashboardTab"
+            options={{ title: "Dashboard" }}
+            initialParams={{ showNotificationBanner: true }}
+          />
+          <Stack.Screen
+            name="(tabs)/NotificationPage"
+            options={{ title: "Notifications", headerShown: false }}
+            initialParams={{ showNotificationBanner: true }}
+          />
 
-        <Stack.Screen
-          name="components/Auth"
-          options={{ headerShown: false }}
-          initialParams={{ showFooter: false }}
-        />
-        <Stack.Screen
-          name="components/Auth/Signin"
-          options={{ headerShown: false }}
-          initialParams={{ showFooter: false }}
-        />
-        <Stack.Screen
-          name="components/Auth/OTPage"
-          options={{ headerShown: false }}
-          initialParams={{ showFooter: false }}
-        />
-        <Stack.Screen
-          name="components/Auth/VerificationPage"
-          options={{ headerShown: false }}
-          initialParams={{ showFooter: false }}
-        />
-        <Stack.Screen
-          name="components/Auth/BlacklistedPage"
-          options={{ headerShown: false }}
-          initialParams={{ showFooter: false }}
-        />
-        <Stack.Screen
-          name="not-found"
-          options={{ headerShown: false }}
-          initialParams={{ showFooter: false }}
-        />
+          <Stack.Screen
+            name="components/Auth"
+            options={{ headerShown: false }}
+            initialParams={{ showFooter: false }}
+          />
+          <Stack.Screen
+            name="components/Auth/Signin"
+            options={{ headerShown: false }}
+            initialParams={{ showFooter: false }}
+          />
+          <Stack.Screen
+            name="components/Auth/OTPage"
+            options={{ headerShown: false }}
+            initialParams={{ showFooter: false }}
+          />
+          <Stack.Screen
+            name="components/Auth/VerificationPage"
+            options={{ headerShown: false }}
+            initialParams={{ showFooter: false }}
+          />
+          <Stack.Screen
+            name="components/Auth/BlacklistedPage"
+            options={{ headerShown: false }}
+            initialParams={{ showFooter: false }}
+          />
+          <Stack.Screen
+            name="not-found"
+            options={{ headerShown: false }}
+            initialParams={{ showFooter: false }}
+          />
 
-        <Stack.Screen
-          name="components/property/PropertyDetailsScreen"
-          options={{ headerShown: false }}
-          initialParams={{ showFooter: false }}
-        />
-        <Stack.Screen
-          name="components/requirement/RequirementDetailsScreen"
-          options={{ headerShown: false }}
-          initialParams={{ showFooter: false }}
-        />
-        <Stack.Screen
-          name="(pages)/Profile"
-          options={{
-            title: "Settings",
-            headerBackVisible: true,
-          }}
-          initialParams={{ showFooter: false }}
-        />
-        <Stack.Screen
-          name="(pages)/Drafts"
-          options={{
-            title: "Choose Inventory",
-            headerBackVisible: true,
-          }}
-          initialParams={{ showFooter: false }}
-        />
-        <Stack.Screen
-          name="(pages)/Credits"
-          options={{
-            title: "ACN Credits",
-            headerBackVisible: true,
-          }}
-          initialParams={{ showFooter: false }}
-        />
-        <Stack.Screen
-          name="(pages)/ComparePlans"
-          options={{
-            title:
-              Platform.OS === "ios"
-                ? "Choose the right plan for you"
-                : "Plans Page",
-            headerBackVisible: true,
-          }}
-          initialParams={{ showFooter: false }}
-        />
-        <Stack.Screen
-          name="(pages)/CheckoutScreen"
-          options={{
-            title: "Checkout",
-            headerBackVisible: true,
-          }}
-          initialParams={{ showFooter: false, showNotificationBanner: false }}
-        />
-        <Stack.Screen
-          name="(pages)/PaymentRecords"
-          options={{
-            title: "Payment Records",
-            headerBackVisible: true,
-          }}
-          initialParams={{ showFooter: false }}
-        />
-        <Stack.Screen
-          name="components/Notification/NotificationSettings"
-          options={{ headerShown: false }}
-          initialParams={{ showFooter: false }}
-        />
-        <Stack.Screen
-          name="components/Payments/transaction"
-          options={{ headerShown: false }}
-          initialParams={{ showFooter: false }}
-        />
-        <Stack.Screen
-          name="(pages)/Legal"
-          options={{
-            title: " ",
-            headerBackVisible: true,
-          }}
-          initialParams={{ showFooter: false }}
-        />
-        <Stack.Screen
-          name="(tabs)/ReportIssue"
-          options={{
-            title: "Report an Issue or Misuse",
-            headerBackVisible: true,
-          }}
-          initialParams={{ showFooter: false }}
-        />
-        <Stack.Screen
-          name="components/Notification/ArchivedNotifications"
-          options={{ headerShown: false }}
-          initialParams={{ showFooter: false }}
-        />
-      </Stack>
+          <Stack.Screen
+            name="components/property/PropertyDetailsScreen"
+            options={{ headerShown: false }}
+            initialParams={{ showFooter: false }}
+          />
+          <Stack.Screen
+            name="components/requirement/RequirementDetailsScreen"
+            options={{ headerShown: false }}
+            initialParams={{ showFooter: false }}
+          />
+          <Stack.Screen
+            name="(pages)/Profile"
+            options={{
+              title: "Settings",
+              headerBackVisible: true,
+            }}
+            initialParams={{ showFooter: false }}
+          />
+          <Stack.Screen
+            name="(pages)/UnderReviewProperties"
+            options={{
+              title: "Properties Under Review",
+              headerBackVisible: true,
+            }}
+            initialParams={{ showFooter: false }}
+          />
+          <Stack.Screen
+            name="(pages)/EnquiriesReceived"
+            options={{
+              title: "Enquiries Received on Property",
+              headerBackVisible: true,
+            }}
+            initialParams={{ showFooter: false }}
+          />
+          <Stack.Screen
+            name="(pages)/Drafts"
+            options={{
+              title: "Choose Inventory",
+              headerBackVisible: true,
+            }}
+            initialParams={{ showFooter: false }}
+          />
+          <Stack.Screen
+            name="(pages)/Credits"
+            options={{
+              title: "ACN Credits",
+              headerBackVisible: true,
+            }}
+            initialParams={{ showFooter: false }}
+          />
+          <Stack.Screen
+            name="(pages)/ComparePlans"
+            options={{
+              title:
+                Platform.OS === "ios"
+                  ? "Choose the right plan for you"
+                  : "Plans Page",
+              headerBackVisible: true,
+            }}
+            initialParams={{ showFooter: false }}
+          />
+          <Stack.Screen
+            name="(pages)/CheckoutScreen"
+            options={{
+              title: "Checkout",
+              headerBackVisible: true,
+            }}
+            initialParams={{ showFooter: false, showNotificationBanner: false }}
+          />
+          <Stack.Screen
+            name="(pages)/PaymentRecords"
+            options={{
+              title: "Payment Records",
+              headerBackVisible: true,
+            }}
+            initialParams={{ showFooter: false }}
+          />
+          <Stack.Screen
+            name="components/Notification/NotificationSettings"
+            options={{ headerShown: false }}
+            initialParams={{ showFooter: false }}
+          />
+          <Stack.Screen
+            name="components/Payments/transaction"
+            options={{ headerShown: false }}
+            initialParams={{ showFooter: false }}
+          />
+          <Stack.Screen
+            name="(pages)/Legal"
+            options={{
+              title: " ",
+              headerBackVisible: true,
+            }}
+            initialParams={{ showFooter: false }}
+          />
+          <Stack.Screen
+            name="(tabs)/ReportIssue"
+            options={{
+              title: "Report an Issue or Misuse",
+              headerBackVisible: true,
+            }}
+            initialParams={{ showFooter: false }}
+          />
+          <Stack.Screen
+            name="components/Notification/ArchivedNotifications"
+            options={{ headerShown: false }}
+            initialParams={{ showFooter: false }}
+          />
+          <Stack.Screen
+            name="(tabs)/MyBusinessPage"
+            options={{
+              title: "My Business",
+            }}
+          />
+          <Stack.Screen
+            name="(pages)/MyBusiness/PropertiesDetailsScreen"
+            options={{ headerShown: false, title: "Property Details" }}
+            initialParams={{ showFooter: false }}
+          />
+        </Stack>
 
-      <Toast config={toastConfig} />
-      <StatusBar style="auto" />
-      <KamManager />
+        <Toast config={toastConfig} />
+        <StatusBar style="auto" />
+        <KamManager />
+        {isAuthenticated && <FooterNavigation/>}
 
-      {isAuthenticated && <FooterNavigation />}
-    </View>
+        {
+          isAuthenticated && (
+            <NewEnquiriesModal
+              visible={showNewEnquiryPopup} // from Redux
+              onClose={() => setShowNewEnquiryPopup(false)}
+              onCheckNow={() => {
+
+              }}
+              enquiryCount={storedCount} // your enquiry count
+            />
+          )
+        }
+
+      </View>
+    </ScrollProvider>
   );
 }
 
@@ -649,7 +795,7 @@ const styles = StyleSheet.create({
     paddingVertical: 8,
     gap: 10,
     borderWidth: 1,
-    borderColor: "#E3E3E3",
+    borderColor: "#9F9C9C",
     borderRadius: 20,
   },
   creditsText: {

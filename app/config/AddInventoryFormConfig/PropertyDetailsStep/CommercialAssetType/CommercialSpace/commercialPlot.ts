@@ -1,0 +1,99 @@
+import { FormField } from "@/types/FormConfig";
+
+export const commercialPlotFields: FormField[] = [
+  {
+    id: "propertyName",
+    label: "Project Name",
+    type: "placesApi",
+    required: true,
+    placeholder: "Enter property name",
+    colspan: 12,
+    conditional: false,
+    dependsOn: {
+      field: "commercialSubType",
+      values: ["commercial plot"],
+    },
+  },
+  {
+    id: "sbua",
+    label: "SBUA",
+    type: "number",
+    required: true,
+    placeholder: "1500",
+    validation: {
+      min: 100,
+      message: "SBUA must be at least 100 sqft",
+    },
+    dependsOn: {
+      field: "commercialSubType",
+      values: ["commercial plot"],
+    },
+    suffix: "Sqft",
+    keyBoardType: "numeric",
+    colspan: 12,
+    conditional: true,
+  },
+  {
+    id: "plotArea",
+    label: "Plot Area",
+    type: "number",
+    placeholder: "1500",
+    dependsOn: {
+      field: "commercialSubType",
+      values: ["commercial plot"],
+    },
+    suffix: "Sqft",
+    keyBoardType: "numeric",
+    colspan: 12,
+    conditional: true,
+  },
+  {
+    id: "facing",
+    label: "Facing",
+    type: "dropdown",
+    required: true,
+    placeholder: "Select facing direction",
+    options: [
+      { label: "North", value: "north" },
+      { label: "South", value: "south" },
+      { label: "East", value: "east" },
+      { label: "West", value: "west" },
+    ],
+    dependsOn: {
+      field: "commercialSubType",
+      values: ["commercial plot"],
+    },
+    colspan: 12,
+    conditional: true,
+  },
+  {
+    id: "possession",
+    label: "Possession",
+    type: "select",
+    required: true,
+    placeholder: "Select possession status",
+    options: [
+      { label: "Ready to Move", value: "ready to move" },
+      { label: "Under Construction", value: "under construction" },
+    ],
+    dependsOn: {
+      field: "commercialSubType",
+      values: ["commercial plot"],
+    },
+    colspan: 12,
+    conditional: true,
+  },
+  {
+    id: "suitableFor",
+    label: "Suitable For",
+    type: "text",
+    required: false,
+    placeholder: "Enter suitable business types",
+    dependsOn: {
+      field: "commercialSubType",
+      values: ["commercial plot"],
+    },
+    colspan: 12,
+    conditional: true,
+  },
+];

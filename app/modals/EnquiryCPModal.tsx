@@ -5,7 +5,6 @@ import {
   View,
   Text,
   TouchableOpacity,
-  StyleSheet,
   Alert,
   ActivityIndicator,
   Dimensions,
@@ -19,6 +18,9 @@ import {
   showSuccessToast,
   toastConfig,
 } from "@/utils/toastUtils";
+
+// import external
+import LottieView from "lottie-react-native";
 import CloseIcon from "@/assets/icons/svg/CloseIcon";
 import Toast from "react-native-toast-message";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -57,6 +59,7 @@ const EnquiryCPModal: React.FC<EnquiryCPModalProps> = ({
 
   useEffect(() => {
     if (visible) {
+      setShowConfetti(true);
       try {
         logEvent(analytics, "enquiry_cp_modal_show", {
           event_category: "modal",
@@ -186,9 +189,8 @@ ${user?.phoneNumber}`;
       .join(" ");
   };
 
-  // if (!visible) return null;
-
   const [forceRender, setForceRender] = useState(false);
+  const [showConfetti, setShowConfetti] = useState(false);
 
   return (
     <Modal
@@ -197,25 +199,31 @@ ${user?.phoneNumber}`;
       animationType="fade"
       onShow={() => setForceRender((prev) => !prev)}
     >
-      {forceRender && <View style={{ height: 0 }} />}
-      <View style={styles.modalOverlay}>
+      {forceRender && <View className="h-0" />}
+      <View className="flex-1 justify-center items-center z-50 bg-black/50 p-5">
         <Toast config={toastConfig} />
-        <View style={styles.modalContent}>
+        <View className="bg-white rounded-[12px] py-8 px-7 w-full max-w-[440px] relative z-50">
           <TouchableOpacity
-            style={styles.closeButton}
-            onPress={() => setIsEnquiryCPModelOpen(false)}
+            className="absolute top-3 right-4 z-50"
+            onPress={(e: any) => {
+              e.stopPropagation();
+              setIsEnquiryCPModelOpen(false);
+              onClose();
+            }}
           >
             <CloseIcon />
           </TouchableOpacity>
 
-          <View style={styles.contentContainer}>
-            <View style={styles.titleContainer}>
-              <Text style={styles.title}>Enquire Now</Text>
-              <Text style={styles.description}>
+          <View className="items-center gap-3">
+            <View className="items-start gap-2">
+              <Text className="text-base text-motserrat font-bold text-[#153E3B]">
+                Enquire Now
+              </Text>
+              <Text className="text-sm text-[#313131] text-left">
                 {agentData ? (
                   <>
                     Connect directly with{" "}
-                    <Text style={styles.boldText}>
+                    <Text className="font-bold">
                       {toCapitalizedWords(agentData.name)}
                     </Text>{" "}
                     for this property.
@@ -226,152 +234,65 @@ ${user?.phoneNumber}`;
               </Text>
             </View>
 
-            <View style={styles.actionsContainer}>
+            <View className="w-full gap-3">
               {agentData && (
-                <View style={styles.phoneContainer}>
-                  <View style={styles.phoneNumberContainer}>
-                    <Text style={styles.phoneNumber}>
+                <View className="flex-row items-center justify-between border border-[#E3E3E3] rounded-[4px] bg-white overflow-hidden">
+                  <View className="p-3">
+                    <Text className="text-sm font-bold text-[#313131]">
                       {agentData.phoneNumber}
                     </Text>
                   </View>
 
                   <TouchableOpacity
                     onPress={handleCopy}
-                    style={styles.copyButton}
+                    className="bg-[#F5F6F7] p-3 rounded-r-[4px]"
                   >
                     <Ionicons name="copy-outline" size={24} color="#555" />
                   </TouchableOpacity>
                 </View>
               )}
 
-              <View style={styles.buttonContainer}>
+              <View className="flex flex-row items-center space-x-[10px] justify-between">
                 <TouchableOpacity
                   onPress={handleWhatsAppEnquiry}
-                  style={styles.actionButton}
+                  className="flex-1 flex-row items-center justify-center space-x-2 border-[1.5px] border-[#153E3B] rounded-[4px] bg-white h-[37px]"
                 >
-                  <View style={styles.buttonIconContainer}>
-                    <Ionicons name="logo-whatsapp" size={24} color="#25D366" />
-                  </View>
-                  <Text style={styles.buttonText}>WhatsApp</Text>
+                  <Ionicons name="logo-whatsapp" size={18} color="#25D366" />
+                  <Text className="text-sm font-bold text-[#313131]">
+                    WhatsApp
+                  </Text>
                 </TouchableOpacity>
 
                 <TouchableOpacity
                   onPress={handleCall}
-                  style={styles.actionButton}
+                  className="flex-1 flex-row items-center justify-center space-x-2 border-[1.5px] border-[#153E3B] rounded-[4px] bg-white h-[37px]"
                 >
-                  <Ionicons name="call-outline" size={24} color="#313131" />
-                  <Text style={styles.buttonText}>Call Agent</Text>
+                  <Ionicons name="call-outline" size={18} color="#313131" />
+                  <Text className="text-sm font-bold text-[#313131]">
+                    Call Agent
+                  </Text>
                 </TouchableOpacity>
               </View>
             </View>
           </View>
         </View>
       </View>
-      {/* <Text style={styles.modalOverlay}>Hi</Text> */}
+      {showConfetti && (
+        <View className="absolute z-50">
+          <LottieView
+            source={require("@/assets/LottieAnimation/confetti.json")}
+            autoPlay
+            loop={false}
+            onAnimationFinish={() => setShowConfetti(false)}
+            style={{
+              width: Dimensions.get("window").width,
+              height: Dimensions.get("window").height,
+            }}
+          />
+        </View>
+      )}
     </Modal>
   );
 };
-
-const styles = StyleSheet.create({
-  modalOverlay: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-    zIndex: 9999,
-    backgroundColor: "rgba(0,0,0,0.5)",
-    padding: 20,
-  },
-  modalContent: {
-    backgroundColor: "white",
-    borderRadius: 12,
-    paddingVertical: 32,
-    paddingHorizontal: 28,
-    width: "100%",
-    maxWidth: 440,
-    borderWidth: 2,
-    borderColor: "#E5E5E5",
-    position: "relative",
-    zIndex: 10000,
-  },
-  closeButton: {
-    position: "absolute",
-    top: 12,
-    right: 16,
-  },
-  contentContainer: {
-    alignItems: "center",
-    gap: 24,
-  },
-  titleContainer: {
-    alignItems: "center",
-    gap: 8,
-  },
-  title: {
-    fontSize: 16,
-    fontWeight: "bold",
-    color: "#153E3B",
-  },
-  description: {
-    fontSize: 14,
-    color: "#313131",
-    textAlign: "center",
-  },
-  boldText: {
-    fontWeight: "bold",
-  },
-  actionsContainer: {
-    width: "100%",
-    gap: 12,
-  },
-  phoneContainer: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    borderWidth: 1,
-    borderColor: "#E3E3E3",
-    borderRadius: 100,
-    backgroundColor: "white",
-    overflow: "hidden",
-  },
-  phoneNumberContainer: {
-    padding: 12,
-  },
-  phoneNumber: {
-    fontSize: 14,
-    fontWeight: "bold",
-    color: "#313131",
-  },
-  copyButton: {
-    backgroundColor: "#F5F6F7",
-    padding: 12,
-    borderRadius: "100%",
-  },
-  buttonContainer: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    gap: 16,
-  },
-  actionButton: {
-    flex: 1,
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    gap: 8,
-    borderWidth: 1,
-    borderColor: "#E3E3E3",
-    borderRadius: 100,
-    padding: 12,
-    backgroundColor: "white",
-  },
-  buttonIconContainer: {
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  buttonText: {
-    fontSize: 14,
-    fontWeight: "bold",
-    color: "#313131",
-  },
-});
 
 export default EnquiryCPModal;

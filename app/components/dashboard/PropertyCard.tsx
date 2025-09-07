@@ -7,7 +7,7 @@ import { setPropertyDataThunk } from "@/store/slices/propertySlice";
 import { RootState } from "@/store/store";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { AnyAction, ThunkDispatch } from "@reduxjs/toolkit";
-import { router } from "expo-router";
+import { router, usePathname } from "expo-router";
 import {
   collection,
   getCountFromServer,
@@ -44,6 +44,7 @@ const PropertyCard = ({
   const [isShareModalOpen, setIsShareModalOpen] = useState(false);
   const [matchingEnquiriesCount, setMatchingEnquiriesCount] = useState("-");
   const dispatch = useDispatch<ThunkDispatch<RootState, unknown, AnyAction>>();
+  const pathname = usePathname();
   const userType =
     useSelector((state: RootState) => state?.agent?.docData?.userType) ||
     "free";
@@ -73,7 +74,7 @@ const PropertyCard = ({
   const shareProperty = {
     ...property,
     propertyId: property.propertyId,
-    totalAskPrice: property.totalAskPrice,
+    totalAskPrice: property?.pricing?.totalAskPrice,
     sbua: property.sbua,
     micromarket: property.micromarket,
   };
@@ -117,8 +118,10 @@ const PropertyCard = ({
     setMatchingEnquiriesCount(count.data().count.toString());
   };
 
+  console.log(pathname)
+
   useEffect(() => {
-    fetchMatchingEnquiryCount();
+    if (pathname === "/MyBusinessPage") fetchMatchingEnquiryCount();
   }, []);
 
   useEffect(() => {
@@ -198,7 +201,7 @@ const PropertyCard = ({
 
           {/* Tags section for Asset Type, Unit Type, and Facing */}
           <StyledView className="flex flex-row flex-wrap gap-2 px-0 mb-3">
-            {[property.assetType, property.unitType, property.facing]
+            {[property.assetType, property.noOfBedrooms, property.facing]
               .filter(Boolean)
               .map((tag, index) => (
                 <StyledView
@@ -220,7 +223,7 @@ const PropertyCard = ({
                 Total Ask Price:
               </StyledText>
               <StyledText className="text-sm font-semibold">
-                {formatCost2(property.totalAskPrice || null)}
+                {formatCost2(property?.pricing?.totalAskPrice || null)}
               </StyledText>
             </StyledView>
 

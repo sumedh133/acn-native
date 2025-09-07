@@ -11,12 +11,11 @@ import {
 import { Text } from "react-native";
 import * as DocumentPicker from "expo-document-picker";
 import { PermissionsAndroid } from "react-native";
-import { showToast } from "@/utils/toastUtils";
-import { addInventoryDocumentTypes } from "@/app/constants/DocumentConstants";
+import { showErrorToast, showToast } from "@/utils/toastUtils";
 
 interface FileUploadProps {
   docsToUpload: DocsToUpload;
-  setDocsToUpload: React.Dispatch<React.SetStateAction<DocsToUpload>>;
+  setDocsToUpload: (docsToUpload: DocsToUpload) => void;
 }
 
 const FileUpload: React.FC<FileUploadProps> = ({
@@ -51,37 +50,6 @@ const FileUpload: React.FC<FileUploadProps> = ({
     // }
   };
 
-  const categorizeFile = async (
-    file: DocumentPicker.DocumentPickerResult
-  ): Promise<{ category?: string; fileObject?: FileObject }> => {
-    // If the user cancelled the document selection
-    if (file.canceled) {
-      return {};
-    }
-    
-    // Get the first selected asset
-    const asset = file.assets?.[0];
-    if (!asset) {
-      showToast("error", "An error occurred while selecting file");
-      return {};
-    }
-
-    const fileObject: FileObject = {
-      name: asset.name,
-      size: asset.size,
-      uri: asset.uri,
-    };
-
-    const mimeType = asset.mimeType || '';
-    if (mimeType.startsWith("image/")) {
-      return { category: "photo", fileObject };
-    } else if (mimeType.startsWith("video/")) {
-      return { category: "video", fileObject };
-    } else {
-      return { category: "document", fileObject };
-    }
-  };
-
   const handleFilePick = async () => {
     const hasPermission = await requestStoragePermission();
     if (!hasPermission) {
@@ -97,58 +65,52 @@ const FileUpload: React.FC<FileUploadProps> = ({
     try {
       const result = await DocumentPicker.getDocumentAsync({
         multiple: true,
-        type: addInventoryDocumentTypes.allowedTypes,
+        type: ["application/pdf", "application/*"],
         copyToCacheDirectory: true,
       });
-      
+
       if (result.canceled) {
         return;
       }
-      
+
       const newDocsToUpload = { ...docsToUpload };
-      
+
       for (const asset of result.assets || []) {
-        // Check if the file type is allowed
-        const mimeType = asset.mimeType || '';
-        const isValidType = addInventoryDocumentTypes.allowedTypes.some(
-          type => mimeType.startsWith(type.split('/')[0] + '/') || type.includes('*')
-        );
-        
+        // Check if the file type is allowed (documents only)
+        const mimeType = asset.mimeType || "";
+        const isValidType =
+          mimeType.startsWith("application/") ||
+          mimeType.includes("pdf") ||
+          mimeType.includes("document");
+
         if (!isValidType) {
           showToast("error", `Invalid file type of ${asset.name}`);
           continue;
         }
-        
-        // Check file size
-        const maxSizeInMB =
-          addInventoryDocumentTypes?.allowedSizes?.filter((allowedSize) =>
-            mimeType.startsWith(allowedSize.type)
-          )?.[0]?.maxFileSizesInMB ?? 10;
+
+        // Check file size (documents only - 50MB limit for PDFs)
+        const maxSizeInMB = 50;
 
         if (asset.size && asset.size > maxSizeInMB * 1024 * 1024) {
-          showToast("error", `${asset.name} exceeds the ${maxSizeInMB}MB limit`);
+          showToast(
+            "error",
+            `${asset.name} exceeds the ${maxSizeInMB}MB limit`
+          );
           continue;
         }
-        
+
         const fileObject: FileObject = {
           name: asset.name,
           size: asset.size,
           uri: asset.uri,
         };
-        
-        // Categorize the file
-        let category: string;
-        if (mimeType.startsWith("image/")) {
-          category = "photo";
-        } else if (mimeType.startsWith("video/")) {
-          category = "video";
-        } else {
-          category = "document";
-        }
-        
+
+        // All validated files are documents
+        const category = "document";
+
         newDocsToUpload[category].push(fileObject);
       }
-      
+
       setDocsToUpload(newDocsToUpload);
     } catch (err) {
       // Error occurred
@@ -159,10 +121,7 @@ const FileUpload: React.FC<FileUploadProps> = ({
   };
 
   const totalFiles = React.useMemo(
-    () =>
-      docsToUpload.photo.length +
-      docsToUpload.video.length +
-      docsToUpload.document.length,
+    () => docsToUpload.document.length,
     [docsToUpload]
   );
 
@@ -174,7 +133,7 @@ const FileUpload: React.FC<FileUploadProps> = ({
           <Text style={styles.staticText}>
             Choose a file or drag & drop it here
           </Text>
-          <Text style={styles.staticSubText}>Images, Videos, or PDFs</Text>
+          <Text style={styles.staticSubText}>PDFs and Documents only</Text>
           {totalFiles > 0 && (
             <Text style={styles.fileCountText}>
               {totalFiles} file{totalFiles !== 1 ? "s" : ""} selected
@@ -263,4 +222,3 @@ const styles = StyleSheet.create({
 });
 
 export default FileUpload;
-

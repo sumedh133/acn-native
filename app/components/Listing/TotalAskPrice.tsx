@@ -20,10 +20,10 @@ interface UnitOption {
 }
 
 interface TotalAskPricetProps {
-  onPriceChange: (unit: string, price: number) => void; // Changed to number
+  onPriceChange: (unit: string, price?: number) => void; // Changed to number
   initialPrice?: number; // Changed to number
   title?: string;
-  required: boolean;
+  required?: boolean;
   searchable?: boolean; // New prop for searchable dropdown
 }
 
@@ -35,7 +35,7 @@ const TotalAskPrice: React.FC<TotalAskPricetProps> = ({
   searchable = false, // Default to false
 }) => {
   // Convert number to string for display
-  const [price, setPrice] = useState(initialPrice ? initialPrice.toString() : "");
+  const [price, setPrice] = useState(initialPrice ? initialPrice.toString(): "");
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [modalVisible, setModalVisible] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
@@ -43,8 +43,8 @@ const TotalAskPrice: React.FC<TotalAskPricetProps> = ({
 
   // Define the unit options with both label and value
   const unitOptions: UnitOption[] = [
-    { label: "Total Ask Price", value: "totalAskPrice" },
-    { label: "/Sq ft", value: "askPricePerSqft" },
+    { label: "Total Ask Price", value: "pricing.totalAskPrice" },
+    { label: "/Sq ft", value: "pricing.pricePerSqft" },
   ];
 
   // Find the initial selected option based on the initialUnit value
@@ -70,7 +70,9 @@ const TotalAskPrice: React.FC<TotalAskPricetProps> = ({
     if (onPriceChange) {
       // Convert string to number before passing to callback
       // Remove commas before converting to number
-      const numericPrice = validPrice ? parseFloat(validPrice.replace(/,/g, "")) : 0;
+      const numericPrice = validPrice
+        ? parseFloat(validPrice.replace(/,/g, ""))
+        : undefined;
       onPriceChange(selectedOption.value, numericPrice);
     }
   };
@@ -94,38 +96,38 @@ const TotalAskPrice: React.FC<TotalAskPricetProps> = ({
 
   const handleSelect = (option: UnitOption) => {
     // Clear the old value with the previous unit
-    onPriceChange(selectedOption.value, 0);
+    onPriceChange(selectedOption.value, undefined);
 
     // CHANGE HERE: Reset the price state to empty string
     setPrice("");
-    
+
     setSelectedOption(option);
     setIsDropdownOpen(false);
     setModalVisible(false);
 
     // Since the price is now reset to empty, we're passing 0 to the callback
-    onPriceChange(option.value, 0);
+    onPriceChange(option.value, undefined);
   };
 
   const selectUnit = (option: UnitOption) => {
     // Clear the old value with the previous unit
-    onPriceChange(selectedOption.value, 0);
+    onPriceChange(selectedOption.value, undefined);
 
     // CHANGE HERE: Reset the price state to empty string
     setPrice("");
-    
+
     setSelectedOption(option);
     setIsDropdownOpen(false);
     setModalVisible(false);
 
     // Since the price is now reset to empty, we're passing 0 to the callback
-    onPriceChange(option.value, 0);
+    onPriceChange(option.value, undefined);
   };
 
   // Calculate the total in words (for display below the input)
   const getPriceInWords = (): string => {
     if (!price) 
-      if (selectedOption.value === 'totalAskPrice' ) return "Eg. 2.20 Cr | 2 Crore 20 Lakh Rupees only";
+      if (selectedOption.value === 'pricing.totalAskPrice' ) return "Eg. 2.20 Cr | 2 Crore 20 Lakh Rupees only";
       else return "Eg. 7.50 K | 7500 Rupees only";
     const numericPrice = parseFloat(price.replace(/,/g, ""));
     if (isNaN(numericPrice)) return "";
@@ -162,10 +164,11 @@ const TotalAskPrice: React.FC<TotalAskPricetProps> = ({
   return (
     <View style={styles.container}>
       <View style={styles.leftContainer}>
+        {title && (
         <Text style={styles.titleText}>
           {title}
           {required && <Text style={styles.compulsoryStar}> *</Text>}
-        </Text>
+        </Text>)}
 
         <View
           style={[
@@ -183,7 +186,7 @@ const TotalAskPrice: React.FC<TotalAskPricetProps> = ({
             onChangeText={handlePriceChange}
             onFocus={handleFocus}
             onBlur={handleBlur}
-            placeholder={selectedOption.value === 'totalAskPrice' ? "eg. 2,20,00,000" : "eg. 7,500"}
+            placeholder={selectedOption.value === 'pricing.totalAskPrice' ? "eg. 2,20,00,000" : "eg. 7,500"}
             placeholderTextColor="#A0A0A0"
             keyboardType="numeric"
           />
@@ -203,7 +206,7 @@ const TotalAskPrice: React.FC<TotalAskPricetProps> = ({
         {/* Price in words */}
         <Text style={styles.priceInWords}>
           {getPriceInWords()}{" "}
-          {selectedOption.value === "totalAskPrice" ? "" : "per sq ft"}
+          {selectedOption.value === "pricing.totalAskPrice" ? "" : "per sq ft"}
         </Text>
 
         {/* New dropdown UI */}
@@ -295,9 +298,9 @@ const styles = StyleSheet.create({
   },
   titleText: {
     fontSize: 14,
-    marginBottom:6,
+    marginBottom: 6,
     color: "#000000",
-    fontFamily:"Montserrat_600SemiBold",
+    fontFamily: "Montserrat_600SemiBold",
   },
   compulsoryStar: {
     fontFamily: "sans-serif",
@@ -308,11 +311,11 @@ const styles = StyleSheet.create({
   inputContainer: {
     flexDirection: "row",
     alignItems: "center",
-    borderWidth: 1,
+    borderWidth: 1.5,
     borderColor: "#E1E3E6",
     backgroundColor: "#ffffff",
-    borderRadius: 8,
-    height: 48,
+    borderRadius: 5,
+    height: 32,
     marginBottom: 4,
   },
   focusedInputContainer: {

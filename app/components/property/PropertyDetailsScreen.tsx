@@ -57,11 +57,14 @@ import { setKamModalVisible } from "@/store/slices/kamSlice";
 import CreditLimitModal from "@/app/modals/CreditLimitModal";
 import { analytics } from "@/app/config/firebase";
 import { logEvent } from "@react-native-firebase/analytics";
+import { FormPreview } from "../Listing/listingPropertyDetails";
 import {
   camelCaseToCapitalizedWords,
   formatCost2,
   toCapitalizedWords,
 } from "@/app/helpers/common";
+import { inventoryFormConfig } from "@/app/config/AddInventoryFormConfig/inventoryFormConfig";
+import Share from "@/assets/icons/svg/PropertyFolder/shareButton.svg";
 
 const { width } = Dimensions.get("window");
 
@@ -348,6 +351,8 @@ export default function PropertyDetailsScreen() {
       added: getUnixDateTime(),
       lastModified: getUnixDateTime(),
       reviews: [],
+      isNew: true,
+      isContactShared: false
     } as Enquiry;
 
     try {
@@ -417,7 +422,7 @@ export default function PropertyDetailsScreen() {
         dispatch,
         boosterCredits
       );
-      let enq: Enquiry | undefined; 
+      let enq: Enquiry | undefined;
       if (typeof nextEnqId === "string") {
         enq = await submitEnquiry(nextEnqId);
       }
@@ -472,19 +477,23 @@ export default function PropertyDetailsScreen() {
       case "properties":
         return (
           <>
+
             <TouchableOpacity
-              style={styles.secondaryButton}
-              onPress={handleOpenDriveDetails}
-            >
-              <DriveIcon />
-              <Text style={styles.secondaryButtonText}>Open Details</Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={styles.primaryButton}
+              className="flex-1 bg-[#153E3B] rounded-[4px] py-2 px-5 flex-row justify-center items-center"
               onPress={handleEnquireNowBtn}
             >
-              <Ionicons name="call-outline" size={20} color="white" />
-              <Text style={styles.primaryButtonText}>Enquire Now</Text>
+              <Ionicons name="call-outline" size={16} color="white" />
+              <Text className="text-xs text-white font-medium ml-1">
+                Enquire Now
+              </Text>
+            </TouchableOpacity>
+            {/* share button*/}
+            <TouchableOpacity
+              className="w-[34px] h-[34px] rounded p-1.5 bg-[#FFFFFF] justify-center items-center border border-[#C3C3C3]"
+              onPress={handleShareButtonPress}
+            >
+              <Share />
+
             </TouchableOpacity>
           </>
         );
@@ -646,267 +655,8 @@ export default function PropertyDetailsScreen() {
 
   return (
     <View style={styles.container}>
-      {/* Header Section */}
-      <View style={styles.header}>
-        <View style={styles.headerTop}>
-          <View style={styles.headerInfo}>
-            <TouchableOpacity onPress={handleGoBack}>
-              <ArrowLeftIcon paddingHorizontal={0} paddingVertical={0} />
-            </TouchableOpacity>
-            <View style={styles.propertyIdBadge}>
-              <Text style={styles.propertyIdText}>
-                {property.propertyId || "Property ID"}
-              </Text>
-            </View>
-          </View>
-          {property.userStatus && (
-            <View
-              style={[
-                styles.propertyStatusBadge,
-                {
-                  backgroundColor:
-                    propertyUserStatus?.[property.userStatus]?.color,
-                },
-              ]}
-            >
-              <Text style={styles.propertyStatusText}>
-                {propertyUserStatus?.[property.userStatus]?.displayName}
-              </Text>
-            </View>
-          )}
-        </View>
-        <Text style={styles.propertyName}>{property.propertyName}</Text>
 
-        <View style={styles.locationInfo}>
-          <View style={styles.infoItem}>
-            <Ionicons name="location-outline" size={16} color="#374151" />
-            <Text style={styles.infoText}>
-              {toCapitalizedWords(property.micromarket) || "N/A"}
-            </Text>
-          </View>
-          <View style={styles.infoItem}>
-            <Ionicons name="home-outline" size={16} color="#374151" />
-            <Text style={styles.infoText}>
-              {property.assetType || "Unknown Type"}
-            </Text>
-          </View>
-          <View style={styles.infoItem}>
-            <HandOverIcon />
-            <Text style={styles.infoText}>
-                {property.handoverDate
-                  ? (() => {
-                    const date = new Date(property.handoverDate * 1000);
-                    const month = (date.getMonth() + 1).toString().padStart(2, "0");
-                    const year = date.getFullYear();
-                    return `${month}/${year}`;
-                  })()
-                  : "Pending"}
-            </Text>
-          </View>
-          <View style={styles.infoItem}>
-            <Ionicons name="bed-outline" size={16} color="#374151" />
-            <Text style={styles.infoText}>
-              {property.unitType || "Not Specified"}
-            </Text>
-          </View>
-        </View>
-      </View>
-
-      {/* Main Content */}
-      <ScrollView
-        style={[styles.content]}
-        contentContainerStyle={[
-          styles.contentContainer,
-          { flexGrow: 1 }, // Add this to ensure content is scrollable
-        ]}
-      >
-        {/* Basic Property Information */}
-        <View style={styles.infoSectionContainer}>
-          {localImages.length <= 0 ? (
-            <LinearGradient
-              colors={["#E0F7F4", "#FFFFFF"]}
-              locations={[0.0891, 0.7814]}
-              className="w-full"
-              style={{
-                borderBottomWidth: 1,
-                borderColor: "#CCCBCB",
-              }}
-            >
-              <View
-                style={{
-                  display: "flex",
-                  flexDirection: "column",
-                  gap: 12,
-                  alignItems: "center",
-                  justifyContent: "center",
-                  height: 200,
-                }}
-              >
-                <Image
-                  source={require("../../../assets/icons/no-image-icon.webp")}
-                  style={{ width: 96, height: 96 }} // You can adjust the size
-                />
-                <StyledView className="flex flex-col items-center justify-center">
-                  <StyledText className="text-sm font-bold">
-                    No Images Found
-                  </StyledText>
-                  <StyledText className="text-sm font-medium text-[#757575]">
-                    The listing doesn't have any images yet.
-                  </StyledText>
-                </StyledView>
-              </View>
-            </LinearGradient>
-          ) : (
-            <ImageCarousel
-              images={localImages}
-              onImagePress={() => {
-                setCurrentImageIndex(0);
-                setIsImageViewerVisible(true);
-              }}
-            />
-          )}
-          <View style={styles.infoSection}>
-            <InfoRow
-              label="Plot Size"
-              value={property.plotSize ? `${property.plotSize} sqft` : null}
-            />
-            <InfoRow
-              label="Carpet Area"
-              value={property.carpet ? `${property.carpet} sqft` : null}
-            />
-            <InfoRow
-              label="SBUA"
-              value={property.sbua ? `${property.sbua} sqft` : null}
-            />
-            <InfoRow label="Facing" value={property.facing} />
-            <InfoRow
-              label="Total Ask Price"
-              value={
-                property.totalAskPrice
-                  ? formatCost2(property.totalAskPrice)
-                  : null
-              }
-            />
-            <InfoRow
-              label="Ask Price/Sqft"
-              value={
-                property.askPricePerSqft ? `₹${property.askPricePerSqft}` : null
-              }
-            />
-            <InfoRow label="Floor" value={property.floorNo} />
-
-            {/* <InfoRow
-              label="BIAPPA"
-              value={property.biappaApproved ? "Yes" : "No"}
-            />
-            <InfoRow label="BDA" value={property.bdaApproved ? "Yes" : "No"} />
-            <InfoRow label="Car Parking" value={property.carPark} />
-            <InfoRow label="Community Type" value={property.communityType} />
-            <InfoRow
-              label="Corner Unit"
-              value={property.cornerUnit ? "Yes" : "No"}
-            />
-            <InfoRow
-              label="Furnishing"
-              value={camelCaseToCapitalizedWords(property.furnishing)}
-            />
-            <InfoRow
-              label="Balcony Facing"
-              value={camelCaseToCapitalizedWords(property.balconyFacing)}
-            />
-            <InfoRow label="No of Balconies" value={property.noOfBalconies} />
-            <InfoRow label="No of Bathrooms" value={property.noOfBathrooms} />
-            <InfoRow label="No of Bedrooms" value={property.noOfBedrooms} />
-            <InfoRow
-              label="Rental Income"
-              value={formatCost(property.rentalIncome)}
-            />
-            <InfoRow label="Structure" value={property.structure} />
-            <InfoRow label="UDS Number" value={property.udsNumber} />
-            <InfoRow label="Unit Number" value={property.unitNumber} />
-            <InfoRow
-              label="Extra Room"
-              value={camelCaseToCapitalizedWords(property.extraRoom)}
-            />
-            <InfoRow label="Plot Facing" value={property.plotFacing} />
-            <InfoRow label="Address" value={property.address} /> */}
-          </View>
-          {/* Location Details Section */}
-          <View style={styles.locationSection}>
-            <View style={styles.locationDetails}>
-              <View style={styles.locationItem}>
-                <Text style={styles.locationLabel}>Micromarket</Text>
-                <Text style={styles.locationValue}>
-                  {property.micromarket || "-"}
-                </Text>
-              </View>
-              <View style={styles.locationItem}>
-                <Text style={styles.locationLabel}>Area</Text>
-                <Text style={styles.locationValue}>{property.area || "-"}</Text>
-              </View>
-            </View>
-
-            <TouchableOpacity
-              style={styles.mapButton}
-              onPress={handleOpenGoogleMap}
-            >
-              <Text style={styles.mapButtonText}>Open in Google Maps</Text>
-              <Ionicons name="arrow-forward" size={16} color="#10302D" />
-            </TouchableOpacity>
-          </View>
-          {/* Extra Details Section */}
-          <View style={styles.extraDetailsSection}>
-            <Text style={styles.extraDetailsTitle}>Extra Details</Text>
-            <View style={styles.extraDetailsContent}>
-              {property?.extraDetails ? (
-                property?.extraDetails
-                  ?.split("\n")
-                  ?.map((detail: any, index: number) => (
-                    <View key={index} style={styles.detailItem}>
-                      <Text style={styles.bulletPoint}>•</Text>
-                      <Text style={styles.detailText}>{detail}</Text>
-                    </View>
-                  ))
-              ) : (
-                <Text style={styles.noDetailsText}>
-                  No extra details available.
-                </Text>
-              )}
-            </View>
-          </View>
-          {/* Additional Property Information */}
-          <View style={styles.additionalInfo}>
-            <InfoRow label="Building Khata" value={property.buildingKhata} />
-            <InfoRow label="Land Khata" value={property.landKhata} />
-            <InfoRow
-              label="Building Age"
-              value={property.buildingAge ? `${property.buildingAge}` : null}
-            />
-            <InfoRow
-              label="Tenanted"
-              value={property.tenanted ? "Yes" : "No"}
-            />
-            <InfoRow
-              label="Inventory Added On"
-              value={formatDate(property.dateOfInventoryAdded)}
-            />
-            <InfoRow
-              label="Last Status Check"
-              value={
-                property.dateOfStatusLastChecked
-                  ? timeAgo(
-                      Math.max(
-                        0,
-                        Date.now() / 1000 - property.dateOfStatusLastChecked
-                      )
-                    )
-                  : "N/A"
-              }
-            />
-          </View>
-        </View>
-      </ScrollView>
-
+      <FormPreview config={inventoryFormConfig} data={property} previewType="listing" />
       <ShareModal
         property={property}
         agentData={agentData}
@@ -916,9 +666,8 @@ export default function PropertyDetailsScreen() {
 
       <ConfirmModal
         title="Confirm Enquiry"
-        message={`Are you sure you want to enquire? You have ${
-          monthlyCredits + boosterCredits
-        } credits remaining for this month.`}
+        message={`Are you sure you want to enquire? You have ${monthlyCredits + boosterCredits
+          } credits remaining for this month.`}
         onConfirm={onConfirmEnquiry}
         onCancel={handleCancel}
         onModalHide={() => {
@@ -944,14 +693,17 @@ export default function PropertyDetailsScreen() {
         onGoPremium={handleGoPremium}
         onBuyCredits={handleBuyCredits}
       />
+      {parent !== "properties" && (<>
 
-      {/* Fixed share button */}
-      <TouchableOpacity
-        style={styles.shareButton}
-        onPress={handleShareButtonPress}
-      >
-        <ShareIconInsidePropertyDetails />
-      </TouchableOpacity>
+        {/* Fixed share button */}
+        < TouchableOpacity
+          style={styles.shareButton}
+          onPress={handleShareButtonPress}
+        >
+          <ShareIconInsidePropertyDetails />
+        </TouchableOpacity>
+      </>)
+      }
 
       {/* Footer Actions */}
       <View style={styles.footer}>{renderFooter()}</View>

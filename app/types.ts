@@ -1,48 +1,48 @@
 export interface GeoLocation {
-  lat: number | null;
-  lng: number | null;
+  lat?: number | null;
+  lng?: number |null;
 }
 
-export interface Property {
-  id: string;
-  propertyId: string | null;
-  cpId: string | null;
-  propertyName: string | null;
-  _geoloc: GeoLocation;
-  area: string | null;
-  builerName: string | null;
-  builderCategory: string | null;
-  micromarket: string | null;
-  mapLocation: string | null;
-  assetType: string | null;
-  unitType: string | null;
-  subType: string | null | undefined;
-  sbua: number | null;
-  carpet: number | null;
-  plotSize: number | null;
-  buildingAge: number | null;
-  floorNo: string | null;
-  facing: string | null;
-  tenanted: boolean | null;
-  totalAskPrice: number | null;
-  askPricePerSqft: number;
-  status: string | null;
-  currentStatus: string | null;
-  builderName: string | null;
-  handoverDate: number | null;
-  buildingKhata: string | null;
-  landKhata: string | null;
-  ocReceived: boolean | null;
-  photo: string[];
-  video: string[];
-  document: string[];
-  driveLink: string | null;
-  dateOfInventoryAdded: number;
-  dateOfStatusLastChecked: number;
-  ageOfInventory: number;
-  ageOfStatus: number;
-  extraDetails: string | null;
-}
+// export interface Property {
+//   id: string;
+//   propertyId: string | null;
+//   cpId: string | null;
+//   propertyName: string | null;
+//   _geoloc: GeoLocation;
+//   area: string | null;
+//   builerName: string | null;
+//   builderCategory: string | null;
+//   micromarket: string | null;
+//   mapLocation: string | null;
+//   assetType: string | null;
+//   unitType: string | null;
+//   subType: string | null | undefined;
+//   sbua: number | null;
+//   carpet: number | null;
+//   plotSize: number | null;
+//   buildingAge: number | null;
+//   floorNo: string | null;
+//   facing: string | null;
+//   tenanted: boolean | null;
+//   totalAskPrice: number | null;
+//   askPricePerSqft: number;
+//   status: string | null;
+//   currentStatus: string | null;
+//   builderName: string | null;
+//   handoverDate: number | null;
+//   buildingKhata: string | null;
+//   landKhata: string | null;
+//   ocReceived: boolean | null;
+//   photo: string[];
+//   video: string[];
+//   document: string[];
+//   driveLink: string | null;
+//   dateOfInventoryAdded: number;
+//   dateOfStatusLastChecked: number;
+//   ageOfInventory: number;
+//   ageOfStatus: number;
+//   extraDetails: string | null;
+// }
 
 export interface Budget {
   from?: number;
@@ -107,6 +107,8 @@ export interface Enquiry {
   added: number;
   lastModified: number;
   reviews: IReview[];
+  isNew: boolean;
+  isContactShared:boolean //for checking whether seller has clicked get contact or not
 }
 
 export interface EnquiryWithProperty extends Enquiry {
@@ -131,11 +133,11 @@ export interface Landmark {
 }
 
 export interface Places {
-  name: string | null;
-  lat: number | null;
-  lng: number | null;
-  address: string | null;
-  mapLocation: string | null;
+  name: string |null;
+  lat: number |null;
+  lng: number|null;
+  address: string |null;
+  mapLocation: string |null;
 }
 
 export interface UploadedFileUrls {
@@ -146,9 +148,9 @@ export interface UploadedFileUrls {
 }
 
 export interface FileObject {
-  name?: string | null;
+  name?: string;
   size?: number | null;
-  uri?: string | null;
+  uri: string;
   firebaseUri?: string | null;
 }
 
@@ -164,35 +166,71 @@ export interface IdGenerationResult {
   nextId: string;
 }
 
-export interface ListingProperty extends Property {
+export interface ListingProperty {
+  _geoloc: GeoLocation;
+  id: string;
+  address: string | null;
+  ageOfInventory: number;
   agentName: string | null;
   agentPhoneNumber: string | null;
-  address?: string | null;
-  biappaApproved?: boolean | null;
-  bdaApproved?: boolean | null;
-  carPark?: number | null;
-  communityType?: string | null;
-  cornerUnit?: boolean | null;
-  eKhata?: boolean | null;
-  exactFloor?: number | null;
-  exclusive?: boolean | null;
-  furnishing?: string | null;
-  balconyFacing?: string | null;
-  kamId?: string | null;
-  kamStatus?: string | null;
-  noOfBalconies?: number | null;
-  noOfBathrooms?: number | null;
-  qcStatus?: string | null;
-  rentalIncome?: number | null;
-  stage?: string | null; //stage
-  structure?: number | null;
-  subType: string | null | undefined;
-  uds?: number | null;
-  unitNo?: string | null;
+  ageOfStatus: number;
+  area: string | null;
+  askPricePerSqft: number;
+  assetType: string | null;
+  builerName: string | null;
+  builderCategory: string | null;
+  builderName: string | null;
+  biappaApproved: boolean;
+  bdaApproved: boolean;
+  buildingAge: string | null;
+  buildingKhata: string | null;
+  carPark: number | null;
+  carpet: number | null;
+  communityType: string | null;
+  cornerUnit: boolean;
+  cpId: string | null;
+  currentStatus: string | null;
+  dateOfInventoryAdded: number;
+  dateOfStatusLastChecked: number;
+  driveLink: string | null;
+  eKhata: boolean;
+  exactFloor: number | null;
+  extraRoom: string[] | null;
+  exclusive: boolean;
+  extraDetails: string | null;
+  facing: string | null;
+  floorNo: string | null;
+  furnishing: string | null;
+  handoverDate: string | number | null;
+  balconyFacing: string | null;
+  kamId: string | null;
+  kamStatus: string | null;
+  landKhata: string | null;
+  mapLocation: string | null;
+  micromarket: string | null;
+  propertyName: string | null;
+  noOfBalconies: number | null;
+  noOfBathrooms: number | null;
+  ocReceived: boolean;
+  plotFacing: string | null;
+  plotSize: number | null;
+  propertyId: string | null;
+  qcStatus: string | null;
+  rentalIncome: number | null;
+  sbua: number | null;
+  stage: string | null;
+  status: string | null;
+  structure: string | null;
+  subType: string | null;
+  tenanted: boolean;
+  totalAskPrice: number | null;
+  uds: number | null;
+  unitNo: string | null;
+  unitType: string | null;
+  photo: string[];
+  video: string[];
+  document: string[];
   lastModified?: number | null;
-  extraRoom?: string[] | null;
-  plotFacing?: string | null;
-  // [key: string]: any;
 }
 
 export interface NotificationItem {
@@ -223,4 +261,253 @@ export interface SubscriptionPlan {
   productPrice: number;
   taxPercentage: number;
   validityPeriod: string;
+}
+
+// Base types remain the same
+type assetType =
+  // residential
+  | "apartment"
+  | "villa"
+  | "villament"
+  | "independent house"
+  | "row house"
+  | "plot"
+  // commercial
+  | "Office Space"
+  | "Retail Space"
+  | "Commercial Space";
+
+type propertyType = "Residential" | "Commercial";
+type listingType = "resale" | "rental";
+
+type extraRooms =
+  | ["Servant Room" | "Study Room" | "Pooja Room" | "Other"]
+  | null;
+type noOfBedrooms = 1 | 2 | 3 | 4 | 5 | 6 | 7;
+type noOfBathrooms = 1 | 2 | 3 | 4 | 5 | "5+";
+type noOfBalconies = 0 | 1 | 2 | 3 | 4 | 5 | "5+";
+type balconyFacing = "Inside" | "Outside";
+type possession = "ready to move" | "under construction";
+type ageOfTheBuilding =
+  | "New"
+  | "1-5 years"
+  | "6-10 years"
+  | "11-15 years"
+  | "15+ Years";
+
+type furnishing = "Unfurnished" | "Semi-Furnished" | "Furnished";
+type direction = "North" | "South" | "East" | "West";
+type apartmentType = "Simple" | "Duplex" | "Triplex" | "Penthouse";
+type amenities = [
+  | "Gym"
+  | "Lifts"
+  | "Water Storage"
+  | "Visitor Parking"
+  | "Service Lifts"
+  | "Pool"
+  | "CCTV Surveillance"
+  | "Security"
+  | "Power Backup"
+  | "Club-House"
+];
+type maintenance = "Included" | "Not Included";
+type commissionType = "Side by Side" | "Commission Sharing";
+type preferredTenants = [
+  "Anyone",
+  "Family",
+  "Bachelor Female",
+  "Bachelor Male"
+];
+type communityType = "Gated" | "Independent";
+type landKhata = "A" | "B";
+
+type PropertyType = "Office Space" | "Retail Space" | "Commercial Space";
+type commercialSubType = PropertyType extends "Office Space"
+  ? "Independent Office Space" | "IT Park" | "Co-Working Space"
+  : PropertyType extends "Retail Space"
+  ? "Commercial Shop" | "Showroom"
+  : PropertyType extends "Commercial Space"
+  ?
+      | "PG/Guest-House"
+      | "Warehouse"
+      | "Commercial Plot"
+      | "Industrial Shed"
+      | "Factory"
+      | "Other"
+  : never;
+
+type commercialAmenities = [
+  | "Power Backup"
+  | "Security"
+  | "Lifts"
+  | "Water Storage"
+  | "CCTV Surveillance"
+  | "Visitor Parking"
+  | "Cafeteria / Food Court"
+  | "Maintenance Staff"
+  | "ATM"
+  | "Wheel-Chair Accessibility"
+];
+
+type furnishingCommercial = "Bare Shell" | "Warm Shell" | "Plug & Play";
+
+type suitableWarehouse =
+  | "Godown"
+  | "Dark Store"
+  | "Industrial Warehouse"
+  | "Cold Storage";
+
+// Property Interface
+export interface Property {
+  // Core Identity
+  propertyId: string;
+  listingType: "resale" | "rental";
+  propertyType: "residential" | "commercial";
+  assetType: assetType;
+
+  // Agent Information
+  cpId: string;
+  agentName: string;
+  agentPhoneNumber: string;
+
+  // KAM Information
+  kamId: string;
+  kamName: string;
+
+  // Metadata
+  added: number;
+  dateOfLastChecked: number;
+  lastModified: number;
+  status: string;
+
+  // QC Flow
+  kamStatus: string;
+  dataStatus: string;
+  stage: string;
+
+  // Location Information
+  propertyName: string |null;
+  micromarket: string | null;
+  mapLocation: string |null;
+  zone: string | null;
+  communityType: communityType;
+  _geoloc: GeoLocation;
+
+  // Area Measurements (unified naming)
+  sbua: number; // Renamed from sbua for clarity
+  carpetArea?: number;
+  plotArea?: number;
+
+  // Orientation
+  facing: direction; // Unified from doorFacing/facing
+
+  // Residential Specific Fields
+  apartmentType?: apartmentType;
+  structure?: string; // For villas, villaments, etc.
+  noOfBedrooms?: noOfBedrooms;
+  extraRooms?: extraRooms;
+  noOfBathrooms?: noOfBathrooms;
+  noOfBalconies?: noOfBalconies;
+  balconyFacing?: balconyFacing;
+
+  // Floor Information
+  floorNumber?: number; // Unified from floorNo/floor/exactFloorNo
+  referredFloorNumber?: string; // String reference for floor (e.g., "Ground Floor", "Mezzanine", "Basement")
+  totalFloors?: number;
+
+  // Commercial Specific Fields
+  noOfSeats?: number;
+  waterSupply?: boolean;
+  typeOfWaterSupply?: "Borewell" | "Cauvery";
+
+  // Plot Specific Fields
+  plotNo?: string;
+  plotLength?: number;
+  plotBreadth?: number;
+  oddSized?: boolean;
+
+  // Furnishing (unified)
+  furnishing?: furnishing | furnishingCommercial;
+
+  // Building Age & Possession
+  ageOfTheBuilding?: ageOfTheBuilding;
+  possession?: possession;
+  availableFrom?: number; // Unified availability date
+  readyToMove?: boolean;
+  handOverDate?: number; // Unified from handOverData/handOverDate
+
+  // Financial Information
+  pricing?: {
+    totalAskPrice?: number;
+    pricePerSqft?: number;
+  };
+
+  sold: {
+    soldPrice?: number;
+    soldPlatform?: string;
+  }
+
+  // Rental Information (unified structure)
+  rentalInfo?: {
+    rent: number;
+    deposit: number;
+    maintenance: maintenance;
+    maintenanceAmount: number;
+    commissionType: commissionType;
+    // For resale properties that are rented out
+    rentalIncome?: number;
+    currentDeposit?: number;
+    startDate?: number;
+    endDate?: number;
+
+    isPreLeased?: boolean;
+  };
+
+  // Tenant Preferences (rental only)
+  tenantPreferences?: {
+    preferredTenants: preferredTenants;
+    petsAllowed: boolean;
+    nonVegAllowed: boolean;
+  };
+
+  // Property Features
+  features?: {
+    cornerUnit: boolean;
+    exclusive: boolean;
+    ocReceived?: boolean;
+  };
+
+  // Legal Documentation
+  legalInfo?: {
+    landKhata?: landKhata;
+    buildingKhata?: landKhata; // For commercial properties
+    eKhata: boolean;
+    biappaApproved: boolean;
+    bdaApproved: boolean;
+  };
+
+  // Amenities (unified)
+  amenities: amenities | commercialAmenities | [];
+
+  // Parking & Additional Info
+  parking?: number;
+  uds?: number; // Undivided share
+
+  // Suitability (for specific property types)
+  suitableFor?: string | suitableWarehouse;
+
+  // Media & Documentation
+  media?: {
+    photos: string[];
+    videos: string[];
+    documents: string[];
+  };
+
+  // Additional Information
+  extraDetails?: string;
+  unitNumber?: string;
+
+
+  commercialSubType?: commercialSubType
+  commercialPropertyType?: PropertyType
 }
