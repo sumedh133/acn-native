@@ -31,6 +31,9 @@ import { FormPreview } from "../Listing/listingPropertyDetails";
 import { getMicromarketFromCoordinates } from "@/app/helpers/getMicromarketFromCoordinates";
 import { FormField } from "@/types/FormConfig";
 import SaveAsDraft from "@/app/modals/SaveAsDraft";
+import { MediaObj } from "@/app/types/MediaTypes";
+import { MediaUploadQueue as MediaUploadQueueClass } from "@/app/services/media_services/MediaUploadQueue";
+import type { UploadResult } from "@/app/services/media_services/mediaService";
 
 // Extend FormField to include our internal properties
 interface FormFieldWithMeta extends FormField {
@@ -114,6 +117,14 @@ export const PropertyFormScreen: React.FC<PropertyFormScreenProps> = ({
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [showPreview, setShowPreview] = useState<boolean>(false);
   const [showDraftModal, setShowDraftModal] = useState<boolean>(false);
+  const [rawMedia, setRawMedia] = useState<{
+    photos: MediaObj[];
+    videos: MediaObj[];
+    documents: MediaObj[];
+  }>({ photos: [], videos: [], documents: [] });
+  const [backgroundUploading, setBackgroundUploading] =
+    useState<boolean>(false);
+  const [backgroundProgress, setBackgroundProgress] = useState<number>(0);
 
   // -------------------- Media Upload Handler --------------------
   const handleMediaUpdate = (media: {
@@ -126,6 +137,19 @@ export const PropertyFormScreen: React.FC<PropertyFormScreenProps> = ({
       media,
     }));
     setIsFormEmpty(false);
+  };
+
+  const handleRawMediaChange = (media?: {
+    photos: MediaObj[];
+    videos: MediaObj[];
+    documents?: MediaObj[];
+  }) => {
+    if (!media) return;
+    setRawMedia({
+      photos: media.photos || [],
+      videos: media.videos || [],
+      documents: media.documents || [],
+    });
   };
 
   // -------------------- Utility Functions --------------------
@@ -537,7 +561,20 @@ export const PropertyFormScreen: React.FC<PropertyFormScreenProps> = ({
           </TouchableOpacity>
           <TouchableOpacity
             className="flex-1 py-2 px-5 rounded-[4px] bg-[#153E3B] border border-[#153E3B]"
-            onPress={() => onComplete(formData)}
+            onPress={async () => {
+              try {
+                const hasRaw =
+                  rawMedia.photos.length > 0 ||
+                  rawMedia.videos.length > 0 ||
+                  rawMedia.documents.length > 0;
+                const payload: any = hasRaw
+                  ? { ...formData, _rawMedia: rawMedia }
+                  : formData;
+                onComplete(payload);
+              } catch (e) {
+                onComplete(formData);
+              }
+            }}
             disabled={isSubmitting}
           >
             {isSubmitting ? (
@@ -707,6 +744,7 @@ export const PropertyFormScreen: React.FC<PropertyFormScreenProps> = ({
             docsToUpload={docsToUpload}
             setDocsToUpload={setDocsToUpload}
             scrollToPossessionRef={scrollToPossessionRef}
+            onRawMediaChange={handleRawMediaChange}
           />
         </View>
 

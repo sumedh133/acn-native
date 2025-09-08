@@ -1,5 +1,13 @@
 import React, { useContext, useEffect, useRef, useState } from "react";
-import { ScrollView, View, Text, BackHandler, TouchableOpacity, Animated, StyleSheet } from "react-native";
+import {
+  ScrollView,
+  View,
+  Text,
+  BackHandler,
+  TouchableOpacity,
+  Animated,
+  StyleSheet,
+} from "react-native";
 import { router } from "expo-router";
 import { ScrollContext } from "@/app/ScrollContext";
 import ModularPopup from "@/components/ModularPopup";
@@ -33,7 +41,7 @@ export type UIProperty = Omit<Property, "handOverDate"> & {
 
 interface FormPreviewProps {
   config: FormConfig;
-  data: UIProperty;
+  data: Partial<UIProperty>;
   onMediaUpdate?: (media: MediaUploadData) => void;
   agentData?: any;
   propId?: string;
@@ -60,18 +68,22 @@ export const FormPreview: React.FC<FormPreviewProps> = ({
   const modalOpacityAnimation = useRef(new Animated.Value(0)).current;
 
   const { enquiryCount, newEnquiryCount, loading } = useEnquiries({
-    propertyId: data?.propertyId,
+    propertyId: data?.propertyId || "",
   });
 
-  const { isStatusInfoOpen, currentStatusInfo, closeStatusInfo } = useContext(ScrollContext);
+  const { isStatusInfoOpen, currentStatusInfo, closeStatusInfo } =
+    useContext(ScrollContext);
 
   useEffect(() => {
-    const backHandler = BackHandler.addEventListener("hardwareBackPress", () => {
-      if (setShowPreview) {
-        setShowPreview(false);
-        return true;
+    const backHandler = BackHandler.addEventListener(
+      "hardwareBackPress",
+      () => {
+        if (setShowPreview) {
+          setShowPreview(false);
+          return true;
+        }
       }
-    });
+    );
 
     return () => backHandler.remove();
   }, [setShowPreview]);
@@ -120,11 +132,11 @@ export const FormPreview: React.FC<FormPreviewProps> = ({
         ]
       : []),
   ];
-  
 
   // Function to handle the status update (assuming it's available in your context)
   const updateStatus = (status: string) => {
-    updateProperty(data.propertyId, { status }, "verified");
+    if (data.propertyId)
+      updateProperty(data.propertyId, { status }, "verified");
   };
 
   const getFieldValue = (obj: any, path: string) =>
@@ -201,7 +213,6 @@ export const FormPreview: React.FC<FormPreviewProps> = ({
       }).start();
     }
   }, [statusUpdateModal]);
-  
 
   return (
     <>
@@ -360,22 +371,22 @@ export const FormPreview: React.FC<FormPreviewProps> = ({
       {/* Use ModularPopup for status update */}
       {statusUpdateModal && (
         <Animated.View
-        style={[
-          styles.popupContainerOverFooter,
-          { opacity: modalOpacityAnimation },
-        ]}
-      >
-        <TouchableOpacity
-          activeOpacity={1}
-          style={styles.popupTouchOverFooter}
-          onPress={() => setStatusUpdateModal(false)}
+          style={[
+            styles.popupContainerOverFooter,
+            { opacity: modalOpacityAnimation },
+          ]}
         >
-        <ModularPopup
-          items={statusItems} // Pass the status items
-          slideAnimation={new Animated.Value(0)} // Add animation handling as needed
-          onDragDown={() => setStatusUpdateModal(false)} // Close popup on drag down
-        />
-        </TouchableOpacity>
+          <TouchableOpacity
+            activeOpacity={1}
+            style={styles.popupTouchOverFooter}
+            onPress={() => setStatusUpdateModal(false)}
+          >
+            <ModularPopup
+              items={statusItems} // Pass the status items
+              slideAnimation={new Animated.Value(0)} // Add animation handling as needed
+              onDragDown={() => setStatusUpdateModal(false)} // Close popup on drag down
+            />
+          </TouchableOpacity>
         </Animated.View>
       )}
 

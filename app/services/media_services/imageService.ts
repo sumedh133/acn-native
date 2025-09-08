@@ -28,6 +28,16 @@ export interface MultipleUploadConfig {
   retryAttempts?: number;
   strategy?: "parallel" | "sequential";
   resumable?: boolean;
+  onBatchProgress?: (progress: {
+    overallProgress: number; // 0-100
+    perFile: Record<string, number>; // fileId -> 0-100
+  }) => void;
+  onFileProgress?: (
+    fileId: string,
+    progress: { uploaded: number; total: number; pct: number }
+  ) => void;
+  onBatchComplete?: (results: UploadResult[]) => void;
+  onBatchError?: (error: Error) => void;
 }
 
 export interface MediaUploadData {
@@ -68,6 +78,8 @@ export const VIDEO_MIME_TYPES = [
 
 export class MultipleFilesUploadService {
   private uploads: Map<string, Upload> = new Map();
+  private fileProgress: Map<string, number> = new Map();
+  private currentBatchTotal: number = 0;
 
   constructor() {
     this.uploads = new Map();
@@ -78,6 +90,8 @@ export class MultipleFilesUploadService {
     config: MultipleUploadConfig
   ): Promise<UploadResult[]> {
     try {
+      this.currentBatchTotal = files.length;
+      this.fileProgress.clear();
       const uploadPromises = files.map((file) =>
         this.uploadSingleFile(file, config)
       );
@@ -126,6 +140,8 @@ export class MultipleFilesUploadService {
         }
       }
 
+      // Notify batch complete
+      config.onBatchComplete?.(results);
       return results;
     } catch (error) {
       const errorObj =
@@ -136,7 +152,7 @@ export class MultipleFilesUploadService {
         success: false,
         error: errorObj,
       }));
-
+      config.onBatchError?.(errorObj);
       throw errorObj;
     }
   }
@@ -158,6 +174,27 @@ export class MultipleFilesUploadService {
             filesize: file.size.toString(),
           },
           headers: config.headers || {},
+          onProgress: (bytesUploaded: number, bytesTotal: number) => {
+            const pct =
+              bytesTotal > 0
+                ? Math.round((bytesUploaded / bytesTotal) * 100)
+                : 0;
+            this.fileProgress.set(file.id, pct);
+            config.onFileProgress?.(file.id, {
+              uploaded: bytesUploaded,
+              total: bytesTotal,
+              pct,
+            });
+            if (this.currentBatchTotal > 0 && config.onBatchProgress) {
+              // Compute simple average progress across files in the batch
+              let sum = 0;
+              this.fileProgress.forEach((v) => (sum += v));
+              const overall = Math.round(sum / this.currentBatchTotal);
+              const perFile: Record<string, number> = {};
+              this.fileProgress.forEach((v, k) => (perFile[k] = v));
+              config.onBatchProgress({ overallProgress: overall, perFile });
+            }
+          },
           onError: (error: Error) => {
             resolve({
               fileId: file.id,

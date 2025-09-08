@@ -9,6 +9,9 @@ import { convertMonthYearToUnix } from "../helpers/format/format";
 import { showErrorToast, showSuccessToast } from "@/utils/toastUtils";
 import { useLocalSearchParams } from "expo-router";
 import { router } from "expo-router";
+import { MediaUploadQueue as MediaUploadQueueClass } from "@/app/services/media_services/MediaUploadQueue";
+import type { UploadResult } from "@/app/services/media_services/mediaService";
+import type { MediaObj } from "@/app/types/MediaTypes";
 
 type UIProperty = Omit<Property, "handOverDate"> & {
   handOverDate?: string;
@@ -58,26 +61,103 @@ const AddInventoryForm = () => {
       );
 
       console.log("Normalized & Cleaned Data:", cleanData);
+      const rawMedia = (data as any)?._rawMedia as
+        | { photos: MediaObj[]; videos: MediaObj[]; documents: MediaObj[] }
+        | undefined;
+      let finalPropId = cleanData.propertyId as string | undefined;
 
       // Update for underReviewEdit
       if (formType === "underReviewEdit") {
         await updateProperty(cleanData.propertyId, cleanData, "qc", true);
+        finalPropId = cleanData.propertyId;
         console.log("Property updated in QC review:", cleanData);
         showSuccessToast(
           `Property updated successfully and sent for QC review!`
         );
         setIsSubmitting(false);
         router.back();
+        // Fire background upload if raw media present
+        if (rawMedia && finalPropId) {
+          const queue = new MediaUploadQueueClass({
+            propId: finalPropId,
+            userId: (cleanData as any)?.cpId || "unknown",
+            onComplete: async (results: UploadResult[]) => {
+              const uploaded = {
+                photos: [] as string[],
+                videos: [] as string[],
+                documents: [] as string[],
+              };
+              results.forEach((r) => {
+                if (!r.success || !r.uploadUrl) return;
+                const id = r.fileId || "";
+                if (id.includes("-photo-")) uploaded.photos.push(r.uploadUrl);
+                else if (id.includes("-video-"))
+                  uploaded.videos.push(r.uploadUrl);
+                else if (id.includes("-document-"))
+                  uploaded.documents.push(r.uploadUrl);
+              });
+              try {
+                await updateProperty(
+                  finalPropId!,
+                  { media: uploaded } as any,
+                  "qc",
+                  true
+                );
+              } catch {}
+            },
+          });
+          queue.uploadMedia(
+            rawMedia.photos,
+            rawMedia.videos,
+            rawMedia.documents
+          );
+        }
         return;
       }
 
       // Update for verifiedEdit
       if (formType === "verifiedEdit") {
         await updateProperty(cleanData.propertyId, cleanData, "verified", true);
+        finalPropId = cleanData.propertyId;
         console.log("Property updated in Verified stage:", cleanData);
         showSuccessToast(`Property updated successfully in verified stage!`);
         setIsSubmitting(false);
         router.back();
+        if (rawMedia && finalPropId) {
+          const queue = new MediaUploadQueueClass({
+            propId: finalPropId,
+            userId: (cleanData as any)?.cpId || "unknown",
+            onComplete: async (results: UploadResult[]) => {
+              const uploaded = {
+                photos: [] as string[],
+                videos: [] as string[],
+                documents: [] as string[],
+              };
+              results.forEach((r) => {
+                if (!r.success || !r.uploadUrl) return;
+                const id = r.fileId || "";
+                if (id.includes("-photo-")) uploaded.photos.push(r.uploadUrl);
+                else if (id.includes("-video-"))
+                  uploaded.videos.push(r.uploadUrl);
+                else if (id.includes("-document-"))
+                  uploaded.documents.push(r.uploadUrl);
+              });
+              try {
+                await updateProperty(
+                  finalPropId!,
+                  { media: uploaded } as any,
+                  "verified",
+                  true
+                );
+              } catch {}
+            },
+          });
+          queue.uploadMedia(
+            rawMedia.photos,
+            rawMedia.videos,
+            rawMedia.documents
+          );
+        }
         return;
       }
 
@@ -88,17 +168,25 @@ const AddInventoryForm = () => {
           { ...cleanData, status: "draft" },
           "qc"
         );
+        finalPropId = cleanData.propertyId;
 
         console.log("Draft property moved to pending QC:", cleanData);
         showSuccessToast(`Draft property submitted for QC verification!`);
       } else {
         // New property creation
-        await createProperty(cleanData as Omit<Property, "propertyId">, "qc");
-        console.log("New property created:", cleanData);
+        const newProperty = await createProperty(
+          cleanData as Omit<Property, "propertyId">,
+          "qc"
+        );
+        finalPropId = (newProperty as any)?.propertyId || cleanData.propertyId;
+        console.log("New property created:", {
+          ...cleanData,
+          propertyId: finalPropId,
+        });
         showSuccessToast(`New property created and sent for verification!`);
       }
       fetch(
-        `https://notification-server-acn.onrender.com/addinventory/${cleanData.propertyId}`,
+        `https://notification-server-acn.onrender.com/addinventory/${finalPropId}`,
         {
           method: "POST",
           headers: {
@@ -106,6 +194,39 @@ const AddInventoryForm = () => {
           },
         }
       );
+
+      // Start background TUS upload using the real propertyId, if raw media present
+      if (rawMedia && finalPropId) {
+        const queue = new MediaUploadQueueClass({
+          propId: finalPropId,
+          userId: (cleanData as any)?.cpId || "unknown",
+          onComplete: async (results: UploadResult[]) => {
+            const uploaded = {
+              photos: [] as string[],
+              videos: [] as string[],
+              documents: [] as string[],
+            };
+            results.forEach((r) => {
+              if (!r.success || !r.uploadUrl) return;
+              const id = r.fileId || "";
+              if (id.includes("-photo-")) uploaded.photos.push(r.uploadUrl);
+              else if (id.includes("-video-"))
+                uploaded.videos.push(r.uploadUrl);
+              else if (id.includes("-document-"))
+                uploaded.documents.push(r.uploadUrl);
+            });
+            try {
+              await updateProperty(
+                finalPropId!,
+                { media: uploaded } as any,
+                "qc",
+                true
+              );
+            } catch {}
+          },
+        });
+        queue.uploadMedia(rawMedia.photos, rawMedia.videos, rawMedia.documents);
+      }
       setIsSubmitting(false);
 
       // Navigation after success for create or draft update
