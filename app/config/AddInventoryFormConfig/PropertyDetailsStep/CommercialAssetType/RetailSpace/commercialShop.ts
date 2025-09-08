@@ -69,9 +69,13 @@ export const commercialShopFields: FormField[] = [
     placeholder: "Select facing direction",
     options: [
       { label: "North", value: "north" },
-      { label: "South", value: "south" },
       { label: "East", value: "east" },
+      { label: "South", value: "south" },
       { label: "West", value: "west" },
+      { label: "North-East", value: "north-east" },
+      { label: "North-West", value: "north-west" },
+      { label: "South-West", value: "south-west" },
+      { label: "South-East", value: "south-east" },
     ],
     dependsOn: {
       field: "commercialSubType",
@@ -83,6 +87,7 @@ export const commercialShopFields: FormField[] = [
   {
     id: "floorNumber",
     label: "Floor No.",
+    footer: "Note: Exact floor will not be shown",
     type: "number",
     required: true,
     placeholder: "0000",

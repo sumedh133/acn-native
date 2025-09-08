@@ -31,6 +31,7 @@ import MultiStatusUpdateModal, {
   SelectedStatuses,
 } from "../components/MyBusinessPage/MultiStatusUpdateModal";
 import { getUnixDateTime } from "../helpers/getUnixDateTime";
+import { showSuccessToast } from "@/utils/toastUtils";
 
 // Icons Import
 
@@ -183,25 +184,33 @@ const MyBusinessPage = () => {
     }
   };
 
-  const handleStatusUpdate = () => {
-    const finalPropertyIdsToUpdate = [];
-    if (statusMap.available.selected)
-      finalPropertyIdsToUpdate.push(statusMap.available.propertyIds);
+  const handleStatusUpdate = async () => {
+    try {
+      const finalPropertyIdsToUpdate = [];
+      if (statusMap.available.selected)
+        finalPropertyIdsToUpdate.push(statusMap.available.propertyIds);
 
-    if (statusMap.sold.selected)
-      finalPropertyIdsToUpdate.push(statusMap.sold.propertyIds);
+      if (statusMap.sold.selected)
+        finalPropertyIdsToUpdate.push(statusMap.sold.propertyIds);
 
-    if (statusMap.hold.selected)
-      finalPropertyIdsToUpdate.push(statusMap.hold.propertyIds);
-    if (statusMap.tenanted.selected)
-      finalPropertyIdsToUpdate.push(statusMap.tenanted.propertyIds);
-    if (statusMap["de-listed"].selected)
-      finalPropertyIdsToUpdate.push(statusMap["de-listed"].propertyIds);
-    for (const i in finalPropertyIdsToUpdate) {
-      updateProperty(i, {
-        status: "available",
-        dateOfLastChecked: getUnixDateTime(),
-      });
+      if (statusMap.hold.selected)
+        finalPropertyIdsToUpdate.push(statusMap.hold.propertyIds);
+      if (statusMap.tenanted.selected)
+        finalPropertyIdsToUpdate.push(statusMap.tenanted.propertyIds);
+      if (statusMap["de-listed"].selected)
+        finalPropertyIdsToUpdate.push(statusMap["de-listed"].propertyIds);
+      const updatePromises = Object.keys(finalPropertyIdsToUpdate).map(
+        (propertyId) =>
+          updateProperty(propertyId, {
+            status: "available",
+            dateOfLastChecked: getUnixDateTime(),
+          })
+      );
+
+      await Promise.all(updatePromises);
+      showSuccessToast("Status updated successfully");
+    } catch (error) {
+      console.error("Error updating status:", error);
     }
   };
 

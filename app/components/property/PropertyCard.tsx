@@ -65,7 +65,7 @@ import { updateProperty } from "@/app/services/property_services/propertyService
 import { ScrollContext } from "@/app/ScrollContext";
 
 interface PropertyCardProps {
-  property: any;
+  property: Property;
   selectedProperties?: Set<string>;
   isSelectionMode?: boolean;
   onToggleSelection?: (propertyId: string, propertyStatus: string) => void;
@@ -150,17 +150,17 @@ const PropertyCard: React.FC<PropertyCardProps> = ({
         return villa;
       case "villament":
         return villament;
-      case "row-house":
+      case "row house":
         return rowHouse;
       case "plot":
         return plot;
-      case "independent-building":
+      case "independent house":
         return independentBuilding;
-      case "office-space":
+      case "office space":
         return officeSpace;
-      case "retail-space":
+      case "retail space":
         return retailSpace;
-      case "commercial-building":
+      case "commercial space":
         return commercialBuilding;
       default:
         return commercialBuilding;
@@ -486,11 +486,16 @@ const PropertyCard: React.FC<PropertyCardProps> = ({
     }
   };
 
-  const handleUpdateStatus = () => {
-    updateProperty(property.propertyId, {
-      status: "available",
-      dateOfLastChecked: getUnixDateTime(),
-    });
+  const handleUpdateStatus = async () => {
+    try {
+      await updateProperty(property.propertyId, {
+        status: "available",
+        dateOfLastChecked: getUnixDateTime(),
+      });
+      showSuccessToast("Updated the Status Successfully");
+    } catch (error) {
+      console.error("error updating status");
+    }
   };
 
   return (
@@ -549,20 +554,20 @@ const PropertyCard: React.FC<PropertyCardProps> = ({
                 property.status === "hold" ||
                 property.status === "sold" ||
                 (property.status === "available" &&
-                  property.dateOfStatusLastChecked &&
+                  property.dateOfLastChecked &&
                   safeDaysDifference(
-                    property.dateOfStatusLastChecked + 60 * 60 * 24 * 15,
+                    property.dateOfLastChecked + 60 * 60 * 24 * 15,
                     Math.floor(Date.now() / 1000)
                   ) > 0)) && (
                 <View className="flex flex-row items-center justify-between bg-[#E3E3E3] rounded-t-lg px-4 py-2">
                   <View className="flex flex-col">
-                    {property.dateOfStatusLastChecked &&
+                    {property.dateOfLastChecked &&
                       safeDaysDifference(
-                        property.dateOfStatusLastChecked + 60 * 60 * 24 * 15,
+                        property.dateOfLastChecked + 60 * 60 * 24 * 15,
                         Math.floor(Date.now() / 1000)
                       ) <= 4 &&
                       safeDaysDifference(
-                        property.dateOfStatusLastChecked + 60 * 60 * 24 * 15,
+                        property.dateOfLastChecked + 60 * 60 * 24 * 15,
                         Math.floor(Date.now() / 1000)
                       ) > 0 &&
                       property.status === "available" && (
@@ -571,8 +576,7 @@ const PropertyCard: React.FC<PropertyCardProps> = ({
                           <Text>
                             {safeText(
                               safeDaysDifference(
-                                property.dateOfStatusLastChecked +
-                                  60 * 60 * 24 * 15,
+                                property.dateOfLastChecked + 60 * 60 * 24 * 15,
                                 Math.floor(Date.now() / 1000)
                               )
                             )}
@@ -608,8 +612,12 @@ const PropertyCard: React.FC<PropertyCardProps> = ({
                 <View className="flex-row items-center">
                   {/* Property ID on the left - using width fit-content approach */}
                   <View className="flex-1 shrink flex-row justify-between">
-                    <View className="self-start flex-row gap-2.5">
-                      <Text className="text-[#5A5555] text-sm font-[Lato] font-semibold leading-[21px] tracking-wide pb-0.5">
+                    <View className="self-start flex-row gap-2.5 flex-1">
+                      <Text
+                        className="text-[#5A5555] text-sm font-[Lato] font-semibold leading-[21px] tracking-wide pb-0.5 flex-1"
+                        numberOfLines={1}
+                        ellipsizeMode="tail"
+                      >
                         {safeText(property.propertyId)}
                       </Text>
                     </View>
@@ -676,13 +684,21 @@ const PropertyCard: React.FC<PropertyCardProps> = ({
                   </View>
                   <View className="flex-col gap-1">
                     {/* Property Name */}
-                    <View className="mt-2 gap-2 flex-col">
-                      <Text className="text-black text-base font-[Montserrat_700Bold]">
+                    <View className="mt-2 gap-2 flex-col flex-1">
+                      <Text
+                        className="text-black text-base font-[Montserrat_700Bold]"
+                        numberOfLines={2}
+                        ellipsizeMode="tail"
+                      >
                         {getPropertyName()}
                       </Text>
-                      <View className="flex-row items-center gap-0.5">
+                      <View className="flex-row items-center gap-0.5 flex-1">
                         <Location width={16} height={16} />
-                        <Text className="text-sm">
+                        <Text
+                          className="text-sm flex-1"
+                          numberOfLines={1}
+                          ellipsizeMode="tail"
+                        >
                           {safeText(property.micromarket)}
                         </Text>
                       </View>
@@ -725,13 +741,17 @@ const PropertyCard: React.FC<PropertyCardProps> = ({
               {/* ✅ FIXED: Price and SBUA section with safe formatting */}
               <View className="flex-row justify-between items-start border-t border-t-[#E3E3E3] pt-2 mb-3">
                 {/* Total Ask Price */}
-                <View className="flex-col items-start border-r border-r-[#E3E3E3] pr-5">
+                <View className="flex-col items-start border-r border-r-[#E3E3E3] pr-5 flex-1">
                   {property.listingType === "rental" ? (
-                    <View>
+                    <View className="flex-1">
                       <Text className="text-[#433F3E] text-xs font-[Montserrat_500normal]">
                         Rent
                       </Text>
-                      <Text className="text-sm font-semibold text-[#111827]">
+                      <Text
+                        className="text-sm font-semibold text-[#111827]"
+                        numberOfLines={1}
+                        ellipsizeMode="tail"
+                      >
                         {safeText(
                           property?.rentalInfo?.rent
                             ? formatCost2(property.rentalInfo.rent)
@@ -740,11 +760,15 @@ const PropertyCard: React.FC<PropertyCardProps> = ({
                       </Text>
                     </View>
                   ) : (
-                    <View>
+                    <View className="flex-1">
                       <Text className="text-[#433F3E] text-xs font-[Montserrat_500normal]">
                         Ask Price
                       </Text>
-                      <Text className="text-sm font-semibold text-[#111827]">
+                      <Text
+                        className="text-sm font-semibold text-[#111827]"
+                        numberOfLines={1}
+                        ellipsizeMode="tail"
+                      >
                         {safeText(
                           property?.pricing?.totalAskPrice
                             ? formatCost2(property.pricing.totalAskPrice)
@@ -756,13 +780,17 @@ const PropertyCard: React.FC<PropertyCardProps> = ({
                 </View>
 
                 {/* Per Sqft or deposit*/}
-                <View className="flex-col items-start border-r border-r-[#E3E3E3] pr-5">
+                <View className="flex-col items-start border-r border-r-[#E3E3E3] pr-5 flex-1">
                   {property.listingType === "rental" ? (
-                    <View>
+                    <View className="flex-1">
                       <Text className="text-[#433F3E] text-xs font-[Montserrat_500normal]">
                         Deposit
                       </Text>
-                      <Text className="text-sm font-semibold text-[#111827]">
+                      <Text
+                        className="text-sm font-semibold text-[#111827]"
+                        numberOfLines={1}
+                        ellipsizeMode="tail"
+                      >
                         {safeText(
                           property?.rentalInfo?.deposit
                             ? formatCost2(property?.rentalInfo?.deposit)
@@ -771,11 +799,15 @@ const PropertyCard: React.FC<PropertyCardProps> = ({
                       </Text>
                     </View>
                   ) : (
-                    <View>
+                    <View className="flex-1">
                       <Text className="text-[#433F3E] text-xs font-[Montserrat_500normal]">
                         Per Sqft Price
                       </Text>
-                      <Text className="text-sm font-semibold text-[#111827]">
+                      <Text
+                        className="text-sm font-semibold text-[#111827]"
+                        numberOfLines={1}
+                        ellipsizeMode="tail"
+                      >
                         {safeText(
                           property?.pricing?.pricePerSqft
                             ? formatCost(property.pricing.pricePerSqft)
@@ -788,11 +820,15 @@ const PropertyCard: React.FC<PropertyCardProps> = ({
 
                 {/* SBUA */}
                 {property.assetType === "plot" ? (
-                  <View className="flex-col items-start">
+                  <View className="flex-col items-start flex-1">
                     <Text className="text-[#6B7280] text-xs font-[Montserrat_600SemiBold]">
                       Plot Size
                     </Text>
-                    <Text className="text-sm font-semibold text-[#111827]">
+                    <Text
+                      className="text-sm font-semibold text-[#111827]"
+                      numberOfLines={1}
+                      ellipsizeMode="tail"
+                    >
                       {property.plotArea ? (
                         <Text>{safeText(property.plotArea)} Sq Ft</Text>
                       ) : (
@@ -801,11 +837,15 @@ const PropertyCard: React.FC<PropertyCardProps> = ({
                     </Text>
                   </View>
                 ) : (
-                  <View className="flex-col items-start">
+                  <View className="flex-col items-start flex-1">
                     <Text className="text-[#6B7280] text-xs font-[Montserrat_600SemiBold]">
                       SBUA
                     </Text>
-                    <Text className="text-sm font-semibold text-[#111827]">
+                    <Text
+                      className="text-sm font-semibold text-[#111827]"
+                      numberOfLines={1}
+                      ellipsizeMode="tail"
+                    >
                       {property.sbua ? (
                         <Text>{safeText(property.sbua)} Sq Ft</Text>
                       ) : (

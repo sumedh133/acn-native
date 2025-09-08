@@ -34,8 +34,8 @@ interface PlaceDetails {
 interface PlacesSearchProps {
   selectedPlace?: Places;
   setSelectedPlace: (place?: Places) => void;
-  communityType: string | null | undefined;
-  disabled?: boolean
+  communityType: string | undefined;
+  disabled?: boolean;
 }
 
 // Note: In production, use environment variables or a secure config approach
@@ -45,7 +45,7 @@ const PlacesSearch = ({
   selectedPlace,
   setSelectedPlace,
   communityType,
-  disabled = false
+  disabled = false,
 }: PlacesSearchProps) => {
   const [searchQuery, setSearchQuery] = useState("");
   const [searchResults, setSearchResults] = useState<PlacePrediction[]>([]);
@@ -246,7 +246,9 @@ const PlacesSearch = ({
     <View style={styles.section}>
       <View style={styles.headingContainer}>
         <Text style={styles.sectionHeading}>
-          {communityType === "Independent" ? "Nearby LandMark" : "Project Name"}
+          {communityType === "independent"
+            ? "Project Location"
+            : "Project Name"}
         </Text>
         <Text style={styles.compulsoryStar}>*</Text>
       </View>
@@ -258,12 +260,17 @@ const PlacesSearch = ({
             blurredAndNotSelected ? styles.notSelectedState : {},
           ]}
         >
-          <Ionicons name="search-outline" height={20} width={20} color="#726C6C" />
+          <Ionicons
+            name="search-outline"
+            height={12}
+            width={20}
+            color="#726C6C"
+          />
           <TextInput
             style={styles.textInput}
             placeholder={
               communityType === "independent"
-                ? "Search Nearby LandMark"
+                ? "Search Project Location"
                 : "Search Project Name"
             }
             placeholderTextColor="#7A7B7C"
@@ -274,14 +281,13 @@ const PlacesSearch = ({
             editable={!disabled}
           />
 
-
           {isLoading ? (
             <ActivityIndicator
               style={styles.rightIcon}
               size="small"
               color="#153E3B"
             />
-          ) : searchQuery && !disabled? (
+          ) : searchQuery && !disabled ? (
             <TouchableOpacity
               onPress={handleClearSearch}
               style={styles.rightIcon}
@@ -343,7 +349,7 @@ const styles = StyleSheet.create({
   sectionHeading: {
     fontFamily: "Lato-Bold",
     fontSize: 16,
-    fontWeight: "700"
+    fontWeight: "700",
   },
   compulsoryStar: {
     fontSize: 16,
@@ -367,7 +373,7 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontWeight: "400",
     color: "#333333",
-    height: 20
+    height: 20,
   },
   notSelectedState: { borderColor: "#D92D20" },
   rightIcon: {

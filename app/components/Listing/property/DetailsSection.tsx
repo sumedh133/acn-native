@@ -182,7 +182,10 @@ export const DetailsSection: React.FC<DetailsSectionProps> = ({
               : String(value).trim() !== ""),
         };
       })
-      .filter((field) => field.hasValue);
+      .filter((field) => field.hasValue)
+      .filter((field) => field.id !== "extraDetails");
+
+    console.log(fieldsWithValues);
 
     if (fieldsWithValues.length === 0) return null;
 

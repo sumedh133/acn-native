@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import { useSelector } from "react-redux";
 import { RootState } from "@/store/store";
 import {
@@ -12,7 +12,7 @@ import {
   ScrollView,
   Alert,
 } from "react-native";
-import { router } from "expo-router";
+import { router, usePathname } from "expo-router";
 import {
   createProperty,
   updateProperty,
@@ -98,9 +98,13 @@ export const PropertyFormScreen: React.FC<PropertyFormScreenProps> = ({
     video: [],
     document: [],
   });
+
+  // Ref for scrolling to possession field
+  const scrollToPossessionRef = useRef<ScrollView>(null);
   const [currentStepIndex, setCurrentStepIndex] = useState<number>(0);
   const [maxStepIndex, setMaxStepIndex] = useState<number>(0);
-  const [isForwardStepChangeDisabled, setIsForwardStepChangeDisabled] = useState<boolean>(false)
+  const [isForwardStepChangeDisabled, setIsForwardStepChangeDisabled] =
+    useState<boolean>(false);
   const [isFormEmpty, setIsFormEmpty] = useState<boolean>(
     Object.keys(initialData || {}).length === 0
   );
@@ -176,6 +180,8 @@ export const PropertyFormScreen: React.FC<PropertyFormScreenProps> = ({
     return false;
   };
 
+  console.log(formData);
+
   /**
    * Validate a single field.
    */
@@ -186,18 +192,24 @@ export const PropertyFormScreen: React.FC<PropertyFormScreenProps> = ({
         value === undefined ||
         value === null ||
         (Array.isArray(value) && value.length === 0);
-      if (isEmpty) return `${field.label} is required`;
+      if (isEmpty) {
+        showErrorToast(`${field.label} is required`);
+        return `${field.label} is required`;
+      }
     }
 
     if (field.validation) {
       const { min, max, pattern, message } = field.validation;
       if (min !== undefined && Number(value) < min) {
+        showErrorToast(message || `${field.label} must be at least ${min}`);
         return message || `${field.label} must be at least ${min}`;
       }
       if (max !== undefined && Number(value) > max) {
+        showErrorToast(message || `${field.label} must be at most ${max}`);
         return message || `${field.label} must be at most ${max}`;
       }
       if (pattern && !pattern.test(String(value))) {
+        showErrorToast(message || `${field.label} format is invalid`);
         return message || `${field.label} format is invalid`;
       }
     }
@@ -288,6 +300,7 @@ export const PropertyFormScreen: React.FC<PropertyFormScreenProps> = ({
     const backHandler = BackHandler.addEventListener(
       "hardwareBackPress",
       () => {
+        console.log("back pressedd");
         if (!showDraftModal && formData.assetType && formData.propertyName) {
           setShowDraftModal(true);
           return true;
@@ -321,7 +334,7 @@ export const PropertyFormScreen: React.FC<PropertyFormScreenProps> = ({
     });
     console.log(isValid, "validate");
     if (!isValid) {
-      showErrorToast("Please fill all required fields.");
+      // showErrorToast("Please fill all required fields.");
     }
 
     handleErrorsUpdate(stepErrors);
@@ -426,6 +439,8 @@ export const PropertyFormScreen: React.FC<PropertyFormScreenProps> = ({
         )
       );
 
+      console.log(cleanData, "clean data");
+
       if (cleanData.propertyId) {
         await updateWholeProperty(
           cleanData.propertyId,
@@ -463,8 +478,8 @@ export const PropertyFormScreen: React.FC<PropertyFormScreenProps> = ({
         setMaxStepIndex(0);
       }
     }
-  }, [formData])
- 
+  }, [formData]);
+
   // -------------------- Derived Values --------------------
   const visibleSteps = getVisibleSteps();
 
@@ -482,6 +497,9 @@ export const PropertyFormScreen: React.FC<PropertyFormScreenProps> = ({
             onMediaUpdate={handleMediaUpdate}
             agentData={agentData}
             propId={propId}
+            handleDraftSave={handleSaveDraft}
+            showDraftModal={showDraftModal}
+            setShowDraftModal={setShowDraftModal}
           />
         </View>
 
@@ -670,6 +688,7 @@ export const PropertyFormScreen: React.FC<PropertyFormScreenProps> = ({
             propId={propId}
             docsToUpload={docsToUpload}
             setDocsToUpload={setDocsToUpload}
+            scrollToPossessionRef={scrollToPossessionRef}
           />
         </View>
 

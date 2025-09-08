@@ -1,6 +1,6 @@
 export interface GeoLocation {
   lat?: number | null;
-  lng?: number |null;
+  lng?: number | null;
 }
 
 // export interface Property {
@@ -54,31 +54,25 @@ export interface Requirement {
   agentPhoneNumber: string;
   agentName: string;
   cpId: string;
-  assetType:
-    | "villa"
-    | "apartment"
-    | "plot"
-    | "commercial"
-    | "warehouse"
-    | "office";
+  assetType: string;
   configuration: "1 bhk" | "2 bhk" | "3 bhk" | "4 bhk" | "5+ bhk" | null;
-  micromarket: string;
+  micromarket?: string;
   budget: Budget;
-  area: number;
+  area?: number;
   kamId: string;
   kamName: string;
   kamPhoneNumber: string;
-  bedrooms: string;
-  bathrooms: string;
-  parking: string;
+  bedrooms?: string;
+  bathrooms?: string;
+  parking?: string;
   propertyName: string;
-  extraDetails: string;
   marketValue: string;
   requirementStatus: "open" | "close";
   internalStatus: "found" | "not found" | "pending";
   added: number;
   lastModified: number;
-  matchingProperties: string[];
+  matchingProperties?: string[];
+  requirementDetails?: string;
 }
 
 // ==================== ENQUIRY TYPES ====================
@@ -108,7 +102,7 @@ export interface Enquiry {
   lastModified: number;
   reviews: IReview[];
   isNew: boolean;
-  isContactShared:boolean //for checking whether seller has clicked get contact or not
+  isContactShared: boolean; //for checking whether seller has clicked get contact or not
 }
 
 export interface EnquiryWithProperty extends Enquiry {
@@ -133,11 +127,11 @@ export interface Landmark {
 }
 
 export interface Places {
-  name: string |null;
-  lat: number |null;
-  lng: number|null;
-  address: string |null;
-  mapLocation: string |null;
+  name: string | null;
+  lat: number | null;
+  lng: number | null;
+  address: string | null;
+  mapLocation: string | null;
 }
 
 export interface UploadedFileUrls {
@@ -186,7 +180,7 @@ export interface ListingProperty {
   buildingKhata: string | null;
   carPark: number | null;
   carpet: number | null;
-  communityType: string | null;
+  communityType: string;
   cornerUnit: boolean;
   cpId: string | null;
   currentStatus: string | null;
@@ -273,9 +267,9 @@ type assetType =
   | "row house"
   | "plot"
   // commercial
-  | "Office Space"
-  | "Retail Space"
-  | "Commercial Space";
+  | "office space"
+  | "retail space"
+  | "commercial space";
 
 type propertyType = "Residential" | "Commercial";
 type listingType = "resale" | "rental";
@@ -295,7 +289,7 @@ type ageOfTheBuilding =
   | "11-15 years"
   | "15+ Years";
 
-type furnishing = "Unfurnished" | "Semi-Furnished" | "Furnished";
+type furnishing = "unfurnished" | "semi-furnished" | "fully-furnished";
 type direction = "North" | "South" | "East" | "West";
 type apartmentType = "Simple" | "Duplex" | "Triplex" | "Penthouse";
 type amenities = [
@@ -364,6 +358,7 @@ export interface Property {
   listingType: "resale" | "rental";
   propertyType: "residential" | "commercial";
   assetType: assetType;
+  source: "app" | "web" | "crm";
 
   // Agent Information
   cpId: string;
@@ -386,9 +381,9 @@ export interface Property {
   stage: string;
 
   // Location Information
-  propertyName: string |null;
+  propertyName: string | null;
   micromarket: string | null;
-  mapLocation: string |null;
+  mapLocation: string | null;
   zone: string | null;
   communityType: communityType;
   _geoloc: GeoLocation;
@@ -445,7 +440,7 @@ export interface Property {
   sold: {
     soldPrice?: number;
     soldPlatform?: string;
-  }
+  };
 
   // Rental Information (unified structure)
   rentalInfo?: {
@@ -502,12 +497,12 @@ export interface Property {
     videos: string[];
     documents: string[];
   };
+  driveLink: string;
 
   // Additional Information
   extraDetails?: string;
   unitNumber?: string;
 
-
-  commercialSubType?: commercialSubType
-  commercialPropertyType?: PropertyType
+  commercialSubType?: commercialSubType;
+  commercialPropertyType?: PropertyType;
 }

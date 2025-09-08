@@ -25,6 +25,7 @@ interface TotalAskPricetProps {
   title?: string;
   required?: boolean;
   searchable?: boolean; // New prop for searchable dropdown
+  area?: number; // Area in sq ft for calculation
 }
 
 const TotalAskPrice: React.FC<TotalAskPricetProps> = ({
@@ -33,13 +34,24 @@ const TotalAskPrice: React.FC<TotalAskPricetProps> = ({
   title,
   required,
   searchable = false, // Default to false
+  area = 0, // Default area
 }) => {
   // Convert number to string for display
-  const [price, setPrice] = useState(initialPrice ? initialPrice.toString(): "");
+  const [price, setPrice] = useState(
+    initialPrice ? initialPrice.toString() : ""
+  );
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [modalVisible, setModalVisible] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const [hoveredItem, setHoveredItem] = useState<string | null>(null);
+
+  // State to track both prices
+  const [totalAskPrice, setTotalAskPrice] = useState<number | undefined>(
+    undefined
+  );
+  const [pricePerSqft, setPricePerSqft] = useState<number | undefined>(
+    undefined
+  );
 
   // Define the unit options with both label and value
   const unitOptions: UnitOption[] = [
@@ -62,6 +74,23 @@ const TotalAskPrice: React.FC<TotalAskPricetProps> = ({
       )
     : unitOptions;
 
+  // Function to calculate the other price based on area
+  const calculateOtherPrice = (
+    currentPrice: number,
+    currentUnit: string
+  ): number | undefined => {
+    if (!area || area <= 0) return undefined;
+
+    if (currentUnit === "pricing.totalAskPrice") {
+      // Calculate price per sq ft from total ask price
+      return currentPrice / area;
+    } else if (currentUnit === "pricing.pricePerSqft") {
+      // Calculate total ask price from price per sq ft
+      return currentPrice * area;
+    }
+    return undefined;
+  };
+
   const handlePriceChange = (value: string) => {
     // Only allow numbers with commas and decimal points
     const validPrice = value.replace(/[^0-9.,]/g, "");
@@ -73,7 +102,32 @@ const TotalAskPrice: React.FC<TotalAskPricetProps> = ({
       const numericPrice = validPrice
         ? parseFloat(validPrice.replace(/,/g, ""))
         : undefined;
-      onPriceChange(selectedOption.value, numericPrice);
+
+      let newTotalAskPrice = totalAskPrice;
+      let newPricePerSqft = pricePerSqft;
+
+      // Update the current price state and calculate the other
+      if (selectedOption.value === "pricing.totalAskPrice") {
+        newTotalAskPrice = numericPrice;
+        // Calculate and set price per sq ft
+        newPricePerSqft = numericPrice
+          ? calculateOtherPrice(numericPrice, selectedOption.value)
+          : undefined;
+      } else if (selectedOption.value === "pricing.pricePerSqft") {
+        newPricePerSqft = numericPrice;
+        // Calculate and set total ask price
+        newTotalAskPrice = numericPrice
+          ? calculateOtherPrice(numericPrice, selectedOption.value)
+          : undefined;
+      }
+
+      // Update state
+      setTotalAskPrice(newTotalAskPrice);
+      setPricePerSqft(newPricePerSqft);
+
+      // Send both values to the callback
+      onPriceChange("pricing.totalAskPrice", newTotalAskPrice);
+      onPriceChange("pricing.pricePerSqft", newPricePerSqft);
     }
   };
 
@@ -95,39 +149,44 @@ const TotalAskPrice: React.FC<TotalAskPricetProps> = ({
   };
 
   const handleSelect = (option: UnitOption) => {
-    // Clear the old value with the previous unit
-    onPriceChange(selectedOption.value, undefined);
+    // Clear both prices when switching units
+    onPriceChange("pricing.totalAskPrice", undefined);
+    onPriceChange("pricing.pricePerSqft", undefined);
 
-    // CHANGE HERE: Reset the price state to empty string
+    // Reset the price state to empty string
     setPrice("");
+
+    // Reset both price states
+    setTotalAskPrice(undefined);
+    setPricePerSqft(undefined);
 
     setSelectedOption(option);
     setIsDropdownOpen(false);
     setModalVisible(false);
-
-    // Since the price is now reset to empty, we're passing 0 to the callback
-    onPriceChange(option.value, undefined);
   };
 
   const selectUnit = (option: UnitOption) => {
-    // Clear the old value with the previous unit
-    onPriceChange(selectedOption.value, undefined);
+    // Clear both prices when switching units
+    onPriceChange("pricing.totalAskPrice", undefined);
+    onPriceChange("pricing.pricePerSqft", undefined);
 
-    // CHANGE HERE: Reset the price state to empty string
+    // Reset the price state to empty string
     setPrice("");
+
+    // Reset both price states
+    setTotalAskPrice(undefined);
+    setPricePerSqft(undefined);
 
     setSelectedOption(option);
     setIsDropdownOpen(false);
     setModalVisible(false);
-
-    // Since the price is now reset to empty, we're passing 0 to the callback
-    onPriceChange(option.value, undefined);
   };
 
   // Calculate the total in words (for display below the input)
   const getPriceInWords = (): string => {
-    if (!price) 
-      if (selectedOption.value === 'pricing.totalAskPrice' ) return "Eg. 2.20 Cr | 2 Crore 20 Lakh Rupees only";
+    if (!price)
+      if (selectedOption.value === "pricing.totalAskPrice")
+        return "Eg. 2.20 Cr | 2 Crore 20 Lakh Rupees only";
       else return "Eg. 7.50 K | 7500 Rupees only";
     const numericPrice = parseFloat(price.replace(/,/g, ""));
     if (isNaN(numericPrice)) return "";
@@ -165,10 +224,11 @@ const TotalAskPrice: React.FC<TotalAskPricetProps> = ({
     <View style={styles.container}>
       <View style={styles.leftContainer}>
         {title && (
-        <Text style={styles.titleText}>
-          {title}
-          {required && <Text style={styles.compulsoryStar}> *</Text>}
-        </Text>)}
+          <Text style={styles.titleText}>
+            {title}
+            {required && <Text style={styles.compulsoryStar}> *</Text>}
+          </Text>
+        )}
 
         <View
           style={[
@@ -186,7 +246,11 @@ const TotalAskPrice: React.FC<TotalAskPricetProps> = ({
             onChangeText={handlePriceChange}
             onFocus={handleFocus}
             onBlur={handleBlur}
-            placeholder={selectedOption.value === 'pricing.totalAskPrice' ? "eg. 2,20,00,000" : "eg. 7,500"}
+            placeholder={
+              selectedOption.value === "pricing.totalAskPrice"
+                ? "eg. 2,20,00,000"
+                : "eg. 7,500"
+            }
             placeholderTextColor="#A0A0A0"
             keyboardType="numeric"
           />

@@ -1,5 +1,5 @@
 import React from "react";
-import { View, Text, TouchableOpacity} from "react-native";
+import { View, Text, TouchableOpacity, Linking } from "react-native";
 import { Property } from "@/app/types";
 
 type UIProperty = Omit<Property, "handOverDate"> & {
@@ -37,7 +37,11 @@ export const LocationSection: React.FC<LocationSectionProps> = ({ data }) => {
         <Text className="w-[104px] text-[14px] leading-[21px] font-medium tracking-[0.25px] text-[#5A5555] font-[Montserrat]">
           Address
         </Text>
-        <Text className="flex-1 text-[16px] leading-[24px] font-bold text-[#2B2928] font-[Lato]">
+        <Text
+          numberOfLines={3}
+          ellipsizeMode="tail"
+          className="flex-1 text-[16px] leading-[24px] font-bold text-[#2B2928] font-[Lato] "
+        >
           {address}
         </Text>
       </View>

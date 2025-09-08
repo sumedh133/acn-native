@@ -30,7 +30,7 @@ const PropertysDetailsScreen = () => {
           dispatch(setPropertyData(updatedProperty));
         }
       },
-      (property.stage != "live" ? "qc" : "verified"),
+      property.stage != "live" ? "qc" : "verified",
       (error) => {
         console.error("Error in property subscription:", error);
       }
@@ -45,7 +45,8 @@ const PropertysDetailsScreen = () => {
   };
 
   const handleEditButtonPress = () => {
-    const formType = property.stage !== "live" ? "underReviewEdit" : "verifiedEdit";
+    const formType =
+      property.stage !== "live" ? "underReviewEdit" : "verifiedEdit";
     router.push({
       pathname: "/(tabs)/AddInventoryForm",
       params: {
@@ -57,7 +58,11 @@ const PropertysDetailsScreen = () => {
 
   return (
     <View className="flex-1 bg-white">
-      <FormPreview config={inventoryFormConfig} data={property} previewType="myBusiness" />
+      <FormPreview
+        config={inventoryFormConfig}
+        data={property}
+        previewType="myBusiness"
+      />
       {/* Navigation Buttons */}
       <View className="flex flex-row items-center justify-center gap-[13px] px-4 py-[14.5px]">
         {property?.stage !== "live" && (
