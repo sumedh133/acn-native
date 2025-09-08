@@ -94,7 +94,7 @@ export const FormPreview: React.FC<FormPreviewProps> = ({
       id: "1",
       text: "Available",
       onPress: () => {
-        updateStatus("Available");
+        updateStatus("available");
         setStatusUpdateModal(false); // Close popup after selection
       },
     },
@@ -102,7 +102,7 @@ export const FormPreview: React.FC<FormPreviewProps> = ({
       id: "2",
       text: "Hold",
       onPress: () => {
-        updateStatus("Hold");
+        updateStatus("hold");
         setStatusUpdateModal(false);
       },
     },

@@ -20,7 +20,7 @@ const EnquiriesReceivedCard = ({
       onPress={() => {
         router.push("/(pages)/EnquiriesReceived");
       }}
-      className="mx-4"
+      className="mx-4 mt-4"
     >
       <LinearGradient
         colors={["#FFDA7D", "#FFE4A2"]} // light teal gradient

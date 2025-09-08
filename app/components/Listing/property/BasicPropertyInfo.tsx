@@ -16,13 +16,22 @@ type UIProperty = Omit<Property, "handOverDate"> & {
 
 const safeDaysFrom = (timestamp: any): number => {
   try {
-    const result = getDaysFrom(timestamp);
-    return typeof result === "number" && !isNaN(result) ? result : 0;
+    const result = getDaysFrom(timestamp); 
+    const match = String(result).match(/\d+/); 
+
+    if (match) {
+      return parseInt(match[0], 10); 
+    }
+
+    return 0;
   } catch (error) {
     console.warn("Error calculating days from:", error);
     return 0;
   }
 };
+
+
+
 
 const safeText = (value: any, fallback: string = "-"): string => {
   if (value === null || value === undefined) return fallback;
