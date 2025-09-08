@@ -112,9 +112,23 @@ export const createProperty = async (
   console.log(property, "property");
   console.log(collectionName, "collection name");
   const time = getUnixDateTime();
+  const referredFloorNumber = property.floorNumber
+    ? property.floorNumber === 0
+      ? "ground floor"
+      : property.floorNumber < 6
+      ? "lower floor (1 - 5)"
+      : property.floorNumber < 11
+      ? "middle floor (6 - 10)"
+      : property.floorNumber < 20
+      ? "higher floor (10+)"
+      : property.floorNumber > 20
+      ? "higher floor (20+)"
+      : undefined
+    : undefined;
 
   const newProperty: Property = {
     ...property,
+    referredFloorNumber: referredFloorNumber,
     propertyId,
     added: time,
     dateOfLastChecked: time,

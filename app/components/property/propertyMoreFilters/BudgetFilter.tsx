@@ -317,10 +317,15 @@ const BudgetRangeFilter: React.FC<BudgetRangeFilterProps> = ({
           )}
           onValueChanged={(low, high, fromUser) => {
             if (fromUser) {
-              // Dragging → update slider state only
+              // Dragging → live update values and notify parent
               setIsDragging(true);
               setSliderMin(low);
               setSliderMax(high);
+              const liveMin = snapToNearest(positionToValue(low));
+              const liveMax = snapToNearest(positionToValue(high));
+              setMin(liveMin);
+              setMax(liveMax);
+              onChangeRange(attribute, [String(liveMin), String(liveMax)]);
             }
           }}
           onTouchStart={() => setIsDragging(true)}

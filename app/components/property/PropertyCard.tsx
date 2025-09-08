@@ -770,11 +770,7 @@ const PropertyCard: React.FC<PropertyCardProps> = ({
                       <Text className="text-[#433F3E] text-xs font-montserrat-medium">
                         Ask Price
                       </Text>
-                      <Text
-                        className="text-sm font-semibold text-[#111827]"
-                        numberOfLines={1}
-                        ellipsizeMode="tail"
-                      >
+                      <Text className="text-sm font-semibold text-[#111827]">
                         {safeText(
                           property?.pricing?.totalAskPrice
                             ? formatCost2(property.pricing.totalAskPrice)
