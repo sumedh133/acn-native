@@ -184,40 +184,58 @@ const TotalAskPrice: React.FC<TotalAskPricetProps> = ({
 
   // Calculate the total in words (for display below the input)
   const getPriceInWords = (): string => {
-    if (!price)
+    if (!price) {
       if (selectedOption.value === "pricing.totalAskPrice")
         return "Eg. 2.20 Cr | 2 Crore 20 Lakh Rupees only";
       else return "Eg. 7.50 K | 7500 Rupees only";
+    }
+
     const numericPrice = parseFloat(price.replace(/,/g, ""));
     if (isNaN(numericPrice)) return "";
 
     if (numericPrice >= 10000000) {
       return `${(numericPrice / 10000000).toFixed(2)} Cr | ${numberToWords(
         numericPrice
-      )}`;
+      )} Rupees only`;
     } else if (numericPrice >= 100000) {
       return `${(numericPrice / 100000).toFixed(2)} Lakh | ${numberToWords(
         numericPrice
-      )}`;
+      )} Rupees only`;
     } else if (numericPrice >= 1000) {
       return `${(numericPrice / 1000).toFixed(2)} K | ${numberToWords(
         numericPrice
-      )}`;
+      )} Rupees only`;
     }
-    return numberToWords(numericPrice);
+
+    return `${numberToWords(numericPrice)} Rupees only`;
   };
 
   // Simple function to convert number to words (simplified for demonstration)
   const numberToWords = (num: number): string => {
-    // This is a simplified implementation
+    // This is a simplified implementation - removed "Rupees only" from here
     if (num >= 10000000) {
-      return `${Math.floor(num / 10000000)} Crore ${Math.floor(
-        (num % 10000000) / 100000
-      )} Lakh Rupees only`;
+      const crores = Math.floor(num / 10000000);
+      const lakhs = Math.floor((num % 10000000) / 100000);
+      const thousands = Math.floor((num % 100000) / 1000);
+
+      let result = `${crores} Crore`;
+      if (lakhs > 0) result += ` ${lakhs} Lakh`;
+      if (thousands > 0) result += ` ${thousands} Thousand`;
+
+      return result;
     } else if (num >= 100000) {
-      return `${Math.floor(num / 100000)} Lakh Rupees only`;
+      const lakhs = Math.floor(num / 100000);
+      const thousands = Math.floor((num % 100000) / 1000);
+
+      let result = `${lakhs} Lakh`;
+      if (thousands > 0) result += ` ${thousands} Thousand`;
+
+      return result;
+    } else if (num >= 1000) {
+      return `${Math.floor(num / 1000)} Thousand`;
     }
-    return `${num} Rupees only`;
+
+    return `${num}`;
   };
 
   return (

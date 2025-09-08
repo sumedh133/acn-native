@@ -501,7 +501,7 @@ const PropertyCard: React.FC<PropertyCardProps> = ({
   return (
     <View>
       {/* Property Card */}
-      <View className="flex flex-row items-center gap-3">
+      <View className="flex flex-row items-center gap-x-3">
         {pathname === "/MyBusinessPage" && isSelectionMode && (
           <Pressable onPress={handleSelectionToggle}>
             {selectedProperties &&
@@ -558,7 +558,7 @@ const PropertyCard: React.FC<PropertyCardProps> = ({
                   safeDaysDifference(
                     property.dateOfLastChecked + 60 * 60 * 24 * 14,
                     Math.floor(Date.now() / 1000)
-                  ) < 3)) && (
+                  ) <= 3)) && (
                 <View className="flex flex-row items-center justify-between bg-[#E3E3E3] rounded-t-lg px-4 py-2">
                   <View className="flex flex-col">
                     {property.dateOfLastChecked &&
@@ -588,7 +588,7 @@ const PropertyCard: React.FC<PropertyCardProps> = ({
                       Is the property available?
                     </Text>
                   </View>
-                  <View className="flex flex-row gap-[10px]">
+                  <View className="flex flex-row gap-x-[10px]">
                     <Pressable
                       onPress={() => {
                         setStatusUpdateModalOpen(true);
@@ -612,7 +612,7 @@ const PropertyCard: React.FC<PropertyCardProps> = ({
                 <View className="flex-row items-center">
                   {/* Property ID on the left - using width fit-content approach */}
                   <View className="flex-1 shrink flex-row justify-between">
-                    <View className="self-start flex-row gap-2.5 flex-1">
+                    <View className="self-start flex-row gap-x-2.5 flex-1">
                       <Text
                         className="text-[#5A5555] text-sm font-[Lato] font-semibold leading-[21px] tracking-wide pb-0.5 flex-1"
                         numberOfLines={1}
@@ -677,27 +677,31 @@ const PropertyCard: React.FC<PropertyCardProps> = ({
                   </View>
                 </View>
 
-                <View className="flex-row items-center mb-2 gap-1.5">
-                  <View className="mt-1.5">
+                <View className="flex-row items-start mb-2 gap-x-1.5">
+                  <View className="self-center">
                     {getIcon() &&
                       React.createElement(getIcon(), { width: 40, height: 40 })}
                   </View>
-                  <View className="flex-col gap-1">
+                  <View
+                    className="flex-col gap-y-1 flex-1"
+                    style={{ minWidth: 0 }}
+                  >
                     {/* Property Name */}
-                    <View className="mt-2 gap-2 flex-col flex-1">
+                    <View className="mt-2 gap-y-1 flex-col flex-1">
                       <Text
-                        className="text-black text-base font-[Montserrat_700Bold]"
-                        numberOfLines={2}
-                        ellipsizeMode="tail"
+                        className="text-black text-base font-montserrat-bold"
+                        style={{ flexShrink: 1, minWidth: 0, width: "100%" }}
                       >
                         {getPropertyName()}
                       </Text>
-                      <View className="flex-row items-center gap-0.5 flex-1">
+                      <View
+                        className="flex-row items-start gap-x-0.5 flex-1 mt-0.5"
+                        style={{ flexWrap: "wrap" }}
+                      >
                         <Location width={16} height={16} />
                         <Text
                           className="text-sm flex-1"
-                          numberOfLines={1}
-                          ellipsizeMode="tail"
+                          style={{ flexShrink: 1, minWidth: 0 }}
                         >
                           {safeText(property.micromarket)}
                         </Text>
@@ -707,14 +711,16 @@ const PropertyCard: React.FC<PropertyCardProps> = ({
                 </View>
 
                 {/* ✅ FIXED: Tags section with safe filtering and rendering */}
-                <View className="flex-row flex-wrap gap-2 mb-3">
+                <View className="flex-row flex-wrap gap-x-2 mb-3">
                   {[
                     toCapitalizedWords(property.assetType),
                     property.noOfBedrooms &&
                       property.noOfBedrooms !== null &&
                       `${property.noOfBedrooms} BHK`,
                     property.assetType === "plot" &&
-                      `${property.plotArea} Sqft`,
+                      property.plotLength &&
+                      property.plotBreadth &&
+                      `${property.plotLength} sqft X ${property.plotBreadth} sqft`,
                     property.facing &&
                       property.facing !== null &&
                       toCapitalizedWords(property.facing),
@@ -741,10 +747,10 @@ const PropertyCard: React.FC<PropertyCardProps> = ({
               {/* ✅ FIXED: Price and SBUA section with safe formatting */}
               <View className="flex-row justify-between items-start border-t border-t-[#E3E3E3] pt-2 mb-3">
                 {/* Total Ask Price */}
-                <View className="flex-col items-start border-r border-r-[#E3E3E3] pr-5 flex-1">
+                <View className="flex-col items-start px-4 flex-1">
                   {property.listingType === "rental" ? (
                     <View className="flex-1">
-                      <Text className="text-[#433F3E] text-xs font-[Montserrat_500normal]">
+                      <Text className="text-[#433F3E] text-xs font-montserrat-medium">
                         Rent
                       </Text>
                       <Text
@@ -761,7 +767,7 @@ const PropertyCard: React.FC<PropertyCardProps> = ({
                     </View>
                   ) : (
                     <View className="flex-1">
-                      <Text className="text-[#433F3E] text-xs font-[Montserrat_500normal]">
+                      <Text className="text-[#433F3E] text-xs font-montserrat-medium">
                         Ask Price
                       </Text>
                       <Text
@@ -779,11 +785,20 @@ const PropertyCard: React.FC<PropertyCardProps> = ({
                   )}
                 </View>
 
+                {/* Vertical divider */}
+                <View
+                  style={{
+                    width: 1,
+                    backgroundColor: "#E3E3E3",
+                    alignSelf: "stretch",
+                  }}
+                />
+
                 {/* Per Sqft or deposit*/}
-                <View className="flex-col items-start border-r border-r-[#E3E3E3] pr-5 flex-1">
+                <View className="flex-col items-start px-4 flex-1">
                   {property.listingType === "rental" ? (
                     <View className="flex-1">
-                      <Text className="text-[#433F3E] text-xs font-[Montserrat_500normal]">
+                      <Text className="text-[#433F3E] text-xs font-montserrat-medium">
                         Deposit
                       </Text>
                       <Text
@@ -800,7 +815,7 @@ const PropertyCard: React.FC<PropertyCardProps> = ({
                     </View>
                   ) : (
                     <View className="flex-1">
-                      <Text className="text-[#433F3E] text-xs font-[Montserrat_500normal]">
+                      <Text className="text-[#433F3E] text-xs font-montserrat-medium">
                         Per Sqft Price
                       </Text>
                       <Text
@@ -818,10 +833,19 @@ const PropertyCard: React.FC<PropertyCardProps> = ({
                   )}
                 </View>
 
+                {/* Vertical divider */}
+                <View
+                  style={{
+                    width: 1,
+                    backgroundColor: "#E3E3E3",
+                    alignSelf: "stretch",
+                  }}
+                />
+
                 {/* SBUA */}
                 {property.assetType === "plot" ? (
-                  <View className="flex-col items-start flex-1">
-                    <Text className="text-[#6B7280] text-xs font-[Montserrat_600SemiBold]">
+                  <View className="flex-col items-start px-4 flex-1">
+                    <Text className="text-[#6B7280] text-xs font-montserrat-semibold">
                       Plot Size
                     </Text>
                     <Text
@@ -837,8 +861,8 @@ const PropertyCard: React.FC<PropertyCardProps> = ({
                     </Text>
                   </View>
                 ) : (
-                  <View className="flex-col items-start flex-1">
-                    <Text className="text-[#6B7280] text-xs font-[Montserrat_600SemiBold]">
+                  <View className="flex-col items-start px-4 flex-1">
+                    <Text className="text-[#6B7280] text-xs font-montserrat-semibold">
                       SBUA
                     </Text>
                     <Text
@@ -856,7 +880,7 @@ const PropertyCard: React.FC<PropertyCardProps> = ({
                 )}
               </View>
               {pathname === "/properties" && (
-                <View className="flex-row gap-3">
+                <View className="flex-row gap-x-3">
                   {/* Enquire Now Button */}
                   <TouchableOpacity
                     className="flex-1 bg-[#153E3B] rounded-md py-2 flex-row justify-center items-center"
@@ -893,7 +917,7 @@ const PropertyCard: React.FC<PropertyCardProps> = ({
                     : ""
                 }`}
               >
-                <View className="flex flex-col gap-[2px]">
+                <View className="flex flex-col gap-y-[2px]">
                   <Text className="text-[#5A5555] text-xs font-medium leading-[150%] tracking-[0.25px]">
                     Enquiries Recieved
                   </Text>
@@ -902,11 +926,11 @@ const PropertyCard: React.FC<PropertyCardProps> = ({
                     <Text> {enquiries === 1 ? "Enquiry" : "Enquiries"}</Text>
                   </Text>
                 </View>
-                <View className="flex flex-col gap-[2px]">
+                <View className="flex flex-col gap-y-[2px]">
                   <Text className="text-[#5A5555] text-xs font-medium leading-[150%] tracking-[0.25px]">
                     Status
                   </Text>
-                  <View className="flex flex-row items-center gap-1">
+                  <View className="flex flex-row items-center gap-y-1">
                     <Text
                       className={`text-sm font-bold leading-[150%] ${
                         property?.status?.toLowerCase() === "available"

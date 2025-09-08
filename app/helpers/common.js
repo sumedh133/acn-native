@@ -46,7 +46,7 @@ export function formatCost(price) {
 
   if (price < 0) {
     isNegative = true;
-    price = Math.abs(price);
+    price = Math.abs(price.toFixed(2));
   }
 
   // Convert the price to a string and remove any existing commas

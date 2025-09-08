@@ -338,15 +338,15 @@ export default function LayoutApp() {
   const showtrial = agentData?.userType === "premium" ? false : true;
 
   const [trialData, setTrialData] = useState({
-    status: getTrialStatus(daysLeft, agentData?.monthlyCredits),
+    status: getTrialStatus(daysLeft, agentData?.monthlyCredits + agentData?.boosterCredits),
     daysLeft: daysLeft,
-    credits: agentData?.monthlyCredits,
+    credits: agentData?.monthlyCredits + agentData?.boosterCredits,
     showNotification: showtrial,
   });
 
   useEffect(() => {
-    setTrialData((prev) => ({ ...prev, credits: agentData?.monthlyCredits }));
-  }, [agentData?.monthlyCredits]);
+    setTrialData((prev) => ({ ...prev, credits: agentData?.monthlyCredits + agentData?.boosterCredits }));
+  }, [agentData?.monthlyCredits, agentData?.boosterCredits]);
 
   const router = useRouter();
 

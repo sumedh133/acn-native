@@ -93,7 +93,6 @@ export const residentialApartmentFields: FormField[] = [
     colspan: 12,
     conditional: true,
   },
-
   {
     id: "floorNumber",
     label: "Floor No.",
