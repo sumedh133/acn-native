@@ -132,6 +132,7 @@ export const factoryFields: FormField[] = [
       conditions: [
         { field: "commercialSubType", values: ["factory"] },
         { field: "listingType", values: ["rental"] },
+        { field: "readyToMove", values: [false] },
       ],
       logicOperator: "AND",
     },

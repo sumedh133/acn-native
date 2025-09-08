@@ -27,7 +27,8 @@ export const pricingDetailsStep: FormStep = {
     // ----------- Rental Pricing -----------
     {
       id: "rentalInfo.rent",
-      label: "Rent/ month ",
+      label: "Rent",
+      suffix: "/month",
       type: "number",
       required: true,
       placeholder: "eg. 2,000",
@@ -75,6 +76,7 @@ export const pricingDetailsStep: FormStep = {
       id: "rentalInfo.maintenanceAmount",
       label: "Maintenance Amount",
       type: "number",
+      suffix: "/month",
       required: true,
       placeholder: "eg. 2,000",
       dependsOn: {

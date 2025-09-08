@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useRef } from "react";
+import React, { useEffect, useState, useRef, useCallback } from "react";
 import { useSelector } from "react-redux";
 import { RootState } from "@/store/store";
 import {
@@ -12,7 +12,7 @@ import {
   ScrollView,
   Alert,
 } from "react-native";
-import { router, usePathname } from "expo-router";
+import { router, usePathname, useFocusEffect } from "expo-router";
 import {
   createProperty,
   updateProperty,
@@ -297,22 +297,37 @@ export const PropertyFormScreen: React.FC<PropertyFormScreenProps> = ({
     }
   }, [selectedPlace]);
 
-  useEffect(() => {
-    // Back button handler
-    const backHandler = BackHandler.addEventListener(
-      "hardwareBackPress",
-      () => {
-        console.log("back pressedd");
+  console.log(currentStepIndex, "index step check");
+
+  useFocusEffect(
+    useCallback(() => {
+      const onBackPress = () => {
+        if (currentStepIndex > 0 && !(currentStepIndex === 1 && isEdit)) {
+          setCurrentStepIndex((s) => Math.max(0, s - 1));
+          return true;
+        }
+        if (isEdit) {
+          return false;
+        }
         if (!showDraftModal && formData.assetType && formData.propertyName) {
           setShowDraftModal(true);
           return true;
         }
         return false;
-      }
-    );
+      };
 
-    return () => backHandler.remove();
-  }, [showDraftModal, formData]);
+      const sub = BackHandler.addEventListener(
+        "hardwareBackPress",
+        onBackPress
+      );
+      return () => sub.remove();
+    }, [
+      currentStepIndex,
+      showDraftModal,
+      formData.assetType,
+      formData.propertyName,
+    ])
+  );
 
   /**
    * Validate all fields in the current step.
@@ -502,6 +517,7 @@ export const PropertyFormScreen: React.FC<PropertyFormScreenProps> = ({
             handleDraftSave={handleSaveDraft}
             showDraftModal={showDraftModal}
             setShowDraftModal={setShowDraftModal}
+            setShowPreview={setShowPreview}
           />
         </View>
 
@@ -697,19 +713,25 @@ export const PropertyFormScreen: React.FC<PropertyFormScreenProps> = ({
         {/* Navigation Buttons */}
         <View className="flex flex-row items-center justify-center gap-[13px] px-4 py-[14.5px] bg-red border-t border-t-[#EEEEEE]">
           {currentStepIndex ? (
-            <TouchableOpacity
-              className="w-[50%] py-2 px-5 rounded-[4px] bg-white border border-[#153E3B]"
-              onPress={handleBack}
-            >
-              <Text className="text-center text-base font-semibold text-black">
-                {currentStepIndex === visibleSteps.length ? "Edit" : "Back"}
-              </Text>
-            </TouchableOpacity>
+            isEdit && currentStepIndex === 1 ? (
+              <></>
+            ) : (
+              <TouchableOpacity
+                className="w-[50%] py-2 px-5 rounded-[4px] bg-white border border-[#153E3B]"
+                onPress={handleBack}
+              >
+                <Text className="text-center text-base font-semibold text-black">
+                  {currentStepIndex === visibleSteps.length ? "Edit" : "Back"}
+                </Text>
+              </TouchableOpacity>
+            )
           ) : null}
 
           <TouchableOpacity
             className={`py-2 px-5 rounded-[4px] bg-[#153E3B] border border-[#153E3B] ${
-              currentStepIndex ? "w-[50%]" : "w-full"
+              currentStepIndex && !(currentStepIndex === 1 && isEdit)
+                ? "w-[50%]"
+                : "w-full"
             }`}
             onPress={handleNext}
           >

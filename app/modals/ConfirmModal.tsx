@@ -120,9 +120,9 @@ const ConfirmModal: React.FC<ConfirmModalProps> = ({
           {generatingEnquiry ? (
             <View className="items-center justify-center p-5 gap-4">
               <ActivityIndicator size="large" color="#153E3B" />
-              <Text className="text-base font-semibold text-[#153E3B] text-center font-['Montserrat_600SemiBold']">
+              {/* <Text className="text-base font-semibold text-[#153E3B] text-center font-['Montserrat_600SemiBold']">
                 Processing your enquiry...
-              </Text>
+              </Text> */}
             </View>
           ) : (
             <>
