@@ -11,14 +11,18 @@ import { BasicPropertyInfo } from "./property/BasicPropertyInfo";
 import { DetailsSection } from "./property/DetailsSection";
 import { LocationSection } from "./property/LocationSection";
 import { ExtraDetailsSection } from "./property/ExtraDetailsSection";
-import { toCapitalizedWords } from "@/app/helpers/common";
+import { getDaysFrom, toCapitalizedWords } from "@/app/helpers/common";
 
 import ArrowLeftIcon from "@/assets/icons/svg/Common/ArrowLeftIcon";
+import ListedAgo from "@/assets/icons/svg/PropertyListing/PropertyDetails/ListedAgo.svg";
+import DateOfLastChecked from "@/assets/icons/svg/PropertyListing/PropertyDetails/dateOfLastChecked.svg";
 
 import EnquiriesReceivedCard from "../MyBusinessPage/EnquiriesReceivedCard";
 import PropertiesStatusCard from "../MyBusinessPage/PropertyStatusCard";
 import { TouchableOpacity } from "react-native";
 import SaveAsDraft from "@/app/modals/SaveAsDraft";
+import { property } from "lodash";
+import { getTimeDifference } from "@/app/helpers/format/timestamp";
 
 export type UIProperty = Omit<Property, "handOverDate"> & {
   handOverDate?: string;
@@ -48,7 +52,7 @@ export const FormPreview: React.FC<FormPreviewProps> = ({
   showDraftModal,
   setShowDraftModal,
 }) => {
-  const { enquiryCount, newEnquiryCount } = useEnquiries({
+  const { enquiryCount, newEnquiryCount, loading } = useEnquiries({
     propertyId: data?.propertyId,
   });
 
@@ -178,7 +182,7 @@ export const FormPreview: React.FC<FormPreviewProps> = ({
       {previewType == "myBusiness" && (
         <View className="bg-white">
           <PropertiesStatusCard data={data} />
-          {enquiryCount > 0 && (
+          {enquiryCount > 0 && !loading && (
             <>
               <EnquiriesReceivedCard
                 totalCount={enquiryCount}
@@ -240,6 +244,41 @@ export const FormPreview: React.FC<FormPreviewProps> = ({
           handleSaveDraft={handleDraftSave}
           isSaving={false}
         />
+      )}
+      {previewType == "myBusiness" && (
+        <View className="flex flex-col gap-y-3 px-4 py-3">
+          <Text className="text-[14px] leading-[150%] font-bold text-black font-montserrat-bold">
+            Inventory Details
+          </Text>
+          <View className="flex flex-row justify-between">
+            <View className="flex flex-row items-center gap-x-2">
+              <View className="p-[6px] bg-[#E0F7F4] rounded-md">
+                <ListedAgo />
+              </View>
+              <View className="flex flex-col">
+                <Text className="text-[14px] leading-[150%] font-bold text-[#5A5555] font-montserrat-bold">
+                  Listed
+                </Text>
+                <Text className="text-[14px] leading-[150%] font-bold text-black font-montserrat-bold">
+                  {getTimeDifference(data.added)}
+                </Text>
+              </View>
+            </View>
+            <View className="flex flex-row items-center gap-x-2">
+              <View className="p-[6px] bg-[#E0F7F4] rounded-md">
+                <DateOfLastChecked stroke={"#000000"} strokeWidth={0.3}/>
+              </View>
+              <View className="flex flex-col">
+                <Text className="text-[14px] leading-[150%] font-bold text-[#5A5555] font-montserrat-bold">
+                  Inventory Last checked
+                </Text>
+                <Text className="text-[14px] leading-[150%] font-bold text-black font-montserrat-bold">
+                  {getTimeDifference(data.dateOfLastChecked)}
+                </Text>
+              </View>
+            </View>
+          </View>
+        </View>
       )}
     </ScrollView>
   );

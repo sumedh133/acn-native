@@ -117,6 +117,7 @@ export const createProperty = async (
     ...property,
     propertyId,
     added: time,
+    dateOfLastChecked: time,
     lastModified: time,
     stage: "kam",
     status: property.status ?? "pending",

@@ -101,7 +101,9 @@ export const PropertyFormScreen: React.FC<PropertyFormScreenProps> = ({
 
   // Ref for scrolling to possession field
   const scrollToPossessionRef = useRef<ScrollView>(null);
-  const [currentStepIndex, setCurrentStepIndex] = useState<number>(0);
+  const [currentStepIndex, setCurrentStepIndex] = useState<number>(
+    isEdit ? 1 : 0
+  );
   const [maxStepIndex, setMaxStepIndex] = useState<number>(0);
   const [isForwardStepChangeDisabled, setIsForwardStepChangeDisabled] =
     useState<boolean>(false);
