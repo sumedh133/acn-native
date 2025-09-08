@@ -28,7 +28,7 @@ import { logEvent } from "@react-native-firebase/analytics";
 import { useSelector } from "react-redux";
 import { RootState } from "@/store/store";
 import { Property } from "../types";
-
+import { trackEvent } from "../services/logAnalyticsService";
 // Define the AgentData interface separately
 interface AgentData {
   phoneNumber: string;
@@ -99,17 +99,12 @@ const EnquiryCPModal: React.FC<EnquiryCPModalProps> = ({
     if (!agentData?.phoneNumber) return;
 
     try {
-      logEvent(analytics, "enquiry_cp_action", {
-        event_category: "modal",
-        event_label: "enquiry_cp",
-        action: "whatsapp",
-        agent_id: selectedCPID,
-        user_type: userType,
+      trackEvent("contact_whatsapp_seller", undefined, property, { page_type: property?.listingType, buyerCpId: user?.cpId, sellerCpId: agentData?.cpId }).catch((error) => {
+        console.error(`Error logging event: ${error}`);
       });
     } catch (error) {
-      console.error("Error logging WhatsApp action:", error);
+      console.error(`Unexpected error: ${error}`);
     }
-
     if (agentData != null) {
       const message = `Hi ${agentData?.name},
 
@@ -136,13 +131,13 @@ ${user?.phoneNumber}`;
         isInModal: true,
       });
 
-      logEvent(analytics, "enquiry_cp_action", {
-        event_category: "modal",
-        event_label: "enquiry_cp",
-        action: "copy_phone",
-        agent_id: selectedCPID,
-        user_type: userType,
-      });
+      try {
+        trackEvent("copy_agent _details", undefined, property, { page_type: property?.listingType, buyerCpId: user?.cpId, sellerCpId: agentData?.cpId }).catch((error) => {
+          console.error(`Error logging event: ${error}`);
+        });
+      } catch (error) {
+        console.error(`Unexpected error: ${error}`);
+      }
     } catch (err) {
       showErrorToast("Failed to copy phone number.", { isInModal: true });
       console.error("Failed to copy phone number:", err);
@@ -153,15 +148,11 @@ ${user?.phoneNumber}`;
     if (!agentData?.phoneNumber) return;
 
     try {
-      logEvent(analytics, "enquiry_cp_action", {
-        event_category: "modal",
-        event_label: "enquiry_cp",
-        action: "call",
-        agent_id: selectedCPID,
-        user_type: userType,
+      trackEvent("contact_oncall_seller", undefined, property, { page_type: property?.listingType, buyerCpId: user?.cpId, sellerCpId: agentData?.cpId }).catch((error) => {
+        console.error(`Error logging event: ${error}`);
       });
     } catch (error) {
-      console.error("Error logging call action:", error);
+      console.error(`Unexpected error: ${error}`);
     }
 
     Linking.openURL(`tel:${agentData.phoneNumber}`);

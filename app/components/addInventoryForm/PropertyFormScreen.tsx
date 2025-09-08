@@ -30,7 +30,8 @@ import { LinearGradient } from "expo-linear-gradient";
 import { FormPreview } from "../Listing/listingPropertyDetails";
 import { getMicromarketFromCoordinates } from "@/app/helpers/getMicromarketFromCoordinates";
 import { FormField } from "@/types/FormConfig";
-import SaveAsDraft from "@/app/modals/SaveAsDraft";
+import SaveAsDraft from "@/app/modals/SaveAsDraft"
+import { trackEvent } from "@/app/services/logAnalyticsService";
 import { MediaObj } from "@/app/types/MediaTypes";
 import { MediaUploadQueue as MediaUploadQueueClass } from "@/app/services/media_services/MediaUploadQueue";
 import type { UploadResult } from "@/app/services/media_services/mediaService";
@@ -401,6 +402,14 @@ export const PropertyFormScreen: React.FC<PropertyFormScreenProps> = ({
   };
 
   const handleBack = () => {
+    try {
+
+      trackEvent("inventory_addition_previous_page").catch((error) => {
+        console.error(`Error logging event: ${error}`);
+      });
+    } catch (error) {
+      console.error(`Unexpected error: ${error}`);
+    }
     setErrors({});
     setCurrentStepIndex((prev) => prev - 1);
   };
@@ -469,6 +478,9 @@ export const PropertyFormScreen: React.FC<PropertyFormScreenProps> = ({
 
   const handleSaveDraft = async () => {
     try {
+      trackEvent("save_draft_inventory", agentData, formData).catch((error) => {
+        console.error(`Error logging event: ${error}`);
+      });
       setIsSavingDraft(true);
       console.log("Raw draft data:", formData);
 
@@ -520,6 +532,26 @@ export const PropertyFormScreen: React.FC<PropertyFormScreenProps> = ({
       }
     }
   }, [formData]);
+
+  useEffect(() => {
+    const logAnalyticsEvent = async () => {
+      try {
+        const eventName =
+          formData?.listingType === "resale"
+            ? "add_inventory_resale"
+            : "add_inventory_rental";
+
+        await trackEvent(eventName).catch((error) => {
+          console.error(`Error logging event: ${error}`);
+        });
+      } catch (error) {
+        console.error(`Unexpected error: ${error}`);
+      }
+    };
+
+    logAnalyticsEvent();
+  }, [formData?.listingType]);
+
 
   // -------------------- Derived Values --------------------
   const visibleSteps = getVisibleSteps();
@@ -614,9 +646,8 @@ export const PropertyFormScreen: React.FC<PropertyFormScreenProps> = ({
             onPress={handleClear}
           >
             <Text
-              className={`font-montserrat text-base font-bold underline ${
-                isFormEmpty ? "text-[#9E9E9E]" : "text-[#D92D20]"
-              }`}
+              className={`font-montserrat text-base font-bold underline ${isFormEmpty ? "text-[#9E9E9E]" : "text-[#D92D20]"
+                }`}
             >
               Clear
             </Text>

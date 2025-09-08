@@ -65,6 +65,7 @@ import {
 } from "@/app/helpers/common";
 import { inventoryFormConfig } from "@/app/config/AddInventoryFormConfig/inventoryFormConfig";
 import Share from "@/assets/icons/svg/PropertyFolder/shareButton.svg";
+import { trackEvent } from "@/app/services/logAnalyticsService";
 
 const { width } = Dimensions.get("window");
 
@@ -460,14 +461,11 @@ export default function PropertyDetailsScreen() {
 
   const handleShareButtonPress = () => {
     try {
-      logEvent(analytics, "property_details_share_click", {
-        event_category: "property",
-        event_label: "interaction",
-        property_id: property.propertyId,
-        user_type: userType,
+      trackEvent("share_property_details", undefined, property).catch((error) => {
+        console.error(`Error logging event: ${error}`);
       });
     } catch (error) {
-      console.error("Error logging share click:", error);
+      console.error(`Unexpected error: ${error}`);
     }
     setIsShareModalOpen(true);
   };

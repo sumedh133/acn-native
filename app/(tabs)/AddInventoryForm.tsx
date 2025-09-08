@@ -12,6 +12,7 @@ import { router } from "expo-router";
 import { MediaUploadQueue as MediaUploadQueueClass } from "@/app/services/media_services/MediaUploadQueue";
 import type { UploadResult } from "@/app/services/media_services/mediaService";
 import type { MediaObj } from "@/app/types/MediaTypes";
+import { trackEvent } from "../services/logAnalyticsService";
 
 type UIProperty = Omit<Property, "handOverDate"> & {
   handOverDate?: string;
@@ -171,7 +172,7 @@ const AddInventoryForm = () => {
         finalPropId = cleanData.propertyId;
 
         console.log("Draft property moved to pending QC:", cleanData);
-        showSuccessToast(`Draft property submitted for QC verification!`);
+        showSuccessToast(`New property created and sent for verification!`);
       } else {
         // New property creation
         const newProperty = await createProperty(
@@ -194,6 +195,14 @@ const AddInventoryForm = () => {
           },
         }
       );
+      try {
+
+        trackEvent("add_inventory_submit").catch((error) => {
+          console.error(`Error logging event: ${error}`);
+        });
+      } catch (error) {
+        console.error(`Unexpected error: ${error}`);
+      }
 
       // Start background TUS upload using the real propertyId, if raw media present
       if (rawMedia && finalPropId) {
@@ -228,7 +237,6 @@ const AddInventoryForm = () => {
         queue.uploadMedia(rawMedia.photos, rawMedia.videos, rawMedia.documents);
       }
       setIsSubmitting(false);
-
       // Navigation after success for create or draft update
       router.dismissAll();
       router.replace("/(tabs)/dashboardTab");
@@ -240,6 +248,14 @@ const AddInventoryForm = () => {
           `Something went wrong while updating the property. Please try again.`
         );
       } else {
+        try {
+
+          trackEvent("inventory_addition_error").catch((error) => {
+            console.error(`Error logging event: ${error}`);
+          });
+        } catch (error) {
+          console.error(`Unexpected error: ${error}`);
+        }
         showErrorToast(
           `Something went wrong while saving the property. Please try again.`
         );

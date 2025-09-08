@@ -12,6 +12,7 @@ import { Text } from "react-native";
 import * as DocumentPicker from "expo-document-picker";
 import { PermissionsAndroid } from "react-native";
 import { showErrorToast, showToast } from "@/utils/toastUtils";
+import { trackEvent } from "@/app/services/logAnalyticsService";
 
 interface FileUploadProps {
   docsToUpload: DocsToUpload;
@@ -51,6 +52,15 @@ const FileUpload: React.FC<FileUploadProps> = ({
   };
 
   const handleFilePick = async () => {
+
+    try {
+
+      trackEvent("open_image_picker").catch((error) => {
+        console.error(`Error logging event: ${error}`);
+      });
+    } catch (error) {
+      console.error(`Unexpected error: ${error}`);
+    }
     const hasPermission = await requestStoragePermission();
     if (!hasPermission) {
       Alert.alert(

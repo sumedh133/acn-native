@@ -1,6 +1,7 @@
 import React from "react";
 import { View, Text, TouchableOpacity, Linking } from "react-native";
 import { Property } from "@/app/types";
+import { trackEvent } from "@/app/services/logAnalyticsService";
 
 type UIProperty = Omit<Property, "handOverDate"> & {
   handOverDate?: string;
@@ -14,8 +15,24 @@ export const LocationSection: React.FC<LocationSectionProps> = ({ data }) => {
   const getFieldValue = (obj: any, path: string) =>
     path.split(".").reduce((acc, key) => acc?.[key], obj);
 
-  const area = getFieldValue(data, "zone");
-  const address = getFieldValue(data, "address");
+  // Sample data or from props
+  const area = getFieldValue(data, "zone") || null;
+  const address =
+    getFieldValue(data, "address") ||null
+
+  const handleMapClick = () => {
+    try {
+
+      trackEvent("property_google_maps", undefined, data).catch((error) => {
+        console.error(`Error logging event: ${error}`);
+      });
+    } catch (error) {
+      console.error(`Unexpected error: ${error}`);
+    }
+    if (data?.mapLocation) {
+      Linking.openURL(data.mapLocation);
+    }
+  }
 
   return (
     <View className="px-3 py-3 border border-[#E1E1E1] rounded-[8px]">
@@ -47,18 +64,16 @@ export const LocationSection: React.FC<LocationSectionProps> = ({ data }) => {
         </View>
       ) : null}
 
-      {/* Button (only show if mapLocation is present) */}
-      {data?.mapLocation ? (
-        <TouchableOpacity
-          className="flex-row items-center justify-center py-2 px-8 border-2 border-black rounded-[4px]"
-          onPress={() => Linking.openURL(data.mapLocation!)}
-        >
-          <Text className="text-[#10302D] text-center text-[12px] leading-[150%] font-bold font-lato">
-            Open in Google Maps
-          </Text>
-          <Text className="text-[#10302D] text-[12px] font-bold">→</Text>
-        </TouchableOpacity>
-      ) : null}
+      {/* Button */}
+      <TouchableOpacity
+        className="flex-row items-center justify-center py-2 px-8 border-2 border-black rounded-[4px]"
+        onPress={handleMapClick}
+      >
+        <Text className="text-[#10302D] text-center text-[12px] leading-[150%] font-bold font-lato">
+          Open in Google Maps
+        </Text>
+        <Text className="text-[#10302D] text-[12px] font-bold">→</Text>
+      </TouchableOpacity>
     </View>
   );
 };

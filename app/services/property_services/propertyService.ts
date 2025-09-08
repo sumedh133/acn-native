@@ -20,6 +20,8 @@ import _ from "lodash";
 import { getUnixDateTime } from "@/app/helpers/getUnixDateTime";
 import { usePathname } from "expo-router";
 
+import { trackEvent } from "../logAnalyticsService";
+
 // Firestore Collections
 const ADMIN_COLLECTION = "acn-admin";
 const INVENTORY_COLLECTION = "acnTestProperties"; // verified stage
@@ -310,6 +312,9 @@ export const updateProperty = async (
   // Log changes in edit history
   if (currentData && isEdit) {
     const changes = getChangedFields(currentData, updates);
+    trackEvent("edit_property_submit", undefined, updateData, {
+      field_updated: changes,
+    });
 
     if (!_.isEmpty(changes)) {
       await addEditHistory(propertyId, { changes }, inventoryStage);

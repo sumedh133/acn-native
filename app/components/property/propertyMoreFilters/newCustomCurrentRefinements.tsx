@@ -7,6 +7,8 @@ import { RootState } from "@/store/store";
 import { SearchFilters } from "../../../services/property_services/propertyAlgoliaService";
 import { formatCostSuffix } from "@/app/helpers/common";
 import { toCapitalize } from "@/app/helpers/format/format";
+import { trackEvent } from "@/app/services/logAnalyticsService";
+
 
 interface CustomCurrentRefinementsProps {
   selectedLandmark?: any;
@@ -119,13 +121,7 @@ export default function CustomCurrentRefinements({
     raw?: string[]
   ) => {
     try {
-      logEvent(analytics, "remove_refinement", {
-        event_category: "filters",
-        event_label: "remove",
-        filter_type: attribute,
-        filter_value: value,
-        user_type: userType,
-      });
+      trackEvent("property_filter_remove", undefined, undefined, { page_type: filters?.listingType?.[0] });
     } catch (error) {
       console.error("Error logging refinement removal:", error);
     }
@@ -156,14 +152,11 @@ export default function CustomCurrentRefinements({
 
   const handleClearAll = () => {
     try {
-      logEvent(analytics, "clear_all_refinements", {
-        event_category: "filters",
-        event_label: "clear_all",
-        active_filters: Object.keys(filters).filter((key) => key !== "type"),
-        user_type: userType,
+      trackEvent("property_filter_clear", undefined, undefined, { page_type: filters?.listingType?.[0] || 'resale' }).catch((error) => {
+        console.error(`Error logging event: ${error}`);
       });
     } catch (error) {
-      console.error("Error logging clear all:", error);
+      console.error(`Unexpected error: ${error}`);
     }
 
     // Keep type, reset everything else, including sortBy
