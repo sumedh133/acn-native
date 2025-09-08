@@ -1,4 +1,4 @@
-import { useNavigation, usePathname, useRouter } from "expo-router";
+import { useNavigation, usePathname, useRouter, useGlobalSearchParams, useLocalSearchParams } from "expo-router";
 import React, { useState, useRef, useEffect, useContext } from "react";
 import {
   Text,
@@ -25,6 +25,11 @@ const FooterNavigation = () => {
   const router = useRouter();
   const navigation = useNavigation();
   const { height } = Dimensions.get("window");
+  
+  // Fetch parameters using Expo Router hooks
+  const localParams = useLocalSearchParams();
+  const globalParams = useGlobalSearchParams();
+  
   const userType =
     useSelector((state: RootState) => state?.agent?.docData?.userType) ||
     "free";
@@ -81,6 +86,33 @@ const FooterNavigation = () => {
     inputRange: [0, 1],
     outputRange: ["0deg", "45deg"],
   });
+
+  // Get showFooter parameter with proper type checking and fallback
+  const getShowFooterParam = () => {
+    // First check local params (current screen)
+    if (localParams?.showFooter !== undefined) {
+      return localParams.showFooter !== 'false' && localParams.showFooter !== false;
+    }
+    
+    // Then check global params
+    if (globalParams?.showFooter !== undefined) {
+      return globalParams.showFooter !== 'false' && globalParams.showFooter !== false;
+    }
+    
+    // Fallback to React Navigation method for compatibility
+    const navParams = navigation?.getState()?.routes?.at(-1)?.params as {
+      showFooter?: boolean;
+    };
+    
+    if (navParams?.showFooter !== undefined) {
+      return navParams.showFooter;
+    }
+    
+    // Default to true if no parameter is found
+    return true;
+  };
+
+  const shouldShowFooter = getShowFooterParam();
 
   // Unified selection handler
   const handleSelection = (type: string, value: string) => {
@@ -227,10 +259,6 @@ const FooterNavigation = () => {
     }
   };
 
-  const params = navigation?.getState()?.routes?.at(-1)?.params as {
-    showFooter?: boolean;
-  };
-
   useFocusEffect(
     React.useCallback(() => {
       const handleBackPress = () => {
@@ -342,7 +370,8 @@ const FooterNavigation = () => {
     height,
   ]);
 
-  if (params?.showFooter === false) return null;
+  // Early return if footer should be hidden
+  if (!shouldShowFooter) return null;
 
   const popupItems = getPopupItems(handlePopupCardClick);
   const modalItems = getModalItems(

@@ -8,6 +8,8 @@ import {
   FlatList,
   ActivityIndicator,
   Keyboard,
+  Modal,
+  Dimensions,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { Places } from "@/app/types";
@@ -53,9 +55,14 @@ const PlacesSearch = ({
   const [isLoading, setIsLoading] = useState(false);
   const [userInitiatedSearch, setUserInitiatedSearch] = useState(false);
   const [blurredAndNotSelected, setBlurredAndNotSelected] = useState(false);
+  const [inputLayout, setInputLayout] = useState({ x: 0, y: 0, width: 0, height: 0 });
 
   const searchTimeout = useRef<NodeJS.Timeout | null>(null);
   const isInitialMount = useRef(true);
+  const inputRef = useRef<View>(null);
+
+  // Get screen dimensions
+  const { height: screenHeight } = Dimensions.get('window');
 
   // Search for locations with debounce
   const searchLocations = useCallback(async (query: string) => {
@@ -229,6 +236,13 @@ const PlacesSearch = ({
 
   // Handle focus on the search input
   const handleSearchFocus = () => {
+    // Get input position for modal placement
+    if (inputRef.current) {
+      inputRef.current.measureInWindow((x, y, width, height) => {
+        setInputLayout({ x, y, width, height });
+      });
+    }
+    
     // Only show results if user has typed something
     if (searchQuery.trim() && userInitiatedSearch) {
       setShowResults(true);
@@ -236,10 +250,69 @@ const PlacesSearch = ({
   };
 
   const handleSearchBlur = () => {
-    if (!selectedPlace) {
-      setBlurredAndNotSelected(true);
-      // setShowResults(false);
-    }
+    // Delay hiding results to allow for selection
+    setTimeout(() => {
+      if (!selectedPlace) {
+        setBlurredAndNotSelected(true);
+      }
+      setShowResults(false);
+    }, 150);
+  };
+
+  // Close modal when backdrop is pressed
+  const handleModalClose = () => {
+    setShowResults(false);
+    Keyboard.dismiss();
+  };
+
+  const renderResults = () => {
+    if (!showResults || searchResults.length === 0) return null;
+
+    return (
+      <Modal
+        visible={showResults}
+        transparent={true}
+        animationType="fade"
+        onRequestClose={handleModalClose}
+      >
+        <TouchableOpacity 
+          style={styles.modalOverlay} 
+          activeOpacity={1} 
+          onPress={handleModalClose}
+        >
+          <View 
+            style={[
+              styles.resultsModal,
+              {
+                top: inputLayout.y + inputLayout.height + 5,
+                left: inputLayout.x,
+                width: inputLayout.width,
+              }
+            ]}
+          >
+            <FlatList
+              data={searchResults}
+              keyExtractor={(item) => item.place_id}
+              renderItem={({ item }) => (
+                <TouchableOpacity
+                  style={styles.resultItem}
+                  onPress={() =>
+                    handleSelectPlace(item.place_id, item.description)
+                  }
+                >
+                  <Text style={styles.resultText}>{item.description}</Text>
+                </TouchableOpacity>
+              )}
+              keyboardShouldPersistTaps="handled"
+              scrollEnabled={true}
+              showsVerticalScrollIndicator={true}
+              style={styles.resultsList}
+              contentContainerStyle={styles.resultsListContent}
+            />
+          </View>
+        </TouchableOpacity>
+      </Modal>
+    );
   };
 
   return (
@@ -255,6 +328,7 @@ const PlacesSearch = ({
       <View style={styles.container}>
         {/* Search Input */}
         <View
+          ref={inputRef}
           style={[
             styles.inputContainer,
             blurredAndNotSelected ? styles.notSelectedState : {},
@@ -297,32 +371,8 @@ const PlacesSearch = ({
           ) : null}
         </View>
 
-        {/* Search Results Dropdown */}
-        {showResults && searchResults.length > 0 && (
-          <View style={styles.resultsContainer}>
-            <FlatList
-              data={searchResults}
-              onScroll={() => Keyboard.dismiss()}
-              keyExtractor={(item) => item.place_id}
-              renderItem={({ item }) => (
-                <TouchableOpacity
-                  style={styles.resultItem}
-                  onPress={() =>
-                    handleSelectPlace(item.place_id, item.description)
-                  }
-                >
-                  <Text style={styles.resultText}>{item.description}</Text>
-                </TouchableOpacity>
-              )}
-              keyboardShouldPersistTaps="handled"
-              scrollEnabled={true}
-              nestedScrollEnabled={true}
-              showsVerticalScrollIndicator={true} // Shows scroll indicator
-              style={styles.resultsList}
-              contentContainerStyle={styles.resultsListContent} // Add this
-            />
-          </View>
-        )}
+        {/* Render Results Modal */}
+        {renderResults()}
       </View>
     </View>
   );
@@ -331,7 +381,6 @@ const PlacesSearch = ({
 const styles = StyleSheet.create({
   container: {
     width: "100%",
-    zIndex: 100,
   },
   section: {
     width: "100%",
@@ -339,7 +388,6 @@ const styles = StyleSheet.create({
     alignItems: "flex-start",
     justifyContent: "center",
     gap: 10,
-    zIndex: 1000,
   },
   headingContainer: {
     display: "flex",
@@ -375,7 +423,9 @@ const styles = StyleSheet.create({
     color: "#333333",
     height: 20,
   },
-  notSelectedState: { borderColor: "#D92D20" },
+  notSelectedState: { 
+    borderColor: "#D92D20" 
+  },
   rightIcon: {
     width: 20,
     height: 20,
@@ -387,26 +437,27 @@ const styles = StyleSheet.create({
     color: "#999",
     fontWeight: "bold",
   },
-  resultsContainer: {
-    position: "absolute",
-    top: 50,
-    left: 0,
-    right: 0,
-    backgroundColor: "white",
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.1)',
+  },
+  resultsModal: {
+    position: 'absolute',
+    backgroundColor: "#fff",
     borderRadius: 5,
     borderWidth: 1,
     borderColor: "#E3E3E3",
     maxHeight: 200,
-    zIndex: 2000,
-    elevation: 15,
+    elevation: 20,
     shadowColor: "#000",
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.15,
-    shadowRadius: 4,
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.25,
+    shadowRadius: 12,
+    zIndex: 99999,
   },
   resultsListContent: {
     flexGrow: 1,
-    paddingBottom: 10, // Add some bottom padding
+    paddingBottom: 5,
   },
   resultsList: {
     width: "100%",
