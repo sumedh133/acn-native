@@ -162,11 +162,7 @@ export const getPropertyById = async (
  * Listen to real-time updates for a property by ID from the specified inventory stage.
  */
 export const subscribeToPropertyById = (
-  propertyId: string,
-  onUpdate: (property: Property | null) => void,
-  inventoryStage: InventoryStage = "verified",
-  onError?: (error: Error) => void
-): Unsubscribe => {
+propertyId: string, onUpdate: (property: Property | null) => void, p0: string, p1: string, p2: (error: any) => void, inventoryStage: InventoryStage = "verified", onError?: (error: Error) => void): Unsubscribe => {
   const collectionName = getCollectionName(inventoryStage);
   const ref = doc(db, collectionName, propertyId);
 

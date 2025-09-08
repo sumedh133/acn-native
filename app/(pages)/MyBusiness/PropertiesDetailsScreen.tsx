@@ -31,7 +31,8 @@ const PropertysDetailsScreen = () => {
         }
       },
       property.stage != "live" ? "qc" : "verified",
-      (error) => {
+      property.stage != "live" ? "qc" : "verified",
+      (error: any) => {
         console.error("Error in property subscription:", error);
       }
     );
@@ -80,21 +81,19 @@ const PropertysDetailsScreen = () => {
         )}
 
         {property?.stage === "live" && (
-          <>
+          <View className="flex flex-row w-full space-x-3">
             <TouchableOpacity
-              className="w-[50%] py-2 px-5 rounded-[4px] bg-white border-[1.5px] border-[#153E3B] gap-2"
+              className="flex-1 py-2 px-5 rounded-[4px] bg-white border-[1.5px] border-[#153E3B] flex-row items-center justify-center"
               onPress={handleEditButtonPress}
             >
-              <View className="flex flex-row items-center justify-center space-x-2 h-[18px]">
-                <EditIcon height={18} width={18} />
-                <Text className="text-xs font-bold text-black h-[18px]">
-                  Edit Property
-                </Text>
-              </View>
+              <EditIcon height={18} width={18} />
+              <Text className="text-xs font-bold text-black ml-2">
+                Edit Property
+              </Text>
             </TouchableOpacity>
 
             <TouchableOpacity
-              className="w-[50%] py-2 px-3 rounded-[4px] bg-[#10302D] gap-2"
+              className="flex-1 py-2 px-3 rounded-[4px] bg-[#10302D] flex-row items-center justify-center"
               onPress={handleShareButtonPress}
             >
               <View className="flex flex-row items-center justify-center space-x-2 h-[18px]">
@@ -104,7 +103,7 @@ const PropertysDetailsScreen = () => {
                 </Text>
               </View>
             </TouchableOpacity>
-          </>
+          </View>
         )}
       </View>
       <ShareModal

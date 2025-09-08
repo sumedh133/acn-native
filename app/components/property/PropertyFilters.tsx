@@ -395,7 +395,7 @@ export default function PropertyFilters({
                 ],
               }}
             >
-              {/* <Ionicons name="chevron-down" size={20} color="#555" /> */}
+              <Ionicons name="chevron-down" size={20} color="#555" />
             </Animated.View>
           </TouchableOpacity>
 
@@ -415,6 +415,8 @@ export default function PropertyFilters({
             setSelectedLandmark={setSelectedLandmark}
             filters={filters}
             onFiltersChange={onFiltersChange}
+            sortBy={sortBy}
+            onSortChange={onSortChange}
           />
         </View>
       </View>
@@ -496,6 +498,8 @@ export default function PropertyFilters({
           setSelectedLandmark={setSelectedLandmark}
           filters={filters}
           onFiltersChange={onFiltersChange}
+          sortBy={sortBy}
+          onSortChange={onSortChange}
         />
       </View>
     </View>

@@ -94,7 +94,7 @@ export const FormPreview: React.FC<FormPreviewProps> = ({
       id: "1",
       text: "Available",
       onPress: () => {
-        updateStatus("Available");
+        updateStatus("available");
         setStatusUpdateModal(false); // Close popup after selection
       },
     },
@@ -102,7 +102,7 @@ export const FormPreview: React.FC<FormPreviewProps> = ({
       id: "2",
       text: "Hold",
       onPress: () => {
-        updateStatus("Hold");
+        updateStatus("hold");
         setStatusUpdateModal(false);
       },
     },
@@ -331,7 +331,7 @@ export const FormPreview: React.FC<FormPreviewProps> = ({
             isSaving={false}
           />
         )}
-        {previewType == "myBusiness" && (
+        {(
           <View className="flex flex-col gap-y-3 px-4 py-3">
             <Text className="text-[14px] leading-[150%] font-bold text-black font-montserrat-bold">
               Inventory Details

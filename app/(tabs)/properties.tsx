@@ -37,7 +37,7 @@ export default function PropertiesScreen() {
   const basicFilter = useMemo(
     () => ({
       listingType: [activeTab],
-      // status: ["available", "Available"],
+      status: ["available", "Available"],
     }),
     [activeTab]
   );
@@ -203,6 +203,7 @@ export default function PropertiesScreen() {
             activeTab={activeTab}
             setActiveTab={setActiveTab}
             showTabs={true}
+            
           />
         </View>
         <View className="w-full flex-1">
