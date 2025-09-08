@@ -295,9 +295,9 @@ export const PropertyImages: React.FC<PropertyImagesProps> = ({
               <Text className="text-sm font-bold text-black">
                 No Images Found
               </Text>
-              <Text className="text-sm font-medium text-[#757575] pb-3">
+              {previewType === 'myBusiness' && (<Text className="text-sm font-medium text-[#757575] pb-3">
                 Generally properties with images gets 5x enquires.
-              </Text>
+              </Text>)}
               {(previewType == 'add' || previewType == 'edit' || previewType === 'myBusiness') && (
                 <TouchableOpacity
                   onPress={openFilePicker}

@@ -467,16 +467,9 @@ const MoreFilters = ({
                   titleClassName="text-sm"
                 />
               )}
-            {viewMode == "residential" &&
-              localFilters?.assetType?.some((type) =>
-                [
-                  "apartment",
-                  "independent house",
-                  "row house",
-                  "villa",
-                  "villament",
-                ].includes(type)
-              ) && (
+            {viewMode === "residential" &&
+              localFilters?.assetType?.length === 1 &&
+              localFilters?.assetType[0] === "apartment" && (
                 <FilterChipList
                   title={`Apartment Type`}
                   items={apartmentTypes}
