@@ -1,5 +1,5 @@
 import React from "react";
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   View,
   Text,
@@ -23,6 +23,8 @@ import Document from "../Listing/document/Document";
 import PlusIcon from "../../../assets/icons/svg/AddInventory/FormIcons/plus_icon.svg";
 import CorrectIcon from "../../../assets/icons/svg/AddInventory/FormIcons/correct_icon.svg";
 import PhotoVideoPicker from "../Listing/PhotoVideoPicker";
+import type { Asset } from "react-native-image-picker";
+import { MediaObj } from "@/app/types/MediaTypes";
 
 type UIProperty = Omit<Property, "handOverDate"> & {
   handOverDate?: string;
@@ -53,6 +55,11 @@ interface FormRendererProps {
   docsToUpload: DocsToUpload;
   setDocsToUpload: (docsToUpload: DocsToUpload) => void;
   scrollToPossessionRef?: React.RefObject<ScrollView>;
+  onRawMediaChange?: (media: {
+    photos: MediaObj[];
+    videos: MediaObj[];
+    documents?: MediaObj[];
+  }) => void;
 }
 
 // Total number of columns in our grid system
@@ -73,9 +80,11 @@ export const FormRenderer: React.FC<FormRendererProps> = ({
   docsToUpload,
   setDocsToUpload,
   scrollToPossessionRef,
+  onRawMediaChange,
 }) => {
   // Ref for the possession field
   const possessionFieldRef = useRef<View>(null);
+  const [selectedMediaAssets, setSelectedMediaAssets] = useState<Asset[]>([]);
 
   /**
    * Set nested field value in formData.
@@ -599,7 +608,28 @@ export const FormRenderer: React.FC<FormRendererProps> = ({
         case "photos/videos":
           return (
             <>
-              <PhotoVideoPicker />
+              <PhotoVideoPicker
+                selectedMedia={selectedMediaAssets}
+                setSelectedMedia={setSelectedMediaAssets}
+                onChange={(data) => {
+                  // Update form data with URIs for preview
+                  const next = {
+                    ...formData,
+                    media: {
+                      photos: data.photos.map((p) => p.uri),
+                      videos: data.videos.map((v) => v.uri),
+                      documents: formData.media?.documents || [],
+                    },
+                  } as Partial<UIProperty>;
+                  onFormUpdate(next);
+                  // Pass raw media objects upward for TUS submission
+                  onRawMediaChange?.({
+                    photos: data.photos,
+                    videos: data.videos,
+                    documents: [],
+                  });
+                }}
+              />
             </>
           );
         default:

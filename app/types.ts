@@ -407,7 +407,7 @@ export interface Property {
 
   // Floor Information
   floorNumber?: number; // Unified from floorNo/floor/exactFloorNo
-  referredFloorNumber?: string; // String reference for floor (e.g., "Ground Floor", "Mezzanine", "Basement")
+  referredFloorNumber?: string | null; // String reference for floor (e.g., "Ground Floor", "Mezzanine", "Basement")
   totalFloors?: number;
 
   // Commercial Specific Fields

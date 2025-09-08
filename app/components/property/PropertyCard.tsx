@@ -812,7 +812,7 @@ const PropertyCard: React.FC<PropertyCardProps> = ({
                   ) : (
                     <View className="flex-1">
                       <Text className="text-[#433F3E] text-xs font-montserrat-medium">
-                        Per Sqft Price
+                        /sqft Price
                       </Text>
                       <Text
                         className="text-sm font-semibold text-[#111827]"

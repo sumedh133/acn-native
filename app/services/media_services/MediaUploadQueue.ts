@@ -81,7 +81,7 @@ export class MediaUploadQueue {
 
       // Configure TUS upload
       const uploadConfig: MultipleUploadConfig = {
-        endpoint: `${TUS_ENDPOINT}${this.config.propId}`,
+        endpoint: TUS_ENDPOINT,
         chunkSize: 1024 * 1024, // 1MB chunks
         maxConcurrent: 3,
         strategy: "parallel",

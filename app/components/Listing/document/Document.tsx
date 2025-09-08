@@ -20,9 +20,7 @@ const Document: React.FC<DocumentProps> = ({
 }) => {
   return (
     <View style={styles.container}>
-      <View
-        style={styles.header}
-      >
+      <View style={styles.header}>
         <View style={styles.header}>
           <View className="border border-[#CBD0DC] rounded-full p-[7px]">
             <UploadFiles />
