@@ -331,7 +331,7 @@ export const FormPreview: React.FC<FormPreviewProps> = ({
             isSaving={false}
           />
         )}
-        {previewType == "myBusiness" && (
+        {(
           <View className="flex flex-col gap-y-3 px-4 py-3">
             <Text className="text-[14px] leading-[150%] font-bold text-black font-montserrat-bold">
               Inventory Details

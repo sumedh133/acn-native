@@ -64,11 +64,6 @@ const PropertysDetailsScreen = () => {
         data={property}
         previewType="myBusiness"
       />
-      <FormPreview
-        config={inventoryFormConfig}
-        data={property}
-        previewType="myBusiness"
-      />
       {/* Navigation Buttons */}
       <View className="flex flex-row items-center justify-center gap-[13px] px-4 py-[14.5px]">
         {property?.stage !== "live" && (

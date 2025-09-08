@@ -415,6 +415,8 @@ export default function PropertyFilters({
             setSelectedLandmark={setSelectedLandmark}
             filters={filters}
             onFiltersChange={onFiltersChange}
+            sortBy={sortBy}
+            onSortChange={onSortChange}
           />
         </View>
       </View>
@@ -496,6 +498,8 @@ export default function PropertyFilters({
           setSelectedLandmark={setSelectedLandmark}
           filters={filters}
           onFiltersChange={onFiltersChange}
+          sortBy={sortBy}
+          onSortChange={onSortChange}
         />
       </View>
     </View>

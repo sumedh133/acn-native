@@ -14,6 +14,25 @@ type UIProperty = Omit<Property, "handOverDate"> & {
   handOverDate?: string;
 };
 
+const safeDaysFrom = (timestamp: any): number => {
+  try {
+    const result = getDaysFrom(timestamp);
+    return typeof result === "number" && !isNaN(result) ? result : 0;
+  } catch (error) {
+    console.warn("Error calculating days from:", error);
+    return 0;
+  }
+};
+
+const safeText = (value: any, fallback: string = "-"): string => {
+  if (value === null || value === undefined) return fallback;
+  if (typeof value === "string") return value.trim() || fallback;
+  if (typeof value === "number") return value.toString();
+  if (typeof value === "boolean") return value.toString();
+  if (typeof value === "object") return fallback; // Don't render objects
+  return String(value) || fallback;
+};
+
 export const BasicPropertyInfo: React.FC<{
   data: Partial<UIProperty>;
   previewType: string;
@@ -155,17 +174,33 @@ export const BasicPropertyInfo: React.FC<{
           )}
         </View>
         {previewType === "listing" &&
-          (daysSinceAdded > 10 ? (
-            <Text className="text-[12px] font-[Lato] font-medium leading-[18px] text-brand-tertiary text-opacity-70 overflow-hidden">
-              {updatedText}
-            </Text>
-          ) : (
-            <View className="px-2 py-1 bg-[#E5F8F6] rounded-md">
-              <Text className="text-[12px] font-[Lato] font-bold text-[#153E3B]">
-                Newly Added
-              </Text>
-            </View>
-          ))}
+          (() => {
+            if (daysSinceAdded < 1) {
+              return (
+                <View className="px-2 py-1 bg-[#E5F8F6] rounded-md">
+                  <Text className="text-[12px] font-[Lato] font-bold text-[#153E3B]">
+                    Newly Added
+                  </Text>
+                </View>
+              );
+            } else if (daysSinceAdded < 10) {
+              const daysFromAdded = safeDaysFrom(data.added);
+              return (
+                <Text className="text-[12px] font-[Lato] font-medium leading-[18px] text-brand-tertiary text-opacity-70 overflow-hidden">
+                  Added {safeText(daysFromAdded)}{" "}
+                  {daysFromAdded === 1 ? "day" : "days"} ago
+                </Text>
+              );
+            } else {
+              const daysFromLastChecked = safeDaysFrom(data.dateOfLastChecked);
+              return (
+                <Text className="text-[12px] font-[Lato] font-medium leading-[18px] text-brand-tertiary text-opacity-70 overflow-hidden">
+                  Updated {safeText(daysFromLastChecked)}{" "}
+                  {daysFromLastChecked === 1 ? "day" : "days"} ago
+                </Text>
+              );
+            }
+          })()}
       </View>
 
       {/* Basic Info Grid */}

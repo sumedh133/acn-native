@@ -315,7 +315,10 @@ const MoreFilters = ({
               className="font-semibold text-lg text-gray-800 mt-1"
               style={{ fontFamily: "Montserrat_700Bold" }}
             >
-              Filters {`(${toCapitalize(filters.listingType?.[0] || "")})`}
+              Filters
+              {filters.listingType?.[0]
+                ? ` (${toCapitalize(filters.listingType[0])})`
+                : ""}
             </Text>
           </View>
 

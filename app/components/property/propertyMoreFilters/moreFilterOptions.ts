@@ -129,7 +129,7 @@ export const furnishingOptions: DropdownOption[] = [
   { label: "Plug & Play", value: "plug-and-play" },
 ];
 export const zoneOptions: FilterChipItem[] = [
-  { label: "Center Bangalore", value: "Center Bangalore" },
+  { label: "Central Bangalore", value: "Central Bangalore" },
   { label: "North Bangalore", value: "North Bangalore" },
   { label: "South Bangalore", value: "South Bangalore" },
   { label: "South-East Bangalore", value: "South-East Bangalore" },
