@@ -1,4 +1,4 @@
-export function getUnixDateTime() {
+export function getUnixDateTime(): number {
   return Math.floor(Date.now() / 1000);
 }
 
@@ -7,7 +7,7 @@ export function getNextDayUnixDateTime() {
   return Math.floor(Date.now() / 1000) + secondsInADay;
 }
 
-export const formatUnixDate = (unix) => {
+export const formatUnixDate = (unix: number): string | undefined => {
   if (!unix) {
     return;
   }
@@ -22,7 +22,7 @@ export const formatUnixDate = (unix) => {
 };
 
 // Returns the difference in days between two unix timestamps
-export const getDaysDifference = (unix1, unix2) => {
+export const getDaysDifference = (unix1: number, unix2: number): number => {
   // if (!unix1 || !unix2) {
   //   return;
   // }
@@ -30,7 +30,7 @@ export const getDaysDifference = (unix1, unix2) => {
   return Math.floor(diffInSeconds / (24 * 60 * 60));
 };
 
-export const formatUnixDateWithMonth = (unix) => {
+export const formatUnixDateWithMonth = (unix: number): string | undefined => {
   if (!unix) {
     return;
   }
@@ -58,7 +58,7 @@ export const formatUnixDateWithMonth = (unix) => {
   return `${day}/${monthShort}/${year}`;
 };
 
-export const formatUnixTime = (unix) => {
+export const formatUnixTime = (unix: number): string | undefined => {
   if (!unix) {
     return;
   }
@@ -73,7 +73,7 @@ export const formatUnixTime = (unix) => {
   return formattedTime;
 };
 
-export const formatUnixDateTime = (unix) => {
+export const formatUnixDateTime = (unix: number): string | undefined => {
   const date = new Date(unix * 1000);
   const day = String(date.getDate()).padStart(2, "0");
   const month = String(date.getMonth() + 1).padStart(2, "0");
@@ -85,5 +85,3 @@ export const formatUnixDateTime = (unix) => {
   const formattedDateTime = `${day}/${month}/${year}, ${hours}:${minutes} ${ampm}`;
   return formattedDateTime;
 };
-
-

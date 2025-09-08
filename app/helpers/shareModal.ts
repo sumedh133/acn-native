@@ -74,7 +74,10 @@ export const createPropertyMessage = async (
 
   const details = [
     appendDetail("Micromarket", property.micromarket),
-    appendDetail("Handover Date", formatUnixDate(property.handOverDate)),
+    appendDetail(
+      "Handover Date",
+      property.handOverDate && formatUnixDate(property.handOverDate)
+    ),
     appendDetail("Asset Type", toCapitalize(property.assetType)),
     appendDetail("Configuration", configParts),
     `${appendDetail("SBUA", property.sbua)} ${property.sbua ? `sqft` : ""}`,
