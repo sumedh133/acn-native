@@ -38,6 +38,7 @@ import NumberRangeFilter from "./NumberRangeFilter";
 import BudgetRangeFilter from "./BudgetFilter";
 import StatusInfoBottomSheet from "../StatusInfoBottomSheet";
 import { ScrollContext } from "@/app/ScrollContext";
+import { toCapitalize } from "@/app/helpers/format/format";
 
 const defaultRanges: Record<string, [string, string]> = {
   rent: ["5000", "100000"],
@@ -314,7 +315,7 @@ const MoreFilters = ({
               className="font-semibold text-lg text-gray-800 mt-1"
               style={{ fontFamily: "Montserrat_700Bold" }}
             >
-              Filters
+              Filters {`(${toCapitalize(filters.listingType?.[0] || "")})`}
             </Text>
           </View>
 
@@ -527,14 +528,19 @@ const MoreFilters = ({
                       : "resale"
                   }
                 />
-                <NumberRangeFilter
-                  attribute="sbua"
-                  title="SBUA (sqft)"
-                  localFilters={localFilters}
-                  onChangeRange={(attr, range) => {
-                    toggleFilterValue(attr, range);
-                  }}
-                />
+                {!(
+                  localFilters.assetType?.length === 1 &&
+                  localFilters.assetType?.includes("plot")
+                ) && (
+                  <NumberRangeFilter
+                    attribute="sbua"
+                    title="SBUA (sqft)"
+                    localFilters={localFilters}
+                    onChangeRange={(attr, range) => {
+                      toggleFilterValue(attr, range);
+                    }}
+                  />
+                )}
 
                 {localFilters.assetType?.includes("plot") && (
                   <NumberRangeFilter

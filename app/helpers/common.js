@@ -46,7 +46,7 @@ export function formatCost(price) {
 
   if (price < 0) {
     isNegative = true;
-    price = Math.abs(price);
+    price = Math.abs(price.toFixed(2));
   }
 
   // Convert the price to a string and remove any existing commas
@@ -161,6 +161,7 @@ export const getDaysFrom = (dateString) => {
   const diffTime = Math.abs(Math.floor(now) - Math.floor(date));
   return Math.ceil(diffTime / (1000 * 60 * 60 * 24));
 };
+
 
 export const formatMonthYear = (dateString) => {
   const [month, year] = dateString.split("/");

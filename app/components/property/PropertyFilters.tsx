@@ -125,6 +125,8 @@ export default function PropertyFilters({
     { label: "Price: High to Low", value: "price_desc" },
     { label: "Newest First", value: "date_desc" },
     { label: "Oldest First", value: "date_asc" },
+    { label: "Price per sqft: Low to High", value: "price_per_sqft_asc" },
+    { label: "Price per sqft: High to Low", value: "price_per_sqft_desc" },
   ];
 
   // Animation effects for popup states

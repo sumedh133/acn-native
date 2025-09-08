@@ -70,9 +70,13 @@ export const residentialVillamentFields: FormField[] = [
     placeholder: "Select facing direction",
     options: [
       { label: "North", value: "north" },
-      { label: "South", value: "south" },
       { label: "East", value: "east" },
+      { label: "South", value: "south" },
       { label: "West", value: "west" },
+      { label: "North-East", value: "north-east" },
+      { label: "North-West", value: "north-west" },
+      { label: "South-West", value: "south-west" },
+      { label: "South-East", value: "south-east" },
     ],
     dependsOn: {
       field: "assetType",
@@ -105,7 +109,7 @@ export const residentialVillamentFields: FormField[] = [
     options: [
       { label: "Unfurnished", value: "unfurnished" },
       { label: "Semi-Furnished", value: "semi-furnished" },
-      { label: "Furnished", value: "furnished" },
+      { label: "Fully Furnished", value: "fully-furnished" },
     ],
     dependsOn: {
       field: "assetType",

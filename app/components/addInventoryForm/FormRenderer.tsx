@@ -1,5 +1,5 @@
 import React from "react";
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import {
   View,
   Text,
@@ -52,6 +52,7 @@ interface FormRendererProps {
   propId?: any;
   docsToUpload: DocsToUpload;
   setDocsToUpload: (docsToUpload: DocsToUpload) => void;
+  scrollToPossessionRef?: React.RefObject<ScrollView>;
 }
 
 // Total number of columns in our grid system
@@ -71,7 +72,11 @@ export const FormRenderer: React.FC<FormRendererProps> = ({
   setSelectedPlace,
   docsToUpload,
   setDocsToUpload,
+  scrollToPossessionRef,
 }) => {
+  // Ref for the possession field
+  const possessionFieldRef = useRef<View>(null);
+
   /**
    * Set nested field value in formData.
    */
@@ -90,6 +95,26 @@ export const FormRenderer: React.FC<FormRendererProps> = ({
 
     resetDependentFields(fieldPath, newData);
     onFormUpdate(newData);
+
+    // Scroll to possession field when it changes
+    if (
+      fieldPath === "possession" &&
+      possessionFieldRef.current &&
+      scrollToPossessionRef?.current
+    ) {
+      setTimeout(() => {
+        possessionFieldRef.current?.measureLayout(
+          scrollToPossessionRef.current as any,
+          (x, y) => {
+            scrollToPossessionRef.current?.scrollTo({
+              y: y - 100,
+              animated: true,
+            });
+          },
+          () => {}
+        );
+      }, 100);
+    }
   };
 
   /**
@@ -209,12 +234,18 @@ export const FormRenderer: React.FC<FormRendererProps> = ({
     const error = errors[field.id];
     const fieldWidth = getFieldWidth(field);
 
-
     const commonLabel = (
-      <Text className="text-base font-semibold mb-3">
-        {field.label}
-        {field.required && <Text>*</Text>}
-      </Text>
+      <View className="mb-3">
+        <Text className="text-base font-semibold">
+          {field.label}
+          {field.required && <Text>*</Text>}
+        </Text>
+        {field.labelNote && (
+          <Text className="font-lato-light text-[11px] leading-[150%]">
+            {field.labelNote}
+          </Text>
+        )}
+      </View>
     );
 
     const errorMessage = error && (
@@ -228,7 +259,6 @@ export const FormRenderer: React.FC<FormRendererProps> = ({
             <View>
               <PlacesSearch
                 selectedPlace={selectedPlace}
-
                 setSelectedPlace={setSelectedPlace}
                 communityType={formData.communityType}
                 disabled={isEdit}
@@ -275,6 +305,11 @@ export const FormRenderer: React.FC<FormRendererProps> = ({
                 multiline
                 numberOfLines={4}
               />
+              {field.footer && (
+                <Text className="font-lato-light text-[11px] leading-[150%]">
+                  {field.labelNote}
+                </Text>
+              )}
               {errorMessage}
             </>
           );
@@ -330,10 +365,13 @@ export const FormRenderer: React.FC<FormRendererProps> = ({
                       }}
                     >
                       <Text
-                        className={`${currentStep ? "" : "px-[10px]"} text-sm font-medium ${isSelected
-                          ? "text-[#153E3B] font-bold"
-                          : "text-[#2B2928]"
-                          } leading-normal`}
+                        className={`${
+                          currentStep ? "" : "px-[10px]"
+                        } text-sm font-medium ${
+                          isSelected
+                            ? "text-[#153E3B] font-bold"
+                            : "text-[#2B2928]"
+                        } leading-normal`}
                       >
                         {option.label}
                       </Text>
@@ -455,6 +493,11 @@ export const FormRenderer: React.FC<FormRendererProps> = ({
                   setFieldValue(fieldKey, value)
                 }
                 required={false}
+                area={
+                  formData.assetType === "plot"
+                    ? formData.plotArea
+                    : formData.sbua
+                }
               />
               {errorMessage}
             </>
@@ -565,7 +608,12 @@ export const FormRenderer: React.FC<FormRendererProps> = ({
     };
 
     return (
-      <View key={field.id} style={{ width: fieldWidth }} className="mb-3 px-2">
+      <View
+        key={field.id}
+        ref={field.id === "possession" ? possessionFieldRef : null}
+        style={{ width: fieldWidth }}
+        className="mb-3 px-2"
+      >
         {fieldContent()}
       </View>
     );
@@ -587,9 +635,6 @@ export const FormRenderer: React.FC<FormRendererProps> = ({
       }
     });
   }, [visibleSteps, currentStep]);
-
-
-
 
   // -------------------- Render --------------------
   if (!visibleSteps[currentStep]) return null;
@@ -618,7 +663,11 @@ export const FormRenderer: React.FC<FormRendererProps> = ({
       </View>
 
       {/* Fields */}
-      <ScrollView className="flex px-3 " showsVerticalScrollIndicator={false}>
+      <ScrollView
+        ref={scrollToPossessionRef}
+        className="flex px-3 "
+        showsVerticalScrollIndicator={false}
+      >
         {fieldRows.map((row, rowIndex) => (
           <View
             key={`row-${rowIndex}`}

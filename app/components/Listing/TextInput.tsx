@@ -9,17 +9,17 @@ import {
 
 interface TextInputFieldProps {
   value: string | number | null;
-  setValue: (value: string | number|null) => void;
+  setValue: (value: string | number | null) => void;
   title?: string;
   placeholder?: string;
   required?: boolean;
   keyboardType?:
-  | "default"
-  | "number-pad"
-  | "decimal-pad"
-  | "numeric"
-  | "email-address"
-  | "phone-pad";
+    | "default"
+    | "number-pad"
+    | "decimal-pad"
+    | "numeric"
+    | "email-address"
+    | "phone-pad";
   maxLength?: number;
   suffix?: string;
   prefix?: string;
@@ -66,19 +66,6 @@ const TextInputField = ({
     }
   };
 
-  // Convert number to words (simplified for Indian currency)
-  const numberToWords = (num: number): string => {
-    if (num >= 10000000) {
-      const crores = Math.floor(num / 10000000);
-      const lakhs = Math.floor((num % 10000000) / 100000);
-      return `${crores} Crore ${lakhs} Lakh Rupees only`;
-    } else if (num >= 100000) {
-      const lakhs = Math.floor(num / 100000);
-      return `${lakhs} Lakh Rupees only`;
-    }
-    return `${num} Rupees only`;
-  };
-
   const getPriceInWords = (): string => {
     if (!value) return "Eg. 7.5 K | 7500 Rupees only";
     const numericPrice =
@@ -87,17 +74,45 @@ const TextInputField = ({
     if (numericPrice >= 10000000) {
       return `${(numericPrice / 10000000).toFixed(2)} Cr | ${numberToWords(
         numericPrice
-      )}`;
+      )} Rupees only`;
     } else if (numericPrice >= 100000) {
       return `${(numericPrice / 100000).toFixed(2)} Lakh | ${numberToWords(
         numericPrice
-      )}`;
+      )} Rupees only`;
     } else if (numericPrice >= 1000) {
       return `${(numericPrice / 1000).toFixed(2)} K | ${numberToWords(
         numericPrice
-      )}`;
+      )} Rupees only`;
     }
-    return numberToWords(numericPrice);
+    return `${numberToWords(numericPrice)} Rupees only`;
+  };
+
+  // Simple function to convert number to words (simplified for demonstration)
+  const numberToWords = (num: number): string => {
+    // This is a simplified implementation - removed "Rupees only" from here
+    if (num >= 10000000) {
+      const crores = Math.floor(num / 10000000);
+      const lakhs = Math.floor((num % 10000000) / 100000);
+      const thousands = Math.floor((num % 100000) / 1000);
+
+      let result = `${crores} Crore`;
+      if (lakhs > 0) result += ` ${lakhs} Lakh`;
+      if (thousands > 0) result += ` ${thousands} Thousand`;
+
+      return result;
+    } else if (num >= 100000) {
+      const lakhs = Math.floor(num / 100000);
+      const thousands = Math.floor((num % 100000) / 1000);
+
+      let result = `${lakhs} Lakh`;
+      if (thousands > 0) result += ` ${thousands} Thousand`;
+
+      return result;
+    } else if (num >= 1000) {
+      return `${Math.floor(num / 1000)} Thousand`;
+    }
+
+    return `${num}`;
   };
 
   return (
@@ -106,7 +121,8 @@ const TextInputField = ({
         <View style={styles.headingContainer}>
           <Text style={styles.sectionHeading}>{title}</Text>
           {required && <Text style={styles.compulsoryStar}>*</Text>}
-        </View>)}
+        </View>
+      )}
       {showStepper ? (
         <View style={styles.stepperContainer}>
           <TouchableOpacity
@@ -122,20 +138,19 @@ const TextInputField = ({
 
           <TouchableOpacity
             style={styles.circleButton}
-            onPress={() =>
-              setValue(typeof value === "number" ? value + 1 : 1)
-            }
+            onPress={() => setValue(typeof value === "number" ? value + 1 : 1)}
           >
             <Text style={styles.buttonText}>+</Text>
           </TouchableOpacity>
         </View>
       ) : (
-
         <View
-          style={[styles.inputContainer, isFocused && styles.focusedInputContainer]}
+          style={[
+            styles.inputContainer,
+            isFocused && styles.focusedInputContainer,
+          ]}
         >
           {prefix && <Text style={styles.suffixText}>{prefix}</Text>}
-
 
           <TextInput
             style={styles.inputField}
@@ -149,11 +164,13 @@ const TextInputField = ({
             maxLength={maxLength}
           />
 
-
           {suffix && <Text style={styles.suffixText}>{suffix}</Text>}
-        </View>)}
+        </View>
+      )}
 
-      {numberToStringFooter && <Text style={styles.priceInWords}>{getPriceInWords()}</Text>}
+      {numberToStringFooter && (
+        <Text style={styles.priceInWords}>{getPriceInWords()}</Text>
+      )}
       {footer !== "" && <Text style={styles.priceInWords}>{footer}</Text>}
     </View>
   );
@@ -192,7 +209,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "space-between",
     paddingHorizontal: 12,
-    paddingVertical:8
+    paddingVertical: 8,
   },
   focusedInputContainer: {
     borderColor: "#2B3034",
@@ -211,7 +228,7 @@ const styles = StyleSheet.create({
     fontFamily: "sans-serif",
     color: "#757575",
     marginLeft: 4,
-    lineHeight:18
+    lineHeight: 18,
   },
   priceInWords: {
     fontSize: 12,
@@ -237,14 +254,13 @@ const styles = StyleSheet.create({
   buttonText: {
     fontSize: 13,
     fontWeight: "300",
-    
   },
   stepperValue: {
     fontSize: 16,
     fontWeight: "700",
     minWidth: 40,
     textAlign: "center",
-    color: "#153E3B"
+    color: "#153E3B",
   },
 });
 

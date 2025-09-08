@@ -1,5 +1,5 @@
-import React from "react";
-import { ScrollView, View, Text } from "react-native";
+import React, { useEffect } from "react";
+import { ScrollView, View, Text, BackHandler } from "react-native";
 import { FormConfig, FormField } from "@/types/FormConfig";
 import { useEnquiries } from "@/hooks/enquiryHooks/useEnquiries";
 import { Property } from "@/app/types";
@@ -11,13 +11,18 @@ import { BasicPropertyInfo } from "./property/BasicPropertyInfo";
 import { DetailsSection } from "./property/DetailsSection";
 import { LocationSection } from "./property/LocationSection";
 import { ExtraDetailsSection } from "./property/ExtraDetailsSection";
-import { toCapitalizedWords } from "@/app/helpers/common";
+import { getDaysFrom, toCapitalizedWords } from "@/app/helpers/common";
 
 import ArrowLeftIcon from "@/assets/icons/svg/Common/ArrowLeftIcon";
+import ListedAgo from "@/assets/icons/svg/PropertyListing/PropertyDetails/ListedAgo.svg";
+import DateOfLastChecked from "@/assets/icons/svg/PropertyListing/PropertyDetails/dateOfLastChecked.svg";
 
 import EnquiriesReceivedCard from "../MyBusinessPage/EnquiriesReceivedCard";
 import PropertiesStatusCard from "../MyBusinessPage/PropertyStatusCard";
 import { TouchableOpacity } from "react-native";
+import SaveAsDraft from "@/app/modals/SaveAsDraft";
+import { property } from "lodash";
+import { getTimeDifference } from "@/app/helpers/format/timestamp";
 
 export type UIProperty = Omit<Property, "handOverDate"> & {
   handOverDate?: string;
@@ -31,6 +36,9 @@ interface FormPreviewProps {
   agentData?: any;
   propId?: string;
   previewType: string;
+  handleDraftSave?: () => Promise<void>;
+  showDraftModal?: boolean;
+  setShowDraftModal?: (show: boolean) => void;
 }
 
 export const FormPreview: React.FC<FormPreviewProps> = ({
@@ -39,15 +47,14 @@ export const FormPreview: React.FC<FormPreviewProps> = ({
   onMediaUpdate,
   agentData,
   propId,
-  previewType
+  previewType,
+  handleDraftSave,
+  showDraftModal,
+  setShowDraftModal,
 }) => {
-
-  const {
-
-    enquiryCount,
-    newEnquiryCount,
-
-  } = useEnquiries({ propertyId: data?.propertyId });
+  const { enquiryCount, newEnquiryCount, loading } = useEnquiries({
+    propertyId: data?.propertyId,
+  });
 
   const getFieldValue = (obj: any, path: string) =>
     path.split(".").reduce((acc, key) => acc?.[key], obj);
@@ -84,10 +91,20 @@ export const FormPreview: React.FC<FormPreviewProps> = ({
         .map((fields) => {
           const activeField = fields.find((f) => isFieldVisible(f));
           return activeField
-            ? { id: activeField.id, label: activeField.label, suffix: activeField.suffix || '', prefix: activeField.prefix || '' }
+            ? {
+                id: activeField.id,
+                label: activeField.label,
+                suffix: activeField.suffix || "",
+                prefix: activeField.prefix || "",
+              }
             : null;
         })
-        .filter(Boolean) as Array<{ id: string; label: string, suffix: string, prefix: string }>;
+        .filter(Boolean) as Array<{
+        id: string;
+        label: string;
+        suffix: string;
+        prefix: string;
+      }>;
 
       return { ...step, stepValues };
     })
@@ -99,25 +116,56 @@ export const FormPreview: React.FC<FormPreviewProps> = ({
     videos: data.media?.videos ?? [],
     documents: data.media?.documents ?? [],
   };
+  useEffect(() => {
+    // Back button handler
+    const backHandler = BackHandler.addEventListener(
+      "hardwareBackPress",
+      () => {
+        if (setShowDraftModal) {
+          setShowDraftModal(true);
+          return true;
+        }
+      }
+    );
+
+    return () => backHandler.remove();
+  }, [showDraftModal]);
 
   return (
     <ScrollView className="flex-1 bg-gray-50">
       <View className="absolute bg-transparent z-50 flex flex-row justify-between items-center px-4 py-3 w-full">
         <View className="flex flex-row gap-[10px]">
-          <TouchableOpacity className="bg-[#FAFAFA] rounded-full p-[6px] h-[28px] w-[28px] flex items-center justify-center" onPress={() => { router.back() }}><ArrowLeftIcon height={12} width={12} /></TouchableOpacity>
+          <TouchableOpacity
+            className="bg-[#FAFAFA] rounded-full p-[6px] h-[28px] w-[28px] flex items-center justify-center"
+            onPress={() => {
+              router.back();
+            }}
+          >
+            <ArrowLeftIcon height={12} width={12} />
+          </TouchableOpacity>
           <View className="bg-[#FAFAFA] py-2 px-3 rounded-[24px]">
-
-            <Text className="leading-normal text-xs font-semibold text-[#153E3B]">{data?.propertyId}</Text>
+            <Text className="leading-normal text-xs font-semibold text-[#153E3B]">
+              {data?.propertyId}
+            </Text>
           </View>
         </View>
         <View className="flex flex-row gap-[6px]">
-          <View className={`${data?.listingType == "rental" ? "bg-[#FCE9BA]" : "bg-[#EADDFF]"} py-2 px-3 rounded-[24px]`}>
-            <Text className="leading-normal text-xs font-semibold text-[#153E3B]">{toCapitalizedWords(data?.listingType)}</Text>
+          <View
+            className={`${
+              data?.listingType == "rental" ? "bg-[#FCE9BA]" : "bg-[#EADDFF]"
+            } py-2 px-3 rounded-[24px]`}
+          >
+            <Text className="leading-normal text-xs font-semibold text-[#153E3B]">
+              {toCapitalizedWords(data?.listingType)}
+            </Text>
           </View>
-          {data?.rentalInfo?.isPreLeased || true && (
+          {data?.rentalInfo?.isPreLeased && (
             <View className="bg-[#F7C752] py-2 px-3 rounded-[24px]">
-              <Text className="leading-normal text-xs font-semibold text-[#153E3B]">Pre-Leased</Text>
-            </View>)}
+              <Text className="leading-normal text-xs font-semibold text-[#153E3B]">
+                Pre-Leased
+              </Text>
+            </View>
+          )}
         </View>
       </View>
 
@@ -131,12 +179,19 @@ export const FormPreview: React.FC<FormPreviewProps> = ({
       />
       <BasicPropertyInfo data={data} previewType={previewType} />
 
-      {previewType == 'myBusiness' && (<>
-        <PropertiesStatusCard data={data} />
-        {enquiryCount > 0 && (<>
-          <EnquiriesReceivedCard totalCount={enquiryCount} newCount={newEnquiryCount} /></>)}
-      </>)}
-
+      {previewType == "myBusiness" && (
+        <View className="bg-white">
+          <PropertiesStatusCard data={data} />
+          {enquiryCount > 0 && !loading && (
+            <>
+              <EnquiriesReceivedCard
+                totalCount={enquiryCount}
+                newCount={newEnquiryCount}
+              />
+            </>
+          )}
+        </View>
+      )}
 
       {processedSteps.map((step) => {
         if (step.title === "Basic Details") return;
@@ -180,6 +235,50 @@ export const FormPreview: React.FC<FormPreviewProps> = ({
 
       {data.extraDetails && (
         <ExtraDetailsSection extraDetails={data.extraDetails} />
+      )}
+
+      {setShowDraftModal && showDraftModal && handleDraftSave && (
+        <SaveAsDraft
+          visible={showDraftModal || false}
+          onClose={() => setShowDraftModal(false)}
+          handleSaveDraft={handleDraftSave}
+          isSaving={false}
+        />
+      )}
+      {previewType == "myBusiness" && (
+        <View className="flex flex-col gap-y-3 px-4 py-3">
+          <Text className="text-[14px] leading-[150%] font-bold text-black font-montserrat-bold">
+            Inventory Details
+          </Text>
+          <View className="flex flex-row justify-between">
+            <View className="flex flex-row items-center gap-x-2">
+              <View className="p-[6px] bg-[#E0F7F4] rounded-md">
+                <ListedAgo />
+              </View>
+              <View className="flex flex-col">
+                <Text className="text-[14px] leading-[150%] font-bold text-[#5A5555] font-montserrat-bold">
+                  Listed
+                </Text>
+                <Text className="text-[14px] leading-[150%] font-bold text-black font-montserrat-bold">
+                  {getTimeDifference(data.added)}
+                </Text>
+              </View>
+            </View>
+            <View className="flex flex-row items-center gap-x-2">
+              <View className="p-[6px] bg-[#E0F7F4] rounded-md">
+                <DateOfLastChecked stroke={"#000000"} strokeWidth={0.3}/>
+              </View>
+              <View className="flex flex-col">
+                <Text className="text-[14px] leading-[150%] font-bold text-[#5A5555] font-montserrat-bold">
+                  Inventory Last checked
+                </Text>
+                <Text className="text-[14px] leading-[150%] font-bold text-black font-montserrat-bold">
+                  {getTimeDifference(data.dateOfLastChecked)}
+                </Text>
+              </View>
+            </View>
+          </View>
+        </View>
       )}
     </ScrollView>
   );

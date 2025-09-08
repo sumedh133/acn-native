@@ -18,6 +18,7 @@ import { Property } from "../../types";
 import _ from "lodash";
 
 import { getUnixDateTime } from "@/app/helpers/getUnixDateTime";
+import { usePathname } from "expo-router";
 
 // Firestore Collections
 const ADMIN_COLLECTION = "acn-admin";
@@ -108,13 +109,19 @@ export const createProperty = async (
   const propertyId = await generatePropertyId();
   const collectionName = getCollectionName(inventoryStage);
   const ref = doc(collection(db, collectionName), propertyId);
+  console.log(property, "property");
+  console.log(collectionName, "collection name");
+  const time = getUnixDateTime();
 
   const newProperty: Property = {
     ...property,
     propertyId,
-    added: getUnixDateTime(),
-    lastModified: getUnixDateTime(),
+    added: time,
+    dateOfLastChecked: time,
+    lastModified: time,
+    stage: "kam",
     status: property.status ?? "pending",
+    source: "app",
   };
 
   await setDoc(ref, newProperty);

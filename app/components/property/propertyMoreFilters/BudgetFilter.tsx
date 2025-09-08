@@ -47,6 +47,90 @@ const RESALE_OPTIONS = [
   550000000, 600000000, 700000000, 800000000, 900000000, 1000000000,
 ];
 
+// -------------------- Segmented Scale Helpers --------------------
+// We map slider position (0..SCALE) to values using piecewise weights
+const SLIDER_SCALE = 1000; // higher = smoother steps
+
+type Segment = { min: number; max: number; weight: number };
+
+const buildSegments = (
+  options: number[],
+  type: "rental" | "resale"
+): Segment[] => {
+  if (type === "rental") {
+    return [
+      // Heavier weight near smaller budgets for more slider space
+      { min: 5000, max: 50000, weight: 8 },
+      { min: 50000, max: 200000, weight: 3 },
+      { min: 200000, max: 1000000, weight: 1 },
+    ];
+  }
+  // resale
+  return [
+    // Strong emphasis on lower ranges, tapering off towards higher values
+    { min: 100000, max: 5000000, weight: 8 }, // up to 50L
+    { min: 6000000, max: 10000000, weight: 5 }, // 50L - 1Cr
+    { min: 12500000, max: 50000000, weight: 3 }, // 1Cr - 5Cr
+    { min: 55000000, max: 1000000000, weight: 1 }, // 5Cr - 100Cr
+  ];
+};
+
+const clamp = (n: number, min: number, max: number) =>
+  Math.max(min, Math.min(max, n));
+
+/**
+ * Precompute cumulative weights per segment proportional to number of option steps
+ */
+const buildScale = (options: number[], segments: Segment[]) => {
+  const optsSet = new Set(options);
+  const segInfo = segments.map((seg) => {
+    const segOptions = options.filter((v) => v >= seg.min && v <= seg.max);
+    const steps = Math.max(1, segOptions.length - 1);
+    const weighted = steps * Math.max(0.0001, seg.weight);
+    return { ...seg, steps, weighted, options: segOptions };
+  });
+
+  const totalWeighted = segInfo.reduce((s, x) => s + x.weighted, 0);
+  let acc = 0;
+  const cumulative = segInfo.map((x) => {
+    const start = acc / totalWeighted;
+    acc += x.weighted;
+    const end = acc / totalWeighted;
+    return { ...x, start, end };
+  });
+
+  const valueToPosition = (value: number): number => {
+    const v = clamp(value, options[0], options[options.length - 1]);
+    const seg =
+      cumulative.find((s) => v >= s.min && v <= s.max) ||
+      cumulative[cumulative.length - 1];
+    const idx = seg.options.findIndex(
+      (o) =>
+        o ===
+        seg.options.reduce((prev, curr) =>
+          Math.abs(curr - v) < Math.abs(prev - v) ? curr : prev
+        )
+    );
+    const t = seg.steps === 0 ? 0 : idx / seg.steps;
+    const pos = seg.start + t * (seg.end - seg.start);
+    return Math.round(pos * SLIDER_SCALE);
+  };
+
+  const positionToValue = (pos: number): number => {
+    const p = clamp(pos / SLIDER_SCALE, 0, 1);
+    const seg =
+      cumulative.find((s) => p >= s.start && p <= s.end) ||
+      cumulative[cumulative.length - 1];
+    const localT =
+      seg.end === seg.start ? 0 : (p - seg.start) / (seg.end - seg.start);
+    const approxIndex = Math.round(localT * seg.steps);
+    const index = clamp(approxIndex, 0, seg.options.length - 1);
+    return seg.options[index];
+  };
+
+  return { valueToPosition, positionToValue };
+};
+
 const formatBudget = (value: number): string => {
   if (value >= 10000000) {
     // 1 Crore or more
@@ -73,6 +157,12 @@ const BudgetRangeFilter: React.FC<BudgetRangeFilterProps> = ({
   // Choose options based on type
   const budgetOptions = type === "rental" ? RENTAL_OPTIONS : RESALE_OPTIONS;
 
+  // Build segmented scale mappers
+  const { valueToPosition, positionToValue } = useMemo(() => {
+    return buildScale(budgetOptions, buildSegments(budgetOptions, type));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [type]);
+
   const budgetDropdownOptions: DropdownOption[] = useMemo(
     () =>
       budgetOptions.map((val) => ({
@@ -97,15 +187,15 @@ const BudgetRangeFilter: React.FC<BudgetRangeFilterProps> = ({
   );
 
   const [isDragging, setIsDragging] = useState(false);
-  const [sliderMin, setSliderMin] = useState<number>(min);
-  const [sliderMax, setSliderMax] = useState<number>(max);
+  const [sliderMin, setSliderMin] = useState<number>(valueToPosition(min));
+  const [sliderMax, setSliderMax] = useState<number>(valueToPosition(max));
 
   useEffect(() => {
     if (!isDragging) {
-      setSliderMin(min);
-      setSliderMax(max);
+      setSliderMin(valueToPosition(min));
+      setSliderMax(valueToPosition(max));
     }
-  }, [min, max, isDragging]);
+  }, [min, max, isDragging, valueToPosition]);
 
   // Update parent whenever values change (but not during dragging)
   useEffect(() => {
@@ -177,10 +267,10 @@ const BudgetRangeFilter: React.FC<BudgetRangeFilterProps> = ({
       {/* Slider */}
       <View className="mb-4">
         <RangeSlider
-          min={budgetOptions[0]}
-          max={budgetOptions[budgetOptions.length - 1]}
+          min={0}
+          max={SLIDER_SCALE}
           step={1}
-          low={sliderMin} // Changed from min
+          low={sliderMin}
           high={sliderMax}
           renderThumb={() => (
             <View
@@ -229,15 +319,15 @@ const BudgetRangeFilter: React.FC<BudgetRangeFilterProps> = ({
             if (fromUser) {
               // Dragging → update slider state only
               setIsDragging(true);
-              setSliderMin(low); // Changed from setMin
-              setSliderMax(high); // Changed from setMax
+              setSliderMin(low);
+              setSliderMax(high);
             }
           }}
           onTouchStart={() => setIsDragging(true)}
           onTouchEnd={() => {
             // Drag ended → snap and apply to main state
-            const snappedMin = snapToNearest(sliderMin); // Changed from min
-            const snappedMax = snapToNearest(sliderMax); // Changed from max
+            const snappedMin = snapToNearest(positionToValue(sliderMin));
+            const snappedMax = snapToNearest(positionToValue(sliderMax));
             setMin(snappedMin);
             setMax(snappedMax);
             setIsDragging(false); // triggers useEffect to call onChangeRange

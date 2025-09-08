@@ -6,7 +6,11 @@ import { db } from "../config/firebase"; // Ensure correct path to your firebase
  * @param {Object} data - The document data { label, prefix, count }.
  * @returns {Object} - An object containing the lastId, nextId, updated prefix, and updated count.
  */
-const generateNextId = (data) => {
+const generateNextId = (data: {
+  label: string;
+  prefix: string;
+  count: number;
+}) => {
   const { label, prefix, count } = data;
 
   const padLength = label === "P" ? 4 : 3;
@@ -30,7 +34,9 @@ const generateNextId = (data) => {
   }
 
   // Generate next ID
-  const nextId = `${label}${newPrefix}${newCount.toString().padStart(padLength, "0")}`;
+  const nextId = `${label}${newPrefix}${newCount
+    .toString()
+    .padStart(padLength, "0")}`;
 
   return { lastId, nextId, updatedPrefix: newPrefix, updatedCount: newCount };
 };
@@ -40,7 +46,10 @@ const generateNextId = (data) => {
  * @param {string} type - The document ID (e.g., "lastKamId" or "lastCpId").
  * @returns {Object} - An object containing the lastId and nextId.
  */
-const handleIdGeneration = async (type, retries = 3) => {
+const handleIdGeneration = async (
+  type: string,
+  retries = 3
+): Promise<{ lastId: string; nextId: string }> => {
   try {
     const docRef = doc(db, "acn-admin", type);
 
@@ -50,7 +59,11 @@ const handleIdGeneration = async (type, retries = 3) => {
         throw new Error(`Document with type ${type} does not exist.`);
       }
 
-      const data = docSnap.data();
+      const data = docSnap.data() as {
+        label: string;
+        prefix: string;
+        count: number;
+      };
       const { lastId, nextId, updatedPrefix, updatedCount } =
         generateNextId(data);
 
@@ -62,7 +75,7 @@ const handleIdGeneration = async (type, retries = 3) => {
 
       return { lastId, nextId };
     });
-  } catch (error) {
+  } catch (error: any) {
     if (retries > 0) {
       console.warn(`Transaction failed, retrying... (${retries} retries left)`);
       await new Promise((resolve) => setTimeout(resolve, 1000)); // Wait 1000ms (1 second) before retry

@@ -42,6 +42,18 @@ export const getSortOptions = (
     onPress: () => handleSelection("sort", "date_asc"),
     selected: selectedSort === "date_asc",
   },
+  {
+    id: "price_per_sqft_asc",
+    text: "Price per sqft: Low to High",
+    onPress: () => handleSelection("sort", "price_per_sqft_asc"),
+    selected: selectedSort === "price_per_sqft_asc",
+  },
+  {
+    id: "price_per_sqft_desc",
+    text: "Price per sqft: High to Low",
+    onPress: () => handleSelection("sort", "price_per_sqft_desc"),
+    selected: selectedSort === "price_per_sqft_desc",
+  },
 ];
 
 export const getStatusOptions = (

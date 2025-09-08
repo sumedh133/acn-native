@@ -3,6 +3,7 @@ import {
   SplashScreen,
   Stack,
   useNavigation,
+  usePathname,
   useRouter,
 } from "expo-router";
 import React, {
@@ -11,11 +12,13 @@ import React, {
   useEffect,
   useRef,
   useState,
+  useLayoutEffect,
 } from "react";
 import Toast from "react-native-toast-message";
 import { StatusBar } from "expo-status-bar";
 import { toastConfig } from "@/utils/toastUtils";
 import OnboardingFlow, { useOnboardingContext } from "./components/Onboarding";
+import { showSuccessToast } from "@/utils/toastUtils";
 import { updateAgentDocData } from "@/store/slices/agentSlice";
 import {
   Keyboard,
@@ -80,6 +83,10 @@ import { doc, onSnapshot } from "firebase/firestore";
 import { db } from "@/app/config/firebase";
 import { ScrollContext, ScrollProvider } from "./ScrollContext";
 import NotificationIcon from "@/assets/icons/notificationIcon.svg";
+import { useEnquiries } from "@/hooks/enquiryHooks/useEnquiries";
+import { setItem, getItem, clearStorage } from "@/storage";
+import NewEnquiriesModal from "./components/property/NewEnquiriesModal";
+import { useUI } from "./uiContext";
 
 // Custom header component to apply the desired styling
 const CustomHeader = ({
@@ -166,6 +173,13 @@ const CustomHeader = ({
 };
 
 export default function LayoutApp() {
+  const dispatch = useDispatch<ThunkDispatch<RootState, unknown, AnyAction>>();
+  const {
+    showNewEnquiryPopup,
+    setShowNewEnquiryPopup,
+    storedCount,
+    setStoredCount,
+  } = useUI();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isMaintenanceMode, setIsMaintenanceMode] = useState(false);
   const [isScrolling, setIsScrolling] = useState(false);
@@ -173,6 +187,8 @@ export default function LayoutApp() {
   const colorScheme = useColorScheme();
   const [topMargin, setTopMargin] = useState(10);
   const [unreadCount, setUnreadCount] = useState(0);
+
+  const { enquiryCount } = useEnquiries();
 
   const [fontsLoaded] = useFonts({
     Montserrat_400Regular,
@@ -191,6 +207,7 @@ export default function LayoutApp() {
     Lora_700Bold,
   });
   const navigation = useNavigation();
+  const pathname = usePathname();
 
   const isConnectedToInternet = useSelector(
     (state: RootState) => state.app.isConnectedToInternet
@@ -237,6 +254,39 @@ export default function LayoutApp() {
 
     return () => unsubscribe();
   }, []);
+
+  // Listen for new enquiries
+  useEffect(() => {
+    if (!enquiryCount) return;
+
+    const storedCount = getItem<number>("enquiryCount");
+
+    if (storedCount !== null && storedCount !== undefined) {
+      const storedCountValue = storedCount || 0;
+
+      if (enquiryCount > storedCountValue) {
+        console.log(
+          `🎉 New enquiries detected! ${
+            enquiryCount - storedCountValue
+          } new enquiries - opening modal`
+        );
+        setStoredCount(enquiryCount - storedCountValue);
+        setShowNewEnquiryPopup(true);
+        setItem("enquiryCount", enquiryCount);
+      }
+    } else if (enquiryCount > 0) {
+      // First time - just store the count, don't show popup
+      setItem("enquiryCount", enquiryCount);
+    }
+  }, [enquiryCount]);
+
+  // if not authentication re route to landing page
+  // useEffect(() => {
+  //   if (!isAuthenticated) {
+  //     if (pathname === "/") return;
+  //     router.push("/components/Auth/Signin");
+  //   }
+  // }, [isAuthenticated]);
 
   const calculateDaysLeft = (trialStartedAt: number): number => {
     try {
@@ -288,17 +338,16 @@ export default function LayoutApp() {
   const showtrial = agentData?.userType === "premium" ? false : true;
 
   const [trialData, setTrialData] = useState({
-    status: getTrialStatus(daysLeft, agentData?.monthlyCredits),
+    status: getTrialStatus(daysLeft, agentData?.monthlyCredits + agentData?.boosterCredits),
     daysLeft: daysLeft,
-    credits: agentData?.monthlyCredits,
+    credits: agentData?.monthlyCredits + agentData?.boosterCredits,
     showNotification: showtrial,
   });
 
   useEffect(() => {
-    setTrialData((prev) => ({ ...prev, credits: agentData?.monthlyCredits }));
-  }, [agentData?.monthlyCredits]);
+    setTrialData((prev) => ({ ...prev, credits: agentData?.monthlyCredits + agentData?.boosterCredits }));
+  }, [agentData?.monthlyCredits, agentData?.boosterCredits]);
 
-  const dispatch = useDispatch<ThunkDispatch<RootState, unknown, AnyAction>>();
   const router = useRouter();
 
   const myKamId = useSelector(selectMyKam);
@@ -311,7 +360,6 @@ export default function LayoutApp() {
 
   // Logout and redirect to BlacklistedPage if the user gets blackListed while already logged in
   useEffect(() => {
-    console.log(isBlacklisted, "isBlacklisted");
     if (isBlacklisted && isAuthenticated) {
       (async () => {
         try {
@@ -471,13 +519,13 @@ export default function LayoutApp() {
                     unreadCount={unreadCount}
                   />
 
-                  {/* {params.showNotificationBanner &&
+                  {params?.showNotificationBanner &&
                     agentData?.userType !== "premium" && (
                       <TrialStatusNotification
-                        showNotification={trialData?.showNotification}
+                        showNotification={trialData.showNotification}
                         onDismiss={handleDismiss}
                       />
-                    )} */}
+                    )}
                 </>
               );
             },
@@ -489,11 +537,11 @@ export default function LayoutApp() {
             options={{ headerShown: false }}
             initialParams={{ showFooter: false }}
           />
-          {/* <Stack.Screen
+          <Stack.Screen
             name="(pages)/ComingSoon"
             options={{ headerShown: false }}
             // initialParams={{ showFooter: false }}
-          /> */}
+          />
           <Stack.Screen
             name="(tabs)/properties"
             options={{ title: "Properties" }}
@@ -594,6 +642,14 @@ export default function LayoutApp() {
             initialParams={{ showFooter: false }}
           />
           <Stack.Screen
+            name="(pages)/EnquiriesReceived"
+            options={{
+              title: "Enquiries Received on Property",
+              headerBackVisible: true,
+            }}
+            initialParams={{ showFooter: false }}
+          />
+          <Stack.Screen
             name="(pages)/Drafts"
             options={{
               title: "Choose Inventory",
@@ -683,8 +739,16 @@ export default function LayoutApp() {
         <Toast config={toastConfig} />
         <StatusBar style="auto" />
         <KamManager />
-
         {isAuthenticated && <FooterNavigation />}
+
+        {isAuthenticated && (
+          <NewEnquiriesModal
+            visible={showNewEnquiryPopup} // from Redux
+            onClose={() => setShowNewEnquiryPopup(false)}
+            onCheckNow={() => {}}
+            enquiryCount={storedCount} // your enquiry count
+          />
+        )}
       </View>
     </ScrollProvider>
   );

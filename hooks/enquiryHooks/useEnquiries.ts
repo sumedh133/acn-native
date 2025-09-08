@@ -77,7 +77,6 @@ export const useEnquiries = (
         q,
         (snapshot) => {
           if (snapshot.empty) {
-            console.log("No enquiries found");
             setEnquiries([]);
           } else {
             const enquiriesData: Enquiry[] = snapshot.docs.map(

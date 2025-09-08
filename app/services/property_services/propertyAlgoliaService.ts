@@ -312,6 +312,8 @@ class AlgoliaInfiniteSearchService {
       price_desc: `${INDEX_NAME}_price_desc`,
       date_desc: `${INDEX_NAME}_date_desc`,
       date_asc: `${INDEX_NAME}_date_asc`,
+      price_per_sqft_asc: `${INDEX_NAME}_price_per_sqft_asc`,
+      price_per_sqft_desc: `${INDEX_NAME}_price_per_sqft_desc`,
       relevanceLow: `${INDEX_NAME}`,
     };
 

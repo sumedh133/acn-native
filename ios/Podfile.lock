@@ -1879,6 +1879,9 @@ PODS:
     - ReactCommon/turbomodule/bridging
     - ReactCommon/turbomodule/core
     - Yoga
+  - MMKV (2.2.3):
+    - MMKVCore (~> 2.2.3)
+  - MMKVCore (2.2.3)
   - nanopb (3.30910.0):
     - nanopb/decode (= 3.30910.0)
     - nanopb/encode (= 3.30910.0)
@@ -3264,6 +3267,9 @@ PODS:
     - ReactCommon/turbomodule/bridging
     - ReactCommon/turbomodule/core
     - Yoga
+  - react-native-mmkv (2.3.1):
+    - MMKV (>= 1.2.13)
+    - React-Core
   - react-native-netinfo (11.4.1):
     - React-Core
   - react-native-safe-area-context (5.4.0):
@@ -4046,6 +4052,7 @@ DEPENDENCIES:
   - react-native-date-picker (from `../node_modules/react-native-date-picker`)
   - "react-native-document-picker (from `../node_modules/@react-native-documents/picker`)"
   - react-native-image-picker (from `../node_modules/react-native-image-picker`)
+  - react-native-mmkv (from `../node_modules/react-native-mmkv`)
   - "react-native-netinfo (from `../node_modules/@react-native-community/netinfo`)"
   - react-native-safe-area-context (from `../node_modules/react-native-safe-area-context`)
   - "react-native-slider (from `../node_modules/@react-native-community/slider`)"
@@ -4133,6 +4140,8 @@ SPEC REPOS:
     - leveldb-library
     - libwebp
     - lottie-ios
+    - MMKV
+    - MMKVCore
     - nanopb
     - PromisesObjC
     - PromisesSwift
@@ -4302,6 +4311,8 @@ EXTERNAL SOURCES:
     :path: "../node_modules/@react-native-documents/picker"
   react-native-image-picker:
     :path: "../node_modules/react-native-image-picker"
+  react-native-mmkv:
+    :path: "../node_modules/react-native-mmkv"
   react-native-netinfo:
     :path: "../node_modules/@react-native-community/netinfo"
   react-native-safe-area-context:
@@ -4488,6 +4499,8 @@ SPEC CHECKSUMS:
   libwebp: 02b23773aedb6ff1fd38cec7a77b81414c6842a8
   lottie-ios: a881093fab623c467d3bce374367755c272bdd59
   lottie-react-native: 8d8786a9c6bfef6e4e59cc5d0bbfa0dfee2f906f
+  MMKV: 941e8774da0e6fdf12c6b3fcc833ca687ae5a42d
+  MMKVCore: 6d5cc1bacce539f4c974985dfe646fb65a5d27d2
   nanopb: fad817b59e0457d11a5dfbde799381cd727c1275
   PromisesObjC: f5707f49cb48b9636751c5b2e7d227e43fba9f47
   PromisesSwift: 9d77319bbe72ebf6d872900551f7eeba9bce2851
@@ -4527,6 +4540,7 @@ SPEC CHECKSUMS:
   react-native-date-picker: 2eca217a8fb09c517f5bb6b23978718c6cec59ec
   react-native-document-picker: 1ebdb3a4bbbc9e5366b73f1c1bcddb4bbf3552ed
   react-native-image-picker: 95948cfcac306acef77a31d6e7de4edc78450ead
+  react-native-mmkv: ab7be6dbb9cbad0906aad28aa2146f421241fab2
   react-native-netinfo: cec9c4e86083cb5b6aba0e0711f563e2fbbff187
   react-native-safe-area-context: 9d72abf6d8473da73033b597090a80b709c0b2f1
   react-native-slider: 9e9ab1e601041d94cbdb826b534c1f6331ded01e
