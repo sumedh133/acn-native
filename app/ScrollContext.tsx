@@ -192,7 +192,7 @@ const closeNewEnquiryPopup = () => setShowNewEnquiryPopup(false);
   // Interpolations
   const footerTranslateY = clampedFooterY.interpolate({
     inputRange: [0, safeFooterHeight],
-    outputRange: [0, safeFooterHeight],
+    outputRange: [0, safeFooterHeight + 30],
     extrapolate: "clamp",
   });
 
