@@ -30,7 +30,8 @@ import { LinearGradient } from "expo-linear-gradient";
 import { FormPreview } from "../Listing/listingPropertyDetails";
 import { getMicromarketFromCoordinates } from "@/app/helpers/getMicromarketFromCoordinates";
 import { FormField } from "@/types/FormConfig";
-import SaveAsDraft from "@/app/modals/SaveAsDraft";
+import SaveAsDraft from "@/app/modals/SaveAsDraft"
+import { trackEvent } from "@/app/services/logAnalyticsService";
 
 // Extend FormField to include our internal properties
 interface FormFieldWithMeta extends FormField {
@@ -360,6 +361,14 @@ export const PropertyFormScreen: React.FC<PropertyFormScreenProps> = ({
   };
 
   const handleBack = () => {
+    try {
+
+      trackEvent("inventory_addition_previous_page").catch((error) => {
+        console.error(`Error logging event: ${error}`);
+      });
+    } catch (error) {
+      console.error(`Unexpected error: ${error}`);
+    }
     setErrors({});
     setCurrentStepIndex((prev) => prev - 1);
   };
@@ -428,6 +437,9 @@ export const PropertyFormScreen: React.FC<PropertyFormScreenProps> = ({
 
   const handleSaveDraft = async () => {
     try {
+      trackEvent("save_draft_inventory", agentData, formData).catch((error) => {
+        console.error(`Error logging event: ${error}`);
+      });
       setIsSavingDraft(true);
       console.log("Raw draft data:", formData);
 
@@ -479,6 +491,26 @@ export const PropertyFormScreen: React.FC<PropertyFormScreenProps> = ({
       }
     }
   }, [formData]);
+
+  useEffect(() => {
+    const logAnalyticsEvent = async () => {
+      try {
+        const eventName =
+          formData?.listingType === "resale"
+            ? "add_inventory_resale"
+            : "add_inventory_rental";
+
+        await trackEvent(eventName).catch((error) => {
+          console.error(`Error logging event: ${error}`);
+        });
+      } catch (error) {
+        console.error(`Unexpected error: ${error}`);
+      }
+    };
+
+    logAnalyticsEvent();
+  }, [formData?.listingType]);
+
 
   // -------------------- Derived Values --------------------
   const visibleSteps = getVisibleSteps();
@@ -559,9 +591,8 @@ export const PropertyFormScreen: React.FC<PropertyFormScreenProps> = ({
             onPress={handleClear}
           >
             <Text
-              className={`font-montserrat text-base font-bold underline ${
-                isFormEmpty ? "text-[#9E9E9E]" : "text-[#D92D20]"
-              }`}
+              className={`font-montserrat text-base font-bold underline ${isFormEmpty ? "text-[#9E9E9E]" : "text-[#D92D20]"
+                }`}
             >
               Clear
             </Text>
@@ -706,9 +737,8 @@ export const PropertyFormScreen: React.FC<PropertyFormScreenProps> = ({
           ) : null}
 
           <TouchableOpacity
-            className={`py-2 px-5 rounded-[4px] bg-[#153E3B] border border-[#153E3B] ${
-              currentStepIndex ? "w-[50%]" : "w-full"
-            }`}
+            className={`py-2 px-5 rounded-[4px] bg-[#153E3B] border border-[#153E3B] ${currentStepIndex ? "w-[50%]" : "w-full"
+              }`}
             onPress={handleNext}
           >
             <Text className="text-center text-base font-semibold text-white leading-normal">

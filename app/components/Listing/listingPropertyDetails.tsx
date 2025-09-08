@@ -20,6 +20,8 @@ import PropertiesStatusCard from "../MyBusinessPage/PropertyStatusCard";
 import { TouchableOpacity } from "react-native";
 import SaveAsDraft from "@/app/modals/SaveAsDraft";
 
+import { trackEvent } from "@/app/services/logAnalyticsService";
+
 export type UIProperty = Omit<Property, "handOverDate"> & {
   handOverDate?: string;
   media?: MediaUploadData;
@@ -88,19 +90,19 @@ export const FormPreview: React.FC<FormPreviewProps> = ({
           const activeField = fields.find((f) => isFieldVisible(f));
           return activeField
             ? {
-                id: activeField.id,
-                label: activeField.label,
-                suffix: activeField.suffix || "",
-                prefix: activeField.prefix || "",
-              }
+              id: activeField.id,
+              label: activeField.label,
+              suffix: activeField.suffix || "",
+              prefix: activeField.prefix || "",
+            }
             : null;
         })
         .filter(Boolean) as Array<{
-        id: string;
-        label: string;
-        suffix: string;
-        prefix: string;
-      }>;
+          id: string;
+          label: string;
+          suffix: string;
+          prefix: string;
+        }>;
 
       return { ...step, stepValues };
     })
@@ -127,6 +129,20 @@ export const FormPreview: React.FC<FormPreviewProps> = ({
     return () => backHandler.remove();
   }, [showDraftModal]);
 
+  useEffect(() => {
+    if (previewType === "listing") {
+      try {
+
+        trackEvent("property_details_view", undefined, data).catch((error) => {
+          console.error(`Error logging event: ${error}`);
+        });
+      } catch (error) {
+        console.error(`Unexpected error: ${error}`);
+      }
+    }
+  }, []);
+
+
   return (
     <ScrollView className="flex-1 bg-gray-50">
       <View className="absolute bg-transparent z-50 flex flex-row justify-between items-center px-4 py-3 w-full">
@@ -147,9 +163,8 @@ export const FormPreview: React.FC<FormPreviewProps> = ({
         </View>
         <View className="flex flex-row gap-[6px]">
           <View
-            className={`${
-              data?.listingType == "rental" ? "bg-[#FCE9BA]" : "bg-[#EADDFF]"
-            } py-2 px-3 rounded-[24px]`}
+            className={`${data?.listingType == "rental" ? "bg-[#FCE9BA]" : "bg-[#EADDFF]"
+              } py-2 px-3 rounded-[24px]`}
           >
             <Text className="leading-normal text-xs font-semibold text-[#153E3B]">
               {toCapitalizedWords(data?.listingType)}

@@ -1,6 +1,7 @@
 import React from "react";
 import { View, Text, TouchableOpacity, Linking } from "react-native";
 import { Property } from "@/app/types";
+import { trackEvent } from "@/app/services/logAnalyticsService";
 
 type UIProperty = Omit<Property, "handOverDate"> & {
   handOverDate?: string;
@@ -15,10 +16,23 @@ export const LocationSection: React.FC<LocationSectionProps> = ({ data }) => {
     path.split(".").reduce((acc, key) => acc?.[key], obj);
 
   // Sample data or from props
-  const area = getFieldValue(data, "area") || "East Bangalore";
+  const area = getFieldValue(data, "area") || null;
   const address =
-    getFieldValue(data, "address") ||
-    "CIL Layout A Block, Judicial Colony, Raj Mahal Vilas 2nd Stage, Sanjayanagara, Bengaluru, Karnataka 560094";
+    getFieldValue(data, "address") ||null
+
+  const handleMapClick = () => {
+    try {
+
+      trackEvent("property_google_maps", undefined, data).catch((error) => {
+        console.error(`Error logging event: ${error}`);
+      });
+    } catch (error) {
+      console.error(`Unexpected error: ${error}`);
+    }
+    if (data?.mapLocation) {
+      Linking.openURL(data.mapLocation);
+    }
+  }
 
   return (
     <View className="px-3 py-3 border border-[#E1E1E1] rounded-[8px]">
@@ -49,11 +63,7 @@ export const LocationSection: React.FC<LocationSectionProps> = ({ data }) => {
       {/* Button */}
       <TouchableOpacity
         className="flex-row items-center justify-center py-2 px-8 border-2 border-black rounded-[4px]"
-        onPress={() => {
-          if (data?.mapLocation) {
-            Linking.openURL(data.mapLocation);
-          }
-        }}
+        onPress={handleMapClick}
       >
         <Text className="text-[#10302D] text-center text-[12px] leading-[150%] font-bold font-lato">
           Open in Google Maps

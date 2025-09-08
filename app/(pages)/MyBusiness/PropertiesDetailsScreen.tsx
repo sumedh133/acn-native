@@ -12,6 +12,7 @@ import EditIcon2 from "@/assets/icons/MyBusinessPage/edit2.svg";
 import ShareModal from "@/app/modals/ShareModal";
 import { subscribeToPropertyById } from "@/app/services/property_services/propertyService";
 import { setPropertyData } from "@/store/slices/propertySlice";
+import { trackEvent } from "@/app/services/logAnalyticsService";
 
 const PropertysDetailsScreen = () => {
   const property = useSelector(selectPropertyStateData);
@@ -41,10 +42,24 @@ const PropertysDetailsScreen = () => {
 
   //----------------------Utility Function----------------------//
   const handleShareButtonPress = () => {
+    try {
+      trackEvent("mb_share_property_details", agentData, property).catch((error) => {
+        console.error(`Error logging event: ${error}`);
+      });
+    } catch (error) {
+      console.error(`Unexpected error: ${error}`);
+    }
     setShowShareModal(true);
   };
 
   const handleEditButtonPress = () => {
+    try {
+      trackEvent("edit_property").catch((error) => {
+        console.error(`Error logging event: ${error}`);
+      });
+    } catch (error) {
+      console.error(`Unexpected error: ${error}`);
+    }
     const formType =
       property.stage !== "live" ? "underReviewEdit" : "verifiedEdit";
     router.push({
@@ -55,6 +70,21 @@ const PropertysDetailsScreen = () => {
       },
     });
   };
+
+  //-----------------------Effects-----------------------------//
+  useEffect(() => {
+    const logAnalyticsEvent = () => {
+      try {
+        trackEvent("mb_property_details_view", agentData, property).catch((error) => {
+          console.error(`Error logging event: ${error}`);
+        });
+      } catch (error) {
+        console.error(`Unexpected error: ${error}`);
+      }
+    };
+
+    logAnalyticsEvent();
+  }, []);
 
   return (
     <View className="flex-1 bg-white">

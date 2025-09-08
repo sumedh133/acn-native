@@ -32,6 +32,7 @@ import MultiStatusUpdateModal, {
 } from "../components/MyBusinessPage/MultiStatusUpdateModal";
 import { getUnixDateTime } from "../helpers/getUnixDateTime";
 import { showSuccessToast } from "@/utils/toastUtils";
+import { trackEvent } from "../services/logAnalyticsService";
 
 // Icons Import
 
@@ -256,7 +257,7 @@ const MyBusinessPage = () => {
       (navigation as any)?.setParams?.({
         showFooter: selectedProperties.size === 0,
       });
-    } catch {}
+    } catch { }
   }, [selectedProperties.size, navigation]);
 
   const handleMarkAsAvailable = () => {
@@ -292,6 +293,23 @@ const MyBusinessPage = () => {
   useEffect(() => {
     resetFooterPosition();
   }, []);
+
+  useEffect(() => {
+    const logAnalyticsEvent = () => {
+      try {
+    
+  
+        trackEvent("my_business_page_view").catch((error) => {
+          console.error(`Error logging event: ${error}`);
+        });
+      } catch (error) {
+        console.error(`Unexpected error: ${error}`);
+      }
+    };
+
+    logAnalyticsEvent();
+  }, []);
+
 
   useEffect(() => {
     try {

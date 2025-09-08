@@ -64,6 +64,7 @@ import StatusUpdateModal from "./statusUpdateModal";
 import { updateProperty } from "@/app/services/property_services/propertyService";
 import { ScrollContext } from "@/app/ScrollContext";
 
+import { trackEvent } from "@/app/services/logAnalyticsService";
 interface PropertyCardProps {
   property: Property;
   selectedProperties?: Set<string>;
@@ -226,15 +227,13 @@ const PropertyCard: React.FC<PropertyCardProps> = ({
   const handleEnquireNowBtn = (e: any) => {
     e.stopPropagation();
     try {
-      logEvent(analytics, "property_enquire_click", {
-        event_category: "property",
-        event_label: "interaction",
-        property_id: property.propertyId,
-        credits_available: monthlyCredits,
-        user_type: userType,
+
+
+      trackEvent("click_enquire_now", { page_type: property?.listingType }).catch((error) => {
+        console.error(`Error logging event: ${error}`);
       });
     } catch (error) {
-      console.error("Error logging enquire click:", error);
+      console.error(`Unexpected error: ${error}`);
     }
 
     setSelectedCPID(property.cpId || "");
@@ -247,6 +246,16 @@ const PropertyCard: React.FC<PropertyCardProps> = ({
   };
 
   const handleCancel = () => {
+    try {
+
+
+      trackEvent("cancel_enquiry", { page_type: property?.listingType }).catch((error) => {
+        console.error(`Error logging event: ${error}`);
+      });
+    } catch (error) {
+      console.error(`Unexpected error: ${error}`);
+    }
+
     setIsConfirmModelOpen(false);
   };
   const handleGoPremium = () => {
@@ -300,6 +309,15 @@ const PropertyCard: React.FC<PropertyCardProps> = ({
       showSuccessToast("Enquiry submitted successfully!", {
         isInModal: true,
       });
+      try {
+
+
+        trackEvent("confirm_enquiry", undefined, property, { page_type: property?.listingType, buyerCpId: agentData?.cpId, sellerCpId: sellerData?.cpId }).catch((error) => {
+          console.error(`Error logging event: ${error}`);
+        });
+      } catch (error) {
+        console.error(`Unexpected error: ${error}`);
+      }
     } catch (error) {
       showErrorToast("Failed to submit enquiry. Please try again.", {
         isInModal: true,
@@ -488,6 +506,9 @@ const PropertyCard: React.FC<PropertyCardProps> = ({
 
   const handleUpdateStatus = async () => {
     try {
+      trackEvent("inventory_status_update").catch((error) => {
+        console.error(`Error logging event: ${error}`);
+      });
       await updateProperty(property.propertyId, {
         status: "available",
         dateOfLastChecked: getUnixDateTime(),
@@ -505,7 +526,7 @@ const PropertyCard: React.FC<PropertyCardProps> = ({
         {pathname === "/MyBusinessPage" && isSelectionMode && (
           <Pressable onPress={handleSelectionToggle}>
             {selectedProperties &&
-            selectedProperties.has(property.propertyId) ? (
+              selectedProperties.has(property.propertyId) ? (
               <View className="min-w-[25px] min-h-[25] ">
                 <Selected />
               </View>
@@ -517,21 +538,23 @@ const PropertyCard: React.FC<PropertyCardProps> = ({
         <View className="flex-1">
           {(pathname === "/MyBusinessPage" ||
             pathname === "/UnderReviewProperties") && (
-            <View
-              className={`${
-                property.listingType === "rental"
+              <View
+                className={`${property.listingType === "rental"
                   ? "bg-[#FCE9BA]"
                   : "bg-[#EADDFF]"
-              } max-w-[56px] max-h-[19px] items-center ml-4 px-[11px] pt-1 rounded-t-lg`}
-            >
-              <Text className="text-[#10302D] text-xs font-medium leading-[150%]">
-                {safeText(toCapitalizedWords(property.listingType))}
-              </Text>
-            </View>
-          )}
+                  } max-w-[56px] max-h-[19px] items-center ml-4 px-[11px] pt-1 rounded-t-lg`}
+              >
+                <Text className="text-[#10302D] text-xs font-medium leading-[150%]">
+                  {safeText(toCapitalizedWords(property.listingType))}
+                </Text>
+              </View>
+            )}
           <Pressable
             delayLongPress={500}
             onLongPress={() => {
+              trackEvent("multiple_properties_selected").catch((error) => {
+                console.error(`Error logging event: ${error}`);
+              });
               if (pathname === "/MyBusinessPage") {
                 setLongPressed(true);
                 handleLongPress();
@@ -591,6 +614,9 @@ const PropertyCard: React.FC<PropertyCardProps> = ({
                   <View className="flex flex-row gap-[10px]">
                     <Pressable
                       onPress={() => {
+                        trackEvent("inventory_status_update").catch((error) => {
+                          console.error(`Error logging event: ${error}`);
+                        });
                         setStatusUpdateModalOpen(true);
                       }}
                     >
@@ -711,13 +737,13 @@ const PropertyCard: React.FC<PropertyCardProps> = ({
                   {[
                     toCapitalizedWords(property.assetType),
                     property.noOfBedrooms &&
-                      property.noOfBedrooms !== null &&
-                      `${property.noOfBedrooms} BHK`,
+                    property.noOfBedrooms !== null &&
+                    `${property.noOfBedrooms} BHK`,
                     property.assetType === "plot" &&
-                      `${property.plotArea} Sqft`,
+                    `${property.plotArea} Sqft`,
                     property.facing &&
-                      property.facing !== null &&
-                      toCapitalizedWords(property.facing),
+                    property.facing !== null &&
+                    toCapitalizedWords(property.facing),
                   ]
                     .filter(
                       (tag) => tag !== null && tag !== undefined && tag !== ""
@@ -881,17 +907,16 @@ const PropertyCard: React.FC<PropertyCardProps> = ({
             {/* ✅ FIXED: Business page footer with safe enquiries rendering */}
             {pathname === "/MyBusinessPage" && (
               <View
-                className={`flex flex-row justify-between rounded-b-lg px-4 py-2 ${
-                  property.status?.toLowerCase() === "available"
-                    ? "bg-[#EAFFEF]"
-                    : property.status?.toLowerCase() === "sold"
+                className={`flex flex-row justify-between rounded-b-lg px-4 py-2 ${property.status?.toLowerCase() === "available"
+                  ? "bg-[#EAFFEF]"
+                  : property.status?.toLowerCase() === "sold"
                     ? "bg-[#F2F2F2]"
                     : property.status?.toLowerCase() === "hold"
-                    ? "bg-[#FFFCF0]"
-                    : property.status?.toLowerCase() === "de-listed"
-                    ? "bg-[#FFF0F0]"
-                    : ""
-                }`}
+                      ? "bg-[#FFFCF0]"
+                      : property.status?.toLowerCase() === "de-listed"
+                        ? "bg-[#FFF0F0]"
+                        : ""
+                  }`}
               >
                 <View className="flex flex-col gap-[2px]">
                   <Text className="text-[#5A5555] text-xs font-medium leading-[150%] tracking-[0.25px]">
@@ -908,17 +933,16 @@ const PropertyCard: React.FC<PropertyCardProps> = ({
                   </Text>
                   <View className="flex flex-row items-center gap-1">
                     <Text
-                      className={`text-sm font-bold leading-[150%] ${
-                        property?.status?.toLowerCase() === "available"
-                          ? "text-[#34C759]"
-                          : property?.status?.toLowerCase() === "sold"
+                      className={`text-sm font-bold leading-[150%] ${property?.status?.toLowerCase() === "available"
+                        ? "text-[#34C759]"
+                        : property?.status?.toLowerCase() === "sold"
                           ? "text-[#5A5555]"
                           : property?.status?.toLowerCase() === "hold"
-                          ? "text-[#FFCC00]"
-                          : property?.status?.toLowerCase() === "de-listed"
-                          ? "text-[#DE1135]"
-                          : "text-[#2B2928]"
-                      }`}
+                            ? "text-[#FFCC00]"
+                            : property?.status?.toLowerCase() === "de-listed"
+                              ? "text-[#DE1135]"
+                              : "text-[#2B2928]"
+                        }`}
                     >
                       {safeText(toCapitalizedWords(property?.status))}
                     </Text>
@@ -982,6 +1006,7 @@ const PropertyCard: React.FC<PropertyCardProps> = ({
             setStatusUpdateModalOpen(false);
           }}
           selectedProperty={new Set([property.propertyId])}
+          agentData={agentData}
         />
       )}
 

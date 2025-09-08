@@ -2,6 +2,7 @@ import algoliasearch from "algoliasearch";
 import type { SearchResponse } from "@algolia/client-search";
 import { getPropertyById, subscribeToPropertiesByIds } from "./propertyService";
 import type { Unsubscribe } from "firebase/firestore";
+import { trackEvent } from "../logAnalyticsService";
 
 const searchClient = algoliasearch(
   "CGRV5YKD8Y",
@@ -57,6 +58,7 @@ export interface AlgoliaSearchResponse {
   hitsPerPage: number;
   processingTimeMS: number;
   facets?: Record<string, Record<string, number>>;
+  tab?:string
 }
 
 export interface InfiniteScrollState {
@@ -247,7 +249,7 @@ class AlgoliaInfiniteSearchService {
     return parts.join(" AND ");
   };
 
-  private buildFilterString = (filters: SearchFilters): string => {
+  private buildFilterString = (filters: SearchFilters,tab?:string): string => {
     const filterConfigs = [
       { values: filters.listingType, fieldName: "listingType" },
       { values: filters.propertyType, fieldName: "propertyType" },
@@ -280,25 +282,87 @@ class AlgoliaInfiniteSearchService {
     ];
 
     const filterParts = filterConfigs
-      .map((config) => this.buildFilterGroup(config.values, config.fieldName))
+      .map((config) => {
+        if (config.values && config.values.length > 0) {
+          // ✅ Track each applied filter value
+          config.values.forEach((value) => {
+            this.trackFilterEvent(
+              config.fieldName,
+              value,
+              filters.listingType?.[0] || ""
+            );
+          });
+          return this.buildFilterGroup(config.values, config.fieldName);
+        }
+        return null;
+      })
       .filter((filter) => filter !== null) as string[];
 
-    // Add number range filters
+    // ✅ Add number range filters with tracking
     const rangeFilters = [
-      this.buildRangeFilter(filters.sbua, "sbua"),
-      this.buildRangeFilter(filters.carpetArea, "carpetArea"),
-      this.buildRangeFilter(filters.totalAskPrice, "pricing.totalAskPrice"),
-      this.buildRangeFilter(filters.rent, "rentalInfo.rent"),
-    ].filter((f) => f !== null) as string[];
+      { values: filters.sbua, fieldName: "sbua" },
+      { values: filters.carpetArea, fieldName: "carpetArea" },
+      { values: filters.totalAskPrice, fieldName: "pricing.totalAskPrice" },
+      { values: filters.rent, fieldName: "rentalInfo.rent" },
+    ]
+      .map((config) => {
+        if (config.values && config.values.length === 2) {
+          const [min, max] = config.values;
+          this.trackRangeFilterEvent(
+            config.fieldName,
+            min,
+            max,
+            filters.listingType?.[0] || ""
+          );
+          return this.buildRangeFilter(config.values, config.fieldName);
+        }
+        return null;
+      })
+      .filter((f) => f !== null) as string[];
 
+    // ✅ Handle availableFrom filter and track it
     const availableFromFilter = this.buildAvailableFromFilter(
       filters.availableFrom,
       "availableFrom"
     );
+    if (filters.availableFrom && filters.availableFrom.length > 0) {
+      this.trackFilterEvent(
+        "availableFrom",
+        filters.availableFrom[0],
+        filters.listingType?.[0] || ""
+      );
+    }
 
     return [...filterParts, ...rangeFilters, availableFromFilter]
       .filter(Boolean)
       .join(" AND ");
+  };
+
+  // ✅ Track single/multiple filter values
+  private trackFilterEvent = (
+    attribute: string,
+    value: string,
+    listingType: string
+  ) => {
+    trackEvent(`property_filter_${attribute}`, {
+      page_type: listingType,
+      attribute: value,
+    });
+  };
+
+  // ✅ Track range filters
+  private trackRangeFilterEvent = (
+    attribute: string,
+    from: string,
+    to: string,
+    listingType: string
+  ) => {
+    trackEvent(`property_filter_${attribute}`, {
+      page_type: listingType,
+      attribute_from: from,
+      attribute_to: to,
+      
+    });
   };
 
   // Get client and index (same as before)

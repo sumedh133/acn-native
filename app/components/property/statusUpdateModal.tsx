@@ -8,17 +8,20 @@ import {
   TextInput,
 } from "react-native";
 import Dropdown, { DropdownOption } from "../../components/DropDown"; // Import the new dropdown component
+import { trackEvent } from "@/app/services/logAnalyticsService";
 
 interface StatusUpdateModalProps {
   visible: boolean;
   onClose: () => void;
   selectedProperty: Set<string>;
+  agentData: any
 }
 
 const StatusUpdateModal = ({
   visible,
   onClose,
   selectedProperty,
+  agentData
 }: StatusUpdateModalProps) => {
   const [newStatus, setNewStatus] = useState<"hold" | "sold">();
   const { width } = useWindowDimensions();
@@ -41,6 +44,29 @@ const StatusUpdateModal = ({
   };
 
   const handleSubmit = () => {
+
+    try {
+
+      if (status == 'hold') {
+        trackEvent("inventory_status_update_hold").catch((error) => {
+          console.error(`Error logging event: ${error}`);
+        });
+      }
+      else {
+        trackEvent(
+          "inventory_status_update_sold",
+          agentData,
+          { propertyId: Array.from(selectedProperty)[0] },
+          { sold_price: sellingPrice }
+        ).catch((error) => {
+          console.error(`Error logging event: ${error}`);
+        });
+      }
+
+
+    } catch (error) {
+      console.error(`Unexpected error: ${error}`);
+    }
     // Handle form submission here
     console.log({
       status: newStatus,
@@ -76,17 +102,15 @@ const StatusUpdateModal = ({
               {/* Status Selection */}
               <View className="w-full flex-row flex-wrap gap-3 justify-center">
                 <Pressable
-                  className={`flex-1 w-full items-center border rounded-xl py-3 px-4 ${
-                    newStatus === "hold" ? "bg-[#EAFFFD]" : "bg-white"
-                  }`}
+                  className={`flex-1 w-full items-center border rounded-xl py-3 px-4 ${newStatus === "hold" ? "bg-[#EAFFFD]" : "bg-white"
+                    }`}
                   onPress={() => setNewStatus("hold")}
                 >
                   <Text className="text-[#10302D]">Hold</Text>
                 </Pressable>
                 <Pressable
-                  className={`flex-1 w-full items-center border rounded-xl py-3 px-4 ${
-                    newStatus === "sold" ? "bg-[#EAFFFD]" : "bg-white"
-                  }`}
+                  className={`flex-1 w-full items-center border rounded-xl py-3 px-4 ${newStatus === "sold" ? "bg-[#EAFFFD]" : "bg-white"
+                    }`}
                   onPress={() => setNewStatus("sold")}
                 >
                   <Text className="text-[#10302D]">Sold</Text>

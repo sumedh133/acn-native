@@ -29,34 +29,22 @@ import { analytics } from "@/app/config/firebase";
 import { logEvent } from "@react-native-firebase/analytics";
 import { useSelector } from "react-redux";
 import { RootState } from "@/store/store";
+import { trackEvent } from "@/app/services/logAnalyticsService";
 
 type Props = {
   isOpen: boolean;
   onClose: () => void;
   enqId: string;
+  enquiry?:any
 };
 
-const ReviewModal: React.FC<Props> = ({ isOpen, onClose, enqId }) => {
+const ReviewModal: React.FC<Props> = ({ isOpen, onClose, enqId,enquiry }) => {
   const [rating, setRating] = useState(0);
   const [review, setReview] = useState("");
   const [loader, setLoader] = useState(false);
   const [errors, setErrors] = useState({ rating: false, review: false });
   const userType = useSelector((state: RootState) => state?.agent?.docData?.userType) || "free";
 
-  useEffect(() => {
-    if (isOpen) {
-      try {
-        logEvent(analytics, 'review_modal_shown', {
-          event_category: 'enquiries',
-          event_label: 'impression',
-          enquiry_id: enqId,
-          user_type: userType
-        });
-      } catch (error) {
-        console.error('Error logging review modal shown:', error);
-      }
-    }
-  }, [isOpen]);
 
   const handleRatingChange = (newRating: number) => {
     try {
@@ -144,15 +132,9 @@ const ReviewModal: React.FC<Props> = ({ isOpen, onClose, enqId }) => {
         reviews: arrayUnion(newReview),
       });
 
-      logEvent(analytics, 'review_submission_success', {
-        event_category: 'enquiries',
-        event_label: 'success',
-        enquiry_id: enqId,
-        rating: rating,
-        review_length: review.length,
-        user_type: userType
+      trackEvent("submit_review_submit",undefined,undefined,{buyerCpId:enquiry.buyerCpId,sellerCpId:enquiry.sellerCpId}).catch((error) => {
+        console.error(`Error logging event: ${error}`);
       });
-
       showSuccessToast("Review added successfully!");
     } catch (error) {
       console.error("Error adding review:", error);
@@ -172,6 +154,18 @@ const ReviewModal: React.FC<Props> = ({ isOpen, onClose, enqId }) => {
       setErrors({ rating: false, review: false });
     }
   };
+
+  const handleCancel = () => {
+    try {
+
+      trackEvent("agent_cancel_review").catch((error) => {
+        console.error(`Error logging event: ${error}`);
+      });
+    } catch (error) {
+      console.error(`Unexpected error: ${error}`);
+    }
+    onClose()
+  }
 
   return (
     <Modal
@@ -203,7 +197,7 @@ const ReviewModal: React.FC<Props> = ({ isOpen, onClose, enqId }) => {
           className="bg-white rounded-2xl p-8 w-full max-w-md space-y-6"
           onPress={(e) => e.stopPropagation()}
         >
-          <Text style={styles.heading}>Overall Rating</Text>
+          <Text style={styles.heading}>Rate Your Enquiry</Text>
           <View className="flex-row justify-center">
             {[1, 2, 3, 4, 5].map((star) => (
               <TouchableOpacity
@@ -248,7 +242,7 @@ const ReviewModal: React.FC<Props> = ({ isOpen, onClose, enqId }) => {
               <ActivityIndicator color="#153E3B" />
             ) : (
               <Text className="text-white text-center font-medium text-xl">
-                Submit Review
+                Submit
               </Text>
             )}
           </TouchableOpacity>

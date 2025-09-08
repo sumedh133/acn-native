@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef, useContext } from "react";
+import { usePathname } from "expo-router";
 import {
   View,
   Text,
@@ -18,6 +19,7 @@ import { SearchFilters } from "../../services/property_services/propertyAlgoliaS
 import CustomCurrentRefinements from "./propertyMoreFilters/newCustomCurrentRefinements";
 import ToggleTabs from "../ToggleTabs";
 import { ScrollContext } from "@/app/ScrollContext";
+import { trackEvent } from "@/app/services/logAnalyticsService";
 
 // Common props for both cases
 interface BasePropertyFiltersProps {
@@ -67,6 +69,7 @@ export default function PropertyFilters({
   isMyBusinessPage = false,
 }: PropertyFiltersProps) {
   const [searchText, setSearchText] = useState(query);
+  const path = usePathname();
   const slideAnim = useRef(
     new Animated.Value(activeTab === "rental" ? 1 : 0)
   ).current;
@@ -184,15 +187,19 @@ export default function PropertyFilters({
     const handler = setTimeout(() => {
       if (searchText.trim() !== query) {
         try {
-          logEvent(analytics, "property_search", {
-            event_category: "search",
-            event_label: "property",
-            search_query: searchText.trim(),
-            previous_query: query,
-            user_type: userType,
-          });
+
+          if (path === "/properties") {
+            trackEvent("property_search", undefined, undefined, { page_type: activeTab, search_query: searchText.trim() }).catch((error) => {
+              console.error(`Error logging event: ${error}`);
+            });
+          }
+          else {
+            trackEvent("mb_search_applied").catch((error) => {
+              console.error(`Error logging event: ${error}`);
+            });
+          }
         } catch (error) {
-          console.error("Error logging property search:", error);
+          console.error(`Unexpected error: ${error}`);
         }
         onQueryChange(searchText.trim());
       }
@@ -244,6 +251,8 @@ export default function PropertyFilters({
       const newFilters = { ...filters, listingType: [] };
       onFiltersChange(newFilters);
     }
+
+
   }, [selectedCategory]);
 
   useEffect(() => {
@@ -261,14 +270,12 @@ export default function PropertyFilters({
       selectedSort !== sortBy
     ) {
       try {
-        logEvent(analytics, "property_sort_change", {
-          event_category: "sort",
-          event_label: "property",
-          sort_value: selectedSort,
-          user_type: userType,
+        const eventName = path === "/properties" ? "" : "mb_sort_applied"
+        trackEvent(eventName).catch((error) => {
+          console.error(`Error logging event: ${error}`);
         });
       } catch (error) {
-        console.error("Error logging sort change:", error);
+        console.error(`Unexpected error: ${error}`);
       }
       onSortChange(selectedSort);
       prevSelectedSortRef.current = selectedSort;
@@ -285,23 +292,30 @@ export default function PropertyFilters({
       duration: 200,
       useNativeDriver: false,
     }).start();
+    try {
+      const eventName = activeTab == "rental" ? "property_page_rental_view" : "property_page_resale_view"
+      trackEvent(eventName, undefined, undefined, { page_type: activeTab }).catch((error) => {
+        console.error(`Error logging event: ${error}`);
+      });
+    } catch (error) {
+      console.error(`Unexpected error: ${error}`);
+    }
   }, [activeTab]);
 
   const handleMoreFilters = () => {
     try {
-      logEvent(analytics, "open_property_filters", {
-        event_category: "filters",
-        event_label: "open",
-        current_query: query,
-        has_landmark: !!selectedLandmark,
-        active_filters: Object.keys(filters).length,
-        user_type: userType,
+      
+      trackEvent("property_filter_open", undefined, undefined, { page_type: activeTab }).catch((error) => {
+        console.error(`Error logging event: ${error}`);
       });
     } catch (error) {
-      console.error("Error logging filter open:", error);
+      console.error(`Unexpected error: ${error}`);
     }
     handleToggleMoreFilters();
   };
+
+  useEffect(() => {
+  }, [filters])
 
   // Render the business page version
   if (isMyBusinessPage) {

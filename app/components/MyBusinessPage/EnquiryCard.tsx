@@ -8,6 +8,7 @@ import CallIcon from "@/assets/icons/MyBusinessPage/call.svg";
 import ProfileIcon from "@/assets/icons/MyBusinessPage/profile.svg";
 import { Linking } from 'react-native';
 import { Enquiry } from '@/app/types';
+import { trackEvent } from '@/app/services/logAnalyticsService';
 
 interface EnquiryCardProps {
     enquiry: Enquiry;
@@ -32,19 +33,54 @@ const EnquiryCard: React.FC<EnquiryCardProps> = ({ enquiry }) => {
 
     const handleContactShare = async (enquiryId: string) => {
         try {
+            trackEvent("get_contact_enquiry", { buyerCpId: enquiry.buyerCpId, sellerCpId: enquiry.sellerCpId }).catch((error) => {
+                console.error(`Error logging event: ${error}`);
+            });
+        } catch (error) {
+            console.error(`Unexpected error: ${error}`);
+        }
+        try {
             await updateEnquiry(enquiryId, { isContactShared: true });
         } catch (error) {
             console.error('Error sharing contact:', error);
         }
+
     };
+
+    const handleReviewModalOpen = () => {
+        try {
+            trackEvent("agent_review_modal_open").catch((error) => {
+                console.error(`Error logging event: ${error}`);
+            });
+        } catch (error) {
+            console.error(`Unexpected error: ${error}`);
+        }
+        setShowReviewModal(true);
+    };
+
     const handleCall = (): void => {
+        try {
+            trackEvent("contact_oncall_buyer").catch((error) => {
+                console.error(`Error logging event: ${error}`);
+            });
+        } catch (error) {
+            console.error(`Unexpected error: ${error}`);
+        }
         if (!enquiry?.buyerNumber) return;
 
 
         Linking.openURL(`tel:${enquiry.buyerNumber}`);
     };
 
+
     const handleWhatsAppEnquiry = (): void => {
+        try {
+            trackEvent("contact_whatsapp_buyer").catch((error) => {
+                console.error(`Error logging event: ${error}`);
+            });
+        } catch (error) {
+            console.error(`Unexpected error: ${error}`);
+        }
         if (!enquiry?.buyerNumber) return;
 
 
@@ -109,7 +145,7 @@ ${enquiry?.sellerNumber}`;
                                 </TouchableOpacity>
                             ) : (
                                 <TouchableOpacity
-                                    onPress={() => setShowReviewModal(true)}
+                                    onPress={handleReviewModalOpen}
                                     className="border border-[#10302D] px-4 py-[6px] rounded-[6px]"
                                 >
                                     <Text className="text-[#10302D] text-center font-semibold leading-[21px]">Submit Review</Text>
@@ -150,6 +186,7 @@ ${enquiry?.sellerNumber}`;
                 isOpen={showReviewModal}
                 onClose={() => setShowReviewModal(false)}
                 enqId={enquiry.enquiryId}
+                enquiry={enquiry}
             />
         </>
     );
