@@ -556,9 +556,9 @@ const PropertyCard: React.FC<PropertyCardProps> = ({
                 (property.status === "available" &&
                   property.dateOfLastChecked &&
                   safeDaysDifference(
-                    property.dateOfLastChecked + 60 * 60 * 24 * 15,
+                    property.dateOfLastChecked + 60 * 60 * 24 * 14,
                     Math.floor(Date.now() / 1000)
-                  ) > 0)) && (
+                  ) < 3)) && (
                 <View className="flex flex-row items-center justify-between bg-[#E3E3E3] rounded-t-lg px-4 py-2">
                   <View className="flex flex-col">
                     {property.dateOfLastChecked &&

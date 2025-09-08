@@ -99,7 +99,7 @@ const PropertysDetailsScreen = () => {
             >
               <View className="flex flex-row items-center justify-center space-x-2 h-[18px]">
                 <ShareIcon height={18} width={18} />
-                <Text className="text-xs font-bold text-black h-[18px] text-white">
+                <Text className="text-xs font-bold text-white h-[18px]">
                   Share
                 </Text>
               </View>

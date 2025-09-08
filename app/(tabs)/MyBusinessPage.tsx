@@ -279,7 +279,7 @@ const MyBusinessPage = () => {
   const fetchProperties = useCallback(async () => {
     try {
       setLoading(true);
-      const propertyResults: Property[] = await searchProperties("cpId", cpId);
+      const propertyResults: Property[] = await searchProperties("cpId", cpId, "qc");
       setProperties(propertyResults || []);
     } catch (error) {
       console.error("Error fetching properties:", error);
