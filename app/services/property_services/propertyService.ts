@@ -164,7 +164,7 @@ export const getPropertyById = async (
  * Listen to real-time updates for a property by ID from the specified inventory stage.
  */
 export const subscribeToPropertyById = (
-propertyId: string, onUpdate: (property: Property | null) => void, p0: string, p1: string, p2: (error: any) => void, inventoryStage: InventoryStage = "verified", onError?: (error: Error) => void): Unsubscribe => {
+propertyId: string, onUpdate: (property: Property | null) => void, inventoryStage: InventoryStage = "verified", onError?: (error: Error) => void): Unsubscribe => {
   const collectionName = getCollectionName(inventoryStage);
   const ref = doc(db, collectionName, propertyId);
 
@@ -312,7 +312,7 @@ export const updateProperty = async (
   // Log changes in edit history
   if (currentData && isEdit) {
     const changes = getChangedFields(currentData, updates);
-    trackEvent("edit_property_submit", undefined, updateData, {
+    trackEvent("edit_property_submit", undefined, updateData as Property, {
       field_updated: changes,
     });
 
@@ -514,7 +514,7 @@ export const testSnapshotConnection = async (
           });
         },
         inventoryStage,
-        (error) => {
+        (error: any) => {
           console.error("Test snapshot error:", error);
           unsubscribe();
 
