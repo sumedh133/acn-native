@@ -48,39 +48,10 @@ const EnquiriesReceived = () => {
         itemVisiblePercentThreshold: 50,
     });
 
-    // Track page view
-    useEffect(() => {
-        try {
-            logEvent(analytics, "enquiries_received_page_view", {
-                event_category: "page_view",
-                event_label: "enquiries",
-                user_type: userType,
-                total_enquiries: enquiryCount,
-                new_enquiries: newEnquiryCount,
-            });
-        } catch (error) {
-            console.error("Error logging page view:", error);
-        }
-    }, [userType, enquiryCount, newEnquiryCount]);
+
 
     const handleContactShare = useCallback(async (enquiryId: string) => {
-        try {
-            // Update in Firestore - the onSnapshot listener will automatically update local state
-            await updateEnquiry(enquiryId, { isContactShared: true })
 
-            // Log analytics
-            logEvent(analytics, "enquiry_contact_shared", {
-                event_category: "interaction",
-                event_label: "contact_share",
-                enquiry_id: enquiryId,
-                user_type: userType,
-            });
-
-            console.log(`Contact shared for enquiry: ${enquiryId}`);
-        } catch (error) {
-            console.error("Error sharing contact:", error);
-            // Show error to user if needed
-        }
     }, [userType]);
 
     const scrollHandler = useAnimatedScrollHandler({
@@ -123,31 +94,12 @@ const EnquiriesReceived = () => {
 
     const renderItem = useCallback(
         ({ item, index }: { item: Enquiry; index: number }) => {
-            const handleEnquiryView = () => {
-                try {
-                    logEvent(analytics, "enquiry_card_view", {
-                        event_category: "interaction",
-                        event_label: "enquiry_view",
-                        enquiry_id: item.enquiryId,
-                        list_position: index + 1,
-                        total_results: enquiryCount,
-                        new_enquiries: newEnquiryCount,
-                        user_type: userType,
-                        is_contact_shared: item.isContactShared || false,
-                        is_new: item.isNew || false,
-                    });
-                } catch (error) {
-                    console.error("Error logging enquiry view:", error);
-                }
-            };
+
 
             return (
                 <View
                     className=""
-                    onStartShouldSetResponder={() => {
-                        handleEnquiryView();
-                        return false;
-                    }}
+
                 >
                     <EnquiryCard
                         enquiry={item}
@@ -160,15 +112,7 @@ const EnquiriesReceived = () => {
 
     // Conditional renders
     if (!isConnectedToInternet) {
-        try {
-            logEvent(analytics, "enquiries_offline_view", {
-                event_category: "error",
-                event_label: "offline",
-                user_type: userType,
-            });
-        } catch (error) {
-            console.error("Error logging offline state:", error);
-        }
+
         return <Offline />;
     }
 
@@ -209,8 +153,6 @@ const EnquiriesReceived = () => {
 
     return (
         <View className="flex-1 bg-[#F5F6F7]">
-
-
             <Animated.FlatList
                 data={enquiries}
                 renderItem={renderItem}
@@ -246,7 +188,7 @@ const EnquiriesReceived = () => {
                 removeClippedSubviews={true}
                 onEndReached={handleEndReached}
                 onEndReachedThreshold={0.3}
-                ListFooterComponent={renderFooter}
+                ListFooterComponent={renderFooter}   
             />
         </View>
     );

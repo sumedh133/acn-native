@@ -12,6 +12,7 @@ import EditIcon2 from "@/assets/icons/MyBusinessPage/edit2.svg";
 import ShareModal from "@/app/modals/ShareModal";
 import { subscribeToPropertyById } from "@/app/services/property_services/propertyService";
 import { setPropertyData } from "@/store/slices/propertySlice";
+import { trackEvent } from "@/app/services/logAnalyticsService";
 
 const PropertysDetailsScreen = () => {
   const property = useSelector(selectPropertyStateData);
@@ -31,7 +32,8 @@ const PropertysDetailsScreen = () => {
         }
       },
       property.stage != "live" ? "qc" : "verified",
-      (error) => {
+      property.stage != "live" ? "qc" : "verified",
+      (error: any) => {
         console.error("Error in property subscription:", error);
       }
     );
@@ -41,10 +43,24 @@ const PropertysDetailsScreen = () => {
 
   //----------------------Utility Function----------------------//
   const handleShareButtonPress = () => {
+    try {
+      trackEvent("mb_share_property_details", agentData, property).catch((error) => {
+        console.error(`Error logging event: ${error}`);
+      });
+    } catch (error) {
+      console.error(`Unexpected error: ${error}`);
+    }
     setShowShareModal(true);
   };
 
   const handleEditButtonPress = () => {
+    try {
+      trackEvent("edit_property").catch((error) => {
+        console.error(`Error logging event: ${error}`);
+      });
+    } catch (error) {
+      console.error(`Unexpected error: ${error}`);
+    }
     const formType =
       property.stage !== "live" ? "underReviewEdit" : "verifiedEdit";
     router.push({
@@ -55,6 +71,21 @@ const PropertysDetailsScreen = () => {
       },
     });
   };
+
+  //-----------------------Effects-----------------------------//
+  useEffect(() => {
+    const logAnalyticsEvent = () => {
+      try {
+        trackEvent("mb_property_details_view", agentData, property).catch((error) => {
+          console.error(`Error logging event: ${error}`);
+        });
+      } catch (error) {
+        console.error(`Unexpected error: ${error}`);
+      }
+    };
+
+    logAnalyticsEvent();
+  }, []);
 
   return (
     <View className="flex-1 bg-white">
@@ -80,21 +111,19 @@ const PropertysDetailsScreen = () => {
         )}
 
         {property?.stage === "live" && (
-          <>
+          <View className="flex flex-row w-full space-x-3">
             <TouchableOpacity
-              className="w-[50%] py-2 px-5 rounded-[4px] bg-white border-[1.5px] border-[#153E3B] gap-2"
+              className="flex-1 py-2 px-5 rounded-[4px] bg-white border-[1.5px] border-[#153E3B] flex-row items-center justify-center"
               onPress={handleEditButtonPress}
             >
-              <View className="flex flex-row items-center justify-center space-x-2 h-[18px]">
-                <EditIcon height={18} width={18} />
-                <Text className="text-xs font-bold text-black h-[18px]">
-                  Edit Property
-                </Text>
-              </View>
+              <EditIcon height={18} width={18} />
+              <Text className="text-xs font-bold text-black ml-2">
+                Edit Property
+              </Text>
             </TouchableOpacity>
 
             <TouchableOpacity
-              className="w-[50%] py-2 px-3 rounded-[4px] bg-[#10302D] gap-2"
+              className="flex-1 py-2 px-3 rounded-[4px] bg-[#10302D] flex-row items-center justify-center"
               onPress={handleShareButtonPress}
             >
               <View className="flex flex-row items-center justify-center space-x-2 h-[18px]">
@@ -104,7 +133,7 @@ const PropertysDetailsScreen = () => {
                 </Text>
               </View>
             </TouchableOpacity>
-          </>
+          </View>
         )}
       </View>
       <ShareModal

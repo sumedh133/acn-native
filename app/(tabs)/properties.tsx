@@ -203,6 +203,7 @@ export default function PropertiesScreen() {
             activeTab={activeTab}
             setActiveTab={setActiveTab}
             showTabs={true}
+            
           />
         </View>
         <View className="w-full flex-1">

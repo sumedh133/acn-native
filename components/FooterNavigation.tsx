@@ -19,6 +19,7 @@ import StatusInfoBottomSheet from "../app/components/property/StatusInfoBottomSh
 import NewEnquiriesModal from "@/app/components/property/NewEnquiriesModal";
 import { ModalType, getModalItems } from "@/app/constants/footerModalOptions";
 import { getPopupItems, menuItems } from "@/app/constants/footerConstants";
+import { trackEvent } from "@/app/services/logAnalyticsService";
 
 const FooterNavigation = () => {
   const pathname = usePathname();
@@ -174,18 +175,30 @@ const FooterNavigation = () => {
         }
       };
 
-      logEvent(analytics, "add_popup_selection", {
-        event_category: "interaction",
-        event_label: "selection",
-        selected_option: item.id,
-        destination: getDestinationFromId(item.id),
-        user_type: userType,
-      });
+      if (item.id == "add_inventory") {
+        try {
+
+          trackEvent("add_inventory_initiated").catch((error) => {
+            console.error(`Error logging event: ${error}`);
+          });
+        } catch (error) {
+          console.error(`Unexpected error: ${error}`);
+        }
+      }
+      else {
+        try {
+
+          trackEvent("add_requirement_initiated").catch((error) => {
+            console.error(`Error logging event: ${error}`);
+          });
+        } catch (error) {
+          console.error(`Unexpected error: ${error}`);
+        }
+      }
     } catch (error) {
       console.error("Error logging popup selection:", error);
     }
   };
-
   const handleNavigation = (path: string) => {
     if (popupAnimationFlag) {
       setPopupAnimationFlag(false);
@@ -237,26 +250,26 @@ const FooterNavigation = () => {
   }, [pathname, resetFooterPosition]);
 
   const handlePopupClick = () => {
+
+
     const newState = !popupAnimationFlag;
 
     if (newState) {
       // Close any active modals
       closeActiveModal();
     }
+    if (newState) {
+      try {
+
+        trackEvent("addition_flow_initiated").catch((error) => {
+          console.error(`Error logging event: ${error}`);
+        });
+      } catch (error) {
+        console.error(`Unexpected error: ${error}`);
+      }
+    }
 
     setPopupAnimationFlag(newState);
-
-    try {
-      logEvent(analytics, newState ? "open_add_popup" : "close_add_popup", {
-        event_category: "interaction",
-        event_label: "popup",
-        action: newState ? "open" : "close",
-        current_path: pathname,
-        user_type: userType,
-      });
-    } catch (error) {
-      console.error("Error logging popup interaction:", error);
-    }
   };
 
   useFocusEffect(

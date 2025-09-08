@@ -34,6 +34,8 @@ import StatusUpdateModal from "../property/statusUpdateModal";
 import { toCapitalizedWords } from "@/app/helpers/common";
 import { updateProperty } from "@/app/services/property_services/propertyService";
 
+import { trackEvent } from "@/app/services/logAnalyticsService";
+
 export type UIProperty = Omit<Property, "handOverDate"> & {
   handOverDate?: string;
   media?: MediaUploadData;
@@ -94,7 +96,7 @@ export const FormPreview: React.FC<FormPreviewProps> = ({
       id: "1",
       text: "Available",
       onPress: () => {
-        updateStatus("Available");
+        updateStatus("available");
         setStatusUpdateModal(false); // Close popup after selection
       },
     },
@@ -102,7 +104,7 @@ export const FormPreview: React.FC<FormPreviewProps> = ({
       id: "2",
       text: "Hold",
       onPress: () => {
-        updateStatus("Hold");
+        updateStatus("hold");
         setStatusUpdateModal(false);
       },
     },
@@ -173,19 +175,19 @@ export const FormPreview: React.FC<FormPreviewProps> = ({
           const activeField = fields.find((f) => isFieldVisible(f));
           return activeField
             ? {
-                id: activeField.id,
-                label: activeField.label,
-                suffix: activeField.suffix || "",
-                prefix: activeField.prefix || "",
-              }
+              id: activeField.id,
+              label: activeField.label,
+              suffix: activeField.suffix || "",
+              prefix: activeField.prefix || "",
+            }
             : null;
         })
         .filter(Boolean) as Array<{
-        id: string;
-        label: string;
-        suffix: string;
-        prefix: string;
-      }>;
+          id: string;
+          label: string;
+          suffix: string;
+          prefix: string;
+        }>;
 
       return { ...step, stepValues };
     })
@@ -213,6 +215,20 @@ export const FormPreview: React.FC<FormPreviewProps> = ({
       }).start();
     }
   }, [statusUpdateModal]);
+
+  useEffect(() => {
+    if (previewType === "listing") {
+      try {
+
+        trackEvent("property_details_view", undefined, data).catch((error) => {
+          console.error(`Error logging event: ${error}`);
+        });
+      } catch (error) {
+        console.error(`Unexpected error: ${error}`);
+      }
+    }
+  }, []);
+
 
   return (
     <>
@@ -331,7 +347,7 @@ export const FormPreview: React.FC<FormPreviewProps> = ({
             isSaving={false}
           />
         )}
-        {previewType == "myBusiness" && (
+        {(
           <View className="flex flex-col gap-y-3 px-4 py-3">
             <Text className="text-[14px] leading-[150%] font-bold text-black font-montserrat-bold">
               Inventory Details

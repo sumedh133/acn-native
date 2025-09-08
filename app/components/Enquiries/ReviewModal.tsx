@@ -29,46 +29,50 @@ import { analytics } from "@/app/config/firebase";
 import { logEvent } from "@react-native-firebase/analytics";
 import { useSelector } from "react-redux";
 import { RootState } from "@/store/store";
+import { trackEvent } from "@/app/services/logAnalyticsService";
 
 type Props = {
   isOpen: boolean;
   onClose: () => void;
   enqId: string;
+  enquiry?:any
 };
 
-const ReviewModal: React.FC<Props> = ({ isOpen, onClose, enqId }) => {
+const ReviewModal: React.FC<Props> = ({ isOpen, onClose, enqId,enquiry }) => {
   const [rating, setRating] = useState(0);
   const [review, setReview] = useState("");
   const [loader, setLoader] = useState(false);
   const [errors, setErrors] = useState({ rating: false, review: false });
-  const userType = useSelector((state: RootState) => state?.agent?.docData?.userType) || "free";
+  const userType =
+    useSelector((state: RootState) => state?.agent?.docData?.userType) ||
+    "free";
 
   useEffect(() => {
     if (isOpen) {
       try {
-        logEvent(analytics, 'review_modal_shown', {
-          event_category: 'enquiries',
-          event_label: 'impression',
+        logEvent(analytics, "review_modal_shown", {
+          event_category: "enquiries",
+          event_label: "impression",
           enquiry_id: enqId,
-          user_type: userType
+          user_type: userType,
         });
       } catch (error) {
-        console.error('Error logging review modal shown:', error);
+        console.error("Error logging review modal shown:", error);
       }
     }
   }, [isOpen]);
 
   const handleRatingChange = (newRating: number) => {
     try {
-      logEvent(analytics, 'review_rating_selected', {
-        event_category: 'enquiries',
-        event_label: 'interaction',
+      logEvent(analytics, "review_rating_selected", {
+        event_category: "enquiries",
+        event_label: "interaction",
         enquiry_id: enqId,
         rating: newRating,
-        user_type: userType
+        user_type: userType,
       });
     } catch (error) {
-      console.error('Error logging rating selection:', error);
+      console.error("Error logging rating selection:", error);
     }
     setRating(newRating);
     setErrors((prev) => ({
@@ -96,28 +100,28 @@ const ReviewModal: React.FC<Props> = ({ isOpen, onClose, enqId }) => {
 
     if (hasError) {
       try {
-        logEvent(analytics, 'review_submission_error', {
-          event_category: 'enquiries',
-          event_label: 'error',
+        logEvent(analytics, "review_submission_error", {
+          event_category: "enquiries",
+          event_label: "error",
           enquiry_id: enqId,
-          error_type: rating === 0 ? 'missing_rating' : 'missing_review',
-          user_type: userType
+          error_type: rating === 0 ? "missing_rating" : "missing_review",
+          user_type: userType,
         });
       } catch (error) {
-        console.error('Error logging submission error:', error);
+        console.error("Error logging submission error:", error);
       }
       return;
     }
 
     try {
       setLoader(true);
-      logEvent(analytics, 'review_submission_started', {
-        event_category: 'enquiries',
-        event_label: 'interaction',
+      logEvent(analytics, "review_submission_started", {
+        event_category: "enquiries",
+        event_label: "interaction",
         enquiry_id: enqId,
         rating: rating,
         review_length: review.length,
-        user_type: userType
+        user_type: userType,
       });
 
       const q = query(
@@ -144,24 +148,18 @@ const ReviewModal: React.FC<Props> = ({ isOpen, onClose, enqId }) => {
         reviews: arrayUnion(newReview),
       });
 
-      logEvent(analytics, 'review_submission_success', {
-        event_category: 'enquiries',
-        event_label: 'success',
-        enquiry_id: enqId,
-        rating: rating,
-        review_length: review.length,
-        user_type: userType
+      trackEvent("submit_review_submit",undefined,undefined,{buyerCpId:enquiry.buyerCpId,sellerCpId:enquiry.sellerCpId}).catch((error) => {
+        console.error(`Error logging event: ${error}`);
       });
-
       showSuccessToast("Review added successfully!");
     } catch (error) {
       console.error("Error adding review:", error);
-      logEvent(analytics, 'review_submission_failure', {
-        event_category: 'enquiries',
-        event_label: 'error',
+      logEvent(analytics, "review_submission_failure", {
+        event_category: "enquiries",
+        event_label: "error",
         enquiry_id: enqId,
-        error_message: error instanceof Error ? error.message : 'Unknown error',
-        user_type: userType
+        error_message: error instanceof Error ? error.message : "Unknown error",
+        user_type: userType,
       });
       showErrorToast("Failed to add review. Please try again.");
     } finally {
@@ -173,6 +171,18 @@ const ReviewModal: React.FC<Props> = ({ isOpen, onClose, enqId }) => {
     }
   };
 
+  const handleCancel = () => {
+    try {
+
+      trackEvent("agent_cancel_review").catch((error) => {
+        console.error(`Error logging event: ${error}`);
+      });
+    } catch (error) {
+      console.error(`Unexpected error: ${error}`);
+    }
+    onClose()
+  }
+
   return (
     <Modal
       visible={isOpen}
@@ -180,17 +190,17 @@ const ReviewModal: React.FC<Props> = ({ isOpen, onClose, enqId }) => {
       animationType="fade"
       onRequestClose={() => {
         try {
-          logEvent(analytics, 'review_modal_closed', {
-            event_category: 'enquiries',
-            event_label: 'interaction',
+          logEvent(analytics, "review_modal_closed", {
+            event_category: "enquiries",
+            event_label: "interaction",
             enquiry_id: enqId,
-            close_type: 'back_button',
+            close_type: "back_button",
             had_rating: rating > 0,
             had_review: review.trim().length > 0,
-            user_type: userType
+            user_type: userType,
           });
         } catch (error) {
-          console.error('Error logging modal close:', error);
+          console.error("Error logging modal close:", error);
         }
         onClose();
       }}
@@ -203,7 +213,7 @@ const ReviewModal: React.FC<Props> = ({ isOpen, onClose, enqId }) => {
           className="bg-white rounded-2xl p-8 w-full max-w-md space-y-6"
           onPress={(e) => e.stopPropagation()}
         >
-          <Text style={styles.heading}>Overall Rating</Text>
+          <Text style={styles.heading}>Rate Your Enquiry</Text>
           <View className="flex-row justify-center">
             {[1, 2, 3, 4, 5].map((star) => (
               <TouchableOpacity
@@ -240,18 +250,31 @@ const ReviewModal: React.FC<Props> = ({ isOpen, onClose, enqId }) => {
             <Text style={styles.errorText}>Please enter your review.</Text>
           )}
 
-          <TouchableOpacity
-            className="bg-[#153E3B] px-4 py-3 rounded-lg w-full"
-            onPress={handleSubmit}
-          >
-            {loader ? (
-              <ActivityIndicator color="#153E3B" />
-            ) : (
-              <Text className="text-white text-center font-medium text-xl">
-                Submit Review
+          <View className="flex-row justify-between w-full gap-3">
+            {/* Cancel Button */}
+            <TouchableOpacity
+              className="bg-gray-200 px-4 py-3 rounded-lg flex-1"
+              onPress={onClose}
+            >
+              <Text className="text-black text-center font-medium text-xl">
+                Cancel
               </Text>
-            )}
-          </TouchableOpacity>
+            </TouchableOpacity>
+
+            {/* Submit Button */}
+            <TouchableOpacity
+              className="bg-[#153E3B] px-4 py-3 rounded-lg flex-1"
+              onPress={handleSubmit}
+            >
+              {loader ? (
+                <ActivityIndicator color="#fff" />
+              ) : (
+                <Text className="text-white text-center font-medium text-xl">
+                  Submit
+                </Text>
+              )}
+            </TouchableOpacity>
+          </View>
         </Pressable>
       </Pressable>
     </Modal>

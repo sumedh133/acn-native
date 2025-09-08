@@ -315,7 +315,10 @@ const MoreFilters = ({
               className="font-semibold text-lg text-gray-800 mt-1"
               style={{ fontFamily: "Montserrat_700Bold" }}
             >
-              Filters {`(${toCapitalize(filters.listingType?.[0] || "")})`}
+              Filters
+              {filters.listingType?.[0]
+                ? ` (${toCapitalize(filters.listingType[0])})`
+                : ""}
             </Text>
           </View>
 
@@ -467,16 +470,9 @@ const MoreFilters = ({
                   titleClassName="text-sm"
                 />
               )}
-            {viewMode == "residential" &&
-              localFilters?.assetType?.some((type) =>
-                [
-                  "apartment",
-                  "independent house",
-                  "row house",
-                  "villa",
-                  "villament",
-                ].includes(type)
-              ) && (
+            {viewMode === "residential" &&
+              localFilters?.assetType?.length === 1 &&
+              localFilters?.assetType[0] === "apartment" && (
                 <FilterChipList
                   title={`Apartment Type`}
                   items={apartmentTypes}

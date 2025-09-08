@@ -24,6 +24,7 @@ import { Property } from "@/app/types";
 import { usePathname } from "expo-router";
 import { FlashList } from "@shopify/flash-list";
 import { FlatList } from "react-native";
+import { trackEvent } from "@/app/services/logAnalyticsService";
 
 interface MobileHitsProps {
   results: any[]; // All accumulated results from infinite scroll
@@ -196,6 +197,18 @@ const MobileHitsComponent = ({
     [results.length, userType]
   );
 
+  const handleScrollStop = useCallback(() => {
+    try {
+      trackEvent("property_row_view", undefined, undefined, {
+        page_type: results?.[0].listingType,
+        property_count: viewedProperties.current.size,
+      }).catch((error) => console.error(`Error logging scroll stop event: ${error}`));
+    } catch (error) {
+      console.error(`Unexpected error: ${error}`);
+    }
+  }, [maxScrollDepth]);
+
+
   // Track scroll depth
   const handleScroll = useCallback(
     (event: any) => {
@@ -203,7 +216,7 @@ const MobileHitsComponent = ({
         event.nativeEvent;
       const scrollDepthPercentage = Math.floor(
         ((contentOffset.y + layoutMeasurement.height) / contentSize.height) *
-          100
+        100
       );
 
       if (scrollDepthPercentage > maxScrollDepth) {
@@ -230,16 +243,12 @@ const MobileHitsComponent = ({
     ({ item, index }: { item: Property; index: number }) => {
       const handlePropertyView = () => {
         try {
-          logEvent(analytics, "property_card_view", {
-            event_category: "interaction",
-            event_label: "property_view",
-            property_id: item.propertyId,
-            list_position: index + 1,
-            total_results: results.length,
-            user_type: userType,
+
+          trackEvent("property_card_view", undefined, item).catch((error) => {
+            console.error(`Error logging event: ${error}`);
           });
         } catch (error) {
-          console.error("Error logging property view:", error);
+          console.error(`Unexpected error: ${error}`);
         }
       };
 
@@ -428,7 +437,10 @@ const MobileHitsComponent = ({
       )}
       scrollEventThrottle={16}
       onScrollEndDrag={onScrollEndDrag} // ← This fixes partial visibility
-      onMomentumScrollEnd={onMomentumScrollEnd}
+      onMomentumScrollEnd={() => {
+        onMomentumScrollEnd?.(); // Keep existing functionality if any
+        handleScrollStop(); // Log custom scroll stop event
+      }}
       onViewableItemsChanged={handleViewableItemsChanged}
       viewabilityConfig={viewabilityConfig.current}
       refreshControl={
@@ -456,6 +468,7 @@ const MobileHitsComponent = ({
       onEndReached={handleEndReached}
       onEndReachedThreshold={0.3}
       ListFooterComponent={renderFooter}
+
     />
   );
 };
@@ -483,11 +496,11 @@ export const MobileHits = React.memo(
         )) &&
       // Compare firebaseProgress
       prevProps.firebaseProgress?.loaded ===
-        nextProps.firebaseProgress?.loaded &&
+      nextProps.firebaseProgress?.loaded &&
       prevProps.firebaseProgress?.total === nextProps.firebaseProgress?.total &&
       // Compare selectedProperties Set
       prevProps.selectedProperties?.size ===
-        nextProps.selectedProperties?.size &&
+      nextProps.selectedProperties?.size &&
       Array.from(prevProps.selectedProperties || []).every((id) =>
         nextProps.selectedProperties?.has(id)
       )
