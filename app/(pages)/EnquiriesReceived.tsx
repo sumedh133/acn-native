@@ -209,8 +209,6 @@ const EnquiriesReceived = () => {
 
     return (
         <View className="flex-1 bg-[#F5F6F7]">
-
-
             <Animated.FlatList
                 data={enquiries}
                 renderItem={renderItem}
@@ -246,7 +244,7 @@ const EnquiriesReceived = () => {
                 removeClippedSubviews={true}
                 onEndReached={handleEndReached}
                 onEndReachedThreshold={0.3}
-                ListFooterComponent={renderFooter}
+                ListFooterComponent={renderFooter}   
             />
         </View>
     );
