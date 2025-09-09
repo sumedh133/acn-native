@@ -121,16 +121,6 @@ export default function PropertyFilters({
     useSelector((state: RootState) => state?.agent?.docData?.userType) ||
     "free";
 
-  // Sort options - updated to match your service's sort mapping
-  const sortOptions = [
-    { label: "Most Relevant", value: "relevance" },
-    { label: "Price: Low to High", value: "price_asc" },
-    { label: "Price: High to Low", value: "price_desc" },
-    { label: "Newest First", value: "date_desc" },
-    { label: "Oldest First", value: "date_asc" },
-    { label: "Price per sqft: Low to High", value: "price_per_sqft_asc" },
-    { label: "Price per sqft: High to Low", value: "price_per_sqft_desc" },
-  ];
 
   // Animation effects for popup states
   useEffect(() => {
@@ -173,7 +163,7 @@ export default function PropertyFilters({
 
   const handleOpenSortPopup = () => {
     setIsSortPopupOpen(true);
-    openSortPopup();
+    openSortPopup(isMyBusinessPage? "" : filters.listingType?.[0])
     setTimeout(() => setIsSortPopupOpen(false), 3000);
   };
 
@@ -326,7 +316,7 @@ export default function PropertyFilters({
           <NewSearchIcon style={{ marginRight: 8 }} />
           <TextInput
             className="flex-1 text-sm text-gray-700"
-            placeholder="Search by project, micro market"
+            placeholder="Search by project"
             value={searchText}
             onChangeText={setSearchText}
             placeholderTextColor="#9CA3AF"
@@ -465,7 +455,7 @@ export default function PropertyFilters({
           <NewSearchIcon style={{ marginRight: 8 }} />
           <TextInput
             className="flex-1 text-xs text-gray-700 "
-            placeholder="Search by project, micro market"
+            placeholder="Search by project"
             value={searchText}
             onChangeText={setSearchText}
             placeholderTextColor="#9CA3AF"

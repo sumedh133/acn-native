@@ -10,51 +10,83 @@ export interface ModalItem {
 
 export const getSortOptions = (
   selectedSort: string | null,
-  handleSelection: (type: string, value: string) => void
-): ModalItem[] => [
-  {
-    id: "relevance",
-    text: "Most Relevant",
-    onPress: () => handleSelection("sort", "relevance"),
-    selected: selectedSort === "relevance",
-  },
-  {
-    id: "price_asc",
-    text: "Price: Low to High",
-    onPress: () => handleSelection("sort", "price_asc"),
-    selected: selectedSort === "price_asc",
-  },
-  {
-    id: "price_desc",
-    text: "Price: High to Low",
-    onPress: () => handleSelection("sort", "price_desc"),
-    selected: selectedSort === "price_desc",
-  },
-  {
-    id: "date_desc",
-    text: "Newest First",
-    onPress: () => handleSelection("sort", "date_desc"),
-    selected: selectedSort === "date_desc",
-  },
-  {
-    id: "date_asc",
-    text: "Oldest First",
-    onPress: () => handleSelection("sort", "date_asc"),
-    selected: selectedSort === "date_asc",
-  },
-  {
-    id: "price_per_sqft_asc",
-    text: "Price per sqft: Low to High",
-    onPress: () => handleSelection("sort", "price_per_sqft_asc"),
-    selected: selectedSort === "price_per_sqft_asc",
-  },
-  {
-    id: "price_per_sqft_desc",
-    text: "Price per sqft: High to Low",
-    onPress: () => handleSelection("sort", "price_per_sqft_desc"),
-    selected: selectedSort === "price_per_sqft_desc",
-  },
-];
+  handleSelection: (type: string, value: string) => void,
+  propertyType?: string
+): ModalItem[] => {
+  // always available
+  console.log(propertyType)
+  const baseOptions: ModalItem[] = [
+    {
+      id: "relevance",
+      text: "Most Relevant",
+      onPress: () => handleSelection("sort", "relevance"),
+      selected: selectedSort === "relevance",
+    },
+    {
+      id: "date_desc",
+      text: "Newest First",
+      onPress: () => handleSelection("sort", "date_desc"),
+      selected: selectedSort === "date_desc",
+    },
+    {
+      id: "date_asc",
+      text: "Oldest First",
+      onPress: () => handleSelection("sort", "date_asc"),
+      selected: selectedSort === "date_asc",
+    },
+  ];
+
+  if (propertyType === "resale") {
+    return [
+      ...baseOptions,
+      {
+        id: "price_asc",
+        text: "Total Price: Low to High",
+        onPress: () => handleSelection("sort", "price_asc"),
+        selected: selectedSort === "price_asc",
+      },
+      {
+        id: "price_desc",
+        text: "Total Price: High to Low",
+        onPress: () => handleSelection("sort", "price_desc"),
+        selected: selectedSort === "price_desc",
+      },
+      {
+        id: "price_per_sqft_asc",
+        text: "Price per sqft: Low to High",
+        onPress: () => handleSelection("sort", "price_per_sqft_asc"),
+        selected: selectedSort === "price_per_sqft_asc",
+      },
+      {
+        id: "price_per_sqft_desc",
+        text: "Price per sqft: High to Low",
+        onPress: () => handleSelection("sort", "price_per_sqft_desc"),
+        selected: selectedSort === "price_per_sqft_desc",
+      },
+    ];
+  }
+
+  if (propertyType === "rental") {
+    return [
+      ...baseOptions,
+      {
+        id: "rent_asc",
+        text: "Rent: Low to High",
+        onPress: () => handleSelection("sort", "rent_asc"),
+        selected: selectedSort === "rent_asc",
+      },
+      {
+        id: "rent_desc",
+        text: "Rent: High to Low",
+        onPress: () => handleSelection("sort", "rent_desc"),
+        selected: selectedSort === "rent_desc",
+      },
+    ];
+  }
+
+  return baseOptions;
+};
+
 
 export const getStatusOptions = (
   selectedStatus: string | null,
@@ -127,11 +159,12 @@ export const getModalItems = (
   selectedSort: string | null,
   selectedStatus: string | null,
   selectedCategory: string | null,
-  handleSelection: (type: string, value: string) => void
+  handleSelection: (type: string, value: string) => void,
+  propertyType?: string,
 ): ModalItem[] => {
   switch (activeModal) {
     case "sort":
-      return getSortOptions(selectedSort, handleSelection);
+      return getSortOptions(selectedSort, handleSelection, propertyType );
     case "status":
       return getStatusOptions(selectedStatus, handleSelection);
     case "listingType":

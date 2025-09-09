@@ -103,7 +103,7 @@ class AlgoliaInfiniteSearchService {
         .filter((id, index, array) => array.indexOf(id) === index); // Remove duplicates
 
       if (propertyIds.length === 0) {
-        console.warn("No valid propertyIds found in Algolia hits");
+        // console.warn("No valid propertyIds found in Algolia hits");
         return [];
       }
 
@@ -378,6 +378,8 @@ class AlgoliaInfiniteSearchService {
       date_asc: `${INDEX_NAME}_date_asc`,
       price_per_sqft_asc: `${INDEX_NAME}_price_per_sqft_asc`,
       price_per_sqft_desc: `${INDEX_NAME}_price_per_sqft_desc`,
+      rent_asc: `${INDEX_NAME}_rent_asc`,
+      rent_desc: `${INDEX_NAME}_rent_desc`,
       relevanceLow: `${INDEX_NAME}`,
     };
 

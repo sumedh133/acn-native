@@ -48,6 +48,7 @@ const FooterNavigation = () => {
 
     // Sort
     showSortPopup,
+    propertyType,
     selectedSort,
     closeSortPopup,
     setSelectedSort,
@@ -363,7 +364,8 @@ const FooterNavigation = () => {
     selectedSort,
     selectedStatus,
     selectedCategory,
-    handleSelection
+    handleSelection,
+    propertyType,
   );
 
   return (

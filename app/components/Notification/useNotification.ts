@@ -55,6 +55,8 @@ export default function useNotification() {
     payment_notification: "billing",
     trial_ended_notification: "billing",
     trial_notification: "billing",
+    add_requirement_notification: "asks",
+    requirement_notification: "asks",
   };
 
   const requestUserPermission = async () => {
@@ -72,11 +74,11 @@ export default function useNotification() {
           user_type: userType,
         });
 
-        if (granted === "granted") {
-          console.log("GRANTED");
-        } else {
-          console.log("NOT GRANTED");
-        }
+        // if (granted === "granted") {
+        //   console.log("GRANTED");
+        // } else {
+        //   console.log("NOT GRANTED");
+        // }
       } else {
         const authStatus = await messaging().requestPermission();
         const enabled =
