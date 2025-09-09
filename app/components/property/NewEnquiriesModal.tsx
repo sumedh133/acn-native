@@ -68,7 +68,7 @@ const NewEnquiriesModal = ({
           transform: [{
             translateY: translateY.interpolate({
               inputRange: [0, SCREEN_HEIGHT],
-              outputRange: [-55, SCREEN_HEIGHT],
+              outputRange: [0, SCREEN_HEIGHT],
             })
           }],
         }}
@@ -84,7 +84,7 @@ const NewEnquiriesModal = ({
             elevation: 5,
           }}
         >
-          <Text className="text-black font-bold text-[24px]">×</Text>
+          <Text className="text-black font-bold text-[24px]">x</Text>
         </TouchableOpacity>
       </AView>
 

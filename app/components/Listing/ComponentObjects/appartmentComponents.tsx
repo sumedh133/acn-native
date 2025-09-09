@@ -81,9 +81,9 @@ export const appartmentComponents = [
     type: "Dropdown",
     field: "furnishing",
     option: [
-      { label: "Full Furnished", value: "fullFurnished" },
-      { label: "Semi Furnished", value: "semiFurnished" },
-      { label: "Unfurnished", value: "unFurnished" },
+      { label: "Full Furnished", value: "full-furnished" },
+      { label: "Semi Furnished", value: "semi-furnished" },
+      { label: "Unfurnished", value: "unfurnished" },
     ],
     colspan: 1,
   },

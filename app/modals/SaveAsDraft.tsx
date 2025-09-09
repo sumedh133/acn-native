@@ -12,6 +12,7 @@ import { analytics } from "@/app/config/firebase";
 import { logEvent } from "@react-native-firebase/analytics";
 import { useSelector } from "react-redux";
 import { RootState } from "@/store/store";
+import { trackEvent } from "../services/logAnalyticsService";
 
 interface SaveAsDraftProps {
   visible: boolean;
@@ -57,14 +58,12 @@ const SaveAsDraft: React.FC<SaveAsDraftProps> = ({
 
   const handleDiscard = () => {
     try {
-      logEvent(analytics, 'save_draft_action', {
-        event_category: 'modal',
-        event_label: 'save_draft',
-        action: 'discard',
-        user_type: userType
+
+      trackEvent("exit_inventory_addition_page").catch((error) => {
+        console.error(`Error logging event: ${error}`);
       });
     } catch (error) {
-      console.error('Error logging discard action:', error);
+      console.error(`Unexpected error: ${error}`);
     }
     onClose();
     router.back();
@@ -72,12 +71,8 @@ const SaveAsDraft: React.FC<SaveAsDraftProps> = ({
 
   const handleSave = async () => {
     try {
-      logEvent(analytics, 'save_draft_action', {
-        event_category: 'modal',
-        event_label: 'save_draft',
-        action: 'save',
-        user_type: userType
-      });
+
+    
 
       await handleSaveDraft();
       onClose();
@@ -189,7 +184,7 @@ const styles = StyleSheet.create({
   },
   buttonContainer: {
     flexDirection: 'row',
-    justifyContent: 'space-between', 
+    justifyContent: 'space-between',
     alignItems: 'center',
   },
   primaryButton: {

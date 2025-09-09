@@ -37,7 +37,7 @@ export default function PropertiesScreen() {
   const basicFilter = useMemo(
     () => ({
       listingType: [activeTab],
-      // status: ["available", "Available"],
+      status: ["available", "Available"],
     }),
     [activeTab]
   );
@@ -58,39 +58,13 @@ export default function PropertiesScreen() {
     loadMore,
   } = useAlgoliaSearch(basicFilter);
 
-  // Memoize filter updates to prevent unnecessary re-renders
-  const filteredForActiveTab = useMemo(() => {
-    if (!filters) return null;
-
-    // Copy current filters and force listingType to match activeTab
-    const newFilters = { ...filters, listingType: [activeTab] };
-
-    if (activeTab === "rental") {
-      // Remove resale-only filters
-      delete newFilters.possession;
-      delete newFilters.carpetArea;
-      delete newFilters.totalAskPrice; // remove resale budget
-    } else if (activeTab === "resale") {
-      // Remove rental-only filters
-      delete newFilters.rent; // remove rental budget
-      delete newFilters.preferredTenants;
-      delete newFilters.nonVegAllowed;
-      delete newFilters.petsAllowed;
-      delete newFilters.availableFrom;
-    }
-
-    return newFilters;
-  }, [activeTab, filters]);
-
-  // Apply filter changes only when necessary
+  // Clear all filters and reset sort when activeTab changes (except basic filters)
   useEffect(() => {
-    if (
-      filteredForActiveTab &&
-      JSON.stringify(filteredForActiveTab) !== JSON.stringify(filters)
-    ) {
-      updateFilters(filteredForActiveTab);
-    }
-  }, [filteredForActiveTab, updateFilters]);
+    // Reset to basic filter when tab changes
+    updateFilters(basicFilter);
+    // Reset sort to relevance
+    updateSort('relevance');
+  }, [activeTab, basicFilter, updateFilters, updateSort]);
 
   // Track page view
   useEffect(() => {
@@ -203,6 +177,7 @@ export default function PropertiesScreen() {
             activeTab={activeTab}
             setActiveTab={setActiveTab}
             showTabs={true}
+            
           />
         </View>
         <View className="w-full flex-1">

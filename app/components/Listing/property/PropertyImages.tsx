@@ -21,6 +21,7 @@ import {
   FilePickerResult,
   MultipleUploadConfig
 } from "../../../services/media_services/mediaService";
+import { trackEvent } from "@/app/services/logAnalyticsService";
 
 // Add MediaItem interface
 interface MediaItem {
@@ -179,7 +180,9 @@ export const PropertyImages: React.FC<PropertyImagesProps> = ({
         if (result.success && result.uploadUrl) {
           const { type } = allFilesToUpload[index];
           successfulUploads[type].push(result.uploadUrl);
-        } else {
+        } else {trackEvent("media_error").catch((error) => {
+                console.error(`Error logging event: ${error}`);
+              });
           console.error(`Failed to upload ${selectedFiles[index].name}:`, result.error?.message || 'Unknown error');
         }
       });
@@ -295,9 +298,9 @@ export const PropertyImages: React.FC<PropertyImagesProps> = ({
               <Text className="text-sm font-bold text-black">
                 No Images Found
               </Text>
-              <Text className="text-sm font-medium text-[#757575] pb-3">
+              {previewType === 'myBusiness' && (<Text className="text-sm font-medium text-[#757575] pb-3">
                 Generally properties with images gets 5x enquires.
-              </Text>
+              </Text>)}
               {(previewType == 'add' || previewType == 'edit' || previewType === 'myBusiness') && (
                 <TouchableOpacity
                   onPress={openFilePicker}

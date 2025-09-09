@@ -18,6 +18,9 @@ import { Property } from "../../types";
 import _ from "lodash";
 
 import { getUnixDateTime } from "@/app/helpers/getUnixDateTime";
+import { usePathname } from "expo-router";
+
+import { trackEvent } from "../logAnalyticsService";
 
 // Firestore Collections
 const ADMIN_COLLECTION = "acn-admin";
@@ -108,13 +111,34 @@ export const createProperty = async (
   const propertyId = await generatePropertyId();
   const collectionName = getCollectionName(inventoryStage);
   const ref = doc(collection(db, collectionName), propertyId);
+  console.log(property, "property");
+  console.log(collectionName, "collection name");
+  const time = getUnixDateTime();
+  const referredFloorNumber: string | null =
+    property.floorNumber !== undefined && property.floorNumber !== null
+      ? property.floorNumber === 0
+        ? "ground floor"
+        : property.floorNumber < 6
+        ? "lower floor (1 - 5)"
+        : property.floorNumber < 11
+        ? "middle floor (6 - 10)"
+        : property.floorNumber < 20
+        ? "higher floor (10+)"
+        : property.floorNumber > 20
+        ? "higher floor (20+)"
+        : null
+      : null;
 
   const newProperty: Property = {
     ...property,
+    referredFloorNumber: referredFloorNumber,
     propertyId,
-    added: getUnixDateTime(),
-    lastModified: getUnixDateTime(),
+    added: time,
+    dateOfLastChecked: time,
+    lastModified: time,
+    stage: "kam",
     status: property.status ?? "pending",
+    source: "app",
   };
 
   await setDoc(ref, newProperty);
@@ -140,11 +164,7 @@ export const getPropertyById = async (
  * Listen to real-time updates for a property by ID from the specified inventory stage.
  */
 export const subscribeToPropertyById = (
-  propertyId: string,
-  onUpdate: (property: Property | null) => void,
-  inventoryStage: InventoryStage = "verified",
-  onError?: (error: Error) => void
-): Unsubscribe => {
+propertyId: string, onUpdate: (property: Property | null) => void, inventoryStage: InventoryStage = "verified", onError?: (error: Error) => void): Unsubscribe => {
   const collectionName = getCollectionName(inventoryStage);
   const ref = doc(db, collectionName, propertyId);
 
@@ -292,6 +312,9 @@ export const updateProperty = async (
   // Log changes in edit history
   if (currentData && isEdit) {
     const changes = getChangedFields(currentData, updates);
+    trackEvent("edit_property_submit", undefined, updateData as Property, {
+      field_updated: changes,
+    });
 
     if (!_.isEmpty(changes)) {
       await addEditHistory(propertyId, { changes }, inventoryStage);
@@ -491,7 +514,7 @@ export const testSnapshotConnection = async (
           });
         },
         inventoryStage,
-        (error) => {
+        (error: any) => {
           console.error("Test snapshot error:", error);
           unsubscribe();
 

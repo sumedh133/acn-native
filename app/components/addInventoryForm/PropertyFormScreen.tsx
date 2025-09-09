@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef, useCallback } from "react";
 import { useSelector } from "react-redux";
 import { RootState } from "@/store/store";
 import {
@@ -12,7 +12,7 @@ import {
   ScrollView,
   Alert,
 } from "react-native";
-import { router } from "expo-router";
+import { router, usePathname, useFocusEffect } from "expo-router";
 import {
   createProperty,
   updateProperty,
@@ -30,7 +30,11 @@ import { LinearGradient } from "expo-linear-gradient";
 import { FormPreview } from "../Listing/listingPropertyDetails";
 import { getMicromarketFromCoordinates } from "@/app/helpers/getMicromarketFromCoordinates";
 import { FormField } from "@/types/FormConfig";
-import SaveAsDraft from "@/app/modals/SaveAsDraft";
+import SaveAsDraft from "@/app/modals/SaveAsDraft"
+import { trackEvent } from "@/app/services/logAnalyticsService";
+import { MediaObj } from "@/app/types/MediaTypes";
+import { MediaUploadQueue as MediaUploadQueueClass } from "@/app/services/media_services/MediaUploadQueue";
+import type { UploadResult } from "@/app/services/media_services/mediaService";
 
 // Extend FormField to include our internal properties
 interface FormFieldWithMeta extends FormField {
@@ -98,9 +102,15 @@ export const PropertyFormScreen: React.FC<PropertyFormScreenProps> = ({
     video: [],
     document: [],
   });
-  const [currentStepIndex, setCurrentStepIndex] = useState<number>(0);
+
+  // Ref for scrolling to possession field
+  const scrollToPossessionRef = useRef<ScrollView>(null);
+  const [currentStepIndex, setCurrentStepIndex] = useState<number>(
+    isEdit ? 1 : 0
+  );
   const [maxStepIndex, setMaxStepIndex] = useState<number>(0);
-  const [isForwardStepChangeDisabled, setIsForwardStepChangeDisabled] = useState<boolean>(false)
+  const [isForwardStepChangeDisabled, setIsForwardStepChangeDisabled] =
+    useState<boolean>(false);
   const [isFormEmpty, setIsFormEmpty] = useState<boolean>(
     Object.keys(initialData || {}).length === 0
   );
@@ -108,6 +118,14 @@ export const PropertyFormScreen: React.FC<PropertyFormScreenProps> = ({
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [showPreview, setShowPreview] = useState<boolean>(false);
   const [showDraftModal, setShowDraftModal] = useState<boolean>(false);
+  const [rawMedia, setRawMedia] = useState<{
+    photos: MediaObj[];
+    videos: MediaObj[];
+    documents: MediaObj[];
+  }>({ photos: [], videos: [], documents: [] });
+  const [backgroundUploading, setBackgroundUploading] =
+    useState<boolean>(false);
+  const [backgroundProgress, setBackgroundProgress] = useState<number>(0);
 
   // -------------------- Media Upload Handler --------------------
   const handleMediaUpdate = (media: {
@@ -120,6 +138,19 @@ export const PropertyFormScreen: React.FC<PropertyFormScreenProps> = ({
       media,
     }));
     setIsFormEmpty(false);
+  };
+
+  const handleRawMediaChange = (media?: {
+    photos: MediaObj[];
+    videos: MediaObj[];
+    documents?: MediaObj[];
+  }) => {
+    if (!media) return;
+    setRawMedia({
+      photos: media.photos || [],
+      videos: media.videos || [],
+      documents: media.documents || [],
+    });
   };
 
   // -------------------- Utility Functions --------------------
@@ -176,6 +207,8 @@ export const PropertyFormScreen: React.FC<PropertyFormScreenProps> = ({
     return false;
   };
 
+  console.log(formData);
+
   /**
    * Validate a single field.
    */
@@ -186,18 +219,24 @@ export const PropertyFormScreen: React.FC<PropertyFormScreenProps> = ({
         value === undefined ||
         value === null ||
         (Array.isArray(value) && value.length === 0);
-      if (isEmpty) return `${field.label} is required`;
+      if (isEmpty) {
+        showErrorToast(`${field.label} is required`);
+        return `${field.label} is required`;
+      }
     }
 
     if (field.validation) {
       const { min, max, pattern, message } = field.validation;
       if (min !== undefined && Number(value) < min) {
+        showErrorToast(message || `${field.label} must be at least ${min}`);
         return message || `${field.label} must be at least ${min}`;
       }
       if (max !== undefined && Number(value) > max) {
+        showErrorToast(message || `${field.label} must be at most ${max}`);
         return message || `${field.label} must be at most ${max}`;
       }
       if (pattern && !pattern.test(String(value))) {
+        showErrorToast(message || `${field.label} format is invalid`);
         return message || `${field.label} format is invalid`;
       }
     }
@@ -283,21 +322,37 @@ export const PropertyFormScreen: React.FC<PropertyFormScreenProps> = ({
     }
   }, [selectedPlace]);
 
-  useEffect(() => {
-    // Back button handler
-    const backHandler = BackHandler.addEventListener(
-      "hardwareBackPress",
-      () => {
+  console.log(currentStepIndex, "index step check");
+
+  useFocusEffect(
+    useCallback(() => {
+      const onBackPress = () => {
+        if (currentStepIndex > 0 && !(currentStepIndex === 1 && isEdit)) {
+          setCurrentStepIndex((s) => Math.max(0, s - 1));
+          return true;
+        }
+        if (isEdit) {
+          return false;
+        }
         if (!showDraftModal && formData.assetType && formData.propertyName) {
           setShowDraftModal(true);
           return true;
         }
         return false;
-      }
-    );
+      };
 
-    return () => backHandler.remove();
-  }, [showDraftModal, formData]);
+      const sub = BackHandler.addEventListener(
+        "hardwareBackPress",
+        onBackPress
+      );
+      return () => sub.remove();
+    }, [
+      currentStepIndex,
+      showDraftModal,
+      formData.assetType,
+      formData.propertyName,
+    ])
+  );
 
   /**
    * Validate all fields in the current step.
@@ -321,7 +376,7 @@ export const PropertyFormScreen: React.FC<PropertyFormScreenProps> = ({
     });
     console.log(isValid, "validate");
     if (!isValid) {
-      showErrorToast("Please fill all required fields.");
+      // showErrorToast("Please fill all required fields.");
     }
 
     handleErrorsUpdate(stepErrors);
@@ -347,6 +402,14 @@ export const PropertyFormScreen: React.FC<PropertyFormScreenProps> = ({
   };
 
   const handleBack = () => {
+    try {
+
+      trackEvent("inventory_addition_previous_page").catch((error) => {
+        console.error(`Error logging event: ${error}`);
+      });
+    } catch (error) {
+      console.error(`Unexpected error: ${error}`);
+    }
     setErrors({});
     setCurrentStepIndex((prev) => prev - 1);
   };
@@ -415,6 +478,9 @@ export const PropertyFormScreen: React.FC<PropertyFormScreenProps> = ({
 
   const handleSaveDraft = async () => {
     try {
+      trackEvent("save_draft_inventory", agentData, formData).catch((error) => {
+        console.error(`Error logging event: ${error}`);
+      });
       setIsSavingDraft(true);
       console.log("Raw draft data:", formData);
 
@@ -425,6 +491,8 @@ export const PropertyFormScreen: React.FC<PropertyFormScreenProps> = ({
           value === undefined ? null : value
         )
       );
+
+      console.log(cleanData, "clean data");
 
       if (cleanData.propertyId) {
         await updateWholeProperty(
@@ -463,8 +531,28 @@ export const PropertyFormScreen: React.FC<PropertyFormScreenProps> = ({
         setMaxStepIndex(0);
       }
     }
-  }, [formData])
- 
+  }, [formData]);
+
+  useEffect(() => {
+    const logAnalyticsEvent = async () => {
+      try {
+        const eventName =
+          formData?.listingType === "resale"
+            ? "add_inventory_resale"
+            : "add_inventory_rental";
+
+        await trackEvent(eventName).catch((error) => {
+          console.error(`Error logging event: ${error}`);
+        });
+      } catch (error) {
+        console.error(`Unexpected error: ${error}`);
+      }
+    };
+
+    logAnalyticsEvent();
+  }, [formData?.listingType]);
+
+
   // -------------------- Derived Values --------------------
   const visibleSteps = getVisibleSteps();
 
@@ -482,6 +570,10 @@ export const PropertyFormScreen: React.FC<PropertyFormScreenProps> = ({
             onMediaUpdate={handleMediaUpdate}
             agentData={agentData}
             propId={propId}
+            handleDraftSave={handleSaveDraft}
+            showDraftModal={showDraftModal}
+            setShowDraftModal={setShowDraftModal}
+            setShowPreview={setShowPreview}
           />
         </View>
 
@@ -501,7 +593,20 @@ export const PropertyFormScreen: React.FC<PropertyFormScreenProps> = ({
           </TouchableOpacity>
           <TouchableOpacity
             className="flex-1 py-2 px-5 rounded-[4px] bg-[#153E3B] border border-[#153E3B]"
-            onPress={() => onComplete(formData)}
+            onPress={async () => {
+              try {
+                const hasRaw =
+                  rawMedia.photos.length > 0 ||
+                  rawMedia.videos.length > 0 ||
+                  rawMedia.documents.length > 0;
+                const payload: any = hasRaw
+                  ? { ...formData, _rawMedia: rawMedia }
+                  : formData;
+                onComplete(payload);
+              } catch (e) {
+                onComplete(formData);
+              }
+            }}
             disabled={isSubmitting}
           >
             {isSubmitting ? (
@@ -541,9 +646,8 @@ export const PropertyFormScreen: React.FC<PropertyFormScreenProps> = ({
             onPress={handleClear}
           >
             <Text
-              className={`font-montserrat text-base font-bold underline ${
-                isFormEmpty ? "text-[#9E9E9E]" : "text-[#D92D20]"
-              }`}
+              className={`font-montserrat text-base font-bold underline ${isFormEmpty ? "text-[#9E9E9E]" : "text-[#D92D20]"
+                }`}
             >
               Clear
             </Text>
@@ -670,25 +774,33 @@ export const PropertyFormScreen: React.FC<PropertyFormScreenProps> = ({
             propId={propId}
             docsToUpload={docsToUpload}
             setDocsToUpload={setDocsToUpload}
+            scrollToPossessionRef={scrollToPossessionRef}
+            onRawMediaChange={handleRawMediaChange}
           />
         </View>
 
         {/* Navigation Buttons */}
         <View className="flex flex-row items-center justify-center gap-[13px] px-4 py-[14.5px] bg-red border-t border-t-[#EEEEEE]">
           {currentStepIndex ? (
-            <TouchableOpacity
-              className="w-[50%] py-2 px-5 rounded-[4px] bg-white border border-[#153E3B]"
-              onPress={handleBack}
-            >
-              <Text className="text-center text-base font-semibold text-black">
-                {currentStepIndex === visibleSteps.length ? "Edit" : "Back"}
-              </Text>
-            </TouchableOpacity>
+            isEdit && currentStepIndex === 1 ? (
+              <></>
+            ) : (
+              <TouchableOpacity
+                className="w-[50%] py-2 px-5 rounded-[4px] bg-white border border-[#153E3B]"
+                onPress={handleBack}
+              >
+                <Text className="text-center text-base font-semibold text-black">
+                  {currentStepIndex === visibleSteps.length ? "Edit" : "Back"}
+                </Text>
+              </TouchableOpacity>
+            )
           ) : null}
 
           <TouchableOpacity
             className={`py-2 px-5 rounded-[4px] bg-[#153E3B] border border-[#153E3B] ${
-              currentStepIndex ? "w-[50%]" : "w-full"
+              currentStepIndex && !(currentStepIndex === 1 && isEdit)
+                ? "w-[50%]"
+                : "w-full"
             }`}
             onPress={handleNext}
           >

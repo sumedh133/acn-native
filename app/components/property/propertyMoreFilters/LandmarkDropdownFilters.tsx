@@ -401,7 +401,9 @@ const LandmarkDropdownFilters = ({
           {/* Labels above slider */}
           <View className="flex-row justify-between px-1 mb-1">
             <Text className="text-xs text-gray-500">1 Km</Text>
-            <Text className="text-xs text-gray-500">5 Km</Text>
+            <Text className="text-xs text-gray-500">
+              {sliderTempValue / 1000} Km
+            </Text>
             <Text className="text-xs text-gray-500">10 Km</Text>
           </View>
 

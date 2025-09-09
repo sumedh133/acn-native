@@ -64,8 +64,9 @@ import StatusUpdateModal from "./statusUpdateModal";
 import { updateProperty } from "@/app/services/property_services/propertyService";
 import { ScrollContext } from "@/app/ScrollContext";
 
+import { trackEvent } from "@/app/services/logAnalyticsService";
 interface PropertyCardProps {
-  property: any;
+  property: Property;
   selectedProperties?: Set<string>;
   isSelectionMode?: boolean;
   onToggleSelection?: (propertyId: string, propertyStatus: string) => void;
@@ -150,17 +151,17 @@ const PropertyCard: React.FC<PropertyCardProps> = ({
         return villa;
       case "villament":
         return villament;
-      case "row-house":
+      case "row house":
         return rowHouse;
       case "plot":
         return plot;
-      case "independent-building":
+      case "independent house":
         return independentBuilding;
-      case "office-space":
+      case "office space":
         return officeSpace;
-      case "retail-space":
+      case "retail space":
         return retailSpace;
-      case "commercial-building":
+      case "commercial space":
         return commercialBuilding;
       default:
         return commercialBuilding;
@@ -226,15 +227,13 @@ const PropertyCard: React.FC<PropertyCardProps> = ({
   const handleEnquireNowBtn = (e: any) => {
     e.stopPropagation();
     try {
-      logEvent(analytics, "property_enquire_click", {
-        event_category: "property",
-        event_label: "interaction",
-        property_id: property.propertyId,
-        credits_available: monthlyCredits,
-        user_type: userType,
+
+
+      trackEvent("click_enquire_now", { page_type: property?.listingType }).catch((error) => {
+        console.error(`Error logging event: ${error}`);
       });
     } catch (error) {
-      console.error("Error logging enquire click:", error);
+      console.error(`Unexpected error: ${error}`);
     }
 
     setSelectedCPID(property.cpId || "");
@@ -247,6 +246,16 @@ const PropertyCard: React.FC<PropertyCardProps> = ({
   };
 
   const handleCancel = () => {
+    try {
+
+
+      trackEvent("cancel_enquiry", { page_type: property?.listingType }).catch((error) => {
+        console.error(`Error logging event: ${error}`);
+      });
+    } catch (error) {
+      console.error(`Unexpected error: ${error}`);
+    }
+
     setIsConfirmModelOpen(false);
   };
   const handleGoPremium = () => {
@@ -300,6 +309,15 @@ const PropertyCard: React.FC<PropertyCardProps> = ({
       showSuccessToast("Enquiry submitted successfully!", {
         isInModal: true,
       });
+      try {
+
+
+        trackEvent("confirm_enquiry", undefined, property, { page_type: property?.listingType, buyerCpId: agentData?.cpId, sellerCpId: sellerData?.cpId }).catch((error) => {
+          console.error(`Error logging event: ${error}`);
+        });
+      } catch (error) {
+        console.error(`Unexpected error: ${error}`);
+      }
     } catch (error) {
       showErrorToast("Failed to submit enquiry. Please try again.", {
         isInModal: true,
@@ -486,21 +504,29 @@ const PropertyCard: React.FC<PropertyCardProps> = ({
     }
   };
 
-  const handleUpdateStatus = () => {
-    updateProperty(property.propertyId, {
-      status: "available",
-      dateOfLastChecked: getUnixDateTime(),
-    });
+  const handleUpdateStatus = async () => {
+    try {
+      trackEvent("inventory_status_update").catch((error) => {
+        console.error(`Error logging event: ${error}`);
+      });
+      await updateProperty(property.propertyId, {
+        status: "available",
+        dateOfLastChecked: getUnixDateTime(),
+      });
+      showSuccessToast("Updated the Status Successfully");
+    } catch (error) {
+      console.error("error updating status");
+    }
   };
 
   return (
     <View>
       {/* Property Card */}
-      <View className="flex flex-row items-center gap-3">
+      <View className="flex flex-row items-center gap-x-3">
         {pathname === "/MyBusinessPage" && isSelectionMode && (
           <Pressable onPress={handleSelectionToggle}>
             {selectedProperties &&
-            selectedProperties.has(property.propertyId) ? (
+              selectedProperties.has(property.propertyId) ? (
               <View className="min-w-[25px] min-h-[25] ">
                 <Selected />
               </View>
@@ -512,21 +538,23 @@ const PropertyCard: React.FC<PropertyCardProps> = ({
         <View className="flex-1">
           {(pathname === "/MyBusinessPage" ||
             pathname === "/UnderReviewProperties") && (
-            <View
-              className={`${
-                property.listingType === "rental"
+              <View
+                className={`${property.listingType === "rental"
                   ? "bg-[#FCE9BA]"
                   : "bg-[#EADDFF]"
-              } max-w-[56px] max-h-[19px] items-center ml-4 px-[11px] pt-1 rounded-t-lg`}
-            >
-              <Text className="text-[#10302D] text-xs font-medium leading-[150%]">
-                {safeText(toCapitalizedWords(property.listingType))}
-              </Text>
-            </View>
-          )}
+                  } max-w-[56px] max-h-[19px] items-center ml-4 px-[11px] pt-1 rounded-t-lg`}
+              >
+                <Text className="text-[#10302D] text-xs font-medium leading-[150%]">
+                  {safeText(toCapitalizedWords(property.listingType))}
+                </Text>
+              </View>
+            )}
           <Pressable
             delayLongPress={500}
             onLongPress={() => {
+              trackEvent("multiple_properties_selected").catch((error) => {
+                console.error(`Error logging event: ${error}`);
+              });
               if (pathname === "/MyBusinessPage") {
                 setLongPressed(true);
                 handleLongPress();
@@ -549,20 +577,20 @@ const PropertyCard: React.FC<PropertyCardProps> = ({
                 property.status === "hold" ||
                 property.status === "sold" ||
                 (property.status === "available" &&
-                  property.dateOfStatusLastChecked &&
+                  property.dateOfLastChecked &&
                   safeDaysDifference(
-                    property.dateOfStatusLastChecked + 60 * 60 * 24 * 15,
+                    property.dateOfLastChecked + 60 * 60 * 24 * 14,
                     Math.floor(Date.now() / 1000)
-                  ) > 0)) && (
+                  ) <= 3)) && (
                 <View className="flex flex-row items-center justify-between bg-[#E3E3E3] rounded-t-lg px-4 py-2">
                   <View className="flex flex-col">
-                    {property.dateOfStatusLastChecked &&
+                    {property.dateOfLastChecked &&
                       safeDaysDifference(
-                        property.dateOfStatusLastChecked + 60 * 60 * 24 * 15,
+                        property.dateOfLastChecked + 60 * 60 * 24 * 15,
                         Math.floor(Date.now() / 1000)
                       ) <= 4 &&
                       safeDaysDifference(
-                        property.dateOfStatusLastChecked + 60 * 60 * 24 * 15,
+                        property.dateOfLastChecked + 60 * 60 * 24 * 15,
                         Math.floor(Date.now() / 1000)
                       ) > 0 &&
                       property.status === "available" && (
@@ -571,8 +599,7 @@ const PropertyCard: React.FC<PropertyCardProps> = ({
                           <Text>
                             {safeText(
                               safeDaysDifference(
-                                property.dateOfStatusLastChecked +
-                                  60 * 60 * 24 * 15,
+                                property.dateOfLastChecked + 60 * 60 * 24 * 15,
                                 Math.floor(Date.now() / 1000)
                               )
                             )}
@@ -584,9 +611,12 @@ const PropertyCard: React.FC<PropertyCardProps> = ({
                       Is the property available?
                     </Text>
                   </View>
-                  <View className="flex flex-row gap-[10px]">
+                  <View className="flex flex-row gap-x-[10px]">
                     <Pressable
                       onPress={() => {
+                        trackEvent("inventory_status_update").catch((error) => {
+                          console.error(`Error logging event: ${error}`);
+                        });
                         setStatusUpdateModalOpen(true);
                       }}
                     >
@@ -608,8 +638,12 @@ const PropertyCard: React.FC<PropertyCardProps> = ({
                 <View className="flex-row items-center">
                   {/* Property ID on the left - using width fit-content approach */}
                   <View className="flex-1 shrink flex-row justify-between">
-                    <View className="self-start flex-row gap-2.5">
-                      <Text className="text-[#5A5555] text-sm font-[Lato] font-semibold leading-[21px] tracking-wide pb-0.5">
+                    <View className="self-start flex-row gap-x-2.5 flex-1">
+                      <Text
+                        className="text-[#5A5555] text-sm font-[Lato] font-semibold leading-[21px] tracking-wide pb-0.5 flex-1"
+                        numberOfLines={1}
+                        ellipsizeMode="tail"
+                      >
                         {safeText(property.propertyId)}
                       </Text>
                     </View>
@@ -669,20 +703,32 @@ const PropertyCard: React.FC<PropertyCardProps> = ({
                   </View>
                 </View>
 
-                <View className="flex-row items-center mb-2 gap-1.5">
-                  <View className="mt-1.5">
+                <View className="flex-row items-start mb-2 gap-x-1.5">
+                  <View className="self-center">
                     {getIcon() &&
                       React.createElement(getIcon(), { width: 40, height: 40 })}
                   </View>
-                  <View className="flex-col gap-1">
+                  <View
+                    className="flex-col gap-y-1 flex-1"
+                    style={{ minWidth: 0 }}
+                  >
                     {/* Property Name */}
-                    <View className="mt-2 gap-2 flex-col">
-                      <Text className="text-black text-base font-[Montserrat_700Bold]">
+                    <View className="mt-2 gap-y-1 flex-col flex-1">
+                      <Text
+                        className="text-black text-base font-montserrat-bold"
+                        style={{ flexShrink: 1, minWidth: 0, width: "100%" }}
+                      >
                         {getPropertyName()}
                       </Text>
-                      <View className="flex-row items-center gap-0.5">
+                      <View
+                        className="flex-row items-start gap-x-0.5 flex-1 mt-0.5"
+                        style={{ flexWrap: "wrap" }}
+                      >
                         <Location width={16} height={16} />
-                        <Text className="text-sm">
+                        <Text
+                          className="text-sm flex-1"
+                          style={{ flexShrink: 1, minWidth: 0 }}
+                        >
                           {safeText(property.micromarket)}
                         </Text>
                       </View>
@@ -691,17 +737,19 @@ const PropertyCard: React.FC<PropertyCardProps> = ({
                 </View>
 
                 {/* ✅ FIXED: Tags section with safe filtering and rendering */}
-                <View className="flex-row flex-wrap gap-2 mb-3">
+                <View className="flex-row flex-wrap gap-x-2 mb-3">
                   {[
                     toCapitalizedWords(property.assetType),
                     property.noOfBedrooms &&
-                      property.noOfBedrooms !== null &&
-                      `${property.noOfBedrooms} BHK`,
+                    property.noOfBedrooms !== null &&
+                    `${property.noOfBedrooms} BHK`,
                     property.assetType === "plot" &&
-                      `${property.plotArea} Sqft`,
+                      property.plotLength &&
+                      property.plotBreadth &&
+                      `${property.plotLength} sqft X ${property.plotBreadth} sqft`,
                     property.facing &&
-                      property.facing !== null &&
-                      toCapitalizedWords(property.facing),
+                    property.facing !== null &&
+                    toCapitalizedWords(property.facing),
                   ]
                     .filter(
                       (tag) => tag !== null && tag !== undefined && tag !== ""
@@ -725,13 +773,17 @@ const PropertyCard: React.FC<PropertyCardProps> = ({
               {/* ✅ FIXED: Price and SBUA section with safe formatting */}
               <View className="flex-row justify-between items-start border-t border-t-[#E3E3E3] pt-2 mb-3">
                 {/* Total Ask Price */}
-                <View className="flex-col items-start border-r border-r-[#E3E3E3] pr-5">
+                <View className="flex-col items-start px-4 flex-1">
                   {property.listingType === "rental" ? (
-                    <View>
-                      <Text className="text-[#433F3E] text-xs font-[Montserrat_500normal]">
+                    <View className="flex-1">
+                      <Text className="text-[#433F3E] text-xs font-montserrat-medium">
                         Rent
                       </Text>
-                      <Text className="text-sm font-semibold text-[#111827]">
+                      <Text
+                        className="text-sm font-semibold text-[#111827]"
+                        numberOfLines={1}
+                        ellipsizeMode="tail"
+                      >
                         {safeText(
                           property?.rentalInfo?.rent
                             ? formatCost2(property.rentalInfo.rent)
@@ -740,8 +792,8 @@ const PropertyCard: React.FC<PropertyCardProps> = ({
                       </Text>
                     </View>
                   ) : (
-                    <View>
-                      <Text className="text-[#433F3E] text-xs font-[Montserrat_500normal]">
+                    <View className="flex-1">
+                      <Text className="text-[#433F3E] text-xs font-montserrat-medium">
                         Ask Price
                       </Text>
                       <Text className="text-sm font-semibold text-[#111827]">
@@ -755,14 +807,27 @@ const PropertyCard: React.FC<PropertyCardProps> = ({
                   )}
                 </View>
 
+                {/* Vertical divider */}
+                <View
+                  style={{
+                    width: 1,
+                    backgroundColor: "#E3E3E3",
+                    alignSelf: "stretch",
+                  }}
+                />
+
                 {/* Per Sqft or deposit*/}
-                <View className="flex-col items-start border-r border-r-[#E3E3E3] pr-5">
+                <View className="flex-col items-start px-4 flex-1">
                   {property.listingType === "rental" ? (
-                    <View>
-                      <Text className="text-[#433F3E] text-xs font-[Montserrat_500normal]">
+                    <View className="flex-1">
+                      <Text className="text-[#433F3E] text-xs font-montserrat-medium">
                         Deposit
                       </Text>
-                      <Text className="text-sm font-semibold text-[#111827]">
+                      <Text
+                        className="text-sm font-semibold text-[#111827]"
+                        numberOfLines={1}
+                        ellipsizeMode="tail"
+                      >
                         {safeText(
                           property?.rentalInfo?.deposit
                             ? formatCost2(property?.rentalInfo?.deposit)
@@ -771,11 +836,15 @@ const PropertyCard: React.FC<PropertyCardProps> = ({
                       </Text>
                     </View>
                   ) : (
-                    <View>
-                      <Text className="text-[#433F3E] text-xs font-[Montserrat_500normal]">
-                        Per Sqft Price
+                    <View className="flex-1">
+                      <Text className="text-[#433F3E] text-xs font-montserrat-medium">
+                        /sqft Price
                       </Text>
-                      <Text className="text-sm font-semibold text-[#111827]">
+                      <Text
+                        className="text-sm font-semibold text-[#111827]"
+                        numberOfLines={1}
+                        ellipsizeMode="tail"
+                      >
                         {safeText(
                           property?.pricing?.pricePerSqft
                             ? formatCost(property.pricing.pricePerSqft)
@@ -786,13 +855,26 @@ const PropertyCard: React.FC<PropertyCardProps> = ({
                   )}
                 </View>
 
+                {/* Vertical divider */}
+                <View
+                  style={{
+                    width: 1,
+                    backgroundColor: "#E3E3E3",
+                    alignSelf: "stretch",
+                  }}
+                />
+
                 {/* SBUA */}
                 {property.assetType === "plot" ? (
-                  <View className="flex-col items-start">
-                    <Text className="text-[#6B7280] text-xs font-[Montserrat_600SemiBold]">
+                  <View className="flex-col items-start px-4 flex-1">
+                    <Text className="text-[#6B7280] text-xs font-montserrat-semibold">
                       Plot Size
                     </Text>
-                    <Text className="text-sm font-semibold text-[#111827]">
+                    <Text
+                      className="text-sm font-semibold text-[#111827]"
+                      numberOfLines={1}
+                      ellipsizeMode="tail"
+                    >
                       {property.plotArea ? (
                         <Text>{safeText(property.plotArea)} Sq Ft</Text>
                       ) : (
@@ -801,11 +883,15 @@ const PropertyCard: React.FC<PropertyCardProps> = ({
                     </Text>
                   </View>
                 ) : (
-                  <View className="flex-col items-start">
-                    <Text className="text-[#6B7280] text-xs font-[Montserrat_600SemiBold]">
+                  <View className="flex-col items-start px-4 flex-1">
+                    <Text className="text-[#6B7280] text-xs font-montserrat-semibold">
                       SBUA
                     </Text>
-                    <Text className="text-sm font-semibold text-[#111827]">
+                    <Text
+                      className="text-sm font-semibold text-[#111827]"
+                      numberOfLines={1}
+                      ellipsizeMode="tail"
+                    >
                       {property.sbua ? (
                         <Text>{safeText(property.sbua)} Sq Ft</Text>
                       ) : (
@@ -816,7 +902,7 @@ const PropertyCard: React.FC<PropertyCardProps> = ({
                 )}
               </View>
               {pathname === "/properties" && (
-                <View className="flex-row gap-3">
+                <View className="flex-row gap-x-3">
                   {/* Enquire Now Button */}
                   <TouchableOpacity
                     className="flex-1 bg-[#153E3B] rounded-md py-2 flex-row justify-center items-center"
@@ -841,19 +927,18 @@ const PropertyCard: React.FC<PropertyCardProps> = ({
             {/* ✅ FIXED: Business page footer with safe enquiries rendering */}
             {pathname === "/MyBusinessPage" && (
               <View
-                className={`flex flex-row justify-between rounded-b-lg px-4 py-2 ${
-                  property.status?.toLowerCase() === "available"
-                    ? "bg-[#EAFFEF]"
-                    : property.status?.toLowerCase() === "sold"
+                className={`flex flex-row justify-between rounded-b-lg px-4 py-2 ${property.status?.toLowerCase() === "available"
+                  ? "bg-[#EAFFEF]"
+                  : property.status?.toLowerCase() === "sold"
                     ? "bg-[#F2F2F2]"
                     : property.status?.toLowerCase() === "hold"
-                    ? "bg-[#FFFCF0]"
-                    : property.status?.toLowerCase() === "de-listed"
-                    ? "bg-[#FFF0F0]"
-                    : ""
-                }`}
+                      ? "bg-[#FFFCF0]"
+                      : property.status?.toLowerCase() === "de-listed"
+                        ? "bg-[#FFF0F0]"
+                        : ""
+                  }`}
               >
-                <View className="flex flex-col gap-[2px]">
+                <View className="flex flex-col gap-y-[2px]">
                   <Text className="text-[#5A5555] text-xs font-medium leading-[150%] tracking-[0.25px]">
                     Enquiries Recieved
                   </Text>
@@ -862,23 +947,22 @@ const PropertyCard: React.FC<PropertyCardProps> = ({
                     <Text> {enquiries === 1 ? "Enquiry" : "Enquiries"}</Text>
                   </Text>
                 </View>
-                <View className="flex flex-col gap-[2px]">
+                <View className="flex flex-col gap-y-[2px]">
                   <Text className="text-[#5A5555] text-xs font-medium leading-[150%] tracking-[0.25px]">
                     Status
                   </Text>
-                  <View className="flex flex-row items-center gap-1">
+                  <View className="flex flex-row items-center gap-y-1">
                     <Text
-                      className={`text-sm font-bold leading-[150%] ${
-                        property?.status?.toLowerCase() === "available"
-                          ? "text-[#34C759]"
-                          : property?.status?.toLowerCase() === "sold"
+                      className={`text-sm font-bold leading-[150%] ${property?.status?.toLowerCase() === "available"
+                        ? "text-[#34C759]"
+                        : property?.status?.toLowerCase() === "sold"
                           ? "text-[#5A5555]"
                           : property?.status?.toLowerCase() === "hold"
-                          ? "text-[#FFCC00]"
-                          : property?.status?.toLowerCase() === "de-listed"
-                          ? "text-[#DE1135]"
-                          : "text-[#2B2928]"
-                      }`}
+                            ? "text-[#FFCC00]"
+                            : property?.status?.toLowerCase() === "de-listed"
+                              ? "text-[#DE1135]"
+                              : "text-[#2B2928]"
+                        }`}
                     >
                       {safeText(toCapitalizedWords(property?.status))}
                     </Text>
@@ -942,6 +1026,7 @@ const PropertyCard: React.FC<PropertyCardProps> = ({
             setStatusUpdateModalOpen(false);
           }}
           selectedProperty={new Set([property.propertyId])}
+          agentData={agentData}
         />
       )}
 

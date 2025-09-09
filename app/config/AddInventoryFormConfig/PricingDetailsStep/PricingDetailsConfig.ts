@@ -27,7 +27,8 @@ export const pricingDetailsStep: FormStep = {
     // ----------- Rental Pricing -----------
     {
       id: "rentalInfo.rent",
-      label: "Rent/ month ",
+      label: "Rent",
+      suffix: "/month",
       type: "number",
       required: true,
       placeholder: "eg. 2,000",
@@ -37,7 +38,6 @@ export const pricingDetailsStep: FormStep = {
       },
       keyBoardType: "numeric",
       prefix: "₹ ",
-      suffix: "/month",
       numberToStringFooter: true,
       colspan: 12,
     },
@@ -53,7 +53,6 @@ export const pricingDetailsStep: FormStep = {
       },
       keyBoardType: "numeric",
       prefix: "₹ ",
-      suffix: "Fixed",
       numberToStringFooter: true,
       colspan: 12,
     },
@@ -77,6 +76,7 @@ export const pricingDetailsStep: FormStep = {
       id: "rentalInfo.maintenanceAmount",
       label: "Maintenance Amount",
       type: "number",
+      suffix: "/month",
       required: true,
       placeholder: "eg. 2,000",
       dependsOn: {
@@ -116,8 +116,17 @@ export const pricingDetailsStep: FormStep = {
       ],
       placeholder: "Enter rental income (if rented)",
       dependsOn: {
-        field: "listingType",
-        values: ["resale"],
+        conditions: [
+          {
+            field: "listingType",
+            values: ["resale"],
+          },
+          {
+            field: "possession",
+            values: ["ready to move"],
+          },
+        ],
+        logicOperator: "AND",
       },
       colspan: 12,
     },
@@ -140,7 +149,7 @@ export const pricingDetailsStep: FormStep = {
         ],
         logicOperator: "AND",
       },
-       keyBoardType: "numeric",
+      keyBoardType: "numeric",
       prefix: "₹ ",
       numberToStringFooter: true,
       colspan: 12,

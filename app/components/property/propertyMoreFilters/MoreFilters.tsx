@@ -38,6 +38,7 @@ import NumberRangeFilter from "./NumberRangeFilter";
 import BudgetRangeFilter from "./BudgetFilter";
 import StatusInfoBottomSheet from "../StatusInfoBottomSheet";
 import { ScrollContext } from "@/app/ScrollContext";
+import { toCapitalize } from "@/app/helpers/format/format";
 
 const defaultRanges: Record<string, [string, string]> = {
   rent: ["5000", "100000"],
@@ -315,6 +316,9 @@ const MoreFilters = ({
               style={{ fontFamily: "Montserrat_700Bold" }}
             >
               Filters
+              {filters.listingType?.[0]
+                ? ` (${toCapitalize(filters.listingType[0])})`
+                : ""}
             </Text>
           </View>
 
@@ -466,16 +470,9 @@ const MoreFilters = ({
                   titleClassName="text-sm"
                 />
               )}
-            {viewMode == "residential" &&
-              localFilters?.assetType?.some((type) =>
-                [
-                  "apartment",
-                  "independent house",
-                  "row house",
-                  "villa",
-                  "villament",
-                ].includes(type)
-              ) && (
+            {viewMode === "residential" &&
+              localFilters?.assetType?.length === 1 &&
+              localFilters?.assetType[0] === "apartment" && (
                 <FilterChipList
                   title={`Apartment Type`}
                   items={apartmentTypes}
@@ -527,14 +524,19 @@ const MoreFilters = ({
                       : "resale"
                   }
                 />
-                <NumberRangeFilter
-                  attribute="sbua"
-                  title="SBUA (sqft)"
-                  localFilters={localFilters}
-                  onChangeRange={(attr, range) => {
-                    toggleFilterValue(attr, range);
-                  }}
-                />
+                {!(
+                  localFilters.assetType?.length === 1 &&
+                  localFilters.assetType?.includes("plot")
+                ) && (
+                  <NumberRangeFilter
+                    attribute="sbua"
+                    title="SBUA (sqft)"
+                    localFilters={localFilters}
+                    onChangeRange={(attr, range) => {
+                      toggleFilterValue(attr, range);
+                    }}
+                  />
+                )}
 
                 {localFilters.assetType?.includes("plot") && (
                   <NumberRangeFilter

@@ -19,4 +19,4 @@ const db = getFirestore(app);
 // import analytics
 const analytics = getAnalytics();
 
-export { db, app, analytics };
+export { db, app,analytics};

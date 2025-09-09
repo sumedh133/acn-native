@@ -47,6 +47,7 @@ const MyBusinessListings = ({
         onSelectAll={onSelectAll}
         onDeselectAll={onDeselectAll}
         onExitSelectionMode={onExitSelectionMode}
+        isMyBusinessPage={true}
       />
     </View>
   );

@@ -25,6 +25,9 @@ import {
 import Offline from "../components/Offline";
 import { analytics } from "../config/firebase";
 import { logEvent } from "@react-native-firebase/analytics";
+import { getUnixDateTime } from "../helpers/getUnixDateTime";
+
+type UIRequirement = Omit<Requirement, "requirementId">;
 
 const UserRequirementForm = () => {
   const cpId =
@@ -57,7 +60,7 @@ const UserRequirementForm = () => {
 
   const [propertyName, setPropertyName] = useState("");
   const [requirementDetails, setRequirementDetails] = useState("");
-  const [assetType, setAssetType] = useState("");
+  const [assetType, setAssetType] = useState<string>("");
   const [area, setArea] = useState<string>("");
   const [configuration, setConfiguration] = useState("");
   const [budgetFrom, setBudgetFrom] = useState<number>(0);
@@ -237,10 +240,20 @@ const UserRequirementForm = () => {
     setSaving(true);
 
     try {
-      const userRequirement: Partial<Requirement> = {
+      const userRequirement: UIRequirement = {
+        requirementStatus: "open",
+        internalStatus: "pending",
+        added: getUnixDateTime(),
+        lastModified: getUnixDateTime(),
+        agentPhoneNumber: agentData?.phoneNumber || "",
+        agentName: agentData?.name || "",
+        cpId: cpId || "",
+        kamId: agentData?.kamId || "",
+        kamName: agentData?.kamName || "",
+        kamPhoneNumber: agentData?.kamPhoneNumber || "",
         propertyName,
-        extraDetails: requirementDetails,
-        assetType: assetType as any,
+        requirementDetails: requirementDetails,
+        assetType: assetType,
         area: area ? parseFloat(area) : 0,
         configuration: configuration as any,
         budget: {
@@ -265,8 +278,12 @@ const UserRequirementForm = () => {
       } catch (error) {
         console.error("Error logging form submission:", error);
       }
-
-      await submitRequirement(userRequirement, cpId);
+      try {
+        await submitRequirement(userRequirement, cpId);
+      } catch (error) {
+        console.error("Unable to proceed with submission:", error);
+        return;
+      }
 
       // Track successful submission
       try {

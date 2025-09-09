@@ -103,7 +103,6 @@ const CustomHeader = ({
   const { headerHeight, setHeaderHeight } = useContext(ScrollContext)!;
   const [measured, setMeasured] = useState(false);
 
-
   const monthlyCredits = useSelector(
     (state: RootState) => state?.agent?.docData?.monthlyCredits
   );
@@ -121,12 +120,12 @@ const CustomHeader = ({
     >
       <View
         style={styles.headerContainer}
-      //         onLayout={(event) => {
-      //   if (!measured.current) {
-      //     setHeaderHeight(event.nativeEvent.layout.height);
-      //     measured.current = true;
-      //   }
-      // }}
+        //         onLayout={(event) => {
+        //   if (!measured.current) {
+        //     setHeaderHeight(event.nativeEvent.layout.height);
+        //     measured.current = true;
+        //   }
+        // }}
       >
         <View style={styles.headerContent}>
           <View style={styles.headerLeft}>
@@ -175,7 +174,12 @@ const CustomHeader = ({
 
 export default function LayoutApp() {
   const dispatch = useDispatch<ThunkDispatch<RootState, unknown, AnyAction>>();
-  const { showNewEnquiryPopup, setShowNewEnquiryPopup, storedCount, setStoredCount } = useUI();
+  const {
+    showNewEnquiryPopup,
+    setShowNewEnquiryPopup,
+    storedCount,
+    setStoredCount,
+  } = useUI();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isMaintenanceMode, setIsMaintenanceMode] = useState(false);
   const [isScrolling, setIsScrolling] = useState(false);
@@ -262,12 +266,11 @@ export default function LayoutApp() {
 
       if (enquiryCount > storedCountValue) {
         console.log(
-          `🎉 New enquiries detected! ${enquiryCount - storedCountValue
+          `🎉 New enquiries detected! ${
+            enquiryCount - storedCountValue
           } new enquiries - opening modal`
         );
-        setStoredCount(enquiryCount - storedCountValue
-
-        );
+        setStoredCount(enquiryCount - storedCountValue);
         setShowNewEnquiryPopup(true);
         setItem("enquiryCount", enquiryCount);
       }
@@ -335,16 +338,15 @@ export default function LayoutApp() {
   const showtrial = agentData?.userType === "premium" ? false : true;
 
   const [trialData, setTrialData] = useState({
-    status: getTrialStatus(daysLeft, agentData?.monthlyCredits),
+    status: getTrialStatus(daysLeft, agentData?.monthlyCredits + agentData?.boosterCredits),
     daysLeft: daysLeft,
-    credits: agentData?.monthlyCredits,
+    credits: agentData?.monthlyCredits + agentData?.boosterCredits,
     showNotification: showtrial,
   });
 
   useEffect(() => {
-    setTrialData((prev) => ({ ...prev, credits: agentData?.monthlyCredits }));
-  }, [agentData?.monthlyCredits]);
-
+    setTrialData((prev) => ({ ...prev, credits: agentData?.monthlyCredits + agentData?.boosterCredits }));
+  }, [agentData?.monthlyCredits, agentData?.boosterCredits]);
 
   const router = useRouter();
 
@@ -538,7 +540,7 @@ export default function LayoutApp() {
           <Stack.Screen
             name="(pages)/ComingSoon"
             options={{ headerShown: false }}
-          // initialParams={{ showFooter: false }}
+            // initialParams={{ showFooter: false }}
           />
           <Stack.Screen
             name="(tabs)/properties"
@@ -581,7 +583,7 @@ export default function LayoutApp() {
             options={{ title: "Notifications", headerShown: false }}
             initialParams={{ showNotificationBanner: true }}
           />
-
+000
           <Stack.Screen
             name="components/Auth"
             options={{ headerShown: false }}
@@ -737,21 +739,16 @@ export default function LayoutApp() {
         <Toast config={toastConfig} />
         <StatusBar style="auto" />
         <KamManager />
-        {isAuthenticated && <FooterNavigation/>}
+        {isAuthenticated && <FooterNavigation />}
 
-        {
-          isAuthenticated && (
-            <NewEnquiriesModal
-              visible={showNewEnquiryPopup} // from Redux
-              onClose={() => setShowNewEnquiryPopup(false)}
-              onCheckNow={() => {
-
-              }}
-              enquiryCount={storedCount} // your enquiry count
-            />
-          )
-        }
-
+        {isAuthenticated && (
+          <NewEnquiriesModal
+            visible={showNewEnquiryPopup} // from Redux
+            onClose={() => setShowNewEnquiryPopup(false)}
+            onCheckNow={() => {}}
+            enquiryCount={storedCount} // your enquiry count
+          />
+        )}
       </View>
     </ScrollProvider>
   );

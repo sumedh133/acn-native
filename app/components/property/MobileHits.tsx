@@ -24,6 +24,7 @@ import { Property } from "@/app/types";
 import { usePathname } from "expo-router";
 import { FlashList } from "@shopify/flash-list";
 import { FlatList } from "react-native";
+import { trackEvent } from "@/app/services/logAnalyticsService";
 
 interface MobileHitsProps {
   results: any[]; // All accumulated results from infinite scroll
@@ -44,6 +45,7 @@ interface MobileHitsProps {
   onSelectAll?: () => void;
   onDeselectAll?: () => void;
   onExitSelectionMode?: () => void;
+  isMyBusinessPage?:boolean
 }
 
 const MobileHitsComponent = ({
@@ -65,6 +67,7 @@ const MobileHitsComponent = ({
   onSelectAll,
   onDeselectAll,
   onExitSelectionMode,
+  isMyBusinessPage=false,
 }: MobileHitsProps) => {
   const agentData = useSelector((state: RootState) => state?.agent?.docData);
   const userType = agentData?.userType || "free";
@@ -196,6 +199,18 @@ const MobileHitsComponent = ({
     [results.length, userType]
   );
 
+  const handleScrollStop = useCallback(() => {
+    try {
+      trackEvent("property_row_view", undefined, undefined, {
+        page_type: results?.[0].listingType,
+        property_count: viewedProperties.current.size,
+      }).catch((error) => console.error(`Error logging scroll stop event: ${error}`));
+    } catch (error) {
+      console.error(`Unexpected error: ${error}`);
+    }
+  }, [maxScrollDepth]);
+
+
   // Track scroll depth
   const handleScroll = useCallback(
     (event: any) => {
@@ -203,7 +218,7 @@ const MobileHitsComponent = ({
         event.nativeEvent;
       const scrollDepthPercentage = Math.floor(
         ((contentOffset.y + layoutMeasurement.height) / contentSize.height) *
-          100
+        100
       );
 
       if (scrollDepthPercentage > maxScrollDepth) {
@@ -230,16 +245,12 @@ const MobileHitsComponent = ({
     ({ item, index }: { item: Property; index: number }) => {
       const handlePropertyView = () => {
         try {
-          logEvent(analytics, "property_card_view", {
-            event_category: "interaction",
-            event_label: "property_view",
-            property_id: item.propertyId,
-            list_position: index + 1,
-            total_results: results.length,
-            user_type: userType,
+
+          trackEvent("property_card_view", undefined, item).catch((error) => {
+            console.error(`Error logging event: ${error}`);
           });
         } catch (error) {
-          console.error("Error logging property view:", error);
+          console.error(`Unexpected error: ${error}`);
         }
       };
 
@@ -428,7 +439,10 @@ const MobileHitsComponent = ({
       )}
       scrollEventThrottle={16}
       onScrollEndDrag={onScrollEndDrag} // ← This fixes partial visibility
-      onMomentumScrollEnd={onMomentumScrollEnd}
+      onMomentumScrollEnd={() => {
+        onMomentumScrollEnd?.(); // Keep existing functionality if any
+        handleScrollStop(); // Log custom scroll stop event
+      }}
       onViewableItemsChanged={handleViewableItemsChanged}
       viewabilityConfig={viewabilityConfig.current}
       refreshControl={
@@ -456,15 +470,20 @@ const MobileHitsComponent = ({
       onEndReached={handleEndReached}
       onEndReachedThreshold={0.3}
       ListFooterComponent={renderFooter}
+
     />
   );
 };
 
-// Memoize the component to prevent unnecessary re-renders
-export const MobileHits = React.memo(
+// 👇 put this after MobileHitsComponent
+const MemoizedMobileHits = React.memo(
   MobileHitsComponent,
   (prevProps, nextProps) => {
-    // Custom comparison function to optimize re-renders
+    // If it's MyBusinessPage, skip memoization → force re-render
+    if (nextProps.isMyBusinessPage) {
+      return false;
+    }
+
     return (
       prevProps.loading === nextProps.loading &&
       prevProps.loadingMore === nextProps.loadingMore &&
@@ -475,17 +494,15 @@ export const MobileHits = React.memo(
       prevProps.query === nextProps.query &&
       prevProps.isSelectionMode === nextProps.isSelectionMode &&
       prevProps.results.length === nextProps.results.length &&
-      // Deep compare results array only if lengths are the same
       (prevProps.results.length === 0 ||
         prevProps.results.every(
           (item, index) =>
             item.propertyId === nextProps.results[index]?.propertyId
         )) &&
-      // Compare firebaseProgress
       prevProps.firebaseProgress?.loaded ===
         nextProps.firebaseProgress?.loaded &&
-      prevProps.firebaseProgress?.total === nextProps.firebaseProgress?.total &&
-      // Compare selectedProperties Set
+      prevProps.firebaseProgress?.total ===
+        nextProps.firebaseProgress?.total &&
       prevProps.selectedProperties?.size ===
         nextProps.selectedProperties?.size &&
       Array.from(prevProps.selectedProperties || []).every((id) =>
@@ -494,3 +511,11 @@ export const MobileHits = React.memo(
     );
   }
 );
+
+// 👇 single export — consumers don't need to care about memoization
+export const MobileHits = (props: MobileHitsProps) => {
+  if (props.isMyBusinessPage) {
+    return <MobileHitsComponent {...props} />;
+  }
+  return <MemoizedMobileHits {...props} />;
+};

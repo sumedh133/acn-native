@@ -24,6 +24,7 @@ import {
   toastConfig,
 } from "@/utils/toastUtils";
 import Toast from "react-native-toast-message";
+import { trackEvent } from "../services/logAnalyticsService";
 
 interface ShareModalProps {
   visible: boolean;
@@ -68,13 +69,14 @@ const ShareModal: React.FC<ShareModalProps> = ({
       );
       details = decodeURIComponent(details);
 
-      logEvent(analytics, "share_action", {
-        event_category: "modal",
-        event_label: "share",
-        action: "copy",
-        property_id: property?.propertyId,
-        user_type: userType,
-      });
+      try {
+     
+           trackEvent("copy_property_details", undefined, property).catch((error) => {
+             console.error(`Error logging event: ${error}`);
+           });
+         } catch (error) {
+           console.error(`Unexpected error: ${error}`);
+         }
 
       showSuccessToast("Inventory details copied Successfully!", {
         isInModal: true,
@@ -88,13 +90,15 @@ const ShareModal: React.FC<ShareModalProps> = ({
 
   const handleShare = async () => {
     try {
-      logEvent(analytics, "share_action", {
-        event_category: "modal",
-        event_label: "share",
-        action: "whatsapp",
-        property_id: property?.propertyId,
-        user_type: userType,
-      });
+      try {
+     
+           trackEvent("share_property_details_whatsapp", undefined, property).catch((error) => {
+             console.error(`Error logging event: ${error}`);
+           });
+         } catch (error) {
+           console.error(`Unexpected error: ${error}`);
+         }
+
       await shareProperty(property, agentData?.phoneNumber, phoneNumber);
     } catch (error) {
       console.error("Error in share action:", error);

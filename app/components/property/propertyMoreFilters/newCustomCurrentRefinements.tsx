@@ -7,19 +7,36 @@ import { RootState } from "@/store/store";
 import { SearchFilters } from "../../../services/property_services/propertyAlgoliaService";
 import { formatCostSuffix } from "@/app/helpers/common";
 import { toCapitalize } from "@/app/helpers/format/format";
+import { trackEvent } from "@/app/services/logAnalyticsService";
 
 interface CustomCurrentRefinementsProps {
   selectedLandmark?: any;
+  sortBy?: any;
   setSelectedLandmark?: (landmark: any) => void;
+  onSortChange?: (sortBy: any) => void;
   filters: SearchFilters;
   onFiltersChange: (filters: SearchFilters) => void;
 }
+
+const sortDisplayMap: Record<string, string> = {
+  price_asc: "Price: Low to High",
+  price_desc: "Price: High to Low",
+  date_desc: "Newest First",
+  date_asc: "Oldest First",
+  price_per_sqft_asc: "Price/Sqft: Low to High",
+  price_per_sqft_desc: "Price/Sqft: High to Low",
+  rent_desc: "Rent: High to Low",
+  rent_asc: "Rent: Low to High",
+  relevanceLow: "Most Relevant",
+};
 
 export default function CustomCurrentRefinements({
   selectedLandmark,
   setSelectedLandmark,
   filters,
   onFiltersChange,
+  sortBy,
+  onSortChange,
 }: CustomCurrentRefinementsProps) {
   const userType =
     useSelector((state: RootState) => state.agent?.docData?.userType) || "free";
@@ -104,12 +121,8 @@ export default function CustomCurrentRefinements({
     raw?: string[]
   ) => {
     try {
-      logEvent(analytics, "remove_refinement", {
-        event_category: "filters",
-        event_label: "remove",
-        filter_type: attribute,
-        filter_value: value,
-        user_type: userType,
+      trackEvent("property_filter_remove", undefined, undefined, {
+        page_type: filters?.listingType?.[0],
       });
     } catch (error) {
       console.error("Error logging refinement removal:", error);
@@ -141,22 +154,21 @@ export default function CustomCurrentRefinements({
 
   const handleClearAll = () => {
     try {
-      logEvent(analytics, "clear_all_refinements", {
-        event_category: "filters",
-        event_label: "clear_all",
-        // Exclude type since we're keeping it
-        active_filters: Object.keys(filters).filter((key) => key !== "type"),
-        user_type: userType,
+      trackEvent("property_filter_clear", undefined, undefined, {
+        page_type: filters?.listingType?.[0] || "resale",
+      }).catch((error) => {
+        console.error(`Error logging event: ${error}`);
       });
     } catch (error) {
-      console.error("Error logging clear all:", error);
+      console.error(`Unexpected error: ${error}`);
     }
 
-    // Keep type, reset everything else
+    // Keep type, reset everything else, including sortBy
     onFiltersChange({
       listingType: filters.listingType,
       status: ["available", "Available"],
     });
+    if (onSortChange) onSortChange("relevance");
 
     if (setSelectedLandmark) {
       setSelectedLandmark(null);
@@ -170,7 +182,9 @@ export default function CustomCurrentRefinements({
       className="flex-row"
     >
       <View className="flex-row items-center px-4 space-x-2 mb-2">
-        {(allRefinements.length > 0 || selectedLandmark) && (
+        {(allRefinements.length > 0 ||
+          selectedLandmark ||
+          (sortBy && sortBy !== "relevance")) && (
           <TouchableOpacity onPress={handleClearAll} className="ml-1">
             <View className="flex-row items-center border border-[#DE1135] bg-[#FFE8EC]/10 px-2 py-1.5 rounded-3xl">
               <Text className="font-lato-semibold text-sm leading-[154%] text-[#313534] overflow-hidden">
@@ -179,6 +193,7 @@ export default function CustomCurrentRefinements({
             </View>
           </TouchableOpacity>
         )}
+
         {selectedLandmark && (
           <TouchableOpacity
             onPress={() => {
@@ -199,6 +214,36 @@ export default function CustomCurrentRefinements({
           >
             <Text className="font-lato-semibold text-sm text-[#313534] mr-2">
               {selectedLandmark.name} ({selectedLandmark.radius / 1000}km)
+            </Text>
+            <Text className="text-base text-[#313534]">×</Text>
+          </TouchableOpacity>
+        )}
+
+        {sortBy && sortBy.toLowerCase() !== "relevance" && (
+          <TouchableOpacity
+            onPress={() => {
+              try {
+                logEvent(analytics, "remove_sort_filter", {
+                  event_category: "filters",
+                  event_label: "remove",
+                  sort_type: sortBy,
+                  user_type: userType,
+                });
+              } catch (error) {
+                console.error("Error logging sort removal:", error);
+              }
+
+              // Reset sortBy to "most relevant"
+              onFiltersChange({ ...filters });
+              if (onSortChange) {
+                console.log("happening");
+                onSortChange("relevance");
+              }
+            }}
+            className="flex-row items-center bg-[#D0E8FF] px-3 py-1.5 rounded-full"
+          >
+            <Text className="font-lato-semibold text-sm text-[#313534] mr-2">
+              {sortDisplayMap[sortBy] || toCapitalize(sortBy)}
             </Text>
             <Text className="text-base text-[#313534]">×</Text>
           </TouchableOpacity>

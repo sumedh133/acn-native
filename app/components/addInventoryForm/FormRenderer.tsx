@@ -1,5 +1,5 @@
 import React from "react";
-import { useEffect } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   View,
   Text,
@@ -23,6 +23,8 @@ import Document from "../Listing/document/Document";
 import PlusIcon from "../../../assets/icons/svg/AddInventory/FormIcons/plus_icon.svg";
 import CorrectIcon from "../../../assets/icons/svg/AddInventory/FormIcons/correct_icon.svg";
 import PhotoVideoPicker from "../Listing/PhotoVideoPicker";
+import type { Asset } from "react-native-image-picker";
+import { MediaObj } from "@/app/types/MediaTypes";
 
 type UIProperty = Omit<Property, "handOverDate"> & {
   handOverDate?: string;
@@ -52,6 +54,12 @@ interface FormRendererProps {
   propId?: any;
   docsToUpload: DocsToUpload;
   setDocsToUpload: (docsToUpload: DocsToUpload) => void;
+  scrollToPossessionRef?: React.RefObject<ScrollView>;
+  onRawMediaChange?: (media: {
+    photos: MediaObj[];
+    videos: MediaObj[];
+    documents?: MediaObj[];
+  }) => void;
 }
 
 // Total number of columns in our grid system
@@ -71,7 +79,13 @@ export const FormRenderer: React.FC<FormRendererProps> = ({
   setSelectedPlace,
   docsToUpload,
   setDocsToUpload,
+  scrollToPossessionRef,
+  onRawMediaChange,
 }) => {
+  // Ref for the possession field
+  const possessionFieldRef = useRef<View>(null);
+  const [selectedMediaAssets, setSelectedMediaAssets] = useState<Asset[]>([]);
+
   /**
    * Set nested field value in formData.
    */
@@ -90,6 +104,26 @@ export const FormRenderer: React.FC<FormRendererProps> = ({
 
     resetDependentFields(fieldPath, newData);
     onFormUpdate(newData);
+
+    // Scroll to possession field when it changes
+    if (
+      fieldPath === "possession" &&
+      possessionFieldRef.current &&
+      scrollToPossessionRef?.current
+    ) {
+      setTimeout(() => {
+        possessionFieldRef.current?.measureLayout(
+          scrollToPossessionRef.current as any,
+          (x, y) => {
+            scrollToPossessionRef.current?.scrollTo({
+              y: y - 100,
+              animated: true,
+            });
+          },
+          () => {}
+        );
+      }, 100);
+    }
   };
 
   /**
@@ -209,12 +243,18 @@ export const FormRenderer: React.FC<FormRendererProps> = ({
     const error = errors[field.id];
     const fieldWidth = getFieldWidth(field);
 
-
     const commonLabel = (
-      <Text className="text-base font-semibold mb-3">
-        {field.label}
-        {field.required && <Text>*</Text>}
-      </Text>
+      <View className="mb-3">
+        <Text className="text-base font-semibold">
+          {field.label}
+          {field.required && <Text>*</Text>}
+        </Text>
+        {field.labelNote && (
+          <Text className="font-lato-light text-[11px] leading-[150%]">
+            {field.labelNote}
+          </Text>
+        )}
+      </View>
     );
 
     const errorMessage = error && (
@@ -228,7 +268,6 @@ export const FormRenderer: React.FC<FormRendererProps> = ({
             <View>
               <PlacesSearch
                 selectedPlace={selectedPlace}
-
                 setSelectedPlace={setSelectedPlace}
                 communityType={formData.communityType}
                 disabled={isEdit}
@@ -275,6 +314,11 @@ export const FormRenderer: React.FC<FormRendererProps> = ({
                 multiline
                 numberOfLines={4}
               />
+              {field.footer && (
+                <Text className="font-lato-light text-[11px] leading-[150%]">
+                  {field.labelNote}
+                </Text>
+              )}
               {errorMessage}
             </>
           );
@@ -330,10 +374,13 @@ export const FormRenderer: React.FC<FormRendererProps> = ({
                       }}
                     >
                       <Text
-                        className={`${currentStep ? "" : "px-[10px]"} text-sm font-medium ${isSelected
-                          ? "text-[#153E3B] font-bold"
-                          : "text-[#2B2928]"
-                          } leading-normal`}
+                        className={`${
+                          currentStep ? "" : "px-[10px]"
+                        } text-sm font-medium ${
+                          isSelected
+                            ? "text-[#153E3B] font-bold"
+                            : "text-[#2B2928]"
+                        } leading-normal`}
                       >
                         {option.label}
                       </Text>
@@ -455,6 +502,11 @@ export const FormRenderer: React.FC<FormRendererProps> = ({
                   setFieldValue(fieldKey, value)
                 }
                 required={false}
+                area={
+                  formData.assetType === "plot"
+                    ? formData.plotArea
+                    : formData.sbua
+                }
               />
               {errorMessage}
             </>
@@ -556,7 +608,28 @@ export const FormRenderer: React.FC<FormRendererProps> = ({
         case "photos/videos":
           return (
             <>
-              <PhotoVideoPicker />
+              <PhotoVideoPicker
+                selectedMedia={selectedMediaAssets}
+                setSelectedMedia={setSelectedMediaAssets}
+                onChange={(data) => {
+                  // Update form data with URIs for preview
+                  const next = {
+                    ...formData,
+                    media: {
+                      photos: data.photos.map((p) => p.uri),
+                      videos: data.videos.map((v) => v.uri),
+                      documents: formData.media?.documents || [],
+                    },
+                  } as Partial<UIProperty>;
+                  onFormUpdate(next);
+                  // Pass raw media objects upward for TUS submission
+                  onRawMediaChange?.({
+                    photos: data.photos,
+                    videos: data.videos,
+                    documents: [],
+                  });
+                }}
+              />
             </>
           );
         default:
@@ -565,7 +638,12 @@ export const FormRenderer: React.FC<FormRendererProps> = ({
     };
 
     return (
-      <View key={field.id} style={{ width: fieldWidth }} className="mb-3 px-2">
+      <View
+        key={field.id}
+        ref={field.id === "possession" ? possessionFieldRef : null}
+        style={{ width: fieldWidth }}
+        className="mb-3 px-2"
+      >
         {fieldContent()}
       </View>
     );
@@ -587,9 +665,6 @@ export const FormRenderer: React.FC<FormRendererProps> = ({
       }
     });
   }, [visibleSteps, currentStep]);
-
-
-
 
   // -------------------- Render --------------------
   if (!visibleSteps[currentStep]) return null;
@@ -618,7 +693,11 @@ export const FormRenderer: React.FC<FormRendererProps> = ({
       </View>
 
       {/* Fields */}
-      <ScrollView className="flex px-3 " showsVerticalScrollIndicator={false}>
+      <ScrollView
+        ref={scrollToPossessionRef}
+        className="flex px-3 "
+        showsVerticalScrollIndicator={false}
+      >
         {fieldRows.map((row, rowIndex) => (
           <View
             key={`row-${rowIndex}`}

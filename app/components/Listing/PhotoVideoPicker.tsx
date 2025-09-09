@@ -26,6 +26,7 @@ import { Ionicons } from "@expo/vector-icons";
 import Video, { VideoRef } from "react-native-video";
 import Icon from "@/assets/icons/svg/PropertyListing/ListingFlow/PhotoVideoPicker.svg";
 import { getIcon } from "@/utils/iconUtils";
+import { trackEvent } from "@/app/services/logAnalyticsService";
 
 // Emit object arrays (not strings) to the parent
 type MediaObj = { uri: string; name?: string; type?: string; size?: number };
@@ -39,7 +40,7 @@ interface PhotoVideoPickerProps {
 const PhotoVideoPicker: React.FC<PhotoVideoPickerProps> = ({
   onChange,
   selectedMedia = [],
-  setSelectedMedia = () => {},
+  setSelectedMedia = () => { },
 }) => {
   // const [selectedMedia, setSelectedMedia] = useState<Asset[]>([]);
   const [modalVisible, setModalVisible] = useState(false);
@@ -193,6 +194,11 @@ const PhotoVideoPicker: React.FC<PhotoVideoPickerProps> = ({
   };
 
   const removeImage = (index: number): void => {
+    try {
+      trackEvent("remove_image").catch((error) => console.error(`Error image remove scroll event: ${error}`));
+    } catch (error) {
+      console.error(`Unexpected error: ${error}`);
+    }
     const updatedMedia = selectedMedia.filter((_, i) => i !== index);
     setSelectedMedia(updatedMedia);
   };
@@ -265,9 +271,8 @@ const PhotoVideoPicker: React.FC<PhotoVideoPickerProps> = ({
     return (
       <TouchableOpacity
         key={index}
-        className={`w-16 h-16 mr-3 rounded-lg overflow-hidden relative border-2 ${
-          isActive ? "border-blue-500" : "border-transparent"
-        }`}
+        className={`w-16 h-16 mr-3 rounded-lg overflow-hidden relative border-2 ${isActive ? "border-blue-500" : "border-transparent"
+          }`}
         onPress={() => handleThumbnailPress(index, mediaItem)}
         activeOpacity={0.8}
       >
@@ -338,6 +343,16 @@ const PhotoVideoPicker: React.FC<PhotoVideoPickerProps> = ({
   };
 
   const showImagePicker = (): void => {
+
+    try {
+
+      trackEvent("open_image_picker").catch((error) => {
+        console.error(`Error logging event: ${error}`);
+      });
+    } catch (error) {
+      console.error(`Unexpected error: ${error}`);
+    }
+
     Alert.alert("Select Media", "Choose an option", [
       { text: "Camera", onPress: () => openCamera() },
       { text: "Photo Library", onPress: () => openGallery() },
@@ -399,7 +414,7 @@ const PhotoVideoPicker: React.FC<PhotoVideoPickerProps> = ({
       mediaType: "mixed" as MediaType,
       maxWidth: 2000,
       maxHeight: 2000,
-      selectionLimit: 10, // Allow multiple selection
+      selectionLimit: 50, // Allow multiple selection
     };
 
     launchImageLibrary(options, (response: ImagePickerResponse) => {

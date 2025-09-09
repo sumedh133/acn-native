@@ -72,6 +72,7 @@ const TrialStatusNotification: React.FC<TrialStatusNotificationProps> = ({
   const [status, setStatus] = useState<TrialStatusType>(TrialStatusType.ACTIVE);
   const [daysLeft, setDaysLeft] = useState<number>(28);
   const [credits, setCredits] = useState<number>(20);
+  const boosterCredits = useSelector((state: RootState) => state?.agent?.docData?.boosterCredits) || 0;
   const agentData = useSelector((state: RootState) => state?.agent?.docData);
   const [showOnboarding, setShowOnboarding] = useState(false);
   const userType =
@@ -135,12 +136,12 @@ const TrialStatusNotification: React.FC<TrialStatusNotificationProps> = ({
       const calculatedDaysLeft = calculateDaysLeft(agentData?.trialStartedAt);
       const trialStatus = getTrialStatus(
         calculatedDaysLeft,
-        agentData?.monthlyCredits
+        agentData?.monthlyCredits + agentData?.boosterCredits
       );
 
       setStatus(trialStatus);
       setDaysLeft(calculatedDaysLeft);
-      setCredits(agentData?.monthlyCredits);
+      setCredits(agentData?.monthlyCredits + agentData?.boosterCredits);
 
       // Track trial status view
       try {
@@ -149,7 +150,7 @@ const TrialStatusNotification: React.FC<TrialStatusNotificationProps> = ({
           event_label: "status",
           trial_status: trialStatus,
           days_left: calculatedDaysLeft,
-          credits_remaining: agentData?.monthlyCredits,
+          credits_remaining: agentData?.monthlyCredits + agentData?.boosterCredits,
           user_type: userType,
         });
       } catch (error) {
@@ -176,7 +177,7 @@ const TrialStatusNotification: React.FC<TrialStatusNotificationProps> = ({
         event_label: "dismiss",
         trial_status: status,
         days_left: daysLeft,
-        credits_remaining: credits,
+        credits_remaining: credits + boosterCredits,
         user_type: userType,
       });
     } catch (error) {
@@ -353,17 +354,17 @@ const TrialStatusNotification: React.FC<TrialStatusNotificationProps> = ({
               </View>
               <View className="flex-1">
                 <Text
-                  className="text-sm text-[#0A0B0A]"
+                  className="text-base text-[#0A0B0A]"
                   style={{ fontFamily: "Lato_700Bold" }}
                 >
                   {config.title}
                 </Text>
-                <Text
+                {/* <Text
                   className="text-xs text-[#0A0B0A]"
                   style={{ fontFamily: "Lato_400Regular" }}
                 >
                   {config.message}
-                </Text>
+                </Text> */}
               </View>
             </TouchableOpacity>
 

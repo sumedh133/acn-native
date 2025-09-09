@@ -31,6 +31,8 @@ import MultiStatusUpdateModal, {
   SelectedStatuses,
 } from "../components/MyBusinessPage/MultiStatusUpdateModal";
 import { getUnixDateTime } from "../helpers/getUnixDateTime";
+import { showSuccessToast } from "@/utils/toastUtils";
+import { trackEvent } from "../services/logAnalyticsService";
 
 // Icons Import
 
@@ -183,25 +185,33 @@ const MyBusinessPage = () => {
     }
   };
 
-  const handleStatusUpdate = () => {
-    const finalPropertyIdsToUpdate = [];
-    if (statusMap.available.selected)
-      finalPropertyIdsToUpdate.push(statusMap.available.propertyIds);
+  const handleStatusUpdate = async () => {
+    try {
+      const finalPropertyIdsToUpdate = [];
+      if (statusMap.available.selected)
+        finalPropertyIdsToUpdate.push(statusMap.available.propertyIds);
 
-    if (statusMap.sold.selected)
-      finalPropertyIdsToUpdate.push(statusMap.sold.propertyIds);
+      if (statusMap.sold.selected)
+        finalPropertyIdsToUpdate.push(statusMap.sold.propertyIds);
 
-    if (statusMap.hold.selected)
-      finalPropertyIdsToUpdate.push(statusMap.hold.propertyIds);
-    if (statusMap.tenanted.selected)
-      finalPropertyIdsToUpdate.push(statusMap.tenanted.propertyIds);
-    if (statusMap["de-listed"].selected)
-      finalPropertyIdsToUpdate.push(statusMap["de-listed"].propertyIds);
-    for (const i in finalPropertyIdsToUpdate) {
-      updateProperty(i, {
-        status: "available",
-        dateOfLastChecked: getUnixDateTime(),
-      });
+      if (statusMap.hold.selected)
+        finalPropertyIdsToUpdate.push(statusMap.hold.propertyIds);
+      if (statusMap.tenanted.selected)
+        finalPropertyIdsToUpdate.push(statusMap.tenanted.propertyIds);
+      if (statusMap["de-listed"].selected)
+        finalPropertyIdsToUpdate.push(statusMap["de-listed"].propertyIds);
+      const updatePromises = Object.keys(finalPropertyIdsToUpdate).map(
+        (propertyId) =>
+          updateProperty(propertyId, {
+            status: "available",
+            dateOfLastChecked: getUnixDateTime(),
+          })
+      );
+
+      await Promise.all(updatePromises);
+      showSuccessToast("Status updated successfully");
+    } catch (error) {
+      console.error("Error updating status:", error);
     }
   };
 
@@ -247,7 +257,7 @@ const MyBusinessPage = () => {
       (navigation as any)?.setParams?.({
         showFooter: selectedProperties.size === 0,
       });
-    } catch {}
+    } catch { }
   }, [selectedProperties.size, navigation]);
 
   const handleMarkAsAvailable = () => {
@@ -270,7 +280,7 @@ const MyBusinessPage = () => {
   const fetchProperties = useCallback(async () => {
     try {
       setLoading(true);
-      const propertyResults: Property[] = await searchProperties("cpId", cpId);
+      const propertyResults: Property[] = await searchProperties("cpId", cpId, "qc");
       setProperties(propertyResults || []);
     } catch (error) {
       console.error("Error fetching properties:", error);
@@ -283,6 +293,23 @@ const MyBusinessPage = () => {
   useEffect(() => {
     resetFooterPosition();
   }, []);
+
+  useEffect(() => {
+    const logAnalyticsEvent = () => {
+      try {
+    
+  
+        trackEvent("my_business_page_view").catch((error) => {
+          console.error(`Error logging event: ${error}`);
+        });
+      } catch (error) {
+        console.error(`Unexpected error: ${error}`);
+      }
+    };
+
+    logAnalyticsEvent();
+  }, []);
+
 
   useEffect(() => {
     try {

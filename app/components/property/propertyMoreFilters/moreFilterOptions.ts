@@ -89,6 +89,7 @@ export const apartmentTypes: FilterChipItem[] = [
   { label: "Duplex", value: "Duplex" },
   { label: "Triplex", value: "Triplex" },
   { label: "Quadplex", value: "Quadplex" },
+  { label: "Penthouse", value: "Penthouse" },
 ];
 
 export const bedroomOptions: FilterChipItem[] = [
@@ -108,11 +109,11 @@ export const facingOptions: DropdownOption[] = [
   { label: "West", value: "West", count: 2 },
 ];
 export const floorOptions: DropdownOption[] = [
-  { label: "Ground", value: "ground" },
-  { label: "Lower Floors", value: "" },
-  { label: "Middle Floors", value: "Middle Floors" },
-  { label: "Upper Floors", value: "Upper Floors" },
-  { label: "Penthouse", value: "Penthouse" },
+  { label: "Ground Floor", value: "ground floor" },
+  { label: "Lower Floor (1 - 5)", value: "lower floor (1 - 5)" },
+  { label: "Middle Floor (6 - 10)", value: "middle floor (6 - 10)" },
+  { label: "Higher Floor (10+)", value: "higher floor (10+)" },
+  { label: "Higher Floor (20+)", value: "higher floor (20+)" },
 ];
 export const preferredTenantsOptions: DropdownOption[] = [
   { label: "Anyone", value: "Anyone" },
@@ -129,7 +130,7 @@ export const furnishingOptions: DropdownOption[] = [
   { label: "Plug & Play", value: "plug-and-play" },
 ];
 export const zoneOptions: FilterChipItem[] = [
-  { label: "Center Bangalore", value: "Center Bangalore" },
+  { label: "Central Bangalore", value: "Central Bangalore" },
   { label: "North Bangalore", value: "North Bangalore" },
   { label: "South Bangalore", value: "South Bangalore" },
   { label: "South-East Bangalore", value: "South-East Bangalore" },
