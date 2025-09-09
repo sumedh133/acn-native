@@ -316,7 +316,7 @@ export default function PropertyFilters({
           <NewSearchIcon style={{ marginRight: 8 }} />
           <TextInput
             className="flex-1 text-sm text-gray-700"
-            placeholder="Search by project, micro market"
+            placeholder="Search by project"
             value={searchText}
             onChangeText={setSearchText}
             placeholderTextColor="#9CA3AF"
@@ -455,7 +455,7 @@ export default function PropertyFilters({
           <NewSearchIcon style={{ marginRight: 8 }} />
           <TextInput
             className="flex-1 text-xs text-gray-700 "
-            placeholder="Search by project, micro market"
+            placeholder="Search by project"
             value={searchText}
             onChangeText={setSearchText}
             placeholderTextColor="#9CA3AF"
