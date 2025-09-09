@@ -163,7 +163,7 @@ export default function PropertyFilters({
 
   const handleOpenSortPopup = () => {
     setIsSortPopupOpen(true);
-    openSortPopup(isMyBusinessPage? "" : filters.listingType?.[0])
+    openSortPopup(isMyBusinessPage? "myBusinessPage" : filters.listingType?.[0])
     setTimeout(() => setIsSortPopupOpen(false), 3000);
   };
 

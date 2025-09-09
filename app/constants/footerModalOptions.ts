@@ -64,9 +64,7 @@ export const getSortOptions = (
         selected: selectedSort === "price_per_sqft_desc",
       },
     ];
-  }
-
-  if (propertyType === "rental") {
+  } else if (propertyType === "rental") {
     return [
       ...baseOptions,
       {
@@ -82,6 +80,8 @@ export const getSortOptions = (
         selected: selectedSort === "rent_desc",
       },
     ];
+  }else {
+    return baseOptions
   }
 
   return baseOptions;
