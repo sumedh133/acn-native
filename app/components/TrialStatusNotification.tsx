@@ -354,17 +354,17 @@ const TrialStatusNotification: React.FC<TrialStatusNotificationProps> = ({
               </View>
               <View className="flex-1">
                 <Text
-                  className="text-sm text-[#0A0B0A]"
+                  className="text-base text-[#0A0B0A]"
                   style={{ fontFamily: "Lato_700Bold" }}
                 >
                   {config.title}
                 </Text>
-                <Text
+                {/* <Text
                   className="text-xs text-[#0A0B0A]"
                   style={{ fontFamily: "Lato_400Regular" }}
                 >
                   {config.message}
-                </Text>
+                </Text> */}
               </View>
             </TouchableOpacity>
 

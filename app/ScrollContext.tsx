@@ -93,7 +93,7 @@ export const ScrollContext = createContext<ScrollContextType>({
   showSortPopup: false,
   selectedSort: null,
   openSortPopup: () => {},
-  propertyType:'',
+  propertyType: "",
   closeSortPopup: () => {},
   setSelectedSort: () => {},
 
@@ -224,71 +224,128 @@ export const ScrollProvider: React.FC<{ children: React.ReactNode }> = ({
     extrapolate: "clamp",
   });
 
+  // Add a ref to track if we're already animating to avoid multiple concurrent animations
+  const isAnimatingToTop = useRef(false);
+
   // Update clamps on scroll
   const updateClampedValue = useCallback(
     (currentScroll: number) => {
-      const diff = currentScroll - lastScrollValue.current;
-      if (Math.abs(diff) > 0.5) {
-        scrollDirection.current = diff > 0 ? "down" : "up";
-        const dampingFactor = 0.3;
-        const dampedDiff = Math.abs(diff) * dampingFactor;
+      // Edge case: If at the top of scroll, force all elements to be visible
+      if (currentScroll <= 0) {
+        // Prevent multiple concurrent animations
+        if (isAnimatingToTop.current) return;
 
-        // Footer behavior
-        if (scrollDirection.current === "down") {
-          currentClampedFooter.current = Math.min(
-            safeFooterHeight,
-            currentClampedFooter.current + dampedDiff
-          );
-        } else {
-          currentClampedFooter.current = Math.max(
-            0,
-            currentClampedFooter.current - dampedDiff
-          );
-        }
-        clampedFooterY.setValue(currentClampedFooter.current);
+        // Check if any element needs to be shown
+        const needsAnimation =
+          currentClampedFooter.current > 0 ||
+          currentClampedHeader.current > 0 ||
+          currentClampedSecondaryHeader.current > 0 ||
+          currentClampedNotification.current > 0;
 
-        // Header behavior
-        if (scrollDirection.current === "down") {
-          currentClampedHeader.current = Math.min(
-            safeHeaderHeight,
-            currentClampedHeader.current + dampedDiff
-          );
-        } else {
-          currentClampedHeader.current = Math.max(
-            0,
-            currentClampedHeader.current - dampedDiff
-          );
-        }
-        clampedHeaderY.setValue(currentClampedHeader.current);
+        if (needsAnimation) {
+          isAnimatingToTop.current = true;
 
-        // Secondary Header behavior
-        if (scrollDirection.current === "down") {
-          currentClampedSecondaryHeader.current = Math.min(
-            safeSecondaryHeaderHeight,
-            currentClampedSecondaryHeader.current + dampedDiff
-          );
-        } else {
-          currentClampedSecondaryHeader.current = Math.max(
-            0,
-            currentClampedSecondaryHeader.current - dampedDiff
-          );
-        }
-        clampedSecondaryHeaderY.setValue(currentClampedSecondaryHeader.current);
+          // Update ref values immediately for consistency
+          currentClampedFooter.current = 0;
+          currentClampedHeader.current = 0;
+          currentClampedSecondaryHeader.current = 0;
+          currentClampedNotification.current = 0;
 
-        // Notification behavior
-        if (scrollDirection.current === "down") {
-          currentClampedNotification.current = Math.min(
-            safeNotificationHeight,
-            currentClampedNotification.current + dampedDiff
-          );
-        } else {
-          currentClampedNotification.current = Math.max(
-            0,
-            currentClampedNotification.current - dampedDiff
-          );
+          // Animate all elements simultaneously for efficiency
+          Animated.parallel([
+            Animated.timing(clampedFooterY, {
+              toValue: 0,
+              duration: 150, // Slightly faster for snappier feel
+              useNativeDriver: false,
+            }),
+            Animated.timing(clampedHeaderY, {
+              toValue: 0,
+              duration: 150,
+              useNativeDriver: false,
+            }),
+            Animated.timing(clampedSecondaryHeaderY, {
+              toValue: 0,
+              duration: 150,
+              useNativeDriver: false,
+            }),
+            Animated.timing(clampedNotificationY, {
+              toValue: 0,
+              duration: 150,
+              useNativeDriver: false,
+            }),
+          ]).start(() => {
+            isAnimatingToTop.current = false;
+          });
         }
-        clampedNotificationY.setValue(currentClampedNotification.current);
+
+        lastScrollValue.current = currentScroll;
+        return;
       }
+
+      // Reset animation flag when not at top
+      isAnimatingToTop.current = false;
+
+      // Only process if there's meaningful movement
+      const diff = currentScroll - lastScrollValue.current;
+      if (Math.abs(diff) <= 0.5) {
+        return; // Early exit for micro-scrolls
+      }
+
+      scrollDirection.current = diff > 0 ? "down" : "up";
+      const dampingFactor = 0.3;
+      const dampedDiff = Math.abs(diff) * dampingFactor;
+
+      // Batch all calculations first
+      let footerValue = currentClampedFooter.current;
+      let headerValue = currentClampedHeader.current;
+      let secondaryHeaderValue = currentClampedSecondaryHeader.current;
+      let notificationValue = currentClampedNotification.current;
+
+      // Footer behavior
+      if (scrollDirection.current === "down") {
+        footerValue = Math.min(safeFooterHeight, footerValue + dampedDiff);
+      } else {
+        footerValue = Math.max(0, footerValue - dampedDiff);
+      }
+
+      // Header behavior
+      if (scrollDirection.current === "down") {
+        headerValue = Math.min(safeHeaderHeight, headerValue + dampedDiff);
+      } else {
+        headerValue = Math.max(0, headerValue - dampedDiff);
+      }
+
+      // Secondary Header behavior
+      if (scrollDirection.current === "down") {
+        secondaryHeaderValue = Math.min(
+          safeSecondaryHeaderHeight,
+          secondaryHeaderValue + dampedDiff
+        );
+      } else {
+        secondaryHeaderValue = Math.max(0, secondaryHeaderValue - dampedDiff);
+      }
+
+      // Notification behavior
+      if (scrollDirection.current === "down") {
+        notificationValue = Math.min(
+          safeNotificationHeight,
+          notificationValue + dampedDiff
+        );
+      } else {
+        notificationValue = Math.max(0, notificationValue - dampedDiff);
+      }
+
+      // Update all values efficiently
+      currentClampedFooter.current = footerValue;
+      currentClampedHeader.current = headerValue;
+      currentClampedSecondaryHeader.current = secondaryHeaderValue;
+      currentClampedNotification.current = notificationValue;
+
+      // Batch setValue calls
+      clampedFooterY.setValue(footerValue);
+      clampedHeaderY.setValue(headerValue);
+      clampedSecondaryHeaderY.setValue(secondaryHeaderValue);
+      clampedNotificationY.setValue(notificationValue);
 
       lastScrollValue.current = currentScroll;
     },
