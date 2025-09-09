@@ -10,7 +10,7 @@ import {
   ActivityIndicator,
 } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
-import * as DocumentPicker from 'expo-document-picker';
+import * as DocumentPicker from "expo-document-picker";
 import { UploadFileIcon } from "../../../../assets/icons/svg/PropertyListing/UploadFileIcon";
 import ImageCarousel from "../../../components/property/ImageCarousel";
 import {
@@ -19,7 +19,7 @@ import {
   UploadResult,
   MediaUploadData,
   FilePickerResult,
-  MultipleUploadConfig
+  MultipleUploadConfig,
 } from "../../../services/media_services/mediaService";
 import { trackEvent } from "@/app/services/logAnalyticsService";
 
@@ -30,7 +30,8 @@ interface MediaItem {
 }
 
 const { width } = Dimensions.get("window");
-const TUS_ENDPOINT = "https://tus-protocol-dot-iqol-crm.uc.r.appspot.com/files/"
+const TUS_ENDPOINT =
+  "https://tus-protocol-dot-iqol-crm.uc.r.appspot.com/files/";
 
 interface PropertyImagesProps {
   images?: string[];
@@ -38,16 +39,16 @@ interface PropertyImagesProps {
   currentMedia?: MediaUploadData;
   propId?: string;
   agentData?: any;
-  previewType?: string
+  previewType?: string;
 }
 
 export const PropertyImages: React.FC<PropertyImagesProps> = ({
   images = [],
   onMediaUpdate,
   currentMedia = { photos: [], videos: [], documents: [] },
-  propId = 'temp-prop-id',
+  propId = "temp-prop-id",
   agentData,
-  previewType
+  previewType,
 }) => {
   const [uploading, setUploading] = useState(false);
 
@@ -61,12 +62,12 @@ export const PropertyImages: React.FC<PropertyImagesProps> = ({
     });
 
     // Add current media with proper types (only photos and videos)
-    currentMedia.photos.forEach(url => {
-      mediaItems.push({ url, type: 'image' });
+    currentMedia.photos.forEach((url) => {
+      mediaItems.push({ url, type: "image" });
     });
 
-    currentMedia.videos.forEach(url => {
-      mediaItems.push({ url, type: 'video' });
+    currentMedia.videos.forEach((url) => {
+      mediaItems.push({ url, type: "video" });
     });
 
     return mediaItems;
@@ -78,24 +79,24 @@ export const PropertyImages: React.FC<PropertyImagesProps> = ({
   const openFilePicker = async () => {
     try {
       const result = await DocumentPicker.getDocumentAsync({
-        type: '*/*',
+        type: "*/*",
         multiple: true,
         copyToCacheDirectory: true,
       });
 
       if (!result.canceled && result.assets && result.assets.length > 0) {
-        const files: FilePickerResult[] = result.assets.map(asset => ({
+        const files: FilePickerResult[] = result.assets.map((asset) => ({
           uri: asset.uri,
           name: asset.name || `file_${Date.now()}`,
-          type: asset.mimeType || 'application/octet-stream',
+          type: asset.mimeType || "application/octet-stream",
           size: asset.size || 0,
         }));
 
         uploadFiles(files);
       }
     } catch (error) {
-      console.error('File picker error:', error);
-      Alert.alert('Error', 'Failed to pick files');
+      console.error("File picker error:", error);
+      Alert.alert("Error", "Failed to pick files");
     }
   };
 
@@ -106,7 +107,7 @@ export const PropertyImages: React.FC<PropertyImagesProps> = ({
     const validationErrors: string[] = [];
     const validFiles: FilePickerResult[] = [];
 
-    files.forEach(file => {
+    files.forEach((file) => {
       const validation = MultipleFilesUploadService.validateFile(file);
       if (validation.valid) {
         validFiles.push(file);
@@ -116,7 +117,7 @@ export const PropertyImages: React.FC<PropertyImagesProps> = ({
     });
 
     if (validationErrors.length > 0) {
-      Alert.alert('Invalid Files', validationErrors.join('\n'));
+      Alert.alert("Invalid Files", validationErrors.join("\n"));
       if (validFiles.length === 0) return;
     }
 
@@ -124,7 +125,8 @@ export const PropertyImages: React.FC<PropertyImagesProps> = ({
 
     try {
       const uploadService = new MultipleFilesUploadService();
-      const categorizedFiles = MultipleFilesUploadService.categorizeFilesByType(validFiles);
+      const categorizedFiles =
+        MultipleFilesUploadService.categorizeFilesByType(validFiles);
 
       // Prepare all files for upload with proper IDs
       const allFilesToUpload: Array<{
@@ -133,22 +135,24 @@ export const PropertyImages: React.FC<PropertyImagesProps> = ({
       }> = [];
 
       Object.entries(categorizedFiles).forEach(([type, fileList]) => {
-        fileList.forEach(file => {
+        fileList.forEach((file) => {
           allFilesToUpload.push({
             file,
-            type: type as keyof MediaUploadData
+            type: type as keyof MediaUploadData,
           });
         });
       });
 
       // Prepare files for TUS upload
-      const selectedFiles: SelectedFile[] = allFilesToUpload.map(({ file, type }, index) => ({
-        uri: file.uri,
-        name: file.name,
-        type: file.type,
-        size: file.size,
-        id: `${propId}-${type}-${file.name || Date.now()}-${index}`,
-      }));
+      const selectedFiles: SelectedFile[] = allFilesToUpload.map(
+        ({ file, type }, index) => ({
+          uri: file.uri,
+          name: file.name,
+          type: file.type,
+          size: file.size,
+          id: `${propId}-${type}-${file.name || Date.now()}-${index}`,
+        })
+      );
 
       // Configure upload
       const uploadConfig: MultipleUploadConfig = {
@@ -164,10 +168,13 @@ export const PropertyImages: React.FC<PropertyImagesProps> = ({
         },
       };
 
-      console.log('selected files', selectedFiles)
+      console.log("selected files", selectedFiles);
 
       // Start the upload
-      const results = await uploadService.startBatchUpload(selectedFiles, uploadConfig);
+      const results = await uploadService.startBatchUpload(
+        selectedFiles,
+        uploadConfig
+      );
 
       // Process results and categorize successful uploads
       const successfulUploads: MediaUploadData = {
@@ -180,10 +187,14 @@ export const PropertyImages: React.FC<PropertyImagesProps> = ({
         if (result.success && result.uploadUrl) {
           const { type } = allFilesToUpload[index];
           successfulUploads[type].push(result.uploadUrl);
-        } else {trackEvent("media_error").catch((error) => {
-                console.error(`Error logging event: ${error}`);
-              });
-          console.error(`Failed to upload ${selectedFiles[index].name}:`, result.error?.message || 'Unknown error');
+        } else {
+          trackEvent("media_error").catch((error) => {
+            console.error(`Error logging event: ${error}`);
+          });
+          console.error(
+            `Failed to upload ${selectedFiles[index].name}:`,
+            result.error?.message || "Unknown error"
+          );
         }
       });
 
@@ -192,30 +203,39 @@ export const PropertyImages: React.FC<PropertyImagesProps> = ({
         const updatedMedia: MediaUploadData = {
           photos: [...currentMedia.photos, ...successfulUploads.photos],
           videos: [...currentMedia.videos, ...successfulUploads.videos],
-          documents: [...currentMedia.documents, ...successfulUploads.documents],
+          documents: [
+            ...currentMedia.documents,
+            ...successfulUploads.documents,
+          ],
         };
         onMediaUpdate(updatedMedia);
       }
-      console.log('successfull', successfulUploads)
+      console.log("successfull", successfulUploads);
 
       // Show success message
-      const totalSuccess = Object.values(successfulUploads).reduce((sum, arr) => sum + arr.length, 0);
+      const totalSuccess = Object.values(successfulUploads).reduce(
+        (sum, arr) => sum + arr.length,
+        0
+      );
       const totalFailed = validFiles.length - totalSuccess;
 
       if (totalSuccess > 0) {
-        const message = totalSuccess === validFiles.length
-          ? `All ${totalSuccess} files uploaded successfully!`
-          : `${totalSuccess} files uploaded successfully`;
-        Alert.alert('Upload Successful', message);
+        const message =
+          totalSuccess === validFiles.length
+            ? `All ${totalSuccess} files uploaded successfully!`
+            : `${totalSuccess} files uploaded successfully`;
+        Alert.alert("Upload Successful", message);
       }
 
       if (totalFailed > 0) {
-        Alert.alert('Upload Issues', `${totalFailed} files failed to upload. Please try again.`);
+        Alert.alert(
+          "Upload Issues",
+          `${totalFailed} files failed to upload. Please try again.`
+        );
       }
-
     } catch (error: any) {
-      console.error('Upload failed:', error);
-      Alert.alert('Upload Failed', error.message || 'Failed to upload files');
+      console.error("Upload failed:", error);
+      Alert.alert("Upload Failed", error.message || "Failed to upload files");
     } finally {
       setUploading(false);
     }
@@ -224,7 +244,9 @@ export const PropertyImages: React.FC<PropertyImagesProps> = ({
   const deleteFile = (fileUrl: string, fileType: keyof MediaUploadData) => {
     if (onMediaUpdate) {
       const updatedMedia = { ...currentMedia };
-      updatedMedia[fileType] = updatedMedia[fileType].filter(url => url !== fileUrl);
+      updatedMedia[fileType] = updatedMedia[fileType].filter(
+        (url) => url !== fileUrl
+      );
       onMediaUpdate(updatedMedia);
     }
   };
@@ -238,7 +260,7 @@ export const PropertyImages: React.FC<PropertyImagesProps> = ({
 
     if (index < legacyImagesCount) {
       // This is a legacy image, might not be deletable
-      fileType = 'photos';
+      fileType = "photos";
       canDelete = false;
     } else {
       // Current media item
@@ -278,10 +300,10 @@ export const PropertyImages: React.FC<PropertyImagesProps> = ({
                 canDeleteFile={(index) =>
                   getFileInfo(allMediaItems[index], index).canDelete
                 }
+                
               />
             </View>
           )}
-
         </View>
       ) : (
         <LinearGradient
@@ -298,10 +320,14 @@ export const PropertyImages: React.FC<PropertyImagesProps> = ({
               <Text className="text-sm font-bold text-black">
                 No Images Found
               </Text>
-              {previewType === 'myBusiness' && (<Text className="text-sm font-medium text-[#757575] pb-3">
-                Generally properties with images gets 5x enquires.
-              </Text>)}
-              {(previewType == 'add' || previewType == 'edit' || previewType === 'myBusiness') && (
+              {previewType === "myBusiness" && (
+                <Text className="text-sm font-medium text-[#757575] pb-3">
+                  Generally properties with images gets 5x enquires.
+                </Text>
+              )}
+              {(previewType == "add" ||
+                previewType == "edit" ||
+                previewType === "myBusiness") && (
                 <TouchableOpacity
                   onPress={openFilePicker}
                   className="bg-[#2D5A52] px-6 py-[9px] rounded-lg flex-row items-center space-x-2"
@@ -314,7 +340,7 @@ export const PropertyImages: React.FC<PropertyImagesProps> = ({
                     <UploadFileIcon size={18} color="white" />
                   )}
                   <Text className="text-white font-semibold text-sm">
-                    {uploading ? 'Uploading...' : 'Add Now'}
+                    {uploading ? "Uploading..." : "Add Now"}
                   </Text>
                 </TouchableOpacity>
               )}

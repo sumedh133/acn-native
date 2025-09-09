@@ -33,6 +33,7 @@ interface ImageCarouselProps {
   propertyId?: string;
   onDeleteFile?: (mediaItem: MediaItem, index: number) => void;
   canDeleteFile?: (index: number) => boolean;
+  delete?: boolean;
 }
 
 const { width, height } = Dimensions.get("window");
@@ -43,6 +44,7 @@ const ImageCarousel: React.FC<ImageCarouselProps> = ({
   propertyId,
   onDeleteFile,
   canDeleteFile,
+  delete: allowDelete = false,
 }) => {
   const [selectedIdx, setSelectedIdx] = useState(0);
   const [showFullscreenModal, setShowFullscreenModal] = useState(false);
@@ -354,7 +356,9 @@ const ImageCarousel: React.FC<ImageCarouselProps> = ({
       <TouchableOpacity
         key={index}
         style={[styles.thumbnail]}
-        onPress={() => handleThumbnailPress(index, mediaItem)}
+        onPress={() => {
+          allowDelete && handleThumbnailPress(index, mediaItem);
+        }}
         activeOpacity={0.8}
       >
         <Image
@@ -367,7 +371,7 @@ const ImageCarousel: React.FC<ImageCarouselProps> = ({
             <Ionicons name="videocam" size={10} color="white" />
           </View>
         )}
-        {isActive && (
+        {isActive && canDeleteFile && onDeleteFile && allowDelete && (
           <View style={styles.thumbnailDeleteIcon}>
             {getIcon("deleteIcon")}
           </View>
@@ -659,9 +663,9 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    left:19,
-    top:32,
-    padding:6
+    left: 19,
+    top: 32,
+    padding: 6,
   },
   closeButton: {
     padding: 8,

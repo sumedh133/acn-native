@@ -69,16 +69,22 @@ export const PropertyFormScreen: React.FC<PropertyFormScreenProps> = ({
   const agentData = useSelector((state: RootState) => state.agent.docData);
 
   // -------------------- State Management --------------------
+  // Store original existing media separately to avoid duplication
+  const [originalExistingMedia] = useState(() => {
+    const legacyPhotos = (initialData as any)?.photo || [];
+    const legacyVideos = (initialData as any)?.video || [];
+    return initialData?.media
+      ? {
+          photos: initialData.media.photos || [],
+          videos: initialData.media.videos || [],
+          documents: initialData.media.documents || [],
+        }
+      : legacyPhotos.length || legacyVideos.length
+      ? { photos: legacyPhotos, videos: legacyVideos, documents: [] }
+      : { photos: [], videos: [], documents: [] };
+  });
+
   const [formData, setFormData] = useState<Partial<UIProperty>>(() => {
-    // Initialize with proper media structure
-    const defaultMedia = {
-      photos: [],
-      videos: [],
-      documents: [],
-    };
-
-    console.log(formData, "formData");
-
     return {
       listingType: "resale",
       propertyType: "residential",
@@ -90,8 +96,8 @@ export const PropertyFormScreen: React.FC<PropertyFormScreenProps> = ({
       kamStatus: "pending",
       dataStatus: "pending",
       stage: "kam",
-      media: initialData?.media || defaultMedia,
       ...initialData,
+      media: originalExistingMedia,
     };
   });
 
@@ -123,6 +129,7 @@ export const PropertyFormScreen: React.FC<PropertyFormScreenProps> = ({
     videos: MediaObj[];
     documents: MediaObj[];
   }>({ photos: [], videos: [], documents: [] });
+  const [selectedMediaAssets, setSelectedMediaAssets] = useState<any[]>([]);
   const [backgroundUploading, setBackgroundUploading] =
     useState<boolean>(false);
   const [backgroundProgress, setBackgroundProgress] = useState<number>(0);
@@ -146,6 +153,14 @@ export const PropertyFormScreen: React.FC<PropertyFormScreenProps> = ({
     documents?: MediaObj[];
   }) => {
     if (!media) return;
+
+    console.log("📤 PropertyFormScreen - received rawMedia:", {
+      photos: media.photos?.length || 0,
+      videos: media.videos?.length || 0,
+      documents: media.documents?.length || 0,
+    });
+
+    // Store all media - TUS will filter out existing URLs during upload
     setRawMedia({
       photos: media.photos || [],
       videos: media.videos || [],
@@ -386,7 +401,15 @@ export const PropertyFormScreen: React.FC<PropertyFormScreenProps> = ({
   // -------------------- Event Handlers --------------------
 
   const handleNext = () => {
+    console.log("🔄 handleNext called - current state:", {
+      currentStepIndex,
+      selectedMediaAssetsCount: selectedMediaAssets.length,
+      rawMediaPhotosCount: rawMedia.photos.length,
+      rawMediaVideosCount: rawMedia.videos.length,
+    });
+
     if (!validateCurrentStep()) {
+      console.log("❌ Validation failed - cannot proceed to next step");
       return;
     }
 
@@ -396,8 +419,10 @@ export const PropertyFormScreen: React.FC<PropertyFormScreenProps> = ({
       if (currentStepIndex > maxStepIndex) {
         setMaxStepIndex(currentStepIndex);
       }
+      console.log("✅ Moving to next step:", currentStepIndex + 1);
     } else {
       setShowPreview(true);
+      console.log("✅ Moving to preview");
     }
   };
 
@@ -414,7 +439,13 @@ export const PropertyFormScreen: React.FC<PropertyFormScreenProps> = ({
   };
 
   const handleFormUpdate = (updatedData: Partial<UIProperty>) => {
+    console.log(
+      "🏠 PropertyFormScreen handleFormUpdate called with:",
+      updatedData
+    );
+    console.log("🏠 Previous formData:", formData);
     setFormData(updatedData);
+    console.log("🏠 FormData updated successfully");
     setIsFormEmpty(false);
   };
 
@@ -477,7 +508,11 @@ export const PropertyFormScreen: React.FC<PropertyFormScreenProps> = ({
 
   const handleSaveDraft = async () => {
     try {
-      trackEvent("save_draft_inventory", agentData, formData).catch((error) => {
+      trackEvent(
+        "save_draft_inventory",
+        agentData as any,
+        formData as any
+      ).catch((error) => {
         console.error(`Error logging event: ${error}`);
       });
       setIsSavingDraft(true);
@@ -775,6 +810,9 @@ export const PropertyFormScreen: React.FC<PropertyFormScreenProps> = ({
             setDocsToUpload={setDocsToUpload}
             scrollToPossessionRef={scrollToPossessionRef}
             onRawMediaChange={handleRawMediaChange}
+            selectedMediaAssets={selectedMediaAssets}
+            setSelectedMediaAssets={setSelectedMediaAssets}
+            originalExistingMedia={originalExistingMedia}
           />
         </View>
 

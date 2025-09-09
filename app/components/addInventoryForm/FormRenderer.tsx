@@ -60,6 +60,13 @@ interface FormRendererProps {
     videos: MediaObj[];
     documents?: MediaObj[];
   }) => void;
+  selectedMediaAssets?: any[];
+  setSelectedMediaAssets?: (assets: any[]) => void;
+  originalExistingMedia?: {
+    photos: string[];
+    videos: string[];
+    documents: string[];
+  };
 }
 
 // Total number of columns in our grid system
@@ -81,10 +88,12 @@ export const FormRenderer: React.FC<FormRendererProps> = ({
   setDocsToUpload,
   scrollToPossessionRef,
   onRawMediaChange,
+  selectedMediaAssets,
+  setSelectedMediaAssets,
+  originalExistingMedia,
 }) => {
   // Ref for the possession field
   const possessionFieldRef = useRef<View>(null);
-  const [selectedMediaAssets, setSelectedMediaAssets] = useState<Asset[]>([]);
 
   /**
    * Set nested field value in formData.
@@ -608,26 +617,86 @@ export const FormRenderer: React.FC<FormRendererProps> = ({
         case "photos/videos":
           return (
             <>
+              {console.log("🔍 FormRenderer PhotoVideoPicker props:", {
+                selectedMediaAssetsCount: selectedMediaAssets?.length || 0,
+                originalExistingPhotos:
+                  originalExistingMedia?.photos?.length || 0,
+                originalExistingVideos:
+                  originalExistingMedia?.videos?.length || 0,
+                propertyId: formData.propertyId,
+              })}
               <PhotoVideoPicker
-                selectedMedia={selectedMediaAssets}
-                setSelectedMedia={setSelectedMediaAssets}
+                selectedMedia={selectedMediaAssets || []}
+                setSelectedMedia={setSelectedMediaAssets || (() => {})}
+                existingMedia={{
+                  photos: originalExistingMedia?.photos || [],
+                  videos: originalExistingMedia?.videos || [],
+                }}
+                propertyId={formData.propertyId}
                 onChange={(data) => {
-                  // Update form data with URIs for preview
-                  const next = {
+                  console.log(
+                    "📤 FormRenderer onChange - updating formData and rawMedia:",
+                    {
+                      rawPhotos: data.photos.length,
+                      rawVideos: data.videos.length,
+                    }
+                  );
+
+                  // Update formData.media to include new selected images for form display
+                  const newPhotoUris = data.photos.map((p) => p.uri);
+                  const newVideoUris = data.videos.map((v) => v.uri);
+
+                  const updatedFormData = {
                     ...formData,
                     media: {
-                      photos: data.photos.map((p) => p.uri),
-                      videos: data.videos.map((v) => v.uri),
+                      photos: [
+                        ...(originalExistingMedia?.photos || []),
+                        ...newPhotoUris,
+                      ],
+                      videos: [
+                        ...(originalExistingMedia?.videos || []),
+                        ...newVideoUris,
+                      ],
                       documents: formData.media?.documents || [],
                     },
-                  } as Partial<UIProperty>;
-                  onFormUpdate(next);
-                  // Pass raw media objects upward for TUS submission
+                  };
+
+                  onFormUpdate(updatedFormData);
+
+                  // Also pass to rawMedia for TUS upload
                   onRawMediaChange?.({
                     photos: data.photos,
                     videos: data.videos,
                     documents: [],
                   });
+                }}
+                onExistingChange={(updated) => {
+                  // When editing, allow removing existing URLs directly
+                  console.log(
+                    "📝 FormRenderer onExistingChange called with:",
+                    updated
+                  );
+                  console.log("📝 Current formData.media:", formData.media);
+
+                  // Get current selected media URIs
+                  const selectedPhotoUris = (selectedMediaAssets || [])
+                    .filter((m) => !m.type?.startsWith("video"))
+                    .map((m) => m.uri as string);
+                  const selectedVideoUris = (selectedMediaAssets || [])
+                    .filter((m) => m.type?.startsWith("video"))
+                    .map((m) => m.uri as string);
+
+                  const nextMedia = {
+                    photos: [...updated.photos, ...selectedPhotoUris],
+                    videos: [...updated.videos, ...selectedVideoUris],
+                    documents: formData.media?.documents || [],
+                  };
+                  const nextFormData = {
+                    ...formData,
+                    media: nextMedia,
+                  } as Partial<UIProperty>;
+                  console.log("📝 Updating formData with:", nextFormData);
+                  onFormUpdate(nextFormData);
                 }}
               />
             </>
