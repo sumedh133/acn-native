@@ -150,15 +150,15 @@ export const createProperty = async (
   const referredFloorNumber: string | null =
     property.floorNumber !== undefined && property.floorNumber !== null
       ? property.floorNumber === 0
-        ? "ground floor"
+        ? "Ground Floor"
         : property.floorNumber < 6
-        ? "lower floor (1 - 5)"
+        ? "Lower Floor (1-5)"
         : property.floorNumber < 11
-        ? "middle floor (6 - 10)"
+        ? "Middle Floor (6-10)"
         : property.floorNumber < 20
-        ? "higher floor (10+)"
+        ? "Higher Floor (10+)"
         : property.floorNumber > 20
-        ? "higher floor (20+)"
+        ? "Higher Floor (20+)"
         : null
       : null;
   const propertyName = getName(property);
