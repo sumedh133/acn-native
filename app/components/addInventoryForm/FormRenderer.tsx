@@ -60,6 +60,13 @@ interface FormRendererProps {
     videos: MediaObj[];
     documents?: MediaObj[];
   }) => void;
+  selectedMediaAssets?: any[];
+  setSelectedMediaAssets?: (assets: any[]) => void;
+  originalExistingMedia?: {
+    photos: string[];
+    videos: string[];
+    documents: string[];
+  };
 }
 
 // Total number of columns in our grid system
@@ -81,10 +88,12 @@ export const FormRenderer: React.FC<FormRendererProps> = ({
   setDocsToUpload,
   scrollToPossessionRef,
   onRawMediaChange,
+  selectedMediaAssets,
+  setSelectedMediaAssets,
+  originalExistingMedia,
 }) => {
   // Ref for the possession field
   const possessionFieldRef = useRef<View>(null);
-  const [selectedMediaAssets, setSelectedMediaAssets] = useState<Asset[]>([]);
 
   /**
    * Set nested field value in formData.
@@ -608,26 +617,61 @@ export const FormRenderer: React.FC<FormRendererProps> = ({
         case "photos/videos":
           return (
             <>
+              {console.log("🔍 FormRenderer PhotoVideoPicker props:", {
+                selectedMediaAssetsCount: selectedMediaAssets?.length || 0,
+                originalExistingPhotos:
+                  originalExistingMedia?.photos?.length || 0,
+                originalExistingVideos:
+                  originalExistingMedia?.videos?.length || 0,
+                propertyId: formData.propertyId,
+              })}
               <PhotoVideoPicker
-                selectedMedia={selectedMediaAssets}
-                setSelectedMedia={setSelectedMediaAssets}
+                selectedMedia={selectedMediaAssets || []}
+                setSelectedMedia={setSelectedMediaAssets || (() => {})}
+                existingMedia={{
+                  photos: originalExistingMedia?.photos || [],
+                  videos: originalExistingMedia?.videos || [],
+                }}
+                propertyId={formData.propertyId}
                 onChange={(data) => {
-                  // Update form data with URIs for preview
-                  const next = {
-                    ...formData,
-                    media: {
-                      photos: data.photos.map((p) => p.uri),
-                      videos: data.videos.map((v) => v.uri),
-                      documents: formData.media?.documents || [],
-                    },
-                  } as Partial<UIProperty>;
-                  onFormUpdate(next);
-                  // Pass raw media objects upward for TUS submission
+                  console.log(
+                    "📤 FormRenderer onChange - only updating rawMedia:",
+                    {
+                      rawPhotos: data.photos.length,
+                      rawVideos: data.videos.length,
+                    }
+                  );
+
+                  // DON'T update formData.media with local URIs
+                  // formData.media should ONLY contain existing database URLs
+                  // Local files are handled by selectedMediaAssets and rawMedia for TUS
+
+                  // Only pass to rawMedia for TUS upload
                   onRawMediaChange?.({
                     photos: data.photos,
                     videos: data.videos,
                     documents: [],
                   });
+                }}
+                onExistingChange={(updated) => {
+                  // When editing, update formData.media with only remaining database URLs
+                  console.log(
+                    "📝 FormRenderer onExistingChange called with:",
+                    updated
+                  );
+                  console.log("📝 Current formData.media:", formData.media);
+
+                  // Update formData.media with ONLY remaining existing URLs (no local URIs)
+                  const nextMedia = {
+                    photos: updated.photos,
+                    videos: updated.videos,
+                    documents: formData.media?.documents || [],
+                  };
+                  const nextFormData = {
+                    ...formData,
+                    media: nextMedia,
+                  } as Partial<UIProperty>;
+                  onFormUpdate(nextFormData);
                 }}
               />
             </>

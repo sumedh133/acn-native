@@ -276,6 +276,7 @@ export const FormPreview: React.FC<FormPreviewProps> = ({
           propId={propId}
           agentData={agentData}
           previewType={previewType}
+          
         />
         <BasicPropertyInfo data={data} previewType={previewType} />
 

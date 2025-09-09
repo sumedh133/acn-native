@@ -347,6 +347,8 @@ export const DetailsSection: React.FC<DetailsSectionProps> = ({
     ? fieldsWithValues
     : fieldsWithValues.slice(0, defaultVisible);
 
+  console.log(visibleFields);
+
   return (
     <View className="bg-white px-5 py-4 pb-0">
       <Text className="text-[14px] leading-[21px] font-bold text-black font-[Montserrat] mb-4">
@@ -362,10 +364,30 @@ export const DetailsSection: React.FC<DetailsSectionProps> = ({
               </View>
               <View className="flex-1">
                 <Text className="text-[14px] leading-[21px] font-medium text-[#5A5555] font-[Lato]">
-                  {field.label}
+                  {field.id === "floorNumber" ? "Floor number" : field.label}
                 </Text>
                 <Text className="text-[16px] leading-[24px] font-bold text-black font-[Lato]">
-                  {field.id === "rentalInfo" && data?.rentalInfo
+                  {field.id === "floorNumber"
+                    ? (() => {
+                        const floorNumber = Number(field.value);
+                        const referredFloorNumber =
+                          floorNumber !== undefined && floorNumber !== null
+                            ? floorNumber === 0
+                              ? "Ground Floor"
+                              : floorNumber < 6
+                              ? "Lower Floor (1-5)"
+                              : floorNumber < 11
+                              ? "Middle Floor (6-10)"
+                              : floorNumber < 20
+                              ? "Higher Floor (10+)"
+                              : floorNumber > 20
+                              ? "Higher Floor (20+)"
+                              : null
+                            : null;
+
+                        return referredFloorNumber || "-";
+                      })()
+                    : field.id === "rentalInfo" && data?.rentalInfo
                     ? (() => {
                         const { startDate = "", endDate = "" } =
                           data.rentalInfo;

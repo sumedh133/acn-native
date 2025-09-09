@@ -12,6 +12,7 @@ import {
   limit,
   onSnapshot,
   Unsubscribe,
+  serverTimestamp,
 } from "firebase/firestore";
 import { db } from "../../config/firebase"; // your Firebase config
 import { Property } from "../../types";
@@ -144,21 +145,19 @@ export const createProperty = async (
   const propertyId = await generatePropertyId();
   const collectionName = getCollectionName(inventoryStage);
   const ref = doc(collection(db, collectionName), propertyId);
-  console.log(property, "property");
-  console.log(collectionName, "collection name");
   const time = getUnixDateTime();
   const referredFloorNumber: string | null =
     property.floorNumber !== undefined && property.floorNumber !== null
       ? property.floorNumber === 0
-        ? "ground floor"
+        ? "Ground Floor"
         : property.floorNumber < 6
-        ? "lower floor (1 - 5)"
+        ? "Lower Floor (1-5)"
         : property.floorNumber < 11
-        ? "middle floor (6 - 10)"
+        ? "Middle Floor (6-10)"
         : property.floorNumber < 20
-        ? "higher floor (10+)"
+        ? "Higher Floor (10+)"
         : property.floorNumber > 20
-        ? "higher floor (20+)"
+        ? "Higher Floor (20+)"
         : null
       : null;
   const propertyName = getName(property);
@@ -339,7 +338,9 @@ export const updateProperty = async (
   const currentData = currentSnapshot.exists()
     ? (currentSnapshot.data() as Property)
     : null;
-
+  // const data = Object.fromEntries(
+  //   Object.entries(updates).filter(([key]) => key !== "media")
+  // );
   const updateData = {
     ...updates,
     lastModified: getUnixDateTime(),
@@ -349,7 +350,7 @@ export const updateProperty = async (
   console.log(result);
   // Log changes in edit history
   if (currentData && isEdit) {
-    const changes = getChangedFields(currentData, updates);
+    const changes = getChangedFields(updates, currentData);
     trackEvent("edit_property_submit", undefined, updateData as Property, {
       field_updated: changes,
     });
@@ -377,6 +378,65 @@ export const updateWholeProperty = async (
   };
 
   await setDoc(ref, updateData);
+};
+
+/**
+ * Delete specific media URLs from a property in Firebase
+ */
+export const deleteMediaFromProperty = async (
+  propertyId: string,
+  mediaUrlsToDelete: {
+    photos?: string[];
+    videos?: string[];
+    documents?: string[];
+  },
+  inventoryStage: InventoryStage = "verified"
+) => {
+  const collectionName = getCollectionName(inventoryStage);
+  const ref = doc(db, collectionName, propertyId);
+
+  // Get current property data
+  const snapshot = await getDoc(ref);
+  if (!snapshot.exists()) {
+    throw new Error(`Property ${propertyId} not found`);
+  }
+
+  const currentData = snapshot.data() as Property;
+  const currentMedia = currentData.media || {
+    photos: [],
+    videos: [],
+    documents: [],
+  };
+
+  // Filter out the URLs to delete
+  const updatedMedia = {
+    photos:
+      currentMedia.photos?.filter(
+        (url) => !mediaUrlsToDelete.photos?.includes(url)
+      ) || [],
+    videos:
+      currentMedia.videos?.filter(
+        (url) => !mediaUrlsToDelete.videos?.includes(url)
+      ) || [],
+    documents:
+      currentMedia.documents?.filter(
+        (url) => !mediaUrlsToDelete.documents?.includes(url)
+      ) || [],
+  };
+
+  // Update the property with the filtered media
+  await updateDoc(ref, {
+    media: updatedMedia,
+    updatedAt: serverTimestamp(),
+  });
+
+  console.log(
+    `🗑️ Deleted media from property ${propertyId}:`,
+    mediaUrlsToDelete
+  );
+  console.log(`📝 Updated media:`, updatedMedia);
+
+  return updatedMedia;
 };
 
 /**

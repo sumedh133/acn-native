@@ -79,39 +79,102 @@ const AddInventoryForm = () => {
         router.back();
         // Fire background upload if raw media present
         if (rawMedia && finalPropId) {
-          const queue = new MediaUploadQueueClass({
-            propId: finalPropId,
-            userId: (cleanData as any)?.cpId || "unknown",
-            onComplete: async (results: UploadResult[]) => {
-              const uploaded = {
-                photos: [] as string[],
-                videos: [] as string[],
-                documents: [] as string[],
-              };
-              results.forEach((r) => {
-                if (!r.success || !r.uploadUrl) return;
-                const id = r.fileId || "";
-                if (id.includes("-photo-")) uploaded.photos.push(r.uploadUrl);
-                else if (id.includes("-video-"))
-                  uploaded.videos.push(r.uploadUrl);
-                else if (id.includes("-document-"))
-                  uploaded.documents.push(r.uploadUrl);
-              });
-              try {
-                await updateProperty(
-                  finalPropId!,
-                  { media: uploaded } as any,
-                  "qc",
-                  true
-                );
-              } catch {}
-            },
-          });
-          queue.uploadMedia(
-            rawMedia.photos,
-            rawMedia.videos,
-            rawMedia.documents
+          // Filter out files that are already uploaded (existing URLs)
+          const isExistingUrl = (uri: string) => {
+            return (
+              uri.startsWith("http") ||
+              uri.startsWith("https") ||
+              uri.startsWith("gs://")
+            );
+          };
+
+          const newPhotos = rawMedia.photos.filter(
+            (photo) => !isExistingUrl(photo.uri)
           );
+          const newVideos = rawMedia.videos.filter(
+            (video) => !isExistingUrl(video.uri)
+          );
+          const newDocuments = rawMedia.documents.filter(
+            (doc) => !isExistingUrl(doc.uri)
+          );
+
+          console.log("📤 Filtering media for upload:");
+          console.log(
+            "Original photos:",
+            rawMedia.photos.length,
+            "New photos:",
+            newPhotos.length
+          );
+          console.log(
+            "Original videos:",
+            rawMedia.videos.length,
+            "New videos:",
+            newVideos.length
+          );
+          console.log(
+            "Original documents:",
+            rawMedia.documents.length,
+            "New documents:",
+            newDocuments.length
+          );
+
+          // Only upload if there are new files to upload
+          if (
+            newPhotos.length > 0 ||
+            newVideos.length > 0 ||
+            newDocuments.length > 0
+          ) {
+            const queue = new MediaUploadQueueClass({
+              propId: finalPropId,
+              userId: (cleanData as any)?.cpId || "unknown",
+              onComplete: async (results: UploadResult[]) => {
+                const uploaded = {
+                  photos: [] as string[],
+                  videos: [] as string[],
+                  documents: [] as string[],
+                };
+                results.forEach((r) => {
+                  if (!r.success || !r.uploadUrl) return;
+                  const id = r.fileId || "";
+                  if (id.includes("-photo-")) uploaded.photos.push(r.uploadUrl);
+                  else if (id.includes("-video-"))
+                    uploaded.videos.push(r.uploadUrl);
+                  else if (id.includes("-document-"))
+                    uploaded.documents.push(r.uploadUrl);
+                });
+                try {
+                  // Merge with existing media instead of overwriting
+                  const mergedMedia = {
+                    photos: [
+                      ...(cleanData.media?.photos || []),
+                      ...uploaded.photos,
+                    ],
+                    videos: [
+                      ...(cleanData.media?.videos || []),
+                      ...uploaded.videos,
+                    ],
+                    documents: [
+                      ...(cleanData.media?.documents || []),
+                      ...uploaded.documents,
+                    ],
+                  };
+                  await updateProperty(
+                    finalPropId!,
+                    { media: mergedMedia } as any,
+                    "qc",
+                    true
+                  );
+                  console.log(
+                    "Media uploaded and merged with existing:",
+                    mergedMedia
+                  );
+                } catch {}
+              },
+            });
+            queue.uploadMedia(newPhotos, newVideos, newDocuments);
+          } else {
+            console.log("📤 No new files to upload, skipping TUS upload");
+          }
         }
         return;
       }
@@ -125,39 +188,104 @@ const AddInventoryForm = () => {
         setIsSubmitting(false);
         router.back();
         if (rawMedia && finalPropId) {
-          const queue = new MediaUploadQueueClass({
-            propId: finalPropId,
-            userId: (cleanData as any)?.cpId || "unknown",
-            onComplete: async (results: UploadResult[]) => {
-              const uploaded = {
-                photos: [] as string[],
-                videos: [] as string[],
-                documents: [] as string[],
-              };
-              results.forEach((r) => {
-                if (!r.success || !r.uploadUrl) return;
-                const id = r.fileId || "";
-                if (id.includes("-photo-")) uploaded.photos.push(r.uploadUrl);
-                else if (id.includes("-video-"))
-                  uploaded.videos.push(r.uploadUrl);
-                else if (id.includes("-document-"))
-                  uploaded.documents.push(r.uploadUrl);
-              });
-              try {
-                await updateProperty(
-                  finalPropId!,
-                  { media: uploaded } as any,
-                  "verified",
-                  true
-                );
-              } catch {}
-            },
-          });
-          queue.uploadMedia(
-            rawMedia.photos,
-            rawMedia.videos,
-            rawMedia.documents
+          // Filter out files that are already uploaded (existing URLs)
+          const isExistingUrl = (uri: string) => {
+            return (
+              uri.startsWith("http") ||
+              uri.startsWith("https") ||
+              uri.startsWith("gs://")
+            );
+          };
+
+          const newPhotos = rawMedia.photos.filter(
+            (photo) => !isExistingUrl(photo.uri)
           );
+          const newVideos = rawMedia.videos.filter(
+            (video) => !isExistingUrl(video.uri)
+          );
+          const newDocuments = rawMedia.documents.filter(
+            (doc) => !isExistingUrl(doc.uri)
+          );
+
+          console.log("📤 Filtering media for verified upload:");
+          console.log(
+            "Original photos:",
+            rawMedia.photos.length,
+            "New photos:",
+            newPhotos.length
+          );
+          console.log(
+            "Original videos:",
+            rawMedia.videos.length,
+            "New videos:",
+            newVideos.length
+          );
+          console.log(
+            "Original documents:",
+            rawMedia.documents.length,
+            "New documents:",
+            newDocuments.length
+          );
+
+          // Only upload if there are new files to upload
+          if (
+            newPhotos.length > 0 ||
+            newVideos.length > 0 ||
+            newDocuments.length > 0
+          ) {
+            const queue = new MediaUploadQueueClass({
+              propId: finalPropId,
+              userId: (cleanData as any)?.cpId || "unknown",
+              onComplete: async (results: UploadResult[]) => {
+                const uploaded = {
+                  photos: [] as string[],
+                  videos: [] as string[],
+                  documents: [] as string[],
+                };
+                results.forEach((r) => {
+                  if (!r.success || !r.uploadUrl) return;
+                  const id = r.fileId || "";
+                  if (id.includes("-photo-")) uploaded.photos.push(r.uploadUrl);
+                  else if (id.includes("-video-"))
+                    uploaded.videos.push(r.uploadUrl);
+                  else if (id.includes("-document-"))
+                    uploaded.documents.push(r.uploadUrl);
+                });
+                try {
+                  // Merge with existing media instead of overwriting
+                  const mergedMedia = {
+                    photos: [
+                      ...(cleanData.media?.photos || []),
+                      ...uploaded.photos,
+                    ],
+                    videos: [
+                      ...(cleanData.media?.videos || []),
+                      ...uploaded.videos,
+                    ],
+                    documents: [
+                      ...(cleanData.media?.documents || []),
+                      ...uploaded.documents,
+                    ],
+                  };
+                  await updateProperty(
+                    finalPropId!,
+                    { media: mergedMedia } as any,
+                    "verified",
+                    true
+                  );
+                  console.log(
+                    "Media uploaded and merged with existing:",
+                    mergedMedia
+                  );
+                } catch {}
+              },
+            });
+            queue.uploadMedia(newPhotos, newVideos, newDocuments);
+          } else {
+            console.log(
+              "📤 No new files to upload for verified, skipping TUS upload"
+            );
+          }
         }
         return;
       }
@@ -196,7 +324,6 @@ const AddInventoryForm = () => {
         }
       );
       try {
-
         trackEvent("add_inventory_submit").catch((error) => {
           console.error(`Error logging event: ${error}`);
         });
@@ -225,16 +352,85 @@ const AddInventoryForm = () => {
                 uploaded.documents.push(r.uploadUrl);
             });
             try {
+              // Merge with existing media instead of overwriting
+              const mergedMedia = {
+                photos: [
+                  ...(cleanData.media?.photos || []),
+                  ...uploaded.photos,
+                ],
+                videos: [
+                  ...(cleanData.media?.videos || []),
+                  ...uploaded.videos,
+                ],
+                documents: [
+                  ...(cleanData.media?.documents || []),
+                  ...uploaded.documents,
+                ],
+              };
               await updateProperty(
                 finalPropId!,
-                { media: uploaded } as any,
+                { media: mergedMedia } as any,
                 "qc",
                 true
+              );
+              console.log(
+                "Media uploaded and merged with existing:",
+                mergedMedia
               );
             } catch {}
           },
         });
-        queue.uploadMedia(rawMedia.photos, rawMedia.videos, rawMedia.documents);
+        // Filter out files that are already uploaded (existing URLs)
+        const isExistingUrl = (uri: string) => {
+          return (
+            uri.startsWith("http") ||
+            uri.startsWith("https") ||
+            uri.startsWith("gs://")
+          );
+        };
+
+        const newPhotos = rawMedia.photos.filter(
+          (photo) => !isExistingUrl(photo.uri)
+        );
+        const newVideos = rawMedia.videos.filter(
+          (video) => !isExistingUrl(video.uri)
+        );
+        const newDocuments = rawMedia.documents.filter(
+          (doc) => !isExistingUrl(doc.uri)
+        );
+
+        console.log("📤 Filtering media for new property upload:");
+        console.log(
+          "Original photos:",
+          rawMedia.photos.length,
+          "New photos:",
+          newPhotos.length
+        );
+        console.log(
+          "Original videos:",
+          rawMedia.videos.length,
+          "New videos:",
+          newVideos.length
+        );
+        console.log(
+          "Original documents:",
+          rawMedia.documents.length,
+          "New documents:",
+          newDocuments.length
+        );
+
+        // Only upload if there are new files to upload
+        if (
+          newPhotos.length > 0 ||
+          newVideos.length > 0 ||
+          newDocuments.length > 0
+        ) {
+          queue.uploadMedia(newPhotos, newVideos, newDocuments);
+        } else {
+          console.log(
+            "📤 No new files to upload for new property, skipping TUS upload"
+          );
+        }
       }
       setIsSubmitting(false);
       // Navigation after success for create or draft update
@@ -249,7 +445,6 @@ const AddInventoryForm = () => {
         );
       } else {
         try {
-
           trackEvent("inventory_addition_error").catch((error) => {
             console.error(`Error logging event: ${error}`);
           });
