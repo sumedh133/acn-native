@@ -290,6 +290,35 @@ const PhotoVideoPicker: React.FC<PhotoVideoPickerProps> = ({
       const updated = selectedMedia.filter((m) => m.uri !== media.uri);
       console.log("🔄 Updated local selectedMedia:", updated);
       setSelectedMedia(updated);
+
+      // Also trigger onChange to update formData.media
+      if (onChange) {
+        const toObj = (m: Asset): MediaObj => ({
+          uri: m.uri as string,
+          name: m.fileName,
+          type: m.type,
+          size: m.fileSize,
+        });
+        const photos = updated
+          .filter((m) =>
+            m.type
+              ? !m.type.startsWith("video")
+              : !m.fileName?.toLowerCase().endsWith(".mp4")
+          )
+          .map(toObj);
+        const videos = updated
+          .filter((m) =>
+            m.type
+              ? m.type.startsWith("video")
+              : m.fileName?.toLowerCase().endsWith(".mp4")
+          )
+          .map(toObj);
+        console.log("🔄 Triggering onChange after local deletion:", {
+          photos: photos.length,
+          videos: videos.length,
+        });
+        onChange({ photos, videos });
+      }
     } else {
       // For existing media, delete directly from Firebase
       if (propertyId) {
@@ -324,57 +353,6 @@ const PhotoVideoPicker: React.FC<PhotoVideoPickerProps> = ({
           );
           setExistingState(nextExisting);
           onExistingChange?.(nextExisting);
-
-          // CRITICAL: Also update rawMedia by calling onChange so deleted URL doesn't go to TUS
-          if (onChange) {
-            const toObj = (m: Asset): MediaObj => ({
-              uri: m.uri as string,
-              name: m.fileName,
-              type: m.type,
-              size: m.fileSize,
-            });
-
-            // Convert remaining existing URLs to MediaObj format
-            const existingPhotosAsMediaObj = nextExisting.photos.map((url) => ({
-              uri: url,
-              name: `existing-photo-${Date.now()}`,
-              type: "image/jpeg",
-              size: 0,
-            }));
-            const existingVideosAsMediaObj = nextExisting.videos.map((url) => ({
-              uri: url,
-              name: `existing-video-${Date.now()}`,
-              type: "video/mp4",
-              size: 0,
-            }));
-
-            // Merge existing (after deletion) + selected local files
-            const localPhotos = selectedMedia
-              .filter(
-                (m) =>
-                  !(m.type
-                    ? m.type.startsWith("video")
-                    : m.fileName?.toLowerCase().endsWith(".mp4"))
-              )
-              .map(toObj);
-            const localVideos = selectedMedia
-              .filter((m) =>
-                m.type
-                  ? m.type.startsWith("video")
-                  : m.fileName?.toLowerCase().endsWith(".mp4")
-              )
-              .map(toObj);
-
-            const updatedData = {
-              photos: [...existingPhotosAsMediaObj, ...localPhotos],
-              videos: [...existingVideosAsMediaObj, ...localVideos],
-            };
-            console.log(
-              "🔄 Calling onChange after Firebase deletion to update rawMedia:",
-              updatedData
-            );
-            onChange(updatedData);
-          }
         } catch (error) {
           console.error("❌ Failed to delete from Firebase:", error);
           // Still update local state even if Firebase fails

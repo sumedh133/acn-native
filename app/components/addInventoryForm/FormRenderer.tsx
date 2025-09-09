@@ -635,35 +635,18 @@ export const FormRenderer: React.FC<FormRendererProps> = ({
                 propertyId={formData.propertyId}
                 onChange={(data) => {
                   console.log(
-                    "📤 FormRenderer onChange - updating formData and rawMedia:",
+                    "📤 FormRenderer onChange - only updating rawMedia:",
                     {
                       rawPhotos: data.photos.length,
                       rawVideos: data.videos.length,
                     }
                   );
 
-                  // Update formData.media to include new selected images for form display
-                  const newPhotoUris = data.photos.map((p) => p.uri);
-                  const newVideoUris = data.videos.map((v) => v.uri);
+                  // DON'T update formData.media with local URIs
+                  // formData.media should ONLY contain existing database URLs
+                  // Local files are handled by selectedMediaAssets and rawMedia for TUS
 
-                  const updatedFormData = {
-                    ...formData,
-                    media: {
-                      photos: [
-                        ...(originalExistingMedia?.photos || []),
-                        ...newPhotoUris,
-                      ],
-                      videos: [
-                        ...(originalExistingMedia?.videos || []),
-                        ...newVideoUris,
-                      ],
-                      documents: formData.media?.documents || [],
-                    },
-                  };
-
-                  onFormUpdate(updatedFormData);
-
-                  // Also pass to rawMedia for TUS upload
+                  // Only pass to rawMedia for TUS upload
                   onRawMediaChange?.({
                     photos: data.photos,
                     videos: data.videos,
@@ -671,31 +654,23 @@ export const FormRenderer: React.FC<FormRendererProps> = ({
                   });
                 }}
                 onExistingChange={(updated) => {
-                  // When editing, allow removing existing URLs directly
+                  // When editing, update formData.media with only remaining database URLs
                   console.log(
                     "📝 FormRenderer onExistingChange called with:",
                     updated
                   );
                   console.log("📝 Current formData.media:", formData.media);
 
-                  // Get current selected media URIs
-                  const selectedPhotoUris = (selectedMediaAssets || [])
-                    .filter((m) => !m.type?.startsWith("video"))
-                    .map((m) => m.uri as string);
-                  const selectedVideoUris = (selectedMediaAssets || [])
-                    .filter((m) => m.type?.startsWith("video"))
-                    .map((m) => m.uri as string);
-
+                  // Update formData.media with ONLY remaining existing URLs (no local URIs)
                   const nextMedia = {
-                    photos: [...updated.photos, ...selectedPhotoUris],
-                    videos: [...updated.videos, ...selectedVideoUris],
+                    photos: updated.photos,
+                    videos: updated.videos,
                     documents: formData.media?.documents || [],
                   };
                   const nextFormData = {
                     ...formData,
                     media: nextMedia,
                   } as Partial<UIProperty>;
-                  console.log("📝 Updating formData with:", nextFormData);
                   onFormUpdate(nextFormData);
                 }}
               />

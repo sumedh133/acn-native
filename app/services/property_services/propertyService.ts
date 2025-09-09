@@ -145,8 +145,6 @@ export const createProperty = async (
   const propertyId = await generatePropertyId();
   const collectionName = getCollectionName(inventoryStage);
   const ref = doc(collection(db, collectionName), propertyId);
-  console.log(property, "property");
-  console.log(collectionName, "collection name");
   const time = getUnixDateTime();
   const referredFloorNumber: string | null =
     property.floorNumber !== undefined && property.floorNumber !== null
@@ -340,7 +338,9 @@ export const updateProperty = async (
   const currentData = currentSnapshot.exists()
     ? (currentSnapshot.data() as Property)
     : null;
-
+  // const data = Object.fromEntries(
+  //   Object.entries(updates).filter(([key]) => key !== "media")
+  // );
   const updateData = {
     ...updates,
     lastModified: getUnixDateTime(),

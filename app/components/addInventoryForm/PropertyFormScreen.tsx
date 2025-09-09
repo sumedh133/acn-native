@@ -598,7 +598,24 @@ export const PropertyFormScreen: React.FC<PropertyFormScreenProps> = ({
         <View className="flex-1">
           <FormPreview
             config={inventoryFormConfig}
-            data={formData}
+            data={{
+              ...formData,
+              media: {
+                photos: [
+                  ...(formData.media?.photos || []), // Existing database URLs only
+                  ...selectedMediaAssets
+                    .filter((m) => !m.type?.startsWith("video"))
+                    .map((m) => m.uri as string), // Local file URIs for preview only
+                ],
+                videos: [
+                  ...(formData.media?.videos || []), // Existing database URLs only
+                  ...selectedMediaAssets
+                    .filter((m) => m.type?.startsWith("video"))
+                    .map((m) => m.uri as string), // Local file URIs for preview only
+                ],
+                documents: formData.media?.documents || [],
+              },
+            }}
             previewType={isEdit ? "edit" : "add"}
             onMediaUpdate={handleMediaUpdate}
             agentData={agentData}
