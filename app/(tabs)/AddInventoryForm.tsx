@@ -443,10 +443,12 @@ const AddInventoryForm = () => {
       console.error("Error while saving/updating property:", error);
 
       if (editData) {
+        console.log('let me cgeck1');
         showErrorToast(
           `Something went wrong while updating the property. Please try again.`
         );
       } else {
+        console.log('let mjaid 2 ');
         try {
           trackEvent("inventory_addition_error").catch((error) => {
             console.error(`Error logging event: ${error}`);

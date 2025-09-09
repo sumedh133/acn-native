@@ -85,7 +85,7 @@ export const basicDetailsStep: FormStep = {
       colspan: 12,
     },
     {
-      id: "commercialPropertyType",
+      id: "assetType",
       label: "Select property type",
       type: "select",
       required: true,
@@ -114,7 +114,7 @@ export const basicDetailsStep: FormStep = {
         { label: "Co-Working Space", value: "co-working space" },
       ],
       dependsOn: {
-        field: "commercialPropertyType",
+        field: "assetType",
         values: ["office space"],
       },
       colspan: 12,
@@ -130,7 +130,7 @@ export const basicDetailsStep: FormStep = {
         { label: "Showroom", value: "showroom" },
       ],
       dependsOn: {
-        field: "commercialPropertyType",
+        field: "assetType",
         values: ["retail space"],
       },
       colspan: 12,
@@ -150,7 +150,7 @@ export const basicDetailsStep: FormStep = {
         { label: "Other", value: "other" },
       ],
       dependsOn: {
-        field: "commercialPropertyType",
+        field: "assetType",
         values: ["commercial space"],
       },
       colspan: 12,

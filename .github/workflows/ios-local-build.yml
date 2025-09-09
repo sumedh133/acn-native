@@ -5,7 +5,7 @@ on:
       - build2
 jobs:
   build-ios:
-    runs-on: macos-latest
+    runs-on: self-hosted
     steps:
       # 1. Checkout the code
       - name: Checkout Repository
