@@ -50,7 +50,6 @@ export const DetailsSection: React.FC<DetailsSectionProps> = ({
     "handoverDate",
     "handOverDate",
     "isPreLeased",
-    
   ]);
 
   // Remove excluded fields right at the start
@@ -364,28 +363,12 @@ export const DetailsSection: React.FC<DetailsSectionProps> = ({
               </View>
               <View className="flex-1">
                 <Text className="text-[14px] leading-[21px] font-medium text-[#5A5555] font-[Lato]">
-                  {field.id === "floorNumber" ? "Floor number" : field.label}
+                  {field.label}
                 </Text>
                 <Text className="text-[16px] leading-[24px] font-bold text-black font-[Lato]">
-                  {field.id === "floorNumber"
+                  {field.id === "referredFloorNumber"
                     ? (() => {
-                        const floorNumber = Number(field.value);
-                        const referredFloorNumber =
-                          floorNumber !== undefined && floorNumber !== null
-                            ? floorNumber === 0
-                              ? "Ground Floor"
-                              : floorNumber < 6
-                              ? "Lower Floor (1-5)"
-                              : floorNumber < 11
-                              ? "Middle Floor (6-10)"
-                              : floorNumber < 20
-                              ? "Higher Floor (10+)"
-                              : floorNumber > 20
-                              ? "Higher Floor (20+)"
-                              : null
-                            : null;
-
-                        return referredFloorNumber || "-";
+                        return field.value;
                       })()
                     : field.id === "rentalInfo" && data?.rentalInfo
                     ? (() => {

@@ -92,7 +92,7 @@ export const iconMap: Record<string, React.FC<any>> = {
   carpetArea: CarpetAreaIcon,
   extraRooms: ExtraRoomsIcon,
   facing: FacingIcon,
-  floorNumber: FloorNumberIcon,
+  referredFloorNumber: FloorNumberIcon,
   furnishing: FurnishingIcon,
   maintenance: MaintenanceIcon,
   nonVegAllowed: NonVegAllowedIcon,

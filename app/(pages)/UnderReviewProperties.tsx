@@ -42,12 +42,16 @@ const UnderReviewProperties = () => {
   const fetchProperties = useCallback(async () => {
     try {
       setLoading(true);
-      const propertyResults: Property[] = await searchProperties("cpId", cpId,"qc");
+      const propertyResults: Property[] = await searchProperties(
+        "cpId",
+        cpId,
+        "qc"
+      );
       console.log(propertyResults, "fetched properties");
-      const props: Property[] = []
-       propertyResults.filter((ele: Property) => {
-        if (ele.stage === 'live')  props.push(ele)
-      })
+      const props: Property[] = [];
+      propertyResults.filter((ele: Property) => {
+        if (ele.stage === "kam" || ele.stage === "data") props.push(ele);
+      });
       setProperties(props || []);
     } catch (error) {
       console.error("Error fetching properties:", error);

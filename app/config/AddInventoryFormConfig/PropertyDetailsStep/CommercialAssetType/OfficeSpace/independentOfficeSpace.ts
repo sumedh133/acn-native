@@ -90,10 +90,10 @@ export const independentOfficeSpaceFields: FormField[] = [
     conditional: true,
   },
   {
-    id: "floorNumber",
+    id: "referredFloorNumber",
     label: "Floor No.",
     footer: "Note: Exact floor will not be shown",
-    type: "number",
+    type: "floorNumber",
     required: true,
     placeholder: "0000",
     validation: {

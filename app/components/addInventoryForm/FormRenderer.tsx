@@ -25,6 +25,7 @@ import CorrectIcon from "../../../assets/icons/svg/AddInventory/FormIcons/correc
 import PhotoVideoPicker from "../Listing/PhotoVideoPicker";
 import type { Asset } from "react-native-image-picker";
 import { MediaObj } from "@/app/types/MediaTypes";
+import { FloorField } from "../Listing/FloorHandlinig";
 
 type UIProperty = Omit<Property, "handOverDate"> & {
   handOverDate?: string;
@@ -98,23 +99,55 @@ export const FormRenderer: React.FC<FormRendererProps> = ({
   /**
    * Set nested field value in formData.
    */
+  // Your config logic for referredFloorNumber
+  const referredFloorConfig = (floorNumber: number | null): string | null => {
+    if (floorNumber === null || floorNumber === undefined) return null;
+    if (floorNumber === 0) return "Ground Floor";
+    if (floorNumber < 6) return "Lower Floor (1-5)";
+    if (floorNumber < 11) return "Middle Floor (6-10)";
+    if (floorNumber < 20) return "Higher Floor (10+)";
+    if (floorNumber > 20) return "Higher Floor (20+)";
+    return null;
+  };
+
   const setFieldValue = (fieldPath: string, value: any) => {
     const keys = fieldPath.split(".");
     const newData = { ...formData };
 
     let current: any = newData;
     for (let i = 0; i < keys.length - 1; i++) {
-      if (!current[keys[i]]) current[keys[i]] = {};
-      current = current[keys[i]];
+      if (!(current as any)[keys[i]]) (current as any)[keys[i]] = {};
+      current = (current as any)[keys[i]];
     }
+    (current as any)[keys[keys.length - 1]] = value;
 
-    // store timestamp directly for handoverDate
-    current[keys[keys.length - 1]] = value;
+    // Handle derived field for floorNumber
+    if (fieldPath.toLowerCase().endsWith("floornumber")) {
+      // Set floorNumber at path
+      (current as any)[keys[keys.length - 1]] = value;
+
+      // Derive referredFloorNumber
+      const referred = referredFloorConfig(value);
+
+      // Set referredFloorNumber at same level
+      const referredKeys = [...keys.slice(0, -1), "referredFloorNumber"];
+      let referredCurrent: any = newData;
+      for (let i = 0; i < referredKeys.length - 1; i++) {
+        if (!(referredCurrent as any)[referredKeys[i]])
+          (referredCurrent as any)[referredKeys[i]] = {};
+        referredCurrent = (referredCurrent as any)[referredKeys[i]];
+      }
+      (referredCurrent as any)[referredKeys[referredKeys.length - 1]] =
+        referred;
+
+      // Optional: also set root-level floorNumber if needed
+      //(newData as any).floorNumber = value;
+      //(newData as any).referredFloorNumber = referred;
+    }
 
     resetDependentFields(fieldPath, newData);
     onFormUpdate(newData);
 
-    // Scroll to possession field when it changes
     if (
       fieldPath === "possession" &&
       possessionFieldRef.current &&
@@ -272,6 +305,28 @@ export const FormRenderer: React.FC<FormRendererProps> = ({
 
     const fieldContent = () => {
       switch (field.type) {
+        case "floorNumber":
+          return (
+            <FloorField
+              value={formData.floorNumber as number | null}
+              setValue={(val) => {
+                const referred = referredFloorConfig(val);
+                setFieldValue(field.id, referred); // for referredFloorNumber
+                setFieldValue("floorNumber", val); // store numeric floorNumber separately
+              }}
+              placeholder={field.placeholder}
+              required={field.required}
+              keyboardType={"number-pad"}
+              prefix={field.prefix}
+              suffix={field.suffix}
+              numberToStringFooter={field.numberToStringFooter}
+              footer={field.footer}
+              errorMessage={errors[field.id]}
+              label={field.label} // <-- Pass this to fix the error
+              labelNote={field.labelNote} // optional
+            />
+          );
+
         case "placesApi":
           return (
             <View>

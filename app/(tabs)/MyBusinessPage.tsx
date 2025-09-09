@@ -312,7 +312,7 @@ const MyBusinessPage = () => {
       );
       const props: Property[] = [];
       propertyResults.filter((ele: Property) => {
-        if (ele.stage === "live") props.push(ele);
+        if (ele.stage === "kam" || ele.stage === "data") props.push(ele);
       });
       setProperties(props || []);
     } catch (error) {
