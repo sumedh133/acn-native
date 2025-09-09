@@ -17,11 +17,11 @@ type UIProperty = Omit<Property, "handOverDate"> & {
 
 const safeDaysFrom = (timestamp: any): number => {
   try {
-    const result = getDaysFrom(timestamp); 
-    const match = String(result).match(/\d+/); 
+    const result = getDaysFrom(timestamp);
+    const match = String(result).match(/\d+/);
 
     if (match) {
-      return parseInt(match[0], 10); 
+      return parseInt(match[0], 10);
     }
 
     return 0;
@@ -30,9 +30,6 @@ const safeDaysFrom = (timestamp: any): number => {
     return 0;
   }
 };
-
-
-
 
 const safeText = (value: any, fallback: string = "-"): string => {
   if (value === null || value === undefined) return fallback;
@@ -109,14 +106,15 @@ export const BasicPropertyInfo: React.FC<{
   }
 
   function getHandoverLabel(data: any): string {
-    if (
-      data?.readyToMove ||
-      (typeof data?.possession === "string" ? data.possession.toLowerCase() : "").toLowerCase() === "ready to move"
-    ) {
+    const possession = data?.possession
+      ? String(data.possession).toLowerCase()
+      : "";
+
+    if (data?.readyToMove || possession === "ready to move") {
       return "Ready to Move";
     }
 
-    if ((typeof data?.possession === "string" ? data.possession.toLowerCase() : "").toLowerCase() === "under construction") {
+    if (possession === "under construction") {
       if (data?.availableFrom) {
         if (typeof data.availableFrom === "string") {
           // format: "MM/YYYY"

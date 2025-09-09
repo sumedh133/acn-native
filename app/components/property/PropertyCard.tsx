@@ -227,9 +227,9 @@ const PropertyCard: React.FC<PropertyCardProps> = ({
   const handleEnquireNowBtn = (e: any) => {
     e.stopPropagation();
     try {
-
-
-      trackEvent("click_enquire_now", { page_type: property?.listingType }).catch((error) => {
+      trackEvent("click_enquire_now", {
+        page_type: property?.listingType,
+      }).catch((error) => {
         console.error(`Error logging event: ${error}`);
       });
     } catch (error) {
@@ -247,11 +247,11 @@ const PropertyCard: React.FC<PropertyCardProps> = ({
 
   const handleCancel = () => {
     try {
-
-
-      trackEvent("cancel_enquiry", { page_type: property?.listingType }).catch((error) => {
-        console.error(`Error logging event: ${error}`);
-      });
+      trackEvent("cancel_enquiry", { page_type: property?.listingType }).catch(
+        (error) => {
+          console.error(`Error logging event: ${error}`);
+        }
+      );
     } catch (error) {
       console.error(`Unexpected error: ${error}`);
     }
@@ -310,9 +310,11 @@ const PropertyCard: React.FC<PropertyCardProps> = ({
         isInModal: true,
       });
       try {
-
-
-        trackEvent("confirm_enquiry", undefined, property, { page_type: property?.listingType, buyerCpId: agentData?.cpId, sellerCpId: sellerData?.cpId }).catch((error) => {
+        trackEvent("confirm_enquiry", undefined, property, {
+          page_type: property?.listingType,
+          buyerCpId: agentData?.cpId,
+          sellerCpId: sellerData?.cpId,
+        }).catch((error) => {
           console.error(`Error logging event: ${error}`);
         });
       } catch (error) {
@@ -526,7 +528,7 @@ const PropertyCard: React.FC<PropertyCardProps> = ({
         {pathname === "/MyBusinessPage" && isSelectionMode && (
           <Pressable onPress={handleSelectionToggle}>
             {selectedProperties &&
-              selectedProperties.has(property.propertyId) ? (
+            selectedProperties.has(property.propertyId) ? (
               <View className="min-w-[25px] min-h-[25] ">
                 <Selected />
               </View>
@@ -538,17 +540,18 @@ const PropertyCard: React.FC<PropertyCardProps> = ({
         <View className="flex-1">
           {(pathname === "/MyBusinessPage" ||
             pathname === "/UnderReviewProperties") && (
-              <View
-                className={`${property.listingType === "rental"
+            <View
+              className={`${
+                property.listingType === "rental"
                   ? "bg-[#FCE9BA]"
                   : "bg-[#EADDFF]"
-                  } max-w-[56px] max-h-[19px] items-center ml-4 px-[11px] pt-1 rounded-t-lg`}
-              >
-                <Text className="text-[#10302D] text-xs font-medium leading-[150%]">
-                  {safeText(toCapitalizedWords(property.listingType))}
-                </Text>
-              </View>
-            )}
+              } max-w-[56px] max-h-[19px] items-center ml-4 px-[11px] pt-1 rounded-t-lg`}
+            >
+              <Text className="text-[#10302D] text-xs font-medium leading-[150%]">
+                {safeText(toCapitalizedWords(property.listingType))}
+              </Text>
+            </View>
+          )}
           <Pressable
             delayLongPress={500}
             onLongPress={() => {
@@ -741,15 +744,15 @@ const PropertyCard: React.FC<PropertyCardProps> = ({
                   {[
                     toCapitalizedWords(property.assetType),
                     property.noOfBedrooms &&
-                    property.noOfBedrooms !== null &&
-                    `${property.noOfBedrooms} BHK`,
+                      property.noOfBedrooms !== null &&
+                      `${property.noOfBedrooms} BHK`,
                     property.assetType === "plot" &&
                       property.plotLength &&
                       property.plotBreadth &&
                       `${property.plotLength} sqft X ${property.plotBreadth} sqft`,
                     property.facing &&
-                    property.facing !== null &&
-                    toCapitalizedWords(property.facing),
+                      property.facing !== null &&
+                      toCapitalizedWords(property.facing),
                   ]
                     .filter(
                       (tag) => tag !== null && tag !== undefined && tag !== ""
@@ -771,16 +774,16 @@ const PropertyCard: React.FC<PropertyCardProps> = ({
               </View>
 
               {/* ✅ FIXED: Price and SBUA section with safe formatting */}
-              <View className="flex-row justify-between items-start border-t border-t-[#E3E3E3] pt-2 mb-3">
-                {/* Total Ask Price */}
-                <View className="flex-col items-start px-4 flex-1">
+              <View className="flex-row justify-between items-start border-t border-t-[#E3E3E3] pt-2 mb-3 px-4">
+                {/* Total Ask Price / Rent */}
+                <View className="flex-col items-start flex-1 pr-2">
                   {property.listingType === "rental" ? (
                     <View className="flex-1">
                       <Text className="text-[#433F3E] text-xs font-montserrat-medium">
                         Rent
                       </Text>
                       <Text
-                        className="text-sm font-semibold text-[#111827]"
+                        className="flex-1 text-sm font-semibold text-[#111827]"
                         numberOfLines={1}
                         ellipsizeMode="tail"
                       >
@@ -796,7 +799,11 @@ const PropertyCard: React.FC<PropertyCardProps> = ({
                       <Text className="text-[#433F3E] text-xs font-montserrat-medium">
                         Ask Price
                       </Text>
-                      <Text className="text-sm font-semibold text-[#111827]">
+                      <Text
+                        className="flex-1 text-sm font-semibold text-[#111827]"
+                        numberOfLines={1}
+                        ellipsizeMode="tail"
+                      >
                         {safeText(
                           property?.pricing?.totalAskPrice
                             ? formatCost2(property.pricing.totalAskPrice)
@@ -808,29 +815,23 @@ const PropertyCard: React.FC<PropertyCardProps> = ({
                 </View>
 
                 {/* Vertical divider */}
-                <View
-                  style={{
-                    width: 1,
-                    backgroundColor: "#E3E3E3",
-                    alignSelf: "stretch",
-                  }}
-                />
+                <View className="w-[1px] bg-[#E3E3E3] self-stretch" />
 
-                {/* Per Sqft or deposit*/}
-                <View className="flex-col items-start px-4 flex-1">
+                {/* Deposit / per sqft */}
+                <View className="flex-col items-start flex-1 px-2">
                   {property.listingType === "rental" ? (
                     <View className="flex-1">
                       <Text className="text-[#433F3E] text-xs font-montserrat-medium">
                         Deposit
                       </Text>
                       <Text
-                        className="text-sm font-semibold text-[#111827]"
+                        className="flex-1 text-sm font-semibold text-[#111827]"
                         numberOfLines={1}
                         ellipsizeMode="tail"
                       >
                         {safeText(
                           property?.rentalInfo?.deposit
-                            ? formatCost2(property?.rentalInfo?.deposit)
+                            ? formatCost2(property.rentalInfo.deposit)
                             : undefined
                         )}
                       </Text>
@@ -841,7 +842,7 @@ const PropertyCard: React.FC<PropertyCardProps> = ({
                         /sqft Price
                       </Text>
                       <Text
-                        className="text-sm font-semibold text-[#111827]"
+                        className="flex-1 text-sm font-semibold text-[#111827]"
                         numberOfLines={1}
                         ellipsizeMode="tail"
                       >
@@ -856,51 +857,48 @@ const PropertyCard: React.FC<PropertyCardProps> = ({
                 </View>
 
                 {/* Vertical divider */}
-                <View
-                  style={{
-                    width: 1,
-                    backgroundColor: "#E3E3E3",
-                    alignSelf: "stretch",
-                  }}
-                />
+                <View className="w-[1px] bg-[#E3E3E3] self-stretch" />
 
-                {/* SBUA */}
-                {property.assetType === "plot" ? (
-                  <View className="flex-col items-start px-4 flex-1">
-                    <Text className="text-[#6B7280] text-xs font-montserrat-semibold">
-                      Plot Size
-                    </Text>
-                    <Text
-                      className="text-sm font-semibold text-[#111827]"
-                      numberOfLines={1}
-                      ellipsizeMode="tail"
-                    >
-                      {property.plotArea ? (
-                        <Text>{safeText(property.plotArea)} Sq Ft</Text>
-                      ) : (
-                        <Text>-</Text>
-                      )}
-                    </Text>
-                  </View>
-                ) : (
-                  <View className="flex-col items-start px-4 flex-1">
-                    <Text className="text-[#6B7280] text-xs font-montserrat-semibold">
-                      SBUA
-                    </Text>
-                    <Text
-                      className="text-sm font-semibold text-[#111827]"
-                      numberOfLines={1}
-                      ellipsizeMode="tail"
-                    >
-                      {property.sbua ? (
-                        <Text>{safeText(property.sbua)} Sq Ft</Text>
-                      ) : (
-                        <Text>-</Text>
-                      )}
-                    </Text>
-                  </View>
-                )}
+                {/* SBUA / Plot Size */}
+                <View className="flex-col items-start flex-1 pl-2">
+                  {property.assetType === "plot" ? (
+                    <>
+                      <Text className="text-[#6B7280] text-xs font-montserrat-semibold">
+                        Plot Size
+                      </Text>
+                      <Text
+                        className="flex-1 text-sm font-semibold text-[#111827]"
+                        numberOfLines={1}
+                        ellipsizeMode="tail"
+                      >
+                        {property.plotArea ? (
+                          <Text>{safeText(property.plotArea)} Sq Ft</Text>
+                        ) : (
+                          <Text>-</Text>
+                        )}
+                      </Text>
+                    </>
+                  ) : (
+                    <>
+                      <Text className="text-[#6B7280] text-xs font-montserrat-semibold">
+                        SBUA
+                      </Text>
+                      <Text
+                        className="flex-1 text-sm font-semibold text-[#111827]"
+                        numberOfLines={1}
+                        ellipsizeMode="tail"
+                      >
+                        {property.sbua ? (
+                          <Text>{safeText(property.sbua)} Sq Ft</Text>
+                        ) : (
+                          <Text>-</Text>
+                        )}
+                      </Text>
+                    </>
+                  )}
+                </View>
               </View>
+
               {pathname === "/properties" && (
                 <View className="flex-row gap-x-3">
                   {/* Enquire Now Button */}
@@ -927,16 +925,17 @@ const PropertyCard: React.FC<PropertyCardProps> = ({
             {/* ✅ FIXED: Business page footer with safe enquiries rendering */}
             {pathname === "/MyBusinessPage" && (
               <View
-                className={`flex flex-row justify-between rounded-b-lg px-4 py-2 ${property.status?.toLowerCase() === "available"
-                  ? "bg-[#EAFFEF]"
-                  : property.status?.toLowerCase() === "sold"
+                className={`flex flex-row justify-between rounded-b-lg px-4 py-2 ${
+                  property.status?.toLowerCase() === "available"
+                    ? "bg-[#EAFFEF]"
+                    : property.status?.toLowerCase() === "sold"
                     ? "bg-[#F2F2F2]"
                     : property.status?.toLowerCase() === "hold"
-                      ? "bg-[#FFFCF0]"
-                      : property.status?.toLowerCase() === "de-listed"
-                        ? "bg-[#FFF0F0]"
-                        : ""
-                  }`}
+                    ? "bg-[#FFFCF0]"
+                    : property.status?.toLowerCase() === "de-listed"
+                    ? "bg-[#FFF0F0]"
+                    : ""
+                }`}
               >
                 <View className="flex flex-col gap-y-[2px]">
                   <Text className="text-[#5A5555] text-xs font-medium leading-[150%] tracking-[0.25px]">
@@ -953,16 +952,17 @@ const PropertyCard: React.FC<PropertyCardProps> = ({
                   </Text>
                   <View className="flex flex-row items-center gap-y-1">
                     <Text
-                      className={`text-sm font-bold leading-[150%] ${property?.status?.toLowerCase() === "available"
-                        ? "text-[#34C759]"
-                        : property?.status?.toLowerCase() === "sold"
+                      className={`text-sm font-bold leading-[150%] ${
+                        property?.status?.toLowerCase() === "available"
+                          ? "text-[#34C759]"
+                          : property?.status?.toLowerCase() === "sold"
                           ? "text-[#5A5555]"
                           : property?.status?.toLowerCase() === "hold"
-                            ? "text-[#FFCC00]"
-                            : property?.status?.toLowerCase() === "de-listed"
-                              ? "text-[#DE1135]"
-                              : "text-[#2B2928]"
-                        }`}
+                          ? "text-[#FFCC00]"
+                          : property?.status?.toLowerCase() === "de-listed"
+                          ? "text-[#DE1135]"
+                          : "text-[#2B2928]"
+                      }`}
                     >
                       {safeText(toCapitalizedWords(property?.status))}
                     </Text>
