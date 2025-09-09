@@ -292,9 +292,10 @@ const AddInventoryForm = () => {
 
       // If property is draft → move to pending
       if (cleanData.status === "draft") {
+        console.log('saving as drafttt')
         await updateProperty(
           cleanData.propertyId,
-          { ...cleanData, status: "draft" },
+          { ...cleanData, status: "pending",stage:"kam"},
           "qc"
         );
         finalPropId = cleanData.propertyId;
@@ -303,6 +304,7 @@ const AddInventoryForm = () => {
         showSuccessToast(`New property created and sent for verification!`);
       } else {
         // New property creation
+        console.log("new propeety")
         const newProperty = await createProperty(
           cleanData as Omit<Property, "propertyId">,
           "qc"
@@ -434,8 +436,9 @@ const AddInventoryForm = () => {
       }
       setIsSubmitting(false);
       // Navigation after success for create or draft update
-      router.dismissAll();
-      router.replace("/(tabs)/dashboardTab");
+      // router.dismissAll();
+      // router.back("/(tabs)/dashboardTab");
+      router.replace("/(tabs)/properties")
     } catch (error: any) {
       console.error("Error while saving/updating property:", error);
 

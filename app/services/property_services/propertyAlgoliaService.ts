@@ -258,7 +258,7 @@ class AlgoliaInfiniteSearchService {
       { values: filters.apartmentType, fieldName: "apartmentType" },
       { values: filters.micromarket, fieldName: "micromarket" },
       { values: filters.facing, fieldName: "facing" },
-      { values: filters.floor, fieldName: "floor" }, // likely change
+      { values: filters.floor, fieldName: "referredFloorNumber" }, // likely change
       { values: filters.furnishing, fieldName: "furnishing" },
       {
         values: filters.preferredTenants,
