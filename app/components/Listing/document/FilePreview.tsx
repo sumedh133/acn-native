@@ -8,6 +8,8 @@ import { View, Text, StyleSheet, TouchableOpacity } from "react-native";
 import PDFIcon from "@/assets/icons/svg/PropertyListing/ListingFlow/PDFIcon.svg";
 import TrashIcon from "@/assets/icons/svg/Common/TrashIcon";
 
+import { trackEvent } from "@/app/services/logAnalyticsService";
+
 interface FilePreviewProps {
   docsToUpload: DocsToUpload;
   setDocsToUpload: (docsToUpload: DocsToUpload) => void;
@@ -23,6 +25,12 @@ const FilePreview: React.FC<FilePreviewProps> = ({
     }
   };
   const handleRemoveFile = async (type: string, index: number) => {
+
+    try {
+      trackEvent("remove_document").catch((error) => console.error(`Error document remove scroll event: ${error}`));
+    } catch (error) {
+      console.error(`Unexpected error: ${error}`);
+    }
     const updatedDocs = { ...docsToUpload };
     if (updatedDocs?.[type]?.[index]?.uri) {
       cleanUpDocument(updatedDocs?.[type]?.[index]?.uri);
