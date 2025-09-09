@@ -47,11 +47,13 @@ const Checkbox: React.FC<CheckboxProps> = ({
   <TouchableOpacity
     onPress={onPress}
     disabled={disabled}
-    className={`w-5 h-5 border-2 rounded ${
+    className={`w-6 h-6 border-2 rounded-md ${
       checked ? "bg-[#153E3B] border-[#153E3B]" : "bg-white border-gray-300"
     } ${disabled ? "opacity-50" : ""} items-center justify-center`}
   >
-    {checked && <Text className="text-white text-xs font-bold">✓</Text>}
+    {checked && (
+      <Text className="text-white text-sm font-bold leading-none">✓</Text>
+    )}
   </TouchableOpacity>
 );
 
@@ -74,10 +76,10 @@ const StatusItem: React.FC<StatusItemProps> = ({
   <TouchableOpacity
     onPress={onToggle}
     disabled={disabled}
-    className="flex flex-row items-center min-w-full justify-between"
+    className="flex-row items-center py-3"
   >
     <Checkbox checked={checked} onPress={onToggle} disabled={disabled} />
-    <Text className="text-[#153E3B] font-medium flex-1">
+    <Text className="text-[#153E3B] font-medium text-base ml-3">
       {status} ({count})
     </Text>
   </TouchableOpacity>
@@ -157,9 +159,6 @@ const MultiStatusUpdateModal: React.FC<MultiStatusUpdateModalProps> = ({
 
   // Get only statuses that have properties to display
   const getAvailableStatuses = () => {
-    const abc = Object.entries(selectedStatuses).filter(
-      ([_, selectStatus]) => selectStatus.propertyIds.length > 0
-    );
     return Object.entries(selectedStatuses).filter(
       ([_, selectStatus]) => selectStatus.propertyIds.length > 0
     );
@@ -179,72 +178,64 @@ const MultiStatusUpdateModal: React.FC<MultiStatusUpdateModalProps> = ({
       >
         {/* Modal Content */}
         <Pressable
-          className="flex flex-col gap-y-2 bg-white rounded-[12px] p-6 w-[320px] max-w-[360px]"
+          className="bg-white rounded-2xl p-6 py-8 w-[80%] shadow-lg"
           onPress={() => {}} // Prevent backdrop press when touching modal content
         >
           {/* Close Button */}
           <TouchableOpacity
             onPress={onClose}
-            className="absolute top-3 right-3 p-1"
+            className="absolute top-2 right-2 p-1 z-10"
           >
-            <CloseIcon />
+            <CloseIcon width={36} height={36} />
           </TouchableOpacity>
 
           {/* Title */}
-          <Text className="text-[#153E3B] font-bold text-lg">
+          <Text
+            className="text-[#153E3B]  text-xl mb-6 font-[Montserrat]"
+            style={{ fontFamily: "Montserrat_700Bold" }}
+          >
             Confirm Status
           </Text>
 
-          {/* Checkboxes */}
-          <ScrollView
-            className="min-h-fit"
-            showsVerticalScrollIndicator={false}
-          >
-            <View className="flex flex-col justify-between">
-              {getAvailableStatuses().map(
-                ([status, selectStatus]: [
-                  string,
-                  { propertyIds: string[]; selected: boolean }
-                ]) => (
-                  <StatusItem
-                    key={status}
-                    status={formatStatusName(status)}
-                    count={selectStatus.propertyIds.length}
-                    checked={selectStatus.selected}
-                    onToggle={() => handleStatusToggle(status as keyof SelectedStatuses)}
-                    disabled={isUpdating}
-                  />
-                )
-              )}
-            </View>
-          </ScrollView>
-
-          {/* Summary */}
-          {/* <View className="bg-gray-50 p-3 rounded-md mb-4">
-            <Text className="text-sm text-gray-700">
-              <Text className="font-semibold">
-                {getTotalSelectedProperties()}
-              </Text>{" "}
-              properties will be marked as "Available"
-            </Text>
-          </View> */}
+          {/* Status List */}
+          <View className="mb-6">
+            {getAvailableStatuses().map(
+              ([status, selectStatus]: [
+                string,
+                { propertyIds: string[]; selected: boolean }
+              ]) => (
+                <StatusItem
+                  key={status}
+                  status={formatStatusName(status)}
+                  count={selectStatus.propertyIds.length}
+                  checked={selectStatus.selected}
+                  onToggle={() =>
+                    handleStatusToggle(status as keyof SelectedStatuses)
+                  }
+                  disabled={isUpdating}
+                />
+              )
+            )}
+          </View>
 
           {/* Buttons */}
-          <View className="flex-row justify-between gap-3">
+          <View className="flex-row justify-between gap-4">
             <TouchableOpacity
               onPress={onClose}
               disabled={isUpdating}
-              className={`flex-1 border border-[#153E3B] rounded-md py-3 items-center ${
+              className={`flex-1 border border-[#153E3B] rounded-lg py-3 items-center ${
                 isUpdating ? "opacity-50" : ""
               }`}
             >
-              <Text className="text-[#153E3B] font-medium">No</Text>
+              <Text className="text-[#153E3B] font-medium text-base font-[Lato]">
+                No
+              </Text>
             </TouchableOpacity>
 
             <TouchableOpacity
               onPress={handleConfirm}
               disabled={isUpdating || getTotalSelectedProperties() === 0}
-              className={`flex-1 bg-[#153E3B] rounded-md py-3 items-center justify-center ${
+              className={`flex-1 bg-[#153E3B] rounded-lg py-3 items-center justify-center ${
                 isUpdating || getTotalSelectedProperties() === 0
                   ? "opacity-50"
                   : ""
@@ -253,10 +244,14 @@ const MultiStatusUpdateModal: React.FC<MultiStatusUpdateModalProps> = ({
               {isUpdating ? (
                 <View className="flex-row items-center gap-2">
                   <ActivityIndicator size="small" color="white" />
-                  <Text className="text-white font-medium">Updating...</Text>
+                  <Text className="text-white font-medium text-base font-[Lato]">
+                    Updating...
+                  </Text>
                 </View>
               ) : (
-                <Text className="text-white font-medium">Yes</Text>
+                <Text className="text-white font-medium text-base font-[Lato]">
+                  Yes
+                </Text>
               )}
             </TouchableOpacity>
           </View>
