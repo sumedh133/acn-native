@@ -53,9 +53,9 @@ const notificationTypeToFilter: Record<string, string> = {
   enquiry_buyer_notification: "connects",
   enquiry_seller_notification: "connects",
   delisting_notification: "listing",
-  delistied_notification: "listing",
+  delisted_notification: "listing",
   listing_live_notification: "listing",
-  add_requirement_notification: "asks",
+  add_requirement_notification: "asks",  // requirement posts
   payment_notification: "billing",
 };
 
@@ -99,13 +99,14 @@ const NotificationPage: React.FC<NotificationPageProps> = () => {
 
   // Filter notifications based on active filter
   const filteredNotifications =
-    activeFilter === "all"
-      ? notifications
-      : notifications.filter(
-          (notification) =>
-            notificationTypeToFilter[notification.type] === activeFilter
-        );
+  activeFilter === "all"
+    ? notifications
+    : notifications.filter(
+        (notification) =>
+          notificationTypeToFilter[notification.type?.toLowerCase()] === activeFilter
+      );
 
+  console.log("Notification types:", notifications.map(n => n.type));
   const fetchAndDispatchProperty = async (propertyId: string) => {
     try {
       const propertyRef = doc(db, "acnProperties", propertyId);

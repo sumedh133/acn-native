@@ -103,7 +103,7 @@ class AlgoliaInfiniteSearchService {
         .filter((id, index, array) => array.indexOf(id) === index); // Remove duplicates
 
       if (propertyIds.length === 0) {
-        console.warn("No valid propertyIds found in Algolia hits");
+        // console.warn("No valid propertyIds found in Algolia hits");
         return [];
       }
 
