@@ -27,6 +27,8 @@ import Video, { VideoRef } from "react-native-video";
 import Icon from "@/assets/icons/svg/PropertyListing/ListingFlow/PhotoVideoPicker.svg";
 import { getIcon } from "@/utils/iconUtils";
 import { trackEvent } from "@/app/services/logAnalyticsService";
+import { deleteMediaFromProperty } from "@/app/services/property_services/propertyService";
+import { usePathname } from "expo-router";
 
 // Emit object arrays (not strings) to the parent
 type MediaObj = { uri: string; name?: string; type?: string; size?: number };
@@ -35,13 +37,24 @@ interface PhotoVideoPickerProps {
   onChange?: (data: { photos: MediaObj[]; videos: MediaObj[] }) => void;
   selectedMedia?: Asset[];
   setSelectedMedia?: (media: Asset[]) => void;
+  existingMedia?: { photos: string[]; videos: string[] };
+  onExistingChange?: (data: { photos: string[]; videos: string[] }) => void;
+  propertyId?: string; // For direct Firebase deletion
 }
 
 const PhotoVideoPicker: React.FC<PhotoVideoPickerProps> = ({
   onChange,
   selectedMedia = [],
-  setSelectedMedia = () => { },
+  setSelectedMedia = () => {},
+  existingMedia = { photos: [], videos: [] },
+  onExistingChange,
+  propertyId,
 }) => {
+  console.log(existingMedia);
+  const inventoryStage = propertyId?.toLocaleLowerCase().startsWith("qc")
+    ? "qc"
+    : "verified";
+  console.log(inventoryStage);
   // const [selectedMedia, setSelectedMedia] = useState<Asset[]>([]);
   const [modalVisible, setModalVisible] = useState(false);
   const [selectedImageIndex, setSelectedImageIndex] = useState(0);
@@ -55,6 +68,78 @@ const PhotoVideoPicker: React.FC<PhotoVideoPickerProps> = ({
 
   const fullscreenScrollRef = useRef<ScrollView>(null);
   const thumbnailScrollRef = useRef<ScrollView>(null);
+
+  // Existing remote media (URLs) state, synced from props
+  const [existingState, setExistingState] = useState<{
+    photos: string[];
+    videos: string[];
+  }>(existingMedia);
+
+  React.useEffect(() => {
+    setExistingState(existingMedia);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [existingMedia?.photos?.length, existingMedia?.videos?.length]);
+
+  type UnifiedMedia = {
+    uri: string;
+    type: "image" | "video";
+    origin: "existing" | "local";
+    asset?: Asset;
+  };
+
+  const isVideoAsset = (m: Asset) =>
+    m.type
+      ? m.type.startsWith("video")
+      : m.fileName?.toLowerCase().endsWith(".mp4");
+
+  // Normalize URL to ensure renderable by RN Image/Video
+  const normalizeUri = (input?: string | null): string => {
+    let url = (input || "").trim();
+    if (!url) return "";
+    if (url.startsWith("//")) url = `https:${url}`;
+    if (url.startsWith("http://")) url = url.replace("http://", "https://");
+    // Handle Google Drive share links -> direct download
+    const drive = url.match(
+      /https?:\/\/drive\.google\.com\/file\/d\/([^/]+)\//
+    );
+    if (drive && drive[1]) {
+      url = `https://drive.google.com/uc?export=download&id=${drive[1]}`;
+    }
+    // Encode spaces and unicode
+    try {
+      url = encodeURI(url);
+    } catch {}
+    return url;
+  };
+
+  const allMedia: UnifiedMedia[] = [
+    ...existingState.photos.map((u) => ({
+      uri: u,
+      type: "image" as const,
+      origin: "existing" as const,
+    })),
+    ...existingState.videos.map((u) => ({
+      uri: u,
+      type: "video" as const,
+      origin: "existing" as const,
+    })),
+    ...selectedMedia.map((m) => ({
+      uri: m.uri as string,
+      type: isVideoAsset(m) ? ("video" as const) : ("image" as const),
+      origin: "local" as const,
+      asset: m,
+    })),
+  ];
+
+  console.log("📱 PhotoVideoPicker allMedia debug:", {
+    existingPhotos: existingState.photos.length,
+    existingVideos: existingState.videos.length,
+    selectedMediaCount: selectedMedia.length,
+    totalAllMedia: allMedia.length,
+    selectedMediaSample: selectedMedia
+      .slice(0, 2)
+      .map((m) => ({ uri: m.uri?.substring(0, 50), type: m.type })),
+  });
 
   // Emit media upwards whenever local selection changes
   React.useEffect(() => {
@@ -102,11 +187,8 @@ const PhotoVideoPicker: React.FC<PhotoVideoPickerProps> = ({
 
   // Auto-scroll to selected image in fullscreen
   const scrollToFullscreenImage = (index: number) => {
-    if (fullscreenScrollRef.current && selectedMedia.length > 0) {
-      const clampedIndex = Math.max(
-        0,
-        Math.min(index, selectedMedia.length - 1)
-      );
+    if (fullscreenScrollRef.current && allMedia.length > 0) {
+      const clampedIndex = Math.max(0, Math.min(index, allMedia.length - 1));
       fullscreenScrollRef.current.scrollTo({
         x: clampedIndex * screenWidth,
         animated: true,
@@ -116,13 +198,10 @@ const PhotoVideoPicker: React.FC<PhotoVideoPickerProps> = ({
 
   // Auto-scroll thumbnail strip
   const scrollThumbnailToIndex = (index: number) => {
-    if (thumbnailScrollRef.current && selectedMedia.length > 0) {
+    if (thumbnailScrollRef.current && allMedia.length > 0) {
       const thumbnailWidth = 64;
       const spacing = 12;
-      const clampedIndex = Math.max(
-        0,
-        Math.min(index, selectedMedia.length - 1)
-      );
+      const clampedIndex = Math.max(0, Math.min(index, allMedia.length - 1));
       const scrollPosition =
         clampedIndex * (thumbnailWidth + spacing) - screenWidth / 2 + 32;
       thumbnailScrollRef.current.scrollTo({
@@ -138,7 +217,7 @@ const PhotoVideoPicker: React.FC<PhotoVideoPickerProps> = ({
     const currentIndex = Math.round(contentOffsetX / screenWidth);
     const clampedIndex = Math.max(
       0,
-      Math.min(currentIndex, selectedMedia.length - 1)
+      Math.min(currentIndex, allMedia.length - 1)
     );
 
     if (clampedIndex !== selectedImageIndex) {
@@ -148,8 +227,8 @@ const PhotoVideoPicker: React.FC<PhotoVideoPickerProps> = ({
     }
   };
 
-  const handleThumbnailPress = (index: number, mediaItem: Asset) => {
-    const clampedIndex = Math.max(0, Math.min(index, selectedMedia.length - 1));
+  const handleThumbnailPress = (index: number) => {
+    const clampedIndex = Math.max(0, Math.min(index, allMedia.length - 1));
     const now = Date.now();
     const lastTap = lastTapTime[clampedIndex] || 0;
 
@@ -165,10 +244,10 @@ const PhotoVideoPicker: React.FC<PhotoVideoPickerProps> = ({
             style: "destructive",
             onPress: () => {
               removeImage(clampedIndex);
-              if (selectedMedia.length <= 1) {
+              if (allMedia.length <= 1) {
                 closeModal();
-              } else if (clampedIndex >= selectedMedia.length - 1) {
-                setSelectedImageIndex(selectedMedia.length - 2);
+              } else if (clampedIndex >= allMedia.length - 1) {
+                setSelectedImageIndex(Math.max(0, allMedia.length - 2));
               }
             },
           },
@@ -185,7 +264,7 @@ const PhotoVideoPicker: React.FC<PhotoVideoPickerProps> = ({
   };
 
   const handleVideoPress = (index: number) => {
-    const clampedIndex = Math.max(0, Math.min(index, selectedMedia.length - 1));
+    const clampedIndex = Math.max(0, Math.min(index, allMedia.length - 1));
     if (playingVideoIndex === clampedIndex) {
       setPlayingVideoIndex(null);
     } else {
@@ -193,22 +272,223 @@ const PhotoVideoPicker: React.FC<PhotoVideoPickerProps> = ({
     }
   };
 
-  const removeImage = (index: number): void => {
+  const removeImage = async (index: number): Promise<void> => {
     try {
-      trackEvent("remove_image").catch((error) => console.error(`Error image remove scroll event: ${error}`));
+      trackEvent("remove_image").catch((error) =>
+        console.error(`Error image remove scroll event: ${error}`)
+      );
     } catch (error) {
       console.error(`Unexpected error: ${error}`);
     }
-    const updatedMedia = selectedMedia.filter((_, i) => i !== index);
-    setSelectedMedia(updatedMedia);
+    const media = allMedia[index];
+    console.log("🗑️ Removing media:", media, "at index:", index);
+    console.log("🔍 Current existingState:", existingState);
+    console.log("🔍 Current selectedMedia:", selectedMedia);
+    if (!media) return;
+
+    if (media.origin === "local") {
+      const updated = selectedMedia.filter((m) => m.uri !== media.uri);
+      console.log("🔄 Updated local selectedMedia:", updated);
+      setSelectedMedia(updated);
+
+      // Also trigger onChange to update formData.media
+      if (onChange) {
+        const toObj = (m: Asset): MediaObj => ({
+          uri: m.uri as string,
+          name: m.fileName,
+          type: m.type,
+          size: m.fileSize,
+        });
+        const photos = updated
+          .filter((m) =>
+            m.type
+              ? !m.type.startsWith("video")
+              : !m.fileName?.toLowerCase().endsWith(".mp4")
+          )
+          .map(toObj);
+        const videos = updated
+          .filter((m) =>
+            m.type
+              ? m.type.startsWith("video")
+              : m.fileName?.toLowerCase().endsWith(".mp4")
+          )
+          .map(toObj);
+        console.log("🔄 Triggering onChange after local deletion:", {
+          photos: photos.length,
+          videos: videos.length,
+        });
+        onChange({ photos, videos });
+      }
+    } else {
+      // For existing media, delete directly from Firebase
+      if (propertyId) {
+        try {
+          const mediaToDelete = {
+            photos: media.type === "image" ? [media.uri] : [],
+            videos: media.type === "video" ? [media.uri] : [],
+            documents: [],
+          };
+
+          console.log("🔥 Deleting from Firebase:", mediaToDelete);
+          await deleteMediaFromProperty(
+            propertyId,
+            mediaToDelete,
+            inventoryStage
+          );
+
+          // Update local state after successful Firebase deletion
+          const nextExisting = {
+            photos:
+              media.type === "image"
+                ? existingState.photos.filter((u) => u !== media.uri)
+                : existingState.photos,
+            videos:
+              media.type === "video"
+                ? existingState.videos.filter((u) => u !== media.uri)
+                : existingState.videos,
+          };
+          console.log(
+            "🔄 Updated existing media after Firebase deletion:",
+            nextExisting
+          );
+          setExistingState(nextExisting);
+          onExistingChange?.(nextExisting);
+        } catch (error) {
+          console.error("❌ Failed to delete from Firebase:", error);
+          // Still update local state even if Firebase fails
+          const nextExisting = {
+            photos:
+              media.type === "image"
+                ? existingState.photos.filter((u) => u !== media.uri)
+                : existingState.photos,
+            videos:
+              media.type === "video"
+                ? existingState.videos.filter((u) => u !== media.uri)
+                : existingState.videos,
+          };
+          setExistingState(nextExisting);
+          onExistingChange?.(nextExisting);
+
+          // Also update rawMedia even on error so UI stays consistent
+          if (onChange) {
+            const toObj = (m: Asset): MediaObj => ({
+              uri: m.uri as string,
+              name: m.fileName,
+              type: m.type,
+              size: m.fileSize,
+            });
+            // Convert remaining existing URLs to MediaObj format
+            const existingPhotosAsMediaObj = nextExisting.photos.map((url) => ({
+              uri: url,
+              name: `existing-photo-${Date.now()}`,
+              type: "image/jpeg",
+              size: 0,
+            }));
+            const existingVideosAsMediaObj = nextExisting.videos.map((url) => ({
+              uri: url,
+              name: `existing-video-${Date.now()}`,
+              type: "video/mp4",
+              size: 0,
+            }));
+
+            // Merge existing (after deletion) + selected local files
+            const localPhotos = selectedMedia
+              .filter(
+                (m) =>
+                  !(m.type
+                    ? m.type.startsWith("video")
+                    : m.fileName?.toLowerCase().endsWith(".mp4"))
+              )
+              .map(toObj);
+            const localVideos = selectedMedia
+              .filter((m) =>
+                m.type
+                  ? m.type.startsWith("video")
+                  : m.fileName?.toLowerCase().endsWith(".mp4")
+              )
+              .map(toObj);
+
+            const updatedData = {
+              photos: [...existingPhotosAsMediaObj, ...localPhotos],
+              videos: [...existingVideosAsMediaObj, ...localVideos],
+            };
+            console.log(
+              "🔄 Calling onChange after error to update rawMedia:",
+              updatedData
+            );
+            onChange(updatedData);
+          }
+        }
+      } else {
+        // Fallback to local-only deletion if no propertyId
+        const nextExisting = {
+          photos:
+            media.type === "image"
+              ? existingState.photos.filter((u) => u !== media.uri)
+              : existingState.photos,
+          videos:
+            media.type === "video"
+              ? existingState.videos.filter((u) => u !== media.uri)
+              : existingState.videos,
+        };
+        console.log("🔄 Updated existing media (no propertyId):", nextExisting);
+        setExistingState(nextExisting);
+        onExistingChange?.(nextExisting);
+
+        // Also update rawMedia for fallback case
+        if (onChange) {
+          const toObj = (m: Asset): MediaObj => ({
+            uri: m.uri as string,
+            name: m.fileName,
+            type: m.type,
+            size: m.fileSize,
+          });
+          // Convert remaining existing URLs to MediaObj format
+          const existingPhotosAsMediaObj = nextExisting.photos.map((url) => ({
+            uri: url,
+            name: `existing-photo-${Date.now()}`,
+            type: "image/jpeg",
+            size: 0,
+          }));
+          const existingVideosAsMediaObj = nextExisting.videos.map((url) => ({
+            uri: url,
+            name: `existing-video-${Date.now()}`,
+            type: "video/mp4",
+            size: 0,
+          }));
+
+          // Merge existing (after deletion) + selected local files
+          const localPhotos = selectedMedia
+            .filter(
+              (m) =>
+                !(m.type
+                  ? m.type.startsWith("video")
+                  : m.fileName?.toLowerCase().endsWith(".mp4"))
+            )
+            .map(toObj);
+          const localVideos = selectedMedia
+            .filter((m) =>
+              m.type
+                ? m.type.startsWith("video")
+                : m.fileName?.toLowerCase().endsWith(".mp4")
+            )
+            .map(toObj);
+
+          const updatedData = {
+            photos: [...existingPhotosAsMediaObj, ...localPhotos],
+            videos: [...existingVideosAsMediaObj, ...localVideos],
+          };
+          console.log("🔄 Calling onChange for fallback case:", updatedData);
+          onChange(updatedData);
+        }
+      }
+    }
   };
 
   // Render fullscreen content
-  const renderFullscreenContent = (mediaItem: Asset, index: number) => {
+  const renderFullscreenContent = (mediaItem: UnifiedMedia, index: number) => {
     const isVideoPlaying = playingVideoIndex === index && modalVisible;
-    const isVideo =
-      mediaItem.type?.includes("video") ||
-      mediaItem.fileName?.toLowerCase().includes(".mp4");
+    const isVideo = mediaItem.type === "video";
 
     if (isVideo && mediaItem.uri) {
       return (
@@ -217,7 +497,7 @@ const PhotoVideoPicker: React.FC<PhotoVideoPickerProps> = ({
           style={{ width: screenWidth - 40, height: screenWidth - 40 }}
         >
           <Video
-            source={{ uri: mediaItem.uri }}
+            source={{ uri: normalizeUri(mediaItem.uri) }}
             style={{ width: "100%", height: "100%" }}
             resizeMode="contain"
             paused={!isVideoPlaying}
@@ -250,7 +530,7 @@ const PhotoVideoPicker: React.FC<PhotoVideoPickerProps> = ({
         style={{ width: screenWidth - 40, height: screenWidth - 40 }}
       >
         <Image
-          source={{ uri: mediaItem.uri }}
+          source={{ uri: normalizeUri(mediaItem.uri) }}
           style={{ width: "100%", height: "100%" }}
           resizeMode="contain"
         />
@@ -260,24 +540,23 @@ const PhotoVideoPicker: React.FC<PhotoVideoPickerProps> = ({
 
   // Render enhanced thumbnail
   const renderEnhancedThumbnail = (
-    mediaItem: Asset,
+    mediaItem: UnifiedMedia,
     index: number,
     isActive: boolean
   ) => {
-    const isVideo =
-      mediaItem.type?.includes("video") ||
-      mediaItem.fileName?.toLowerCase().includes(".mp4");
+    const isVideo = mediaItem.type === "video";
 
     return (
       <TouchableOpacity
         key={index}
-        className={`w-16 h-16 mr-3 rounded-lg overflow-hidden relative border-2 ${isActive ? "border-blue-500" : "border-transparent"
-          }`}
-        onPress={() => handleThumbnailPress(index, mediaItem)}
+        className={`w-16 h-16 mr-3 rounded-lg overflow-hidden relative border-2 ${
+          isActive ? "border-blue-500" : "border-transparent"
+        }`}
+        onPress={() => handleThumbnailPress(index)}
         activeOpacity={0.8}
       >
         <Image
-          source={{ uri: mediaItem.uri }}
+          source={{ uri: normalizeUri(mediaItem.uri) }}
           className="w-full h-full"
           resizeMode="cover"
         />
@@ -343,9 +622,7 @@ const PhotoVideoPicker: React.FC<PhotoVideoPickerProps> = ({
   };
 
   const showImagePicker = (): void => {
-
     try {
-
       trackEvent("open_image_picker").catch((error) => {
         console.error(`Error logging event: ${error}`);
       });
@@ -459,7 +736,7 @@ const PhotoVideoPicker: React.FC<PhotoVideoPickerProps> = ({
           </Text>
         </View>
         <Text className="text-sm text-gray-500">
-          {selectedMedia.length} Photo{selectedMedia.length !== 1 ? "s" : ""}
+          {allMedia.length} File{allMedia.length !== 1 ? "s" : ""}
         </Text>
       </View>
 
@@ -477,15 +754,15 @@ const PhotoVideoPicker: React.FC<PhotoVideoPickerProps> = ({
             </View>
           </TouchableOpacity>
 
-          {/* First two photos */}
-          {selectedMedia.slice(0, 2).map((media, index) => (
+          {/* First two media */}
+          {allMedia.slice(0, 2).map((media, index) => (
             <TouchableOpacity
               key={index}
               onPress={() => openImageModal(index)}
               className="flex-1 aspect-square rounded-md overflow-hidden border border-[#006B5F]"
             >
               <Image
-                source={{ uri: media.uri }}
+                source={{ uri: normalizeUri(media.uri) }}
                 className="w-full h-full"
                 resizeMode="cover"
                 onError={(error) =>
@@ -496,7 +773,7 @@ const PhotoVideoPicker: React.FC<PhotoVideoPickerProps> = ({
           ))}
 
           {/* Empty slots for first row if needed */}
-          {Array.from({ length: Math.max(0, 2 - selectedMedia.length) }).map(
+          {Array.from({ length: Math.max(0, 2 - allMedia.length) }).map(
             (_, index) => (
               <View
                 key={`empty-top-${index}`}
@@ -507,12 +784,12 @@ const PhotoVideoPicker: React.FC<PhotoVideoPickerProps> = ({
         </View>
 
         {/* Second Row */}
-        {selectedMedia.length > 2 && (
+        {allMedia.length > 2 && (
           <View className="flex flex-row gap-2">
             {/* Next photos (indices 2, 3, 4) */}
-            {selectedMedia.slice(2, 5).map((media, index) => {
+            {allMedia.slice(2, 5).map((media, index) => {
               const actualIndex = index + 2;
-              const isLast = actualIndex === 4 && selectedMedia.length > 5;
+              const isLast = actualIndex === 4 && allMedia.length > 5;
 
               return (
                 <TouchableOpacity
@@ -521,7 +798,7 @@ const PhotoVideoPicker: React.FC<PhotoVideoPickerProps> = ({
                   className="flex-1 aspect-square rounded-xl overflow-hidden border border-[#006B5F] relative"
                 >
                   <Image
-                    source={{ uri: media.uri }}
+                    source={{ uri: normalizeUri(media.uri) }}
                     className="w-full h-full"
                     resizeMode="cover"
                     onError={(error) =>
@@ -532,7 +809,7 @@ const PhotoVideoPicker: React.FC<PhotoVideoPickerProps> = ({
                   {isLast && (
                     <View className="absolute inset-0 bg-black/50 rounded-md items-center justify-center w-full h-full">
                       <Text className="text-white font-bold text-[25px] font-lato-medium leading-[150%]">
-                        +{selectedMedia.length - 5}
+                        +{allMedia.length - 5}
                       </Text>
                     </View>
                   )}
@@ -542,7 +819,7 @@ const PhotoVideoPicker: React.FC<PhotoVideoPickerProps> = ({
 
             {/* Empty slots for second row if needed */}
             {Array.from({
-              length: Math.max(0, 3 - Math.max(0, selectedMedia.length - 2)),
+              length: Math.max(0, 3 - Math.max(0, allMedia.length - 2)),
             }).map((_, index) => (
               <View
                 key={`empty-bottom-${index}`}
@@ -554,7 +831,7 @@ const PhotoVideoPicker: React.FC<PhotoVideoPickerProps> = ({
       </View>
 
       {/* Description Text - Only show if no photos selected */}
-      {selectedMedia.length === 0 && (
+      {allMedia.length === 0 && (
         <View className="mt-4">
           <Text className="text-sm text-gray-700 text-center leading-5">
             Properties with photos & videos receive{" "}
@@ -594,7 +871,7 @@ const PhotoVideoPicker: React.FC<PhotoVideoPickerProps> = ({
               onMomentumScrollEnd={handleFullscreenScroll}
               scrollEventThrottle={16}
             >
-              {selectedMedia.map((mediaItem, index) => (
+              {allMedia.map((mediaItem, index) => (
                 <View
                   key={`fullscreen-${index}`}
                   className="flex-1 justify-center items-center px-5 py-5"
@@ -629,7 +906,7 @@ const PhotoVideoPicker: React.FC<PhotoVideoPickerProps> = ({
               </TouchableOpacity>
 
               {/* Enhanced Photo Thumbnails */}
-              {selectedMedia.map((mediaItem, index) =>
+              {allMedia.map((mediaItem, index) =>
                 renderEnhancedThumbnail(
                   mediaItem,
                   index,
