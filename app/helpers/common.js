@@ -41,7 +41,8 @@ export function formatNumber(num) {
 export function formatCost(price) {
   if (!price && price !== 0) return;
 
-  price = String(price);
+  temp = String(price.toFixed(2));
+  price = temp.endsWith(".00") ? String(price) : String(price.toFixed(2));
   let isNegative = false;
 
   if (price < 0) {
@@ -78,13 +79,17 @@ export function formatCost(price) {
 
 export function formatCost2(cost) {
   if (cost < 100000) return formatCost(cost);
+  let temp = String(cost.toFixed(2));
+  let price = temp.endsWith(".00") ? String(cost) : String(cost.toFixed(2));
 
-  return helper((cost / 100000).toFixed(2));
+  return helper(price / 100000);
 }
 
 export function helper(cost) {
   if (cost >= 100) {
-    return `₹${(cost / 100).toFixed(2)} Cr`;
+    // let temp = String((cost / 100).toFixed(2));
+    // let price = temp.endsWith(".00") ? String(cost) : String(cost.toFixed(2));
+    return `₹${cost / 100} Cr`;
   } else {
     return `₹${cost} Lakhs`;
   }
@@ -161,7 +166,6 @@ export const getDaysFrom = (dateString) => {
   const diffTime = Math.abs(Math.floor(now) - Math.floor(date));
   return Math.ceil(diffTime / (1000 * 60 * 60 * 24));
 };
-
 
 export const formatMonthYear = (dateString) => {
   const [month, year] = dateString.split("/");

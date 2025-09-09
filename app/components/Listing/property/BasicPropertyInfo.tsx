@@ -107,40 +107,17 @@ export const BasicPropertyInfo: React.FC<{
 
   function getHandoverLabel(data: any): string {
     const possession = data?.possession
-      ? String(data.possession).toLowerCase()
-      : "";
+      ? data.possession === "ready to move"
+        ? "ready to move"
+        : data?.handoverDate
+        ? formatUnixDate(data.handoverDate)
+        : "Unconfirmed"
+      : "Unconfirmed";
 
-    if (data?.readyToMove || possession === "ready to move") {
-      return "Ready to Move";
-    }
-
-    if (possession === "under construction") {
-      if (data?.availableFrom) {
-        if (typeof data.availableFrom === "string") {
-          // format: "MM/YYYY"
-          const [mm, yyyy] = data.availableFrom.split("/");
-          const parsedDate = new Date(Number(yyyy), Number(mm) - 1, 1);
-          return formatUnixDate(Math.floor(parsedDate.getTime() / 1000));
-        } else if (typeof data.availableFrom === "number") {
-          // timestamp (ms or sec)
-          const ts =
-            data.availableFrom > 1e12
-              ? Math.floor(data.availableFrom / 1000) // ms → sec
-              : data.availableFrom;
-          return formatUnixDate(ts);
-        }
-      }
-
-      if (data?.handOverDate || data?.handoverDate) {
-        const dateStr = data.handOverDate || data.handoverDate;
-        const [mm, yyyy] = dateStr.split("/");
-        const parsedDate = new Date(Number(yyyy), Number(mm) - 1, 1);
-        return formatUnixDate(Math.floor(parsedDate.getTime() / 1000));
-      }
-    }
-
-    return "-";
+    return possession;
   }
+
+  console.log(getHandoverLabel(data));
 
   const basicInfo = [
     {

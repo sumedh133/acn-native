@@ -545,9 +545,9 @@ const PropertyCard: React.FC<PropertyCardProps> = ({
                 property.listingType === "rental"
                   ? "bg-[#FCE9BA]"
                   : "bg-[#EADDFF]"
-              } max-w-[56px] max-h-[19px] items-center ml-4 px-[11px] pt-1 rounded-t-lg`}
+              } max-w-[70px] max-h-[19px] items-center ml-4 px-[11px] pt-1 rounded-t-lg`}
             >
-              <Text className="text-[#10302D] text-xs font-medium leading-[150%]">
+              <Text className="text-[#10302D] max-w-fit text-xs font-medium leading-[150%]">
                 {safeText(toCapitalizedWords(property.listingType))}
               </Text>
             </View>

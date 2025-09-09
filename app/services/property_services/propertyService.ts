@@ -164,7 +164,6 @@ export const createProperty = async (
   const newProperty: Property = {
     ...property,
     propertyName,
-    referredFloorNumber: referredFloorNumber,
     propertyId,
     added: time,
     dateOfLastChecked: time,

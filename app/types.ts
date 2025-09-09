@@ -406,7 +406,7 @@ export interface Property {
   balconyFacing?: balconyFacing;
 
   // Floor Information
-  floorNumber?: number; // Unified from floorNo/floor/exactFloorNo
+  floorNumber: number | null; // Unified from floorNo/floor/exactFloorNo
   referredFloorNumber?: string | null; // String reference for floor (e.g., "Ground Floor", "Mezzanine", "Basement")
   totalFloors?: number;
 
