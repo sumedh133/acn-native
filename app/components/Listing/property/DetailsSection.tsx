@@ -50,6 +50,7 @@ export const DetailsSection: React.FC<DetailsSectionProps> = ({
     "handoverDate",
     "handOverDate",
     "isPreLeased",
+    
   ]);
 
   // Remove excluded fields right at the start

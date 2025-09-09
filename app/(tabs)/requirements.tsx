@@ -80,7 +80,6 @@ const MobileHits = React.memo(() => {
       }
     }
   }, [items, status, query, userType]);
-
   const viewabilityConfig = useRef<ViewabilityConfig>({
     itemVisiblePercentThreshold: 50,
     minimumViewTime: 500,
@@ -389,7 +388,7 @@ const RequirementsPage = () => {
         <Configure
           analytics={true}
           hitsPerPage={20}
-          filters="NOT status:'Closed'"
+          filters="NOT status:'Closed' AND NOT requirementStatus:'close'"
         />
         <View style={styles.content}>
           {/* Filters */}
