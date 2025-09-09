@@ -310,7 +310,11 @@ const MyBusinessPage = () => {
         cpId,
         "qc"
       );
-      setProperties(propertyResults || []);
+      const props: Property[] = [];
+      propertyResults.filter((ele: Property) => {
+        if (ele.stage === "live") props.push(ele);
+      });
+      setProperties(props || []);
     } catch (error) {
       console.error("Error fetching properties:", error);
       setProperties([]);

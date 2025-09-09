@@ -44,7 +44,11 @@ const UnderReviewProperties = () => {
       setLoading(true);
       const propertyResults: Property[] = await searchProperties("cpId", cpId,"qc");
       console.log(propertyResults, "fetched properties");
-      setProperties(propertyResults || []);
+      const props: Property[] = []
+       propertyResults.filter((ele: Property) => {
+        if (ele.stage === 'live')  props.push(ele)
+      })
+      setProperties(props || []);
     } catch (error) {
       console.error("Error fetching properties:", error);
       setProperties([]);
