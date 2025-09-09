@@ -15,6 +15,7 @@ import { updateAgentDocData } from "@/store/slices/agentSlice";
 import {
   formatUnixDateTime,
   formatUnixDateWithMonth,
+  getUnixDateTime,
 } from "@/app/helpers/getUnixDateTime";
 import { analytics } from "@/app/config/firebase";
 import { logEvent } from "@react-native-firebase/analytics";
@@ -64,7 +65,7 @@ export function OnboardingProvider({
         const agentRef = doc(db, "acnAgents", cpId);
         const updatedData = {
           onboardingComplete: true,
-          trialStartedAt: Math.floor(Date.now() / 1000),
+          trialStartedAt: getUnixDateTime(),
           monthlyCredits: 100,
           userType: "Trial",
           trialUsed: true,

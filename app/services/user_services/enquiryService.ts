@@ -18,6 +18,7 @@ import {
 import { db } from "../../config/firebase"; // your firebase config
 import { Enquiry, EnquiryWithProperty, IReview } from "../../types";
 import { getPropertyById } from "../property_services/propertyService"; // reuse property service
+import { getUnixDateTime } from "@/app/helpers/getUnixDateTime";
 
 // References
 const adminDocRef = doc(db, "acn-admin", "lastEnqId");
@@ -46,7 +47,7 @@ export const generateEnquiryId = async (): Promise<string> => {
   await updateDoc(adminDocRef, {
     count: increment(1),
     lastGeneratedId: enquiryId,
-    updatedAt: Date.now(),
+    updatedAt: getUnixDateTime(),
   });
 
   return enquiryId;
@@ -63,8 +64,8 @@ export const createEnquiry = async (
   const newEnquiry: Enquiry = {
     ...enquiryData,
     enquiryId,
-    added: Date.now(),
-    lastModified: Date.now(),
+    added: getUnixDateTime(),
+    lastModified: getUnixDateTime(),
     reviews: [],
   };
 
@@ -102,7 +103,7 @@ export const updateEnquiry = async (
 ): Promise<void> => {
   await updateDoc(doc(db, "acnEnquiries", enquiryId), {
     ...updates,
-    lastModified: Date.now(),
+    lastModified: getUnixDateTime(),
   });
 };
 
@@ -127,12 +128,12 @@ export const addEnquiryReview = async (
 
   const updatedReviews: IReview[] = [
     ...enquiry.reviews,
-    { ...review, timestamp: Date.now() },
+    { ...review, timestamp: getUnixDateTime() },
   ];
 
   await updateDoc(doc(db, "acnEnquiries", enquiryId), {
     reviews: updatedReviews,
-    lastModified: Date.now(),
+    lastModified: getUnixDateTime(),
   });
 };
 

@@ -4,6 +4,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import * as FileSystem from "expo-file-system";
 import { AppState, AppStateStatus } from "react-native";
 import pLimit from "p-limit";
+import { getUnixDateTime } from "@/app/helpers/getUnixDateTime";
 
 // Constants
 const UPLOAD_STORAGE_KEY = "tus_uploads";
@@ -293,7 +294,7 @@ export class MultipleFilesUploadService {
         bytesTotal: file.size || 0,
         fingerprint,
         metadata: config.metadata || {},
-        timestamp: Date.now(),
+        timestamp: getUnixDateTime(),
       };
 
       const existingUploads = await this.getStoredUploads();

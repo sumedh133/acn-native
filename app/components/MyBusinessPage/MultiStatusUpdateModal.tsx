@@ -155,8 +155,6 @@ const MultiStatusUpdateModal: React.FC<MultiStatusUpdateModalProps> = ({
     return status.charAt(0).toUpperCase() + status.slice(1);
   };
 
-  console.log(selectedStatuses);
-
   // Get only statuses that have properties to display
   const getAvailableStatuses = () => {
     const abc = Object.entries(selectedStatuses).filter(
