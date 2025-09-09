@@ -314,6 +314,8 @@ class AlgoliaInfiniteSearchService {
       date_asc: `${INDEX_NAME}_date_asc`,
       price_per_sqft_asc: `${INDEX_NAME}_price_per_sqft_asc`,
       price_per_sqft_desc: `${INDEX_NAME}_price_per_sqft_desc`,
+      rent_asc: `${INDEX_NAME}_rent_asc`,
+      rent_desc: `${INDEX_NAME}_rent_desc`,
       relevanceLow: `${INDEX_NAME}`,
     };
 

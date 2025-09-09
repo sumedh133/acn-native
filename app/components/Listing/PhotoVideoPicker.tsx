@@ -399,7 +399,7 @@ const PhotoVideoPicker: React.FC<PhotoVideoPickerProps> = ({
       mediaType: "mixed" as MediaType,
       maxWidth: 2000,
       maxHeight: 2000,
-      selectionLimit: 10, // Allow multiple selection
+      selectionLimit: 50, // Allow multiple selection
     };
 
     launchImageLibrary(options, (response: ImagePickerResponse) => {

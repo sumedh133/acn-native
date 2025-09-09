@@ -36,7 +36,9 @@ interface ScrollContextType {
   // Sort popup
   showSortPopup: boolean;
   selectedSort: string | null;
-  openSortPopup: () => void;
+  // Context type
+  openSortPopup: (propertyType?: string) => void;
+  propertyType: string;
   closeSortPopup: () => void;
   setSelectedSort: (value: string) => void;
 
@@ -91,6 +93,7 @@ export const ScrollContext = createContext<ScrollContextType>({
   showSortPopup: false,
   selectedSort: null,
   openSortPopup: () => {},
+  propertyType:'',
   closeSortPopup: () => {},
   setSelectedSort: () => {},
 
@@ -173,12 +176,19 @@ export const ScrollProvider: React.FC<{ children: React.ReactNode }> = ({
     useState<boolean>(false);
 
   // Popup methods
-  const openSortPopup = () => setShowSortPopup(true);
+  const [currentPropertyType, setCurrentPropertyType] = useState<string>("");
+
+  const openSortPopup = (propertyType?: string) => {
+    if (propertyType) {
+      setCurrentPropertyType(propertyType);
+    }
+    setShowSortPopup(true);
+  };
   const closeSortPopup = () => setShowSortPopup(false);
   const openStatusPopup = () => setShowStatusPopup(true);
   const closeStatusPopup = () => setShowStatusPopup(false);
- const openNewEnquiryPopup = () => setShowNewEnquiryPopup(true);
-const closeNewEnquiryPopup = () => setShowNewEnquiryPopup(false);
+  const openNewEnquiryPopup = () => setShowNewEnquiryPopup(true);
+  const closeNewEnquiryPopup = () => setShowNewEnquiryPopup(false);
 
   const openCategoryPopup = () => setShowCategoryPopup(true);
   const closeCategoryPopup = () => setShowCategoryPopup(false);
@@ -470,6 +480,7 @@ const closeNewEnquiryPopup = () => setShowNewEnquiryPopup(false);
         // Sort popup
         showSortPopup,
         selectedSort,
+        propertyType: currentPropertyType,
         openSortPopup,
         closeSortPopup,
         setSelectedSort,

@@ -118,16 +118,6 @@ export default function PropertyFilters({
     useSelector((state: RootState) => state?.agent?.docData?.userType) ||
     "free";
 
-  // Sort options - updated to match your service's sort mapping
-  const sortOptions = [
-    { label: "Most Relevant", value: "relevance" },
-    { label: "Price: Low to High", value: "price_asc" },
-    { label: "Price: High to Low", value: "price_desc" },
-    { label: "Newest First", value: "date_desc" },
-    { label: "Oldest First", value: "date_asc" },
-    { label: "Price per sqft: Low to High", value: "price_per_sqft_asc" },
-    { label: "Price per sqft: High to Low", value: "price_per_sqft_desc" },
-  ];
 
   // Animation effects for popup states
   useEffect(() => {
@@ -170,7 +160,7 @@ export default function PropertyFilters({
 
   const handleOpenSortPopup = () => {
     setIsSortPopupOpen(true);
-    openSortPopup();
+    openSortPopup(filters.listingType?.[0])
     setTimeout(() => setIsSortPopupOpen(false), 3000);
   };
 

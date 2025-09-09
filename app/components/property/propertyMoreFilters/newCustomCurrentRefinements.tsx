@@ -24,6 +24,8 @@ const sortDisplayMap: Record<string, string> = {
   date_asc: "Oldest First",
   price_per_sqft_asc: "Price/Sqft: Low to High",
   price_per_sqft_desc: "Price/Sqft: High to Low",
+  rent_desc: "Rent: High to Low",
+  rent_asc: "Rent: Low to High",
   relevanceLow: "Most Relevant",
 };
 
