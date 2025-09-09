@@ -49,7 +49,8 @@ const shortenUrl = async (longUrl: string) => {
 
 export const createPropertyMessage = async (
   property: Property,
-  agentNumber: string
+  agentNumber: string,
+  agentName: string
 ) => {
   const projectName = property.propertyName || "Unnamed Project";
 
@@ -101,7 +102,9 @@ I am sharing details about a property that suits your requirements.
 *Project Name*: ${projectName}
 ${details}
 
-For more details, please contact me at ${agentNumber}`
+For more details, please contact me at
+${agentName}
+${agentNumber}`
   );
 
   return message;
@@ -110,9 +113,9 @@ For more details, please contact me at ${agentNumber}`
 export const shareProperty = async (
   property: Property,
   agentNumber: string,
-  userNumber: string
+  agentName: string
 ) => {
-  const message = await createPropertyMessage(property, agentNumber);
+  const message = await createPropertyMessage(property, agentNumber, agentName);
   const whatsappUrl = `https://wa.me/?text=${message}`;
   Linking.openURL(whatsappUrl);
 };
