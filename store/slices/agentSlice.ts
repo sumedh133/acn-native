@@ -118,7 +118,17 @@ export const handleNewAgentThunk = async (
       } catch (error) {
         console.log("Pipeline doc not found for:", formattedPhoneNumber);
       }
-
+      const acnAgents = query(
+        collection(db, "acnAgents"),
+        where("phoneNumber", "==", formattedPhoneNumber)
+      );
+      const agentsQuery = await getDocs(acnAgents);
+      const acnLeads = query(
+        collection(db, "acnAgents"),
+        where("phoneNumber", "==", formattedPhoneNumber)
+      );
+      const leadsQuery = await getDocs(acnLeads);
+      if (agentsQuery.size < 0 && leadsQuery.size < 0) return;
       const newAgent = {
         leadId: agentId,
         name: "",
