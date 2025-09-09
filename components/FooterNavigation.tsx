@@ -364,7 +364,8 @@ const FooterNavigation = () => {
     selectedSort,
     selectedStatus,
     selectedCategory,
-    handleSelection
+    handleSelection,
+    propertyType,
   );
 
   return (

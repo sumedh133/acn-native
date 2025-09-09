@@ -9,7 +9,6 @@ import { formatCostSuffix } from "@/app/helpers/common";
 import { toCapitalize } from "@/app/helpers/format/format";
 import { trackEvent } from "@/app/services/logAnalyticsService";
 
-
 interface CustomCurrentRefinementsProps {
   selectedLandmark?: any;
   sortBy?: any;
@@ -30,7 +29,6 @@ const sortDisplayMap: Record<string, string> = {
   rent_asc: "Rent: Low to High",
   relevanceLow: "Most Relevant",
 };
-
 
 export default function CustomCurrentRefinements({
   selectedLandmark,
@@ -123,7 +121,9 @@ export default function CustomCurrentRefinements({
     raw?: string[]
   ) => {
     try {
-      trackEvent("property_filter_remove", undefined, undefined, { page_type: filters?.listingType?.[0] });
+      trackEvent("property_filter_remove", undefined, undefined, {
+        page_type: filters?.listingType?.[0],
+      });
     } catch (error) {
       console.error("Error logging refinement removal:", error);
     }
@@ -154,7 +154,9 @@ export default function CustomCurrentRefinements({
 
   const handleClearAll = () => {
     try {
-      trackEvent("property_filter_clear", undefined, undefined, { page_type: filters?.listingType?.[0] || 'resale' }).catch((error) => {
+      trackEvent("property_filter_clear", undefined, undefined, {
+        page_type: filters?.listingType?.[0] || "resale",
+      }).catch((error) => {
         console.error(`Error logging event: ${error}`);
       });
     } catch (error) {
@@ -166,7 +168,7 @@ export default function CustomCurrentRefinements({
       listingType: filters.listingType,
       status: ["available", "Available"],
     });
-    if(onSortChange)  onSortChange("relevance")
+    if (onSortChange) onSortChange("relevance");
 
     if (setSelectedLandmark) {
       setSelectedLandmark(null);
@@ -180,11 +182,13 @@ export default function CustomCurrentRefinements({
       className="flex-row"
     >
       <View className="flex-row items-center px-4 space-x-2 mb-2">
-        {(allRefinements.length > 0 || selectedLandmark || sortBy ) && sortBy.toLowerCase() !== "relevance" && (
+        {(allRefinements.length > 0 ||
+          selectedLandmark ||
+          (sortBy && sortBy !== "relevance")) && (
           <TouchableOpacity onPress={handleClearAll} className="ml-1">
             <View className="flex-row items-center border border-[#DE1135] bg-[#FFE8EC]/10 px-2 py-1.5 rounded-3xl">
               <Text className="font-lato-semibold text-sm leading-[154%] text-[#313534] overflow-hidden">
-                Clear All 
+                Clear All
               </Text>
             </View>
           </TouchableOpacity>
@@ -230,8 +234,11 @@ export default function CustomCurrentRefinements({
               }
 
               // Reset sortBy to "most relevant"
-              onFiltersChange({ ...filters});
-              if(onSortChange){console.log("happening");  onSortChange("relevance")}
+              onFiltersChange({ ...filters });
+              if (onSortChange) {
+                console.log("happening");
+                onSortChange("relevance");
+              }
             }}
             className="flex-row items-center bg-[#D0E8FF] px-3 py-1.5 rounded-full"
           >

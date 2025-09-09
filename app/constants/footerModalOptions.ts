@@ -11,9 +11,10 @@ export interface ModalItem {
 export const getSortOptions = (
   selectedSort: string | null,
   handleSelection: (type: string, value: string) => void,
-  propertyType?: "resale" | "rental"
+  propertyType?: string
 ): ModalItem[] => {
   // always available
+  console.log(propertyType)
   const baseOptions: ModalItem[] = [
     {
       id: "relevance",
@@ -163,7 +164,7 @@ export const getModalItems = (
 ): ModalItem[] => {
   switch (activeModal) {
     case "sort":
-      return getSortOptions(selectedSort, handleSelection, (propertyType ==='resale'? 'resale': 'rental'));
+      return getSortOptions(selectedSort, handleSelection, propertyType );
     case "status":
       return getStatusOptions(selectedStatus, handleSelection);
     case "listingType":
