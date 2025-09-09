@@ -111,12 +111,12 @@ export const BasicPropertyInfo: React.FC<{
   function getHandoverLabel(data: any): string {
     if (
       data?.readyToMove ||
-      data?.possession?.toLowerCase() === "ready to move"
+      (typeof data?.possession === "string" ? data.possession.toLowerCase() : "").toLowerCase() === "ready to move"
     ) {
       return "Ready to Move";
     }
 
-    if (data?.possession?.toLowerCase() === "under construction") {
+    if ((typeof data?.possession === "string" ? data.possession.toLowerCase() : "").toLowerCase() === "under construction") {
       if (data?.availableFrom) {
         if (typeof data.availableFrom === "string") {
           // format: "MM/YYYY"
