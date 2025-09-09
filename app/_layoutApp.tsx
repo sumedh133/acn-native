@@ -139,33 +139,38 @@ const CustomHeader = ({
             <Text style={styles.headerTitle}>{title}</Text>
           </View>
 
-          {!headerBackVisible && (
-            <View className="flex flex-row items-center gap-2">
-              <TouchableOpacity
-                className="relative border p-[6px] rounded-md border-[#9F9C9C]"
-                onPress={() => {
-                  router.push("/(tabs)/NotificationPage");
-                }}
-              >
-                {unreadCount > 0 && (
-                  <Text className="absolute text-white top-[2px] right-[3px] bg-[#EB5757] rounded-full px-[4px] py-[1px] text-[10px] z-10">
-                    {unreadCount}
-                  </Text>
-                )}
-                <NotificationIcon width={21} height={21} className="z-0" />
-              </TouchableOpacity>
+         {!headerBackVisible && (
+  <View className="flex flex-row items-center gap-2">
+    <TouchableOpacity
+      className="relative border p-[6px] rounded-md border-[#9F9C9C]"
+      onPress={() => {
+        router.push("/(tabs)/NotificationPage");
+      }}
+    >
+      {unreadCount > 0 && (
+        <Text 
+          style={[
+            styles.notificationBadge,
+            Platform.OS === 'ios' && styles.notificationBadgeIOS
+          ]}
+        >
+          {unreadCount}
+        </Text>
+      )}
+      <NotificationIcon width={21} height={21} className="z-0" />
+    </TouchableOpacity>
 
-              <TouchableOpacity
-                style={styles.headerRight}
-                onPress={() => router.push("/(pages)/Credits")}
-              >
-                <Text style={styles.creditsText}>
-                  {monthlyCredits + boosterCredits}
-                </Text>
-                <CoinIcon width={18} height={18} />
-              </TouchableOpacity>
-            </View>
-          )}
+    <TouchableOpacity
+      style={styles.headerRight}
+      onPress={() => router.push("/(pages)/Credits")}
+    >
+      <Text style={styles.creditsText}>
+        {monthlyCredits + boosterCredits}
+      </Text>
+      <CoinIcon width={18} height={18} />
+    </TouchableOpacity>
+  </View>
+)}
         </View>
       </View>
     </Animated.View>
@@ -777,6 +782,29 @@ const styles = StyleSheet.create({
     flex: 1,
     alignItems: "flex-start",
     marginLeft: 16, // Add margin from hamburger icon
+  },
+   notificationBadge: {
+    position: 'absolute',
+    top: 2,
+    right: 3,
+    backgroundColor: '#EB5757',
+    color: 'white',
+    fontSize: 10,
+    zIndex: 10,
+    paddingHorizontal: 4,
+    paddingVertical: 1,
+    borderRadius: Platform.OS === 'ios' ? 8 : 12, // More rounded for iOS
+    minWidth: 16,
+    textAlign: 'center',
+    overflow: 'hidden',
+  },
+  
+  notificationBadgeIOS: {
+    borderRadius: 10, // Perfect oval for iOS
+    minWidth: 18,
+    minHeight: 16,
+    lineHeight: 14, // Better text centering on iOS
+    textAlignVertical: 'center',
   },
   headerTitle: {
     fontFamily: "Montserrat_700Bold",

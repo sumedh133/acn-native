@@ -227,7 +227,7 @@ export default function RequirementDetailsScreen() {
               />
               <InfoRow label="Budget" value={formatBudget()} />
               <InfoRow
-                label="Date of Requirement Added"
+                label="Added Date"
                 value={
                   requirement.added
                     ? new Date(requirement.added * 1000).toLocaleDateString(
