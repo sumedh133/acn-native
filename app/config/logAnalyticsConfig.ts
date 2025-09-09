@@ -292,6 +292,22 @@ export const ANALYTICS_EVENTS_CONFIG: Record<string, EventConfig> = {
       carpetarea: optionalData?.carpetArea,
     }),
   },
+  property_filter_listingType: {
+    required: ["event_category", "page_type"],
+    mapper: (agentData, propertyData, optionalData) => ({
+      event_category: "property flow",
+      page_type: optionalData?.page_type || "resale",
+      carpetarea: optionalData?.listingType,
+    }),
+  },
+  property_filter_status: {
+    required: ["event_category", "page_type"],
+    mapper: (agentData, propertyData, optionalData) => ({
+      event_category: "property flow",
+      page_type: optionalData?.page_type || "resale",
+      carpetarea: optionalData?.status,
+    }),
+  },
   property_filter_SBUA: {
     required: ["event_category", "page_type", "sbua"],
     mapper: (agentData, propertyData, optionalData) => ({

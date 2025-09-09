@@ -89,6 +89,7 @@ export const apartmentTypes: FilterChipItem[] = [
   { label: "Duplex", value: "Duplex" },
   { label: "Triplex", value: "Triplex" },
   { label: "Quadplex", value: "Quadplex" },
+  { label: "Penthouse", value: "Penthouse" },
 ];
 
 export const bedroomOptions: FilterChipItem[] = [

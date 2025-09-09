@@ -45,6 +45,7 @@ interface MobileHitsProps {
   onSelectAll?: () => void;
   onDeselectAll?: () => void;
   onExitSelectionMode?: () => void;
+  isMyBusinessPage?:boolean
 }
 
 const MobileHitsComponent = ({
@@ -66,6 +67,7 @@ const MobileHitsComponent = ({
   onSelectAll,
   onDeselectAll,
   onExitSelectionMode,
+  isMyBusinessPage=false,
 }: MobileHitsProps) => {
   const agentData = useSelector((state: RootState) => state?.agent?.docData);
   const userType = agentData?.userType || "free";
@@ -473,11 +475,15 @@ const MobileHitsComponent = ({
   );
 };
 
-// Memoize the component to prevent unnecessary re-renders
-export const MobileHits = React.memo(
+// 👇 put this after MobileHitsComponent
+const MemoizedMobileHits = React.memo(
   MobileHitsComponent,
   (prevProps, nextProps) => {
-    // Custom comparison function to optimize re-renders
+    // If it's MyBusinessPage, skip memoization → force re-render
+    if (nextProps.isMyBusinessPage) {
+      return false;
+    }
+
     return (
       prevProps.loading === nextProps.loading &&
       prevProps.loadingMore === nextProps.loadingMore &&
@@ -488,22 +494,28 @@ export const MobileHits = React.memo(
       prevProps.query === nextProps.query &&
       prevProps.isSelectionMode === nextProps.isSelectionMode &&
       prevProps.results.length === nextProps.results.length &&
-      // Deep compare results array only if lengths are the same
       (prevProps.results.length === 0 ||
         prevProps.results.every(
           (item, index) =>
             item.propertyId === nextProps.results[index]?.propertyId
         )) &&
-      // Compare firebaseProgress
       prevProps.firebaseProgress?.loaded ===
-      nextProps.firebaseProgress?.loaded &&
-      prevProps.firebaseProgress?.total === nextProps.firebaseProgress?.total &&
-      // Compare selectedProperties Set
+        nextProps.firebaseProgress?.loaded &&
+      prevProps.firebaseProgress?.total ===
+        nextProps.firebaseProgress?.total &&
       prevProps.selectedProperties?.size ===
-      nextProps.selectedProperties?.size &&
+        nextProps.selectedProperties?.size &&
       Array.from(prevProps.selectedProperties || []).every((id) =>
         nextProps.selectedProperties?.has(id)
       )
     );
   }
 );
+
+// 👇 single export — consumers don't need to care about memoization
+export const MobileHits = (props: MobileHitsProps) => {
+  if (props.isMyBusinessPage) {
+    return <MobileHitsComponent {...props} />;
+  }
+  return <MemoizedMobileHits {...props} />;
+};
