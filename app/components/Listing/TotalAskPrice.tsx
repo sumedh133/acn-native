@@ -186,7 +186,7 @@ const TotalAskPrice: React.FC<TotalAskPricetProps> = ({
   const getPriceInWords = (): string => {
     if (!price) {
       if (selectedOption.value === "pricing.totalAskPrice")
-        return "Eg. 2.20 Cr | 2 Crore 20 Lakh Rupees only";
+        return "Eg. 2.20 Cr | 2 Crore 20 Lakhs Rupees only";
       else return "Eg. 7.50 K | 7500 Rupees only";
     }
 
@@ -198,7 +198,7 @@ const TotalAskPrice: React.FC<TotalAskPricetProps> = ({
         numericPrice
       )} Rupees only`;
     } else if (numericPrice >= 100000) {
-      return `${(numericPrice / 100000).toFixed(2)} Lakh | ${numberToWords(
+      return `${(numericPrice / 100000).toFixed(2)} Lakhs | ${numberToWords(
         numericPrice
       )} Rupees only`;
     } else if (numericPrice >= 1000) {
@@ -219,7 +219,7 @@ const TotalAskPrice: React.FC<TotalAskPricetProps> = ({
       const thousands = Math.floor((num % 100000) / 1000);
 
       let result = `${crores} Crore`;
-      if (lakhs > 0) result += ` ${lakhs} Lakh`;
+      if (lakhs > 0) result += ` ${lakhs} Lakhs`;
       if (thousands > 0) result += ` ${thousands} Thousand`;
 
       return result;
@@ -227,7 +227,7 @@ const TotalAskPrice: React.FC<TotalAskPricetProps> = ({
       const lakhs = Math.floor(num / 100000);
       const thousands = Math.floor((num % 100000) / 1000);
 
-      let result = `${lakhs} Lakh`;
+      let result = `${lakhs} Lakhs`;
       if (thousands > 0) result += ` ${thousands} Thousand`;
 
       return result;

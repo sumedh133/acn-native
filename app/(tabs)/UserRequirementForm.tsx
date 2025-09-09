@@ -26,6 +26,7 @@ import Offline from "../components/Offline";
 import { analytics } from "../config/firebase";
 import { logEvent } from "@react-native-firebase/analytics";
 import { getUnixDateTime } from "../helpers/getUnixDateTime";
+import { router } from "expo-router";
 
 type UIRequirement = Omit<Requirement, "requirementId">;
 
@@ -318,6 +319,7 @@ const UserRequirementForm = () => {
       console.error("An error occurred:", error);
     } finally {
       setSaving(false);
+      router.back();
     }
   };
 
@@ -327,7 +329,7 @@ const UserRequirementForm = () => {
     if (numericPrice >= 10000000) {
       return `${(numericPrice / 10000000).toFixed(2)} Cr`;
     } else if (numericPrice >= 100000) {
-      return `${(numericPrice / 100000).toFixed(2)} Lakh`;
+      return `${(numericPrice / 100000).toFixed(2)} Lakhs`;
     } else if (numericPrice >= 1000) {
       return `${(numericPrice / 1000).toFixed(2)} K`;
     }
@@ -340,9 +342,9 @@ const UserRequirementForm = () => {
     if (num >= 10000000) {
       return `${Math.floor(num / 10000000)} Crore ${Math.floor(
         (num % 10000000) / 100000
-      )} Lakh Rupees only`;
+      )} Lakhs Rupees only`;
     } else if (num >= 100000) {
-      return `${Math.floor(num / 100000)} Lakh Rupees only`;
+      return `${Math.floor(num / 100000)} Lakhs Rupees only`;
     }
     return `${num} Rupees only`;
   };

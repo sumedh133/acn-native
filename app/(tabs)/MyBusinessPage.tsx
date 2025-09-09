@@ -185,33 +185,58 @@ const MyBusinessPage = () => {
     }
   };
 
-  const handleStatusUpdate = async () => {
+  const handleStatusUpdate = async (statusMap: SelectedStatuses) => {
     try {
-      const finalPropertyIdsToUpdate = [];
+      setIsUpdatingStatus(true);
+      const finalPropertyIdsToUpdate: string[] = [];
+
+      // Collect property IDs based on the selected statuses
       if (statusMap.available.selected)
-        finalPropertyIdsToUpdate.push(statusMap.available.propertyIds);
+        finalPropertyIdsToUpdate.push(...statusMap.available.propertyIds);
 
       if (statusMap.sold.selected)
-        finalPropertyIdsToUpdate.push(statusMap.sold.propertyIds);
+        finalPropertyIdsToUpdate.push(...statusMap.sold.propertyIds);
 
       if (statusMap.hold.selected)
-        finalPropertyIdsToUpdate.push(statusMap.hold.propertyIds);
-      if (statusMap.tenanted.selected)
-        finalPropertyIdsToUpdate.push(statusMap.tenanted.propertyIds);
-      if (statusMap["de-listed"].selected)
-        finalPropertyIdsToUpdate.push(statusMap["de-listed"].propertyIds);
-      const updatePromises = Object.keys(finalPropertyIdsToUpdate).map(
-        (propertyId) =>
-          updateProperty(propertyId, {
-            status: "available",
-            dateOfLastChecked: getUnixDateTime(),
-          })
-      );
+        finalPropertyIdsToUpdate.push(...statusMap.hold.propertyIds);
 
+      if (statusMap.tenanted.selected)
+        finalPropertyIdsToUpdate.push(...statusMap.tenanted.propertyIds);
+
+      if (statusMap["de-listed"].selected)
+        finalPropertyIdsToUpdate.push(...statusMap["de-listed"].propertyIds);
+
+      // Map over the property IDs and update their status
+      const updatePromises = finalPropertyIdsToUpdate.map((propertyId) => {
+        let statusToUpdate = "";
+
+        // Set the correct status based on the selection
+        if (statusMap.available.selected) {
+          statusToUpdate = "available";
+        } else if (statusMap.sold.selected) {
+          statusToUpdate = "sold";
+        } else if (statusMap.hold.selected) {
+          statusToUpdate = "hold";
+        } else if (statusMap.tenanted.selected) {
+          statusToUpdate = "tenanted";
+        } else if (statusMap["de-listed"].selected) {
+          statusToUpdate = "de-listed";
+        }
+
+        return updateProperty(propertyId, {
+          status: statusToUpdate,
+          dateOfLastChecked: getUnixDateTime(),
+        });
+      });
+
+      // Wait for all updates to complete
       await Promise.all(updatePromises);
       showSuccessToast("Status updated successfully");
     } catch (error) {
       console.error("Error updating status:", error);
+    } finally {
+      setShowStatusModal(false);
+      setIsUpdatingStatus(false);
     }
   };
 
@@ -257,7 +282,7 @@ const MyBusinessPage = () => {
       (navigation as any)?.setParams?.({
         showFooter: selectedProperties.size === 0,
       });
-    } catch { }
+    } catch {}
   }, [selectedProperties.size, navigation]);
 
   const handleMarkAsAvailable = () => {
@@ -280,7 +305,11 @@ const MyBusinessPage = () => {
   const fetchProperties = useCallback(async () => {
     try {
       setLoading(true);
-      const propertyResults: Property[] = await searchProperties("cpId", cpId, "qc");
+      const propertyResults: Property[] = await searchProperties(
+        "cpId",
+        cpId,
+        "qc"
+      );
       setProperties(propertyResults || []);
     } catch (error) {
       console.error("Error fetching properties:", error);
@@ -297,8 +326,6 @@ const MyBusinessPage = () => {
   useEffect(() => {
     const logAnalyticsEvent = () => {
       try {
-    
-  
         trackEvent("my_business_page_view").catch((error) => {
           console.error(`Error logging event: ${error}`);
         });
@@ -309,7 +336,6 @@ const MyBusinessPage = () => {
 
     logAnalyticsEvent();
   }, []);
-
 
   useEffect(() => {
     try {

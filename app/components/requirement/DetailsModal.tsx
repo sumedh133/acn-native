@@ -62,7 +62,7 @@ const DetailsModal = ({ onClose, requirement }: DetailsModalProps) => {
               <Text style={styles.sectionTitle}>Budget & Timeline</Text>
               <View style={styles.infoRow}>
                 <Text style={styles.label}>Budget</Text>
-                <Text style={styles.value}>₹ {requirement.budget} Lacs</Text>
+                <Text style={styles.value}>₹ {requirement.budget} Lakhs</Text>
               </View>
               <View style={styles.infoRow}>
                 <Text style={styles.label}>Timeline</Text>
