@@ -65,7 +65,8 @@ const ShareModal: React.FC<ShareModalProps> = ({
     try {
       let details = await createPropertyMessage(
         property,
-        agentData?.phoneNumber
+        agentData?.phoneNumber,
+        agentData?.name
       );
       details = decodeURIComponent(details);
 

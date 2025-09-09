@@ -30,7 +30,7 @@ import { LinearGradient } from "expo-linear-gradient";
 import { FormPreview } from "../Listing/listingPropertyDetails";
 import { getMicromarketFromCoordinates } from "@/app/helpers/getMicromarketFromCoordinates";
 import { FormField } from "@/types/FormConfig";
-import SaveAsDraft from "@/app/modals/SaveAsDraft"
+import SaveAsDraft from "@/app/modals/SaveAsDraft";
 import { trackEvent } from "@/app/services/logAnalyticsService";
 import { MediaObj } from "@/app/types/MediaTypes";
 import { MediaUploadQueue as MediaUploadQueueClass } from "@/app/services/media_services/MediaUploadQueue";
@@ -403,7 +403,6 @@ export const PropertyFormScreen: React.FC<PropertyFormScreenProps> = ({
 
   const handleBack = () => {
     try {
-
       trackEvent("inventory_addition_previous_page").catch((error) => {
         console.error(`Error logging event: ${error}`);
       });
@@ -552,7 +551,6 @@ export const PropertyFormScreen: React.FC<PropertyFormScreenProps> = ({
     logAnalyticsEvent();
   }, [formData?.listingType]);
 
-
   // -------------------- Derived Values --------------------
   const visibleSteps = getVisibleSteps();
 
@@ -646,8 +644,9 @@ export const PropertyFormScreen: React.FC<PropertyFormScreenProps> = ({
             onPress={handleClear}
           >
             <Text
-              className={`font-montserrat text-base font-bold underline ${isFormEmpty ? "text-[#9E9E9E]" : "text-[#D92D20]"
-                }`}
+              className={`font-montserrat text-base font-bold underline ${
+                isFormEmpty ? "text-[#9E9E9E]" : "text-[#D92D20]"
+              }`}
             >
               Clear
             </Text>

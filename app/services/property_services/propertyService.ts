@@ -21,6 +21,7 @@ import { getUnixDateTime } from "@/app/helpers/getUnixDateTime";
 import { usePathname } from "expo-router";
 
 import { trackEvent } from "../logAnalyticsService";
+import { toCapitalize } from "@/app/helpers/format/format";
 
 // Firestore Collections
 const ADMIN_COLLECTION = "acn-admin";
@@ -104,6 +105,38 @@ export const generatePropertyId = async (): Promise<string> => {
 /**
  * Create a new property in the specified inventory stage.
  */
+
+// helper to get the name of the property
+const getName = (property: Omit<Property, "propertyId">): string | null => {
+  const type = property.listingType === "rental" ? "sale" : "rent";
+  switch (property.assetType.toLowerCase()) {
+    case "apartment":
+    case "villa":
+    case "villament":
+    case "independent house":
+    case "row house":
+      return property.communityType?.toLowerCase() === "gated"
+        ? property.propertyName
+        : `Independent ${toCapitalize(property.assetType)} for ${type}`;
+    case "plot":
+      return property.communityType?.toLowerCase() === "gated"
+        ? property.propertyName
+        : `Independent ${toCapitalize(property.assetType)} for ${type}`;
+    case "office space":
+      return property.commercialSubType === "independent office space"
+        ? `${toCapitalize(property.assetType)} for ${type}`
+        : `${toCapitalize(property.assetType)} for ${type} in ${
+            property.propertyName
+          }`;
+    case "retail property.commercialSubType":
+      return `${property.commercialSubType} for ${type}`;
+    case "commercial space":
+      return `${property.commercialSubType} for ${type}`;
+    default:
+      return property.propertyName;
+  }
+};
+
 export const createProperty = async (
   property: Omit<Property, "propertyId">,
   inventoryStage: InventoryStage = "verified"
@@ -128,9 +161,10 @@ export const createProperty = async (
         ? "higher floor (20+)"
         : null
       : null;
-
+  const propertyName = getName(property);
   const newProperty: Property = {
     ...property,
+    propertyName,
     referredFloorNumber: referredFloorNumber,
     propertyId,
     added: time,
@@ -164,7 +198,11 @@ export const getPropertyById = async (
  * Listen to real-time updates for a property by ID from the specified inventory stage.
  */
 export const subscribeToPropertyById = (
-propertyId: string, onUpdate: (property: Property | null) => void, inventoryStage: InventoryStage = "verified", onError?: (error: Error) => void): Unsubscribe => {
+  propertyId: string,
+  onUpdate: (property: Property | null) => void,
+  inventoryStage: InventoryStage = "verified",
+  onError?: (error: Error) => void
+): Unsubscribe => {
   const collectionName = getCollectionName(inventoryStage);
   const ref = doc(db, collectionName, propertyId);
 
@@ -307,8 +345,8 @@ export const updateProperty = async (
     lastModified: getUnixDateTime(),
   };
 
-  await updateDoc(ref, updateData);
-
+  const result = await updateDoc(ref, updateData);
+  console.log(result);
   // Log changes in edit history
   if (currentData && isEdit) {
     const changes = getChangedFields(currentData, updates);

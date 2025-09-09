@@ -4,6 +4,7 @@ import { MaterialIcons, MaterialCommunityIcons } from "@expo/vector-icons";
 import { toCapitalizedWords } from "@/app/helpers/common";
 import { NotificationItem } from "@/app/types";
 import NotificationMoreOptions from "./NotificationMoreOptions";
+import { getUnixDateTime } from "@/app/helpers/getUnixDateTime";
 // Map notification types to icon/color and default CTAs if needed
 const notificationTypeConfig: Record<
   string,
@@ -184,7 +185,7 @@ const NotificationCard: React.FC<NotificationCardProps> = ({
   };
 
   const getTimeAgo = (timestamp: number) => {
-    const now = Math.floor(Date.now() / 1000);
+    const now = getUnixDateTime();
     const diff = now - timestamp;
     if (diff < 60) return "just now";
     if (diff < 3600) return `${Math.floor(diff / 60)}m ago`;

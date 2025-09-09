@@ -65,7 +65,10 @@ export const useEnquiries = (
       const enquiriesRef = collection(db, "acnEnquiries");
 
       // ✅ Build query constraints dynamically
-      const constraints: QueryConstraint[] = [where("sellerCpId", "==", cpId)];
+      const constraints: QueryConstraint[] = [
+        where("sellerCpId", "==", cpId),
+        orderBy("added", "desc"),
+      ];
 
       if (propertyId) {
         constraints.push(where("propertyId", "==", propertyId));
