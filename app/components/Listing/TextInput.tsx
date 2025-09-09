@@ -76,7 +76,7 @@ const TextInputField = ({
         numericPrice
       )} Rupees only`;
     } else if (numericPrice >= 100000) {
-      return `${(numericPrice / 100000).toFixed(2)} Lakh | ${numberToWords(
+      return `${(numericPrice / 100000).toFixed(2)} Lakhs | ${numberToWords(
         numericPrice
       )} Rupees only`;
     } else if (numericPrice >= 1000) {
@@ -96,7 +96,7 @@ const TextInputField = ({
       const thousands = Math.floor((num % 100000) / 1000);
 
       let result = `${crores} Crore`;
-      if (lakhs > 0) result += ` ${lakhs} Lakh`;
+      if (lakhs > 0) result += ` ${lakhs} Lakhs`;
       if (thousands > 0) result += ` ${thousands} Thousand`;
 
       return result;
@@ -104,7 +104,7 @@ const TextInputField = ({
       const lakhs = Math.floor(num / 100000);
       const thousands = Math.floor((num % 100000) / 1000);
 
-      let result = `${lakhs} Lakh`;
+      let result = `${lakhs} Lakhs`;
       if (thousands > 0) result += ` ${thousands} Thousand`;
 
       return result;

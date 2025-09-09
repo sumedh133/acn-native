@@ -23,6 +23,7 @@ import { RootState } from "../store";
 import { analytics } from "@/app/config/firebase";
 import { logEvent } from "@react-native-firebase/analytics";
 import { router } from "expo-router";
+import { getUnixDateTime } from "@/app/helpers/getUnixDateTime";
 
 export const setAgentDataState = createAsyncThunk(
   "agent/setAgentDataState",
@@ -62,7 +63,7 @@ export const handleNewAgentThunk = async (
     try {
       console.log("🔄 Adding new agent:");
 
-      const timestamp = Math.floor(Date.now() / 1000);
+      const timestamp = getUnixDateTime();
 
       // Get next agent ID from admin collection
       const adminDocRef = doc(db, "acn-admin", "lastLeadId");
@@ -117,7 +118,17 @@ export const handleNewAgentThunk = async (
       } catch (error) {
         console.log("Pipeline doc not found for:", formattedPhoneNumber);
       }
-
+      const acnAgents = query(
+        collection(db, "acnAgents"),
+        where("phoneNumber", "==", formattedPhoneNumber)
+      );
+      const agentsQuery = await getDocs(acnAgents);
+      const acnLeads = query(
+        collection(db, "acnAgents"),
+        where("phoneNumber", "==", formattedPhoneNumber)
+      );
+      const leadsQuery = await getDocs(acnLeads);
+      if (agentsQuery.size < 0 && leadsQuery.size < 0) return;
       const newAgent = {
         leadId: agentId,
         name: "",

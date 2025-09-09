@@ -9,6 +9,7 @@ import {
   formatPrice,
   toCapitalize,
 } from "../../../helpers/format/format";
+import { getUnixDateTime } from "@/app/helpers/getUnixDateTime";
 
 type UIProperty = Omit<Property, "handOverDate"> & {
   handOverDate?: string;
@@ -81,7 +82,7 @@ export const BasicPropertyInfo: React.FC<{
   }
 
   const daysSinceAdded = data?.dateOfLastChecked
-    ? getDaysDifference(data.dateOfLastChecked, Math.floor(Date.now() / 1000))
+    ? getDaysDifference(data.dateOfLastChecked, getUnixDateTime())
     : 0;
 
   const updatedText =

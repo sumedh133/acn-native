@@ -86,7 +86,7 @@ export function helper(cost) {
   if (cost >= 100) {
     return `₹${(cost / 100).toFixed(2)} Cr`;
   } else {
-    return `₹${cost} Lacs`;
+    return `₹${cost} Lakhs`;
   }
 }
 
