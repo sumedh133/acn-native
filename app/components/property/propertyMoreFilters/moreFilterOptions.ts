@@ -109,11 +109,11 @@ export const facingOptions: DropdownOption[] = [
   { label: "West", value: "West", count: 2 },
 ];
 export const floorOptions: DropdownOption[] = [
-  { label: "Ground Floor", value: "ground floor" },
-  { label: "Lower Floor (1 - 5)", value: "lower floor (1 - 5)" },
-  { label: "Middle Floor (6 - 10)", value: "middle floor (6 - 10)" },
-  { label: "Higher Floor (10+)", value: "higher floor (10+)" },
-  { label: "Higher Floor (20+)", value: "higher floor (20+)" },
+  { label: "Ground Floor", value: "Ground Floor" },
+  { label: "Lower Floor (1 - 5)", value: "Lower Floor (1-5)" },
+  { label: "Middle Floor (6 - 10)", value: "Middle Floor (6-10)" },
+  { label: "Higher Floor (10+)", value: "Higher Floor (10+)" },
+  { label: "Higher Floor (20+)", value: "Higher Floor (20+)" },
 ];
 export const preferredTenantsOptions: DropdownOption[] = [
   { label: "Anyone", value: "Anyone" },
