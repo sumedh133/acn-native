@@ -129,7 +129,7 @@ const getName = (property: Omit<Property, "propertyId">): string | null => {
         : `${toCapitalize(property.assetType)} for ${type} in ${
             property.propertyName
           }`;
-    case "retail property.commercialSubType":
+    case "retail space":
       return `${property.commercialSubType} for ${type}`;
     case "commercial space":
       return `${property.commercialSubType} for ${type}`;
